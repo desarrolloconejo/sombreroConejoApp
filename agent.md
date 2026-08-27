@@ -1140,3 +1140,134 @@ lo que se veia era la pagina interna de Next, en ingles y sin relacion con la
 marca. Va con estilos en linea a proposito: es la pantalla que aparece cuando
 ya ha fallado todo lo demas, y no debe depender de la hoja de estilos ni de
 ningun componente compartido.
+
+## Etapa 20 — Correcciones tras las pruebas en produccion
+
+La primera pasada real por la aplicacion desplegada saco nueve problemas. Tres
+no eran detalles: habia funcionalidad que sencillamente no funcionaba, y un
+campo de metricas que escribia en la columna equivocada.
+
+### Tres sintomas, una causa: los paneles del historial
+
+Ver y borrar no hacian nada. El motivo estaba encadenado:
+
+- La page **nunca leia `estado.panel`** y **no pasaba la prop `panel`** al
+  listado, asi que no habia nada que renderizar.
+- `"borrar"` **no estaba en la lista blanca** `PANELES`. Al caer fuera, `panel`
+  se anula, y eso arrastra `panelId` a `null`: ni siquiera llegaba el id.
+- `editar` funcionaba **de casualidad**, porque apunta a otra page que ignora el
+  nombre del panel y solo usa el id.
+
+`borrarFicha` llevaba escrita desde el principio sin que nadie la llamara, y no
+existian ni `DetalleFicha` ni `ConfirmarBorradoFicha`. La leccion: un enlace a
+un panel que la lista blanca no reconoce **no falla, desaparece**.
+
+### El fallo de metricas escribia en la columna equivocada
+
+El campo con `name="guardados"` tomaba su etiqueta de la metrica del objetivo de
+la ficha:
+
+```tsx
+etiqueta={ficha ? metricaDe(ficha.objetivo).split(" ")[0] : "Guardados"}
+```
+
+Con objetivo `compartidos` rotulaba «Compartidos» —duplicando el campo
+siguiente— y escribia en `guardados`. Con `consideracion` rotulaba «Clics» y
+pasaba lo mismo. No era cosmetico: **hay datos guardados en la columna
+equivocada** en cualquier ficha registrada con esos dos objetivos.
+
+Los rotulos pasan a ser fijos. Se anade `me_gusta` y se retira `conversiones`.
+La bateria de modelos gana una comprobacion que cruza los tres valores de
+interaccion con cifras distintas entre si, para que un cruce se vea.
+
+### Filtros de seleccion multiple
+
+Eran de un solo valor por decision explicita, documentada en el propio codigo:
+
+```
+// Se toma el primero: el listado no tiene filtros de seleccion multiple.
+```
+
+Cambiarlo toco cuatro capas: el lector de parametros, el constructor de URLs, el
+desplegable y las consultas. Dos decisiones que merecen quedar escritas:
+
+- **`ANY` y no `IN`.** La lista entera viaja como UN parametro, asi que el texto
+  de la consulta no cambia con el numero de valores. Con `IN` habria que
+  fabricar tantos marcadores como valores, que es justo donde se cuela una
+  concatenacion.
+- **El desplegable deja de cerrarse al elegir.** Se cerraba porque solo cabia
+  una opcion; con varias, cerrarse tras la primera obliga a reabrirlo cada vez.
+
+Se cuentan hasta doce valores por filtro y se descarta lo que no este en la
+lista blanca, de modo que una URL con basura mezclada consulta por lo valido en
+vez de fallar entera.
+
+### El salto al principio de la pagina
+
+Cada chip, cabecera de orden y boton de fila es un enlace, y Next sube al
+principio en cada navegacion. **No habia un solo `scroll={false}` en el
+proyecto** salvo en `ListadoBuscador`, cuya cabecera ya explicaba por que hace
+falta — y que el resto del listado ignoraba.
+
+La paginacion se queda como estaba, y es deliberado: cambiar de pagina sustituye
+la lista entera, asi que quedarse a media altura dejaria a la vista el medio de
+unos registros que nadie ha leido.
+
+### Empresas: codigo muerto que dejaba dos callejones sin salida
+
+`empresas.crear` existia en el modelo y no la llamaba nadie: la unica forma de
+que existiera una empresa era el seed. El alta de usuarios avisaba de que «hay
+que registrar la empresa antes de dar de alta a su persona de contacto» y no
+existia el sitio donde registrarla; la ficha de un hook pedia un cliente
+obligatorio con el desplegable vacio.
+
+El RIF es unico, asi que el choque se deja en manos de PostgreSQL y se captura
+el `23505`. Comprobarlo antes con una consulta daria una falsa sensacion de
+seguridad: entre la consulta y la insercion cabe otra alta con el mismo RIF.
+
+### Hooks por usuario, pero solo en la portada
+
+`enCurso`, `ultimaMedida` y `contarPorEstado` consultaban las fichas de toda la
+agencia, asi que a alguien le aparecia como pieza en curso el borrador de otro.
+Las tres pasan a filtrar por `creado_por`. **El historial NO cambia**: sigue
+mostrando lo de todos y permitiendo ver, editar y borrar cualquier ficha.
+
+Queda escrito que filtrar la lectura no protege nada por si solo: `actualizar`,
+`borrar` y `guardarNota` siguen yendo por id.
+
+### Usar como plantilla
+
+Lo unico que decidia crear o actualizar era **un input oculto con el id**. En
+modo plantilla no se emite, asi que el primer guardado crea y la original queda
+intacta. Se copia todo menos el cliente: es el cliente quien decide que regla
+aplica el auditor, asi que elegirlo es una decision y no un tramite.
+
+Se corrige de paso un fallo que ya existia: `guardarBorrador` no devolvia el id
+de lo que acababa de crear, asi que pulsar Guardar dos veces creaba dos fichas.
+
+### Notificaciones flotantes
+
+Mismo fallo que tenia la contrasena provisional: la alerta se pintaba arriba de
+un formulario largo y quien acababa de pulsar el boton estaba abajo.
+
+El detalle que costaria depurar: `useActionState` devuelve un objeto nuevo por
+envio, pero dos envios con el mismo resultado tienen el mismo texto. El hook
+compara la **identidad** del estado, no su contenido; comparando contenido, el
+segundo guardado identico no avisaria.
+
+Los errores de campo no se mueven: siguen pegados a su campo.
+
+### Verificado
+
+| Comprobacion | Resultado |
+| --- | --- |
+| `tsc --noEmit` y `eslint` | limpios |
+| `prueba:auditor` / `prueba:modelos` | 19/19 y 25/25 |
+| Paneles del historial: ver, borrar, id inexistente | abre, abre, no abre |
+| Dos roles a la vez en el filtro | los dos, y el resumen dice «2 seleccionados» |
+| Basura mezclada en un filtro (`?rol=;DROP&rol=admin`) | 200, consulta por el valido |
+| Dos territorios en documentacion | 6 + 6 = 12, suma y no intersecta |
+| RIF duplicado | la base devuelve 23505, que la action convierte en error de campo |
+| Portada de otro usuario | no ve el borrador ajeno; el historial si |
+| Plantilla | copia el texto, sin id y sin cliente; editar si lleva los dos |
+| Region de avisos | presente en el dashboard, ausente en el login |
