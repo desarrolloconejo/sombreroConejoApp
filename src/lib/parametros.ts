@@ -59,11 +59,34 @@ const PANELES: readonly string[] = [
 ];
 
 /**
- * Un parametro repetido ("?tipo=a&tipo=b") llega como arreglo. Se toma el
- * primero: el listado no tiene filtros de seleccion multiple.
+ * Un parametro repetido ("?orden=a&orden=b") llega como arreglo.
+ *
+ * Para los parametros de control —orden, pagina, panel— solo cabe un valor,
+ * asi que se toma el primero: pedir dos ordenes a la vez no significa nada.
+ * Los FILTROS si admiten varios, y para esos esta `todosLosValores`.
  */
 function primerValor(valor: string | string[] | undefined): string | undefined {
   return Array.isArray(valor) ? valor[0] : valor;
+}
+
+/** Cuantos valores admite un mismo filtro. Son etiquetas, no un buscador. */
+const MAXIMO_POR_FILTRO = 12;
+
+/**
+ * Todos los valores de un filtro, limpios y sin repetir.
+ *
+ * El tope no es paranoia: la URL la escribe cualquiera, y sin el una peticion
+ * con doscientos valores repetidos acabaria en un `IN` de doscientos elementos
+ * contra la base.
+ */
+function todosLosValores(valor: string | string[] | undefined): string[] {
+  const crudos = Array.isArray(valor) ? valor : valor === undefined ? [] : [valor];
+
+  const limpios = crudos
+    .map((uno) => limpiarTexto(uno, LIMITE_FILTRO))
+    .filter((uno) => uno.length > 0);
+
+  return [...new Set(limpios)].slice(0, MAXIMO_POR_FILTRO);
 }
 
 /** Deja el tamano de pagina dentro de un rango que la base pueda servir. */
@@ -107,10 +130,10 @@ export function leerEstadoListado(
 
   // Solo se recogen las claves que el modulo declaro. Cualquier otro parametro
   // de la URL se queda fuera del estado y, por tanto, fuera de la consulta.
-  const filtros: Record<string, string> = {};
+  const filtros: Record<string, string[]> = {};
   for (const clave of config.filtrosPermitidos ?? []) {
-    const valor = limpiarTexto(leer(clave), LIMITE_FILTRO);
-    if (valor) filtros[clave] = valor;
+    const valores = todosLosValores(parametros[clave]);
+    if (valores.length > 0) filtros[clave] = valores;
   }
 
   const panelPedido = leer(PARAMETROS.panel);

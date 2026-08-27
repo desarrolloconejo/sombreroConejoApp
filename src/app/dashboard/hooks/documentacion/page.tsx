@@ -55,14 +55,17 @@ const MIGAS = [
  * se acababa de tocar.
  */
 function enlace(
-  territorio: string | null,
+  territorios: readonly string[],
   panel?: string,
   id?: number,
   retiradas = false,
 ): string {
   const parametros = new URLSearchParams();
 
-  if (territorio) parametros.set("territorio", territorio);
+  // Se repite la clave por cada territorio elegido, igual que hace el listado
+  // estandar: es como se representa una lista en una URL sin inventar un
+  // separador que despues habria que escapar.
+  for (const territorio of territorios) parametros.append("territorio", territorio);
   if (retiradas) parametros.set("retiradas", "si");
   if (panel) parametros.set("panel", panel);
   if (typeof id === "number") parametros.set("id", String(id));
@@ -71,8 +74,35 @@ function enlace(
   return cadena ? `${RUTA}?${cadena}` : RUTA;
 }
 
-function comoTerritorio(valor: unknown): SlugTerritorio | null {
-  return TERRITORIOS.find((t) => t.slug === valor)?.slug ?? null;
+/**
+ * Los territorios elegidos, descartando lo que no exista y sin repetir.
+ *
+ * Devuelve una LISTA porque se pueden marcar varios: antes solo cabia uno y el
+ * rotulo decia literalmente "elige uno", asi que ver las aperturas de dos
+ * territorios a la vez era imposible.
+ */
+function comoTerritorios(valor: unknown): SlugTerritorio[] {
+  const crudos = Array.isArray(valor) ? valor : valor === undefined ? [] : [valor];
+
+  const validos = crudos.flatMap((uno) => {
+    const encontrado = TERRITORIOS.find((t) => t.slug === uno)?.slug;
+    return encontrado ? [encontrado] : [];
+  });
+
+  return [...new Set(validos)];
+}
+
+/** Anade o quita un territorio de los elegidos. Pulsar sobre uno puesto lo saca. */
+function alternarTerritorio(
+  elegidos: readonly SlugTerritorio[],
+  slug: string,
+): SlugTerritorio[] {
+  const encontrado = TERRITORIOS.find((t) => t.slug === slug)?.slug;
+  if (!encontrado) return [...elegidos];
+
+  return elegidos.includes(encontrado)
+    ? elegidos.filter((uno) => uno !== encontrado)
+    : [...elegidos, encontrado];
 }
 
 function comoId(valor: unknown): number | null {
@@ -87,7 +117,7 @@ export default async function PaginaDocumentacion(
 
   const parametros = await props.searchParams;
 
-  const territorio = comoTerritorio(parametros.territorio);
+  const territorios = comoTerritorios(parametros.territorio);
   const panel = typeof parametros.panel === "string" ? parametros.panel : null;
   const id = comoId(parametros.id);
   const verRetiradas = parametros.retiradas === "si";
@@ -96,7 +126,7 @@ export default async function PaginaDocumentacion(
     await Promise.all([
       reglasModelo.listar(),
       aperturasModelo.listar({
-        ...(territorio ? { territorio } : {}),
+        ...(territorios.length > 0 ? { territorio: territorios } : {}),
         incluirRetiradas: verRetiradas,
       }),
       aperturasModelo.contarActivas(),
@@ -146,7 +176,7 @@ export default async function PaginaDocumentacion(
 
   // Cerrar devuelve a la lista TAL Y COMO estaba, retiradas incluidas: si no,
   // reponer una apertura terminaria en una lista donde ya no aparece.
-  const hrefCerrar = enlace(territorio, undefined, undefined, verRetiradas);
+  const hrefCerrar = enlace(territorios, undefined, undefined, verRetiradas);
 
   return (
     <Wrapper
@@ -165,10 +195,10 @@ export default async function PaginaDocumentacion(
       <div className="surge">
         <SeccionReglas
           reglas={reglas}
-          hrefNueva={enlace(territorio, "nueva-regla")}
-          hrefVer={(reglaId) => enlace(territorio, "ver-regla", reglaId)}
-          hrefEditar={(reglaId) => enlace(territorio, "editar-regla", reglaId)}
-          hrefBorrar={(reglaId) => enlace(territorio, "borrar-regla", reglaId)}
+          hrefNueva={enlace(territorios, "nueva-regla")}
+          hrefVer={(reglaId) => enlace(territorios, "ver-regla", reglaId)}
+          hrefEditar={(reglaId) => enlace(territorios, "editar-regla", reglaId)}
+          hrefBorrar={(reglaId) => enlace(territorios, "borrar-regla", reglaId)}
         />
       </div>
 
@@ -182,20 +212,29 @@ export default async function PaginaDocumentacion(
         <SeccionAperturas
           aperturas={aperturas}
           total={totalAperturas}
-          territorioActivo={territorio}
-          hrefTerritorio={(slug) => enlace(slug, undefined, undefined, verRetiradas)}
+          territoriosActivos={territorios}
+          hrefTerritorio={(slug) =>
+            enlace(
+              // null es el chip "Todos": limpia el grupo entero en lugar de
+              // alternar un valor.
+              slug === null ? [] : alternarTerritorio(territorios, slug),
+              undefined,
+              undefined,
+              verRetiradas,
+            )
+          }
           hrefVer={(aperturaId) =>
-            enlace(territorio, "ver-apertura", aperturaId, verRetiradas)
+            enlace(territorios, "ver-apertura", aperturaId, verRetiradas)
           }
           hrefEditar={(aperturaId) =>
-            enlace(territorio, "editar-apertura", aperturaId, verRetiradas)
+            enlace(territorios, "editar-apertura", aperturaId, verRetiradas)
           }
           hrefRetirar={(aperturaId) =>
-            enlace(territorio, "retirar-apertura", aperturaId, verRetiradas)
+            enlace(territorios, "retirar-apertura", aperturaId, verRetiradas)
           }
-          hrefNueva={enlace(territorio, "nueva-apertura", undefined, verRetiradas)}
+          hrefNueva={enlace(territorios, "nueva-apertura", undefined, verRetiradas)}
           verRetiradas={verRetiradas}
-          hrefRetiradas={(ver) => enlace(territorio, undefined, undefined, ver)}
+          hrefRetiradas={(ver) => enlace(territorios, undefined, undefined, ver)}
         />
       </div>
 
@@ -208,10 +247,10 @@ export default async function PaginaDocumentacion(
       <div className="surge [--retraso:0.08s]">
         <SeccionReferencias
           referencias={referencias}
-          hrefNueva={enlace(territorio, "nueva-referencia")}
-          hrefVer={(refId) => enlace(territorio, "ver-referencia", refId)}
-          hrefEditar={(refId) => enlace(territorio, "editar-referencia", refId)}
-          hrefBorrar={(refId) => enlace(territorio, "borrar-referencia", refId)}
+          hrefNueva={enlace(territorios, "nueva-referencia")}
+          hrefVer={(refId) => enlace(territorios, "ver-referencia", refId)}
+          hrefEditar={(refId) => enlace(territorios, "editar-referencia", refId)}
+          hrefBorrar={(refId) => enlace(territorios, "borrar-referencia", refId)}
         />
       </div>
 
@@ -230,7 +269,7 @@ export default async function PaginaDocumentacion(
           <DetalleRegla
             regla={reglaVer}
             empresas={empresas}
-            hrefEditar={enlace(territorio, "editar-regla", reglaVer.id)}
+            hrefEditar={enlace(territorios, "editar-regla", reglaVer.id)}
             hrefCerrar={hrefCerrar}
           />
         </PanelLateral>
@@ -283,7 +322,7 @@ export default async function PaginaDocumentacion(
         >
           <DetalleApertura
             apertura={aperturaVer}
-            hrefEditar={enlace(territorio, "editar-apertura", aperturaVer.id)}
+            hrefEditar={enlace(territorios, "editar-apertura", aperturaVer.id)}
             hrefCerrar={hrefCerrar}
           />
         </PanelLateral>
@@ -340,7 +379,7 @@ export default async function PaginaDocumentacion(
         >
           <DetalleReferencia
             referencia={referenciaVer}
-            hrefEditar={enlace(territorio, "editar-referencia", referenciaVer.id)}
+            hrefEditar={enlace(territorios, "editar-referencia", referenciaVer.id)}
             hrefCerrar={hrefCerrar}
           />
         </PanelLateral>

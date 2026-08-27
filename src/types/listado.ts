@@ -103,8 +103,15 @@ export type EstadoListado = {
   pagina: number;
   porPagina: number;
 
-  /** Solo las claves declaradas en `filtrosPermitidos`, y sin valores vacios. */
-  filtros: Record<string, string>;
+  /**
+   * Solo las claves declaradas en `filtrosPermitidos`, y sin valores vacios.
+   *
+   * Cada filtro es una LISTA, aunque casi siempre traiga un solo elemento. Es
+   * lo que permite elegir dos estados a la vez sin que uno pise al otro: la
+   * URL los repite ("?estado=borrador&estado=medida") y aqui llegan los dos.
+   * Una clave presente con la lista vacia no existe: se descarta al leerla.
+   */
+  filtros: Record<string, string[]>;
 
   /** Panel lateral abierto: ?panel=nuevo | ?panel=editar | ausente. */
   panel: string | null;

@@ -31,7 +31,7 @@ export default async function PaginaMetricas() {
   // Se piden mas de las que caben en un desplegable comodo y se cortan aqui:
   // si hay veinte pendientes, el problema no es el desplegable.
   const pendientes = await fichasModelo.listar({
-    estado: "auditada",
+    estado: ["auditada"],
     orden: "actualizadoEn",
     direccion: "desc",
     porPagina: 50,

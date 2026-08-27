@@ -41,7 +41,7 @@ export default async function PaginaInicio() {
   // ella. Se pide una sola fila porque lo unico que interesa es el total.
   const usuariosActivos =
     usuario.rol === "admin"
-      ? (await usuarios.listar({ activo: true, porPagina: 1 })).total
+      ? (await usuarios.listar({ activo: [true], porPagina: 1 })).total
       : null;
 
   return (

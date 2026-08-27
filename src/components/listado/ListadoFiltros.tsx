@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Check, FilterX } from "lucide-react";
 
 import type { DefinicionFiltro, EstadoListado, OpcionFiltro } from "@/types";
-import { conFiltro, sinFiltros } from "@/lib/urlListado";
+import { alternarFiltro, sinFiltros } from "@/lib/urlListado";
 
 import { FiltroDesplegable } from "./FiltroDesplegable";
 
@@ -12,6 +12,11 @@ import { FiltroDesplegable } from "./FiltroDesplegable";
  * Cada opcion sigue siendo un <Link> que cambia un parametro de la URL, asi
  * que el filtrado funciona sin JavaScript y se puede compartir el enlace. Lo
  * unico de cliente es abrir y cerrar el grupo.
+ *
+ * Se pueden elegir VARIOS valores del mismo grupo. Cada opcion alterna: si ya
+ * estaba puesta, el mismo enlace la quita, asi que no hace falta una "x" en
+ * cada una. Por eso "Todos" no es una opcion mas sino el atajo para dejar el
+ * grupo entero sin filtrar.
  *
  * La opcion de quitar el filtro la pone SIEMPRE este componente, y siempre se
  * llama "Todos". Antes la declaraba cada modulo y salieron cuatro nombres
@@ -43,32 +48,52 @@ export function ListadoFiltros({
 }) {
   if (filtros.length === 0) return null;
 
-  const hayAlguno = filtros.some((f) => Boolean(estado.filtros[f.clave]));
+  const hayAlguno = filtros.some((f) => (estado.filtros[f.clave] ?? []).length > 0);
 
   return (
     // En movil se apilan, uno por fila; desde sm vuelven a compartirla
     <div className="flex flex-col gap-2 border-b border-borde px-5 py-3 sm:flex-row sm:flex-wrap sm:items-center">
       {filtros.map((filtro) => {
-        const elegido = estado.filtros[filtro.clave] ?? "";
+        const elegidos = estado.filtros[filtro.clave] ?? [];
         const opciones = conOpcionTodos(filtro.opciones);
-        const opcionElegida =
-          opciones.find((o) => o.valor === elegido) ?? opciones[0];
+
+        /*
+         * Con un valor se muestra su nombre; con varios, cuantos hay.
+         *
+         * Listar los nombres separados por comas parece mas informativo y no
+         * lo es: el boton tiene ancho acotado, asi que con tres nombres se
+         * recorta a mitad de la segunda palabra y deja de decir nada.
+         */
+        const nombreDe = (valor: string): string =>
+          opciones.find((o) => o.valor === valor)?.texto ?? valor;
+
+        const resumen =
+          elegidos.length === 0
+            ? nombreDe("")
+            : elegidos.length === 1
+              ? nombreDe(elegidos[0])
+              : `${elegidos.length} seleccionados`;
 
         return (
           <FiltroDesplegable
             key={filtro.clave}
             titulo={filtro.titulo}
-            resumen={opcionElegida?.texto ?? "Todos"}
-            activo={Boolean(elegido)}
+            resumen={resumen}
+            activo={elegidos.length > 0}
           >
             <ul className="flex flex-col gap-0.5">
               {opciones.map((opcion) => {
-                const activa = opcion.valor === elegido;
+                // "Todos" se enciende cuando no hay ninguno elegido, que es
+                // justo lo que significa: el grupo sin filtrar.
+                const activa =
+                  opcion.valor === ""
+                    ? elegidos.length === 0
+                    : elegidos.includes(opcion.valor);
 
                 return (
                   <li key={opcion.valor || "todos"}>
                     <Link
-                      href={conFiltro(ruta, estado, filtro.clave, opcion.valor || null)}
+                      href={alternarFiltro(ruta, estado, filtro.clave, opcion.valor || null)}
                       scroll={false}
                       aria-current={activa ? "true" : undefined}
                       className={[

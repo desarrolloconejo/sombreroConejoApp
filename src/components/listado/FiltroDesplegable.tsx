@@ -110,10 +110,13 @@ export function FiltroDesplegable({
         <div
           id={idPanel}
           /*
-           * Al elegir una opcion se navega, la page se vuelve a renderizar y
-           * este componente se monta de cero: no hace falta cerrarlo a mano.
+           * NO se cierra al elegir, y es deliberado.
+           *
+           * Antes se cerraba porque solo cabia una opcion: elegida una, no
+           * quedaba nada que hacer ahi. Ahora se pueden marcar varias, y
+           * cerrarse tras la primera obligaria a volver a abrirlo para cada
+           * valor. Se cierra pulsando fuera, con Escape o con el propio boton.
            */
-          onClick={() => setAbierto(false)}
           className={[
             "absolute z-30 mt-1.5 w-full min-w-[190px] rounded-xl border border-borde sm:w-auto",
             "bg-superficie p-1.5 shadow-[var(--sombra-alta)]",

@@ -27,8 +27,14 @@ function parametrosDe(estado: EstadoListado): URLSearchParams {
 
   // El orden de insercion sigue al de `filtrosPermitidos`, asi que la misma
   // combinacion produce siempre la misma URL.
-  for (const [clave, valor] of Object.entries(estado.filtros)) {
-    if (valor) parametros.set(clave, valor);
+  //
+  // `append` y no `set`: un filtro con varios valores se repite en la URL
+  // ("?estado=borrador&estado=medida"), que es como se representa una lista
+  // sin inventar un separador que despues habria que escapar.
+  for (const [clave, valores] of Object.entries(estado.filtros)) {
+    for (const valor of valores) {
+      if (valor) parametros.append(clave, valor);
+    }
   }
 
   parametros.set(PARAMETROS.orden, estado.orden);
@@ -66,8 +72,20 @@ export function conBusqueda(
   return unir(ruta, parametrosDe({ ...estado, busqueda: termino.trim(), pagina: 1 }));
 }
 
-/** Un valor nulo o vacio quita el filtro, que es lo que hace el chip "Todos". */
-export function conFiltro(
+/**
+ * Anade o quita un valor de un filtro, sin tocar los demas.
+ *
+ * Es un INTERRUPTOR, no una asignacion: pulsar sobre algo ya elegido lo quita.
+ * Asi el mismo enlace sirve para poner y para sacar, y no hace falta una "x"
+ * aparte en cada opcion.
+ *
+ * Un valor nulo o vacio limpia el filtro entero, que es lo que hace "Todos".
+ *
+ * Cambiar un filtro vuelve SIEMPRE a la primera pagina: el conjunto de
+ * resultados es otro, y quedarse en la pagina siete de una lista que ahora
+ * tiene dos paginas mostraria un vacio que parece un error.
+ */
+export function alternarFiltro(
   ruta: string,
   estado: EstadoListado,
   clave: string,
@@ -78,7 +96,19 @@ export function conFiltro(
   if (valor === null || valor === "") {
     delete filtros[clave];
   } else {
-    filtros[clave] = valor;
+    const actuales = filtros[clave] ?? [];
+
+    const siguientes = actuales.includes(valor)
+      ? actuales.filter((uno) => uno !== valor)
+      : [...actuales, valor];
+
+    if (siguientes.length > 0) {
+      filtros[clave] = siguientes;
+    } else {
+      // Sin valores el filtro no existe, en lugar de quedarse como una clave
+      // con lista vacia que ensuciaria la URL y `hayCriterios`.
+      delete filtros[clave];
+    }
   }
 
   return unir(ruta, parametrosDe({ ...estado, filtros, pagina: 1 }));

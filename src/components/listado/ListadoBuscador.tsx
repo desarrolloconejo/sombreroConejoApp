@@ -128,9 +128,11 @@ export function ListadoBuscador({
       }}
       className="flex min-w-0 flex-1 sm:max-w-[340px]"
     >
+      {/* La clave lleva el valor porque un filtro con varios valores repite el
+          mismo nombre: "estado" sale dos veces y con la clave sola chocarian. */}
       {ocultos.map((campoOculto) => (
         <input
-          key={campoOculto.nombre}
+          key={`${campoOculto.nombre}=${campoOculto.valor}`}
           type="hidden"
           name={campoOculto.nombre}
           value={campoOculto.valor}

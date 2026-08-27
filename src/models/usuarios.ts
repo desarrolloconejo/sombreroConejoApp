@@ -303,31 +303,37 @@ export async function listar(
     );
   }
 
-  if (filtros.tipo) {
+  /*
+   * ANY y no IN: la lista entera viaja como UN parametro, asi que el texto de
+   * la consulta no cambia con el numero de valores. Con IN habria que fabricar
+   * tantos marcadores como valores, que es justo donde se cuela una
+   * concatenacion.
+   */
+  if (filtros.tipo?.length) {
     valores.push(filtros.tipo);
-    condiciones.push(`tipo = $${valores.length}`);
+    condiciones.push(`tipo = ANY($${valores.length})`);
   }
 
-  if (filtros.rol) {
+  if (filtros.rol?.length) {
     valores.push(filtros.rol);
-    condiciones.push(`rol = $${valores.length}`);
+    condiciones.push(`rol = ANY($${valores.length})`);
   }
 
   // Se filtra por el slug, nunca por el nombre mostrado: el slug es el
   // valor cerrado contra el que se decide el contenido.
-  if (filtros.cargo) {
+  if (filtros.cargo?.length) {
     valores.push(filtros.cargo);
-    condiciones.push(`cargo_slug = $${valores.length}`);
+    condiciones.push(`cargo_slug = ANY($${valores.length})`);
   }
 
-  if (typeof filtros.empresaId === "number") {
+  if (filtros.empresaId?.length) {
     valores.push(filtros.empresaId);
-    condiciones.push(`empresa_id = $${valores.length}`);
+    condiciones.push(`empresa_id = ANY($${valores.length})`);
   }
 
-  if (typeof filtros.activo === "boolean") {
+  if (filtros.activo?.length) {
     valores.push(filtros.activo);
-    condiciones.push(`activo = $${valores.length}`);
+    condiciones.push(`activo = ANY($${valores.length})`);
   }
 
   const donde = condiciones.length > 0 ? `WHERE ${condiciones.join(" AND ")}` : "";

@@ -249,7 +249,7 @@ export function SeccionReglas({
 export function SeccionAperturas({
   aperturas,
   total,
-  territorioActivo,
+  territoriosActivos,
   hrefTerritorio,
   hrefVer,
   hrefEditar,
@@ -260,7 +260,9 @@ export function SeccionAperturas({
 }: {
   aperturas: Apertura[];
   total: number;
-  territorioActivo: string | null;
+  /** Los territorios marcados. Vacio significa "todos". */
+  territoriosActivos: readonly string[];
+  /** null limpia el grupo; un slug lo alterna. */
   hrefTerritorio: (slug: string | null) => string;
   hrefVer: (id: number) => string;
   hrefEditar: (id: number) => string;
@@ -276,7 +278,7 @@ export function SeccionAperturas({
     <div className="overflow-hidden rounded-[15px] border border-borde bg-superficie shadow-[var(--sombra)]">
       <div className="border-b border-borde px-6 pt-5 pb-4">
         <p className="mb-2.5 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
-          Territorio · elige uno
+          Territorio · elige los que quieras
         </p>
 
         <div className="flex flex-wrap gap-[7px]">
@@ -285,7 +287,7 @@ export function SeccionAperturas({
             scroll={false}
             className={[
               "suave inline-flex min-h-8 items-center rounded-full border-[1.5px] px-3 text-xs font-semibold",
-              territorioActivo === null
+              territoriosActivos.length === 0
                 ? "border-acento bg-acento text-acento-contraste"
                 : "border-borde text-suave hover:border-acento hover:text-acento",
             ].join(" ")}
@@ -300,7 +302,7 @@ export function SeccionAperturas({
               scroll={false}
               className={[
                 "suave inline-flex min-h-8 items-center rounded-full border-[1.5px] px-3 text-xs font-semibold",
-                territorioActivo === t.slug
+                territoriosActivos.includes(t.slug)
                   ? "border-acento bg-acento text-acento-contraste"
                   : "border-borde text-suave hover:border-acento hover:text-acento",
               ].join(" ")}

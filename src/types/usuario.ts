@@ -111,11 +111,16 @@ export type OrdenUsuarios = "nombre" | "email" | "creadoEn" | "ultimoAcceso";
 /** Filtros del listado de usuarios del modulo de administracion. */
 export type FiltrosUsuarios = {
   busqueda?: string;
-  tipo?: TipoUsuario;
-  rol?: NombreRol;
-  cargo?: SlugCargo;
-  empresaId?: number;
-  activo?: boolean;
+
+  /*
+   * Los filtros son LISTAS: el listado admite elegir varios valores del mismo
+   * grupo. Una lista vacia equivale a no filtrar por esa clave.
+   */
+  tipo?: TipoUsuario[];
+  rol?: NombreRol[];
+  cargo?: SlugCargo[];
+  empresaId?: number[];
+  activo?: boolean[];
   orden?: OrdenUsuarios;
   direccion?: "asc" | "desc";
   pagina?: number;

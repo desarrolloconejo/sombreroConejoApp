@@ -77,28 +77,49 @@ function comoOrden(valor: string): OrdenUsuarios {
   return ORDEN_PERMITIDO.find((clave) => clave === valor) ?? "creadoEn";
 }
 
-function comoTipo(valor: string | undefined): TipoUsuario | undefined {
-  return TIPOS.find((tipo) => tipo === valor);
+/*
+ * Reciben y devuelven LISTAS porque el listado admite varios valores por
+ * grupo. Filtrar aqui, ademas, hace que "?rol=admin&rol=inventado" consulte
+ * por el valido y descarte el otro, en lugar de fallar entera.
+ *
+ * Devuelven `undefined` cuando no queda nada valido: una lista vacia y la
+ * ausencia de filtro significan lo mismo, y el modelo solo entiende una.
+ */
+function soloValidos<T>(valores: T[]): T[] | undefined {
+  return valores.length > 0 ? valores : undefined;
 }
 
-function comoRol(valor: string | undefined): NombreRol | undefined {
-  return ROLES.find((rol) => rol === valor);
+function comoTipos(valores: string[] | undefined): TipoUsuario[] | undefined {
+  return soloValidos(
+    (valores ?? []).filter((v): v is TipoUsuario => TIPOS.some((t) => t === v)),
+  );
+}
+
+function comoRoles(valores: string[] | undefined): NombreRol[] | undefined {
+  return soloValidos(
+    (valores ?? []).filter((v): v is NombreRol => ROLES.some((r) => r === v)),
+  );
 }
 
 /** El area se valida contra las que existen en la base, no contra una lista. */
-function comoCargo(
-  valor: string | undefined,
+function comoCargos(
+  valores: string[] | undefined,
   cargos: Cargo[],
-): SlugCargo | undefined {
-  return cargos.find((cargo) => cargo.slug === valor)?.slug;
+): SlugCargo[] | undefined {
+  return soloValidos(
+    (valores ?? [])
+      .map((v) => cargos.find((cargo) => cargo.slug === v)?.slug)
+      .filter((slug): slug is SlugCargo => slug !== undefined),
+  );
 }
 
-/** El chip manda "true" o "false"; el modelo espera un booleano o nada. */
-function comoActivo(valor: string | undefined): boolean | undefined {
-  if (valor === "true") return true;
-  if (valor === "false") return false;
-
-  return undefined;
+/** El chip manda "true" o "false"; el modelo espera booleanos. */
+function comoActivos(valores: string[] | undefined): boolean[] | undefined {
+  return soloValidos(
+    (valores ?? [])
+      .filter((v) => v === "true" || v === "false")
+      .map((v) => v === "true"),
+  );
 }
 
 /** Lo que necesitan los desplegables del alta y de la edicion. */
@@ -155,10 +176,10 @@ export default async function PaginaUsuarios(
 
   const filtros: FiltrosUsuarios = {
     busqueda: estado.busqueda || undefined,
-    tipo: comoTipo(estado.filtros.tipo),
-    rol: comoRol(estado.filtros.rol),
-    cargo: comoCargo(estado.filtros.cargo, cargos),
-    activo: comoActivo(estado.filtros.activo),
+    tipo: comoTipos(estado.filtros.tipo),
+    rol: comoRoles(estado.filtros.rol),
+    cargo: comoCargos(estado.filtros.cargo, cargos),
+    activo: comoActivos(estado.filtros.activo),
     orden: comoOrden(estado.orden),
     direccion: estado.direccion,
     pagina: estado.pagina,

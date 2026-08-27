@@ -62,9 +62,14 @@ const COLUMNAS_ORDEN = {
 
 export type FiltrosFichas = {
   busqueda?: string;
-  empresaId?: number;
-  estado?: EstadoFicha;
-  objetivo?: SlugObjetivo;
+
+  /*
+   * Los filtros son LISTAS: el listado admite elegir varios valores del mismo
+   * grupo. Una lista vacia equivale a no filtrar por esa clave.
+   */
+  empresaId?: number[];
+  estado?: EstadoFicha[];
+  objetivo?: SlugObjetivo[];
   orden?: string;
   direccion?: "asc" | "desc";
   pagina?: number;
@@ -144,19 +149,28 @@ export async function listar(
     );
   }
 
-  if (typeof filtros.empresaId === "number") {
+  /*
+   * ANY y no IN.
+   *
+   * Con ANY la lista entera viaja como UN parametro, asi que el texto de la
+   * consulta no cambia con el numero de valores: no hay que fabricar
+   * marcadores a mano, no hay riesgo de descuadrar la numeracion, y el plan de
+   * PostgreSQL se reutiliza entre peticiones. Con IN habria que generar tantos
+   * marcadores como valores, que es justo donde se cuela una concatenacion.
+   */
+  if (filtros.empresaId?.length) {
     valores.push(filtros.empresaId);
-    condiciones.push(`f.empresa_id = $${valores.length}`);
+    condiciones.push(`f.empresa_id = ANY($${valores.length})`);
   }
 
-  if (filtros.estado) {
+  if (filtros.estado?.length) {
     valores.push(filtros.estado);
-    condiciones.push(`f.estado = $${valores.length}`);
+    condiciones.push(`f.estado = ANY($${valores.length})`);
   }
 
-  if (filtros.objetivo) {
+  if (filtros.objetivo?.length) {
     valores.push(filtros.objetivo);
-    condiciones.push(`f.objetivo = $${valores.length}`);
+    condiciones.push(`f.objetivo = ANY($${valores.length})`);
   }
 
   const donde = condiciones.length > 0 ? `WHERE ${condiciones.join(" AND ")}` : "";

@@ -46,8 +46,22 @@ async function principal(): Promise<void> {
   const todas = await aperturas.listar();
   comprobar("Las 42 aperturas estan sembradas", todas.length === 42, `${todas.length} activas`);
 
-  const territorioA = await aperturas.listar({ territorio: "a" });
+  const territorioA = await aperturas.listar({ territorio: ["a"] });
   comprobar("Filtro por territorio", territorioA.length === 6, `territorio A: ${territorioA.length}`);
+
+  /*
+   * Varios territorios a la vez: la suma de los dos por separado.
+   *
+   * Es la comprobacion que demuestra que el filtro es OR y no AND. Con AND el
+   * resultado seria cero, porque ninguna apertura pertenece a dos territorios.
+   */
+  const territorioB = await aperturas.listar({ territorio: ["b"] });
+  const aYb = await aperturas.listar({ territorio: ["a", "b"] });
+  comprobar(
+    "Varios territorios a la vez suman, no intersectan",
+    aYb.length === territorioA.length + territorioB.length && aYb.length > territorioA.length,
+    `a=${territorioA.length} + b=${territorioB.length} = ${aYb.length}`,
+  );
 
   const porMecanismo = await aperturas.listar({ mecanismo: "comparacion" });
   comprobar(

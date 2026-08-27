@@ -36,7 +36,8 @@ const COLUMNAS = `
 
 export type FiltrosAperturas = {
   busqueda?: string;
-  territorio?: SlugTerritorio;
+  /** Lista: se pueden ver los de varios territorios a la vez. */
+  territorio?: SlugTerritorio[];
   mecanismo?: SlugMecanismo;
   /** Por defecto solo las activas: las retiradas no se ofrecen para escribir. */
   incluirRetiradas?: boolean;
@@ -50,9 +51,9 @@ export async function listar(
 
   if (!filtros.incluirRetiradas) condiciones.push("activa");
 
-  if (filtros.territorio) {
+  if (filtros.territorio?.length) {
     valores.push(filtros.territorio);
-    condiciones.push(`territorio = $${valores.length}`);
+    condiciones.push(`territorio = ANY($${valores.length})`);
   }
 
   if (filtros.mecanismo) {

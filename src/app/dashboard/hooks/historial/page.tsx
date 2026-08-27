@@ -56,18 +56,33 @@ const MIGAS = [
 /*
  * Las conversiones descartan lo que no reconocen en lugar de arriesgar un
  * cast: un parametro escrito a mano no debe llegar nunca a la consulta.
+ *
+ * Reciben y devuelven LISTAS porque el listado admite varios valores por
+ * grupo. Filtrar aqui, ademas, hace que "?estado=borrador&estado=inventado"
+ * consulte por el valido y descarte el otro, en lugar de fallar entera.
  */
-function comoEstado(valor: string | undefined): EstadoFicha | undefined {
-  return ESTADOS.find((e) => e === valor);
+function comoEstados(valores: string[] | undefined): EstadoFicha[] | undefined {
+  const validos = (valores ?? []).filter((v): v is EstadoFicha =>
+    ESTADOS.some((e) => e === v),
+  );
+
+  return validos.length > 0 ? validos : undefined;
 }
 
-function comoObjetivo(valor: string | undefined): SlugObjetivo | undefined {
-  return OBJETIVOS.find((o) => o === valor);
+function comoObjetivos(valores: string[] | undefined): SlugObjetivo[] | undefined {
+  const validos = (valores ?? []).filter((v): v is SlugObjetivo =>
+    OBJETIVOS.some((o) => o === v),
+  );
+
+  return validos.length > 0 ? validos : undefined;
 }
 
-function comoEmpresa(valor: string | undefined): number | undefined {
-  const numero = Number(valor);
-  return Number.isInteger(numero) && numero > 0 ? numero : undefined;
+function comoEmpresas(valores: string[] | undefined): number[] | undefined {
+  const validos = (valores ?? [])
+    .map(Number)
+    .filter((n) => Number.isInteger(n) && n > 0);
+
+  return validos.length > 0 ? validos : undefined;
 }
 
 export default async function PaginaHistorial(
@@ -87,9 +102,9 @@ export default async function PaginaHistorial(
   const [pagina, empresas, fichaPanel] = await Promise.all([
     fichasModelo.listar({
       busqueda: estado.busqueda || undefined,
-      estado: comoEstado(estado.filtros.estado),
-      empresaId: comoEmpresa(estado.filtros.empresa),
-      objetivo: comoObjetivo(estado.filtros.objetivo),
+      estado: comoEstados(estado.filtros.estado),
+      empresaId: comoEmpresas(estado.filtros.empresa),
+      objetivo: comoObjetivos(estado.filtros.objetivo),
       orden: estado.orden,
       direccion: estado.direccion,
       pagina: estado.pagina,
