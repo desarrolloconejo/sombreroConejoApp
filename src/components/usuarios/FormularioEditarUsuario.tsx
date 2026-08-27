@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { Check, CircleAlert, CircleCheck, Mail, Phone } from "lucide-react";
+import { Check, Mail, Phone } from "lucide-react";
 
 import { editarUsuario } from "@/actions/usuarios";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Alerta, Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import type {
   Cargo,
   Empresa,
@@ -52,6 +53,10 @@ export function FormularioEditarUsuario({
 }) {
   const [estado, enviar, enviando] = useActionState(editarUsuario, ESTADO_INICIAL);
 
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
+
   const errores = estado.errores ?? {};
   const esTrabajador = usuario.tipo === "trabajador";
 
@@ -66,15 +71,6 @@ export function FormularioEditarUsuario({
         <input type="hidden" name="id" value={usuario.id} />
         <input type="hidden" name="tipo" value={usuario.tipo} />
 
-        {estado.mensaje && (
-          <Alerta
-            tono={estado.ok ? "info" : "aviso"}
-            icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
-            className="mb-[18px]"
-          >
-            {estado.mensaje}
-          </Alerta>
-        )}
 
         <SeparadorPanel>Datos de la persona</SeparadorPanel>
 

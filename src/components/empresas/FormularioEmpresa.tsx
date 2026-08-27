@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { Building2, Check, CircleAlert, CircleCheck } from "lucide-react";
+import { Building2, Check } from "lucide-react";
 
 import { crearEmpresa } from "@/actions/empresas";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Alerta, Boton, BotonEnlace, Campo } from "@/components/ui";
+import { Boton, BotonEnlace, Campo } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
  * Alta rapida de una empresa cliente, dentro del panel lateral.
@@ -21,20 +22,15 @@ import { ESTADO_INICIAL } from "@/types";
  */
 export function FormularioEmpresa({ hrefCancelar }: { hrefCancelar: string }) {
   const [estado, enviar, enviando] = useActionState(crearEmpresa, ESTADO_INICIAL);
+
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
   const errores = estado.errores ?? {};
 
   return (
     <form action={enviar} noValidate className="flex min-h-0 flex-1 flex-col">
       <PanelCuerpo>
-        {estado.mensaje && (
-          <Alerta
-            tono={estado.ok ? "info" : "aviso"}
-            icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
-            className="mb-[18px]"
-          >
-            {estado.mensaje}
-          </Alerta>
-        )}
 
         <SeparadorPanel>Quien es</SeparadorPanel>
 

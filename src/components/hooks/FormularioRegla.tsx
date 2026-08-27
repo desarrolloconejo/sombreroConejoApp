@@ -1,14 +1,15 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Check, CircleAlert, CircleCheck } from "lucide-react";
+import { Check } from "lucide-react";
 
 import { guardarRegla } from "@/actions/hooksDocumentacion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Alerta, Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
 import { ESTANDAR_INSERT, ESTANDAR_VOZ } from "@/lib/hooks/listas";
 import { ESTADO_INICIAL } from "@/types";
 import type { Empresa, ReglaHook } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
  * El alta y la edicion de una regla.
@@ -29,6 +30,10 @@ export function FormularioRegla({
 }) {
   const [estado, enviar, enviando] = useActionState(guardarRegla, ESTADO_INICIAL);
 
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
+
   const [empresaId, setEmpresaId] = useState(
     regla?.empresaId ? String(regla.empresaId) : "",
   );
@@ -47,15 +52,6 @@ export function FormularioRegla({
         {regla && <input type="hidden" name="id" value={regla.id} />}
         <input type="hidden" name="empresaId" value={empresaId} />
 
-        {estado.mensaje && (
-          <Alerta
-            tono={estado.ok ? "info" : "aviso"}
-            icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
-            className="mb-[18px]"
-          >
-            {estado.mensaje}
-          </Alerta>
-        )}
 
         <SeparadorPanel>A quien se aplica</SeparadorPanel>
 

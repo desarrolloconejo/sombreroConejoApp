@@ -2,11 +2,12 @@
 
 import { useActionState } from "react";
 import type { CSSProperties } from "react";
-import { CircleAlert, Mail, Phone, Save, User } from "lucide-react";
+import { Mail, Phone, Save, User } from "lucide-react";
 
 import { actualizarPerfil } from "@/actions/perfil";
-import { Alerta, Boton, Campo, CampoFijo } from "@/components/ui";
+import { Boton, Campo, CampoFijo } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
  * Los datos personales.
@@ -35,6 +36,10 @@ export function FormularioDatos({
 }) {
   const [estado, enviar, enviando] = useActionState(actualizarPerfil, ESTADO_INICIAL);
 
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
+
   return (
     <section
       style={{ "--retraso": "0.12s" } as CSSProperties}
@@ -54,15 +59,6 @@ export function FormularioDatos({
       </header>
 
       <form action={enviar} noValidate>
-        {estado.mensaje && (
-          <Alerta
-            tono={estado.ok ? "info" : "aviso"}
-            icono={estado.ok ? undefined : <CircleAlert />}
-            className="mb-[15px]"
-          >
-            {estado.mensaje}
-          </Alerta>
-        )}
 
         <div className="grid gap-[15px] sm:grid-cols-2">
           <Campo

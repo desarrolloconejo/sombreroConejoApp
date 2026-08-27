@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { CircleAlert, CircleCheck, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import { borrarFicha } from "@/actions/hooks";
-import { Alerta, Boton, BotonEnlace } from "@/components/ui";
+import { Boton, BotonEnlace } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
 import type { FichaConResultado } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
  * La confirmacion de borrar una ficha.
@@ -30,21 +31,16 @@ export function ConfirmarBorradoFicha({
 }) {
   const [estado, enviar, enviando] = useActionState(borrarFicha, ESTADO_INICIAL);
 
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
+
   const conResultados = ficha.estado === "medida" || ficha.resultado !== null;
 
   return (
     <form action={enviar}>
       <input type="hidden" name="id" value={ficha.id} />
 
-      {estado.mensaje && (
-        <Alerta
-          tono={estado.ok ? "info" : "aviso"}
-          icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
-          className="mb-4"
-        >
-          {estado.mensaje}
-        </Alerta>
-      )}
 
       <p>
         Se borrara{" "}

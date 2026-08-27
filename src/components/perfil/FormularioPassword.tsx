@@ -2,12 +2,13 @@
 
 import { useActionState, useState } from "react";
 import type { CSSProperties } from "react";
-import { Check, Circle, CircleAlert, KeyRound, Lock } from "lucide-react";
+import { Check, Circle, KeyRound, Lock } from "lucide-react";
 
 import { cambiarPassword } from "@/actions/perfil";
-import { Alerta, Boton, Campo } from "@/components/ui";
+import { Boton, Campo } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
 import type { EstadoFormulario } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
  * El cambio de contrasena.
@@ -42,6 +43,10 @@ const VACIOS: Campos = { actual: "", nueva: "", confirmacion: "" };
 
 export function FormularioPassword() {
   const [estado, enviar, enviando] = useActionState(cambiarPassword, ESTADO_INICIAL);
+
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
 
   /**
    * Los tres campos van controlados y junto a ellos se guarda el estado con
@@ -82,15 +87,6 @@ export function FormularioPassword() {
       </header>
 
       <form action={enviar} noValidate>
-        {estado.mensaje && (
-          <Alerta
-            tono={estado.ok ? "info" : "aviso"}
-            icono={estado.ok ? undefined : <CircleAlert />}
-            className="mb-[15px]"
-          >
-            {estado.mensaje}
-          </Alerta>
-        )}
 
         <div className="grid gap-[15px] sm:grid-cols-2">
           <Campo

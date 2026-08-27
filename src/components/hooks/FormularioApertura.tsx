@@ -1,14 +1,15 @@
 "use client";
 
 import { useActionState } from "react";
-import { Check, CircleAlert, CircleCheck } from "lucide-react";
+import { Check, CircleAlert } from "lucide-react";
 
 import { guardarApertura } from "@/actions/hooksDocumentacion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Alerta, Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
 import { MECANISMOS, TERRITORIOS } from "@/lib/hooks/catalogo";
 import { ESTADO_INICIAL } from "@/types";
 import type { Apertura } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
  * El alta y la edicion de una apertura del catalogo.
@@ -83,6 +84,10 @@ export function FormularioApertura({
   hrefCancelar: string;
 }) {
   const [estado, enviar, enviando] = useActionState(guardarApertura, ESTADO_INICIAL);
+
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
   const errores = estado.errores ?? {};
   const marcados = apertura?.mecanismos ?? [];
 
@@ -91,15 +96,6 @@ export function FormularioApertura({
       <PanelCuerpo>
         {apertura && <input type="hidden" name="id" value={apertura.id} />}
 
-        {estado.mensaje && (
-          <Alerta
-            tono={estado.ok ? "info" : "aviso"}
-            icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
-            className="mb-[18px]"
-          >
-            {estado.mensaje}
-          </Alerta>
-        )}
 
         <SeparadorPanel>Con que intencion</SeparadorPanel>
 

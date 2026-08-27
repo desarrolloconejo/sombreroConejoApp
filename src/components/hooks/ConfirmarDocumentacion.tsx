@@ -1,15 +1,16 @@
 "use client";
 
 import { useActionState } from "react";
-import { ArchiveRestore, CircleAlert, CircleCheck, Trash2, Undo2 } from "lucide-react";
+import { ArchiveRestore, Trash2, Undo2 } from "lucide-react";
 
 import {
   borrarReferencia,
   borrarRegla,
   cambiarEstadoApertura,
 } from "@/actions/hooksDocumentacion";
-import { Alerta, Boton, BotonEnlace } from "@/components/ui";
+import { Boton, BotonEnlace } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
  * Las confirmaciones de Documentacion: borrar una regla, borrar una referencia
@@ -65,6 +66,10 @@ export function ConfirmarDocumentacion({
   hrefCerrar: string;
 }) {
   const [estado, enviar, enviando] = useActionState(ACCIONES[caso], ESTADO_INICIAL);
+
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
   const boton = BOTONES[caso];
   const Icono = boton.icono;
 
@@ -74,15 +79,6 @@ export function ConfirmarDocumentacion({
       {/* La misma action retira y repone; lo decide este campo. */}
       {caso === "reponer-apertura" && <input type="hidden" name="reponer" value="si" />}
 
-      {estado.mensaje && (
-        <Alerta
-          tono={estado.ok ? "info" : "aviso"}
-          icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
-          className="mb-4"
-        >
-          {estado.mensaje}
-        </Alerta>
-      )}
 
       {/*
         Se dice que pasa Y que no pasa. Lo segundo es lo que quita el miedo a

@@ -1,14 +1,15 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { CircleAlert, Eraser, Zap } from "lucide-react";
+import { Eraser, Zap } from "lucide-react";
 
 import { auditarTexto } from "@/actions/hooks";
-import { Alerta, Boton, Selector } from "@/components/ui";
+import { Boton, Selector } from "@/components/ui";
 import { contarPalabras } from "@/lib/hooks/auditor";
 import { MINIMO_PALABRAS } from "@/lib/hooks/listas";
 import { ESTADO_AUDITORIA } from "@/types";
 import type { Empresa } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 import { ResultadoAuditoria, ResultadoNeutro } from "./ResultadoAuditoria";
 
@@ -33,6 +34,9 @@ export function AuditorSuelto({
 }) {
   const [estado, enviar, enviando] = useActionState(auditarTexto, ESTADO_AUDITORIA);
 
+  // El resultado sale como aviso flotante.
+  useAvisoDeAccion(estado);
+
   const [hablado, setHablado] = useState("");
   const [insertTitulo, setInsertTitulo] = useState("");
   const [empresaId, setEmpresaId] = useState("");
@@ -49,12 +53,6 @@ export function AuditorSuelto({
         className="surge flex flex-col gap-5 rounded-[15px] border border-borde bg-superficie px-[26px] py-6 shadow-[var(--sombra)]"
       >
         <input type="hidden" name="empresaId" value={empresaId} />
-
-        {estado.mensaje && !estado.resultado && (
-          <Alerta tono="aviso" icono={<CircleAlert />}>
-            {estado.mensaje}
-          </Alerta>
-        )}
 
         <Selector
           id="suelto-empresa"

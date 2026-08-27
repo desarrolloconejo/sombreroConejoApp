@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { CircleAlert, KeyRound } from "lucide-react";
+import { KeyRound } from "lucide-react";
 
 import { restablecerPassword } from "@/actions/usuarios";
-import { Alerta, Boton, BotonEnlace } from "@/components/ui";
+import { Boton, BotonEnlace } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
 import type { UsuarioCompleto } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 import { CredencialProvisional } from "./CredencialProvisional";
 
@@ -33,6 +34,10 @@ export function ConfirmarRestablecer({
     ESTADO_INICIAL,
   );
 
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
+
   const quien = `${usuario.nombre} ${usuario.apellido}`;
 
   if (estado.ok && estado.credencial) {
@@ -58,11 +63,6 @@ export function ConfirmarRestablecer({
     <form action={enviar}>
       <input type="hidden" name="id" value={usuario.id} />
 
-      {estado.mensaje && (
-        <Alerta tono="aviso" icono={<CircleAlert />} className="mb-4">
-          {estado.mensaje}
-        </Alerta>
-      )}
 
       {/*
         Se dice que pasa Y que no pasa. Lo segundo es lo que quita el miedo a

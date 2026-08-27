@@ -1,13 +1,14 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { CircleAlert, CircleCheck, Save } from "lucide-react";
+import { Save } from "lucide-react";
 
 import { guardarResultados } from "@/actions/hooksDocumentacion";
-import { Alerta, Boton, Campo, Selector } from "@/components/ui";
+import { Boton, Campo, Selector } from "@/components/ui";
 import { metricaDe, objetivoDe } from "@/lib/hooks/catalogo";
 import { ESTADO_INICIAL } from "@/types";
 import type { FichaConResultado } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
  * El registro de metricas: el final del recorrido.
@@ -38,6 +39,10 @@ function aNumero(texto: string): number {
 
 export function FormularioMetricas({ fichas }: { fichas: FichaConResultado[] }) {
   const [estado, enviar, enviando] = useActionState(guardarResultados, ESTADO_INICIAL);
+
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
 
   const [fichaId, setFichaId] = useState("");
   const [impresiones, setImpresiones] = useState("");
@@ -84,15 +89,6 @@ export function FormularioMetricas({ fichas }: { fichas: FichaConResultado[] }) 
         </div>
 
         <div className="px-[22px] py-[22px]">
-          {estado.mensaje && (
-            <Alerta
-              tono={estado.ok ? "info" : "aviso"}
-              icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
-              className="mb-5"
-            >
-              {estado.mensaje}
-            </Alerta>
-          )}
 
           <div className="mb-5 rounded-xl border border-[#d77474] bg-[#fff2f1] px-4 py-3.5 text-[12.5px] leading-relaxed text-[#7f2b2b] dark-tema:bg-[rgb(215_116_116/0.12)] dark-tema:text-[#f0b8b8]">
             La lectura organica es direccional; no conviertas pequenas

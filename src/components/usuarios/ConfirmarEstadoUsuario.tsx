@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { CircleAlert, CircleCheck, Power, PowerOff } from "lucide-react";
+import { Power, PowerOff } from "lucide-react";
 
 import { cambiarEstadoUsuario } from "@/actions/usuarios";
-import { Alerta, Boton, BotonEnlace } from "@/components/ui";
+import { Boton, BotonEnlace } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
 import type { UsuarioCompleto } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
  * La confirmacion de activar o desactivar una cuenta.
@@ -31,6 +32,10 @@ export function ConfirmarEstadoUsuario({
     ESTADO_INICIAL,
   );
 
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
+
   const desactivar = usuario.activo;
   const quien = `${usuario.nombre} ${usuario.apellido}`;
 
@@ -38,15 +43,6 @@ export function ConfirmarEstadoUsuario({
     <form action={enviar}>
       <input type="hidden" name="id" value={usuario.id} />
 
-      {estado.mensaje && (
-        <Alerta
-          tono={estado.ok ? "info" : "aviso"}
-          icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
-          className="mb-4"
-        >
-          {estado.mensaje}
-        </Alerta>
-      )}
 
       {/*
         Se dice que pasa Y que no pasa. Lo segundo es lo que de verdad quita el

@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { CircleAlert, CircleCheck, Save, Zap } from "lucide-react";
+import { Save, Zap } from "lucide-react";
 
 import { enviarCanvas } from "@/actions/hooks";
-import { Alerta, Boton, Campo, Selector } from "@/components/ui";
+import { Boton, Campo, Selector } from "@/components/ui";
 import { contarPalabras } from "@/lib/hooks/auditor";
 import { metricaDe, OBJETIVOS, PLATAFORMAS } from "@/lib/hooks/catalogo";
 import { ESTADO_AUDITORIA } from "@/types";
 import type { Empresa, FichaHook } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 import { FichaProduccion, type ValoresFicha } from "./FichaProduccion";
 import { ResultadoAuditoria } from "./ResultadoAuditoria";
@@ -123,6 +124,10 @@ export function FormularioHook({
   hrefNuevaEmpresa: string;
 }) {
   const [estado, enviar, enviando] = useActionState(enviarCanvas, ESTADO_AUDITORIA);
+
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
   const [campos, setCampos] = useState<Campos>(() => desdeFicha(ficha, plantilla));
 
   /*
@@ -177,14 +182,6 @@ export function FormularioHook({
         <input key={clave} type="hidden" name={clave} value={valor} />
       ))}
 
-      {estado.mensaje && (
-        <Alerta
-          tono={estado.ok ? "info" : "aviso"}
-          icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
-        >
-          {estado.mensaje}
-        </Alerta>
-      )}
 
       {/* ================= contexto ================= */}
       <section className="surge rounded-[15px] border border-borde bg-superficie px-[26px] py-6 shadow-[var(--sombra)]">

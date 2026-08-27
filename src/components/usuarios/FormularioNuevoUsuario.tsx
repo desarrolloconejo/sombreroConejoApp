@@ -6,7 +6,6 @@ import {
   Briefcase,
   Building2,
   CircleAlert,
-  CircleCheck,
   Mail,
   Phone,
   Plus,
@@ -20,6 +19,7 @@ import { Alerta, Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
 import { CredencialProvisional } from "./CredencialProvisional";
 import { ESTADO_INICIAL } from "@/types";
 import type { Cargo, Empresa, NombreRol, Rol, TipoUsuario } from "@/types";
+import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
  * Formulario de alta, dentro del panel lateral.
@@ -128,6 +128,10 @@ export function FormularioNuevoUsuario({
   hrefCancelar: string;
 }) {
   const [estado, enviar, enviando] = useActionState(crearUsuario, ESTADO_INICIAL);
+
+  // El resultado sale como aviso flotante: en un formulario largo, una alerta
+  // arriba queda fuera de la vista de quien acaba de pulsar el boton.
+  useAvisoDeAccion(estado);
   const [tipo, setTipo] = useState<TipoUsuario>("trabajador");
 
   const errores = estado.errores ?? {};
@@ -173,15 +177,6 @@ export function FormularioNuevoUsuario({
   return (
     <form action={enviar} noValidate className="flex min-h-0 flex-1 flex-col">
       <PanelCuerpo>
-      {estado.mensaje && (
-        <Alerta
-          tono={estado.ok ? "info" : "aviso"}
-          icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
-          className="mb-[18px]"
-        >
-          {estado.mensaje}
-        </Alerta>
-      )}
 
       <fieldset className="min-w-0">
         <legend className="sr-only">Tipo de usuario</legend>
