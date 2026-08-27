@@ -2,10 +2,18 @@ import type { Metadata } from "next";
 import { Plus } from "lucide-react";
 
 import { Wrapper } from "@/components/layout/Wrapper";
-import { Listado, ListadoVacio } from "@/components/listado";
+import {
+  Listado,
+  ListadoVacio,
+  ModalConfirmacion,
+  PanelLateral,
+} from "@/components/listado";
 import { columnasFichas, filtrosFichas } from "@/components/hooks/ColumnasFichas";
+import { ConfirmarBorradoFicha } from "@/components/hooks/ConfirmarBorradoFicha";
+import { DetalleFicha } from "@/components/hooks/DetalleFicha";
 import { BotonEnlace } from "@/components/ui";
 import { leerEstadoListado } from "@/lib/parametros";
+import { conPanel } from "@/lib/urlListado";
 import { requerirCargo } from "@/lib/sesion";
 import * as empresasModelo from "@/models/empresas";
 import * as fichasModelo from "@/models/fichas";
@@ -76,7 +84,7 @@ export default async function PaginaHistorial(
     filtrosPermitidos: ["estado", "empresa", "objetivo"],
   });
 
-  const [pagina, empresas] = await Promise.all([
+  const [pagina, empresas, fichaPanel] = await Promise.all([
     fichasModelo.listar({
       busqueda: estado.busqueda || undefined,
       estado: comoEstado(estado.filtros.estado),
@@ -88,7 +96,16 @@ export default async function PaginaHistorial(
       porPagina: estado.porPagina,
     }),
     empresasModelo.listarActivas(),
+
+    // Solo se consulta la ficha que el panel va a mostrar. Si el id no
+    // corresponde a nadie devuelve null y no se abre nada, que es lo que pasa
+    // al recargar un "?panel=ver&id=999" viejo.
+    (estado.panel === "ver" || estado.panel === "borrar") && estado.panelId !== null
+      ? fichasModelo.buscarConResultado(estado.panelId)
+      : null,
   ]);
+
+  const hrefCerrar = conPanel(RUTA, estado, null);
 
   return (
     <Wrapper
@@ -126,6 +143,36 @@ export default async function PaginaHistorial(
               </BotonEnlace>
             }
           />
+        }
+        panel={
+          <>
+            {fichaPanel && estado.panel === "ver" && (
+              <PanelLateral
+                hrefCerrar={hrefCerrar}
+                kicker="Ficha de hook"
+                titulo={fichaPanel.empresaNombre ?? "Sin cliente"}
+                descripcion="La decision completa que se tomo antes de grabar, y lo que paso despues si llego a publicarse."
+              >
+                <DetalleFicha
+                  ficha={fichaPanel}
+                  hrefEditar={`/dashboard/hooks/nuevo?panel=editar&id=${fichaPanel.id}`}
+                  hrefPlantilla={`/dashboard/hooks/nuevo?panel=plantilla&id=${fichaPanel.id}`}
+                  hrefCerrar={hrefCerrar}
+                />
+              </PanelLateral>
+            )}
+
+            {fichaPanel && estado.panel === "borrar" && (
+              <ModalConfirmacion
+                hrefCerrar={hrefCerrar}
+                tono="aviso"
+                kicker="Borrar"
+                titulo="¿Borrar esta ficha?"
+              >
+                <ConfirmarBorradoFicha ficha={fichaPanel} hrefCerrar={hrefCerrar} />
+              </ModalConfirmacion>
+            )}
+          </>
         }
       />
     </Wrapper>
