@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import {
   Briefcase,
@@ -321,9 +322,22 @@ export function FormularioNuevoUsuario({
         ) : (
           <>
             {sinEmpresas ? (
+              /*
+                Este aviso era un callejon sin salida: decia que habia que
+                registrar la empresa y no existia el sitio donde hacerlo. El
+                alta vive en el modulo de hooks, que es donde tambien se
+                tropieza con ella al escribir una ficha.
+              */
               <Alerta icono={<CircleAlert />} className="col-span-2">
-                Todavia no hay ninguna empresa activa. Hay que registrar la
-                empresa antes de dar de alta a su persona de contacto.
+                Todavia no hay ninguna empresa activa. Hay que registrarla antes
+                de dar de alta a su persona de contacto:{" "}
+                <Link
+                  href="/dashboard/hooks/nuevo?panel=nuevo"
+                  className="font-semibold underline"
+                >
+                  registrar una empresa
+                </Link>
+                .
               </Alerta>
             ) : (
               <Selector

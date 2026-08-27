@@ -20,6 +20,7 @@ export const LIMITES = {
   cargo: 80,
   empresa: 120,
   rif: 20,
+  sector: 120,
   direccion: 200,
   passwordMinima: 8,
 } as const;
@@ -173,6 +174,42 @@ export function validarPerfil(
   }
 
   return resultado({ nombre, apellido, telefono }, errores);
+}
+
+/**
+ * Alta de una empresa cliente.
+ *
+ * Solo el nombre es obligatorio, y eso viene de la base: es la unica columna
+ * con NOT NULL y con un CHECK que exige que no quede en blanco. El resto se
+ * puede completar despues.
+ *
+ * El SECTOR merece una nota, porque parece un dato administrativo y no lo es:
+ * de el sale el escalon del medio de la resolucion de regla del auditor
+ * —cliente, luego sector, luego el estandar de la casa—. Una empresa sin
+ * sector se queda sin ese escalon.
+ */
+export function validarEmpresa(datos: FormData): Validacion<{
+  nombre: string;
+  rif: string | null;
+  sector: string | null;
+  telefono: string | null;
+  direccion: string | null;
+}> {
+  const nombre = limpiarTexto(datos.get("nombre"), LIMITES.empresa);
+  const rif = limpiarOpcional(datos.get("rif"), LIMITES.rif);
+  const sector = limpiarOpcional(datos.get("sector"), LIMITES.sector);
+  const telefono = limpiarOpcional(datos.get("telefono"), LIMITES.telefono);
+  const direccion = limpiarOpcional(datos.get("direccion"), LIMITES.direccion);
+
+  const errores: ErroresCampo = {};
+
+  if (!nombre) errores.nombre = "Escribe el nombre de la empresa";
+
+  if (telefono && !/^[\d\s+()-]{7,}$/.test(telefono)) {
+    errores.telefono = "El telefono solo puede tener numeros, espacios y + ( ) -";
+  }
+
+  return resultado({ nombre, rif, sector, telefono, direccion }, errores);
 }
 
 /** Cambio de contrasena desde el perfil. */

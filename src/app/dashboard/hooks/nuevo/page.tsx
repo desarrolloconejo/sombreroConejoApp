@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
+import { Building2 } from "lucide-react";
 
 import { Wrapper } from "@/components/layout/Wrapper";
+import { PanelLateral } from "@/components/listado";
+import { FormularioEmpresa } from "@/components/empresas/FormularioEmpresa";
 import { FormularioHook } from "@/components/hooks";
+import { BotonEnlace } from "@/components/ui";
 import { limitesPorDefecto } from "@/lib/hooks/auditor";
 import { leerEstadoListado } from "@/lib/parametros";
 import { requerirCargo } from "@/lib/sesion";
@@ -17,11 +21,17 @@ import * as reglasModelo from "@/models/reglasHook";
  * formulario porque dependen del cliente, y el cliente puede cambiar mientras
  * se escribe: se pasan los del que trae la ficha, y la action vuelve a
  * resolverlos con el definitivo al guardar.
+ *
+ * Aqui vive tambien el alta de empresas, y no es un capricho de colocacion:
+ * es donde uno se encuentra con que falta el cliente. La ficha exige uno, y
+ * antes el desplegable salia vacio sin explicacion y sin salida.
  */
 
 export const metadata: Metadata = {
   title: "Escribir un hook",
 };
+
+const RUTA = "/dashboard/hooks/nuevo";
 
 const MIGAS = [
   { texto: "Conejo App", href: "/dashboard" },
@@ -43,6 +53,8 @@ export default async function PaginaNuevoHook(
     ordenPorDefecto: "creadoEn",
   });
 
+  const abrirEmpresa = estado.panel === "nuevo";
+
   const [empresas, ficha] = await Promise.all([
     empresasModelo.listarActivas(),
     estado.panelId !== null ? fichasModelo.buscarPorId(estado.panelId) : null,
@@ -54,12 +66,29 @@ export default async function PaginaNuevoHook(
 
   const activos = limites ?? limitesPorDefecto();
 
+  // Se conserva el resto de la URL al abrir y cerrar el panel: si alguien
+  // estaba editando una ficha, el alta de empresa no puede perdersela.
+  const conservar = new URLSearchParams();
+  if (estado.panelId !== null && !abrirEmpresa) {
+    conservar.set("panel", estado.panel ?? "editar");
+    conservar.set("id", String(estado.panelId));
+  }
+
+  const hrefEmpresa = `${RUTA}?panel=nuevo`;
+  const hrefCerrar = conservar.toString() ? `${RUTA}?${conservar}` : RUTA;
+
   return (
     <Wrapper
       migas={MIGAS}
       kicker="03 / Hooks"
       titulo={ficha ? "Sigue donde lo dejaste" : "Escribe la decision, no la frase"}
       descripcion="Completa la decision antes de redactar. Al final genera una ficha que edicion puede ejecutar sin interpretar la idea."
+      accion={
+        <BotonEnlace href={hrefEmpresa} variante="fantasma" tamano="chico">
+          <Building2 aria-hidden="true" />
+          Nueva empresa
+        </BotonEnlace>
+      }
     >
       <FormularioHook
         empresas={empresas}
@@ -67,7 +96,19 @@ export default async function PaginaNuevoHook(
         limiteVoz={activos.maxPalabrasVoz}
         limiteInsert={activos.maxPalabrasInsert}
         etiquetaRegla={activos.etiqueta}
+        hrefNuevaEmpresa={hrefEmpresa}
       />
+
+      {abrirEmpresa && (
+        <PanelLateral
+          hrefCerrar={hrefCerrar}
+          kicker="Alta de cliente"
+          titulo="Nueva empresa"
+          descripcion="Solo hace falta el nombre. El resto se puede completar despues."
+        >
+          <FormularioEmpresa hrefCancelar={hrefCerrar} />
+        </PanelLateral>
+      )}
     </Wrapper>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { CircleAlert, CircleCheck, Save, Zap } from "lucide-react";
 
@@ -89,6 +90,7 @@ export function FormularioHook({
   limiteVoz,
   limiteInsert,
   etiquetaRegla,
+  hrefNuevaEmpresa,
 }: {
   empresas: Empresa[];
   ficha: FichaHook | null;
@@ -97,6 +99,9 @@ export function FormularioHook({
   limiteVoz: number;
   limiteInsert: number;
   etiquetaRegla: string;
+
+  /** Salida cuando falta el cliente. Sin esto el desplegable es un muro. */
+  hrefNuevaEmpresa: string;
 }) {
   const [estado, enviar, enviando] = useActionState(enviarCanvas, ESTADO_AUDITORIA);
   const [campos, setCampos] = useState<Campos>(() => desdeFicha(ficha));
@@ -169,6 +174,21 @@ export function FormularioHook({
               ayuda={`Decide la regla del auditor. Ahora manda «${etiquetaRegla}».`}
               error={errores.empresaId}
             />
+
+            {/*
+              Sin empresas el desplegable salia vacio, obligatorio y sin
+              explicacion: no habia forma de guardar una ficha ni de saber por
+              que. Ahora dice que falta y a donde ir.
+            */}
+            {empresas.length === 0 && (
+              <p className="mt-2 text-[11.5px] leading-relaxed text-blackberry dark-tema:text-[#e9a9cd]">
+                Todavia no hay ninguna empresa registrada.{" "}
+                <Link href={hrefNuevaEmpresa} className="font-semibold underline">
+                  Registra la primera
+                </Link>{" "}
+                para poder escribir la ficha.
+              </p>
+            )}
           </div>
 
           <Selector
