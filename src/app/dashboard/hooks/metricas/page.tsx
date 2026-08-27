@@ -26,7 +26,7 @@ const MIGAS = [
 ];
 
 export default async function PaginaMetricas() {
-  await requerirCargo("redes");
+  const usuario = await requerirCargo("redes");
 
   // Se piden mas de las que caben en un desplegable comodo y se cortan aqui:
   // si hay veinte pendientes, el problema no es el desplegable.
@@ -37,7 +37,9 @@ export default async function PaginaMetricas() {
     porPagina: 50,
   });
 
-  const conteo = await fichasModelo.contarPorEstado();
+  // El recuento es el de quien mira, igual que en la portada: dice cuantas
+  // piezas propias faltan por cerrar, no cuantas tiene la agencia.
+  const conteo = await fichasModelo.contarPorEstado(usuario.id);
 
   return (
     <Wrapper

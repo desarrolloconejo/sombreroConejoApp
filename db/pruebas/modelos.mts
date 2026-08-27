@@ -163,7 +163,7 @@ async function principal(): Promise<void> {
     `nota ${auditada?.notaAuditor}, ${auditada?.estado}`,
   );
 
-  const enCurso = await fichas.enCurso();
+  const enCurso = await fichas.enCurso(creadora.id);
   comprobar(
     "La pieza en curso prefiere la que espera numeros",
     enCurso?.id === ficha.id && enCurso.estado === "auditada",
@@ -237,7 +237,7 @@ async function principal(): Promise<void> {
     `${cuantos?.total} fila(s), impresiones ${relei?.impresiones}`,
   );
 
-  const conteo = await fichas.contarPorEstado();
+  const conteo = await fichas.contarPorEstado(creadora.id);
   comprobar("Conteo por estado", conteo.medida >= 1, JSON.stringify(conteo));
 
   // ------------------------------------------------------------ referencias

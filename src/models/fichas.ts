@@ -17,9 +17,23 @@ import type {
 /**
  * Consultas sobre fichas_hook.
  *
- * El alcance es de EQUIPO: ninguna consulta filtra por usuario. `creado_por`
- * se lee para atribuir la ficha, no para esconderla. Si algun dia hiciera
- * falta lo contrario, el sitio para ponerlo es aqui y no en las pages.
+ * EL ALCANCE ES MIXTO, Y ES DELIBERADO
+ * ------------------------------------
+ * Cada quien trabaja sobre SU pieza, pero el historial es del equipo. Son dos
+ * necesidades distintas y por eso hay dos comportamientos:
+ *
+ * - `enCurso`, `ultimaMedida` y `contarPorEstado` reciben un usuario y filtran
+ *   por el. Alimentan la portada del modulo, que responde "que estoy haciendo
+ *   yo": con el alcance de equipo, a alguien le aparecia como pieza en curso
+ *   el borrador de otro, y el porcentaje de avance no era el suyo.
+ *
+ * - `listar`, `buscarPorId` y `buscarConResultado` NO filtran. Son el
+ *   historial, donde se consulta y se aprende de lo que hizo la agencia
+ *   entera, y donde se puede ver, editar y borrar lo de cualquiera.
+ *
+ * Filtrar la lectura no protege nada por si solo: `actualizar`, `borrar` y
+ * `guardarNota` siguen yendo por id, asi que si algun dia hiciera falta
+ * restringir quien puede tocar que, la comprobacion va en la action, no aqui.
  */
 
 const COLUMNAS = `
@@ -217,33 +231,47 @@ export async function listar(
  * una pieza publicada sin metricas es la que mas urge cerrar: el video ya
  * esta fuera y los datos se enfrian.
  */
-export async function enCurso(): Promise<FichaConResultado | null> {
+export async function enCurso(
+  creadoPor: number,
+): Promise<FichaConResultado | null> {
   return consultarUno<FichaConResultado>(
     `SELECT ${COLUMNAS}, ${RESULTADO}, ${HOOK_RATE}
      ${DESDE}
      LEFT JOIN resultados_hook r ON r.ficha_id = f.id
-     WHERE f.estado <> 'medida'
+     WHERE f.creado_por = $1 AND f.estado <> 'medida'
      ORDER BY (f.estado = 'auditada') DESC, f.actualizado_en DESC
      LIMIT 1`,
+    [creadoPor],
   );
 }
 
 /** La ultima terminada, para el cuarto estado de la tarjeta de la raiz. */
-export async function ultimaMedida(): Promise<FichaConResultado | null> {
+export async function ultimaMedida(
+  creadoPor: number,
+): Promise<FichaConResultado | null> {
   return consultarUno<FichaConResultado>(
     `SELECT ${COLUMNAS}, ${RESULTADO}, ${HOOK_RATE}
      ${DESDE}
      LEFT JOIN resultados_hook r ON r.ficha_id = f.id
-     WHERE f.estado = 'medida'
+     WHERE f.creado_por = $1 AND f.estado = 'medida'
      ORDER BY f.actualizado_en DESC
      LIMIT 1`,
+    [creadoPor],
   );
 }
 
 /** Cuantas fichas hay en cada estado. Alimenta los contadores del recorrido. */
-export async function contarPorEstado(): Promise<Record<EstadoFicha, number>> {
+export async function contarPorEstado(
+  creadoPor: number,
+): Promise<Record<EstadoFicha, number>> {
+  // Esta es la unica consulta que va contra la tabla pelada, sin el JOIN de
+  // las demas, asi que la columna se nombra sin alias.
   const filas = await consultar<{ estado: EstadoFicha; total: string }>(
-    "SELECT estado, count(*)::text AS total FROM fichas_hook GROUP BY estado",
+    `SELECT estado, count(*)::text AS total
+     FROM fichas_hook
+     WHERE creado_por = $1
+     GROUP BY estado`,
+    [creadoPor],
   );
 
   const conteo: Record<EstadoFicha, number> = {

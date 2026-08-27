@@ -34,12 +34,14 @@ export const metadata: Metadata = {
 const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Hooks" }];
 
 export default async function PaginaHooks() {
-  await requerirCargo("redes");
+  const usuario = await requerirCargo("redes");
 
   const [pieza, ultima, conteo, aperturas, reglas, referencias] = await Promise.all([
-    fichasModelo.enCurso(),
-    fichasModelo.ultimaMedida(),
-    fichasModelo.contarPorEstado(),
+    // La portada responde "que estoy haciendo YO", asi que las tres van
+    // filtradas por quien mira. El historial sigue siendo del equipo.
+    fichasModelo.enCurso(usuario.id),
+    fichasModelo.ultimaMedida(usuario.id),
+    fichasModelo.contarPorEstado(usuario.id),
     aperturasModelo.contarActivas(),
     reglasModelo.listar(),
     referenciasModelo.contar(),
