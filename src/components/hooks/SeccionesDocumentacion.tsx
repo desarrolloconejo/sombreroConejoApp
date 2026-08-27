@@ -78,6 +78,7 @@ function Accion({
   return (
     <Link
       href={href}
+      scroll={false}
       aria-label={etiqueta}
       title={etiqueta}
       className={[
@@ -281,6 +282,7 @@ export function SeccionAperturas({
         <div className="flex flex-wrap gap-[7px]">
           <Link
             href={hrefTerritorio(null)}
+            scroll={false}
             className={[
               "suave inline-flex min-h-8 items-center rounded-full border-[1.5px] px-3 text-xs font-semibold",
               territorioActivo === null
@@ -295,6 +297,7 @@ export function SeccionAperturas({
             <Link
               key={t.slug}
               href={hrefTerritorio(t.slug)}
+              scroll={false}
               className={[
                 "suave inline-flex min-h-8 items-center rounded-full border-[1.5px] px-3 text-xs font-semibold",
                 territorioActivo === t.slug
@@ -330,6 +333,7 @@ export function SeccionAperturas({
           {hrefRetiradas && (
             <Link
               href={hrefRetiradas(!verRetiradas)}
+              scroll={false}
               aria-pressed={verRetiradas}
               className={[
                 "suave inline-flex min-h-8 items-center gap-1.5 rounded-full border-[1.5px] px-3 text-[11.5px] font-semibold",

@@ -63,6 +63,7 @@ export function PanelLateral({
 
       <Link
         href={hrefCerrar}
+        scroll={false}
         aria-hidden="true"
         tabIndex={-1}
         className="panel-velo fixed inset-0 z-40 bg-black/[0.42]"
@@ -98,6 +99,7 @@ export function PanelLateral({
 
           <Link
             href={hrefCerrar}
+            scroll={false}
             aria-label="Cerrar el panel"
             title="Cerrar"
             className={[

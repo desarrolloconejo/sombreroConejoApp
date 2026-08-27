@@ -53,6 +53,7 @@ export function ListadoVacio({
       {filtrado && hrefLimpiar && (
         <Link
           href={hrefLimpiar}
+          scroll={false}
           className={[
             "mt-5 inline-flex min-h-10 items-center rounded-full border-[1.5px] border-borde",
             "px-[15px] text-[12.5px] font-semibold text-suave",

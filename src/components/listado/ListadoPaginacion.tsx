@@ -53,6 +53,15 @@ export function numerosDePagina(actual: number, total: number): (number | null)[
   return [1, null, actual - 1, actual, actual + 1, null, total];
 }
 
+/*
+ * La paginacion es la UNICA navegacion del listado que SI sube al principio.
+ *
+ * En los filtros, el orden y los botones de fila se conserva la posicion con
+ * `scroll={false}`, porque ahi el contenido sigue siendo el mismo y perder el
+ * sitio es una molestia pura. Aqui no: cambiar de pagina sustituye la lista
+ * entera, asi que quedarse a media altura dejaria a la vista el medio de unos
+ * registros que no se han leido. Subir es lo correcto.
+ */
 function Extremo({
   href,
   etiqueta,

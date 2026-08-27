@@ -66,6 +66,7 @@ export function ModalConfirmacion({
       */}
       <Link
         href={hrefCerrar}
+        scroll={false}
         aria-hidden="true"
         tabIndex={-1}
         className="modal-velo fixed inset-0 z-40 bg-black/[0.45]"

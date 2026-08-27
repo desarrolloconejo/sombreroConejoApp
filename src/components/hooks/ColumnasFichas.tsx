@@ -46,6 +46,7 @@ function AccionFila({
   return (
     <Link
       href={href}
+      scroll={false}
       aria-label={etiqueta}
       title={etiqueta}
       className={[

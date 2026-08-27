@@ -107,6 +107,7 @@ export function ListadoTabla<T>({
               const contenido = columna.ordenable ? (
                 <Link
                   href={conOrden(ruta, estado, columna.clave)}
+                  scroll={false}
                   className={[
                     "inline-flex min-h-11 items-center gap-[5px]",
                     "suave hover:text-texto",

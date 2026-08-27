@@ -69,6 +69,7 @@ export function ListadoFiltros({
                   <li key={opcion.valor || "todos"}>
                     <Link
                       href={conFiltro(ruta, estado, filtro.clave, opcion.valor || null)}
+                      scroll={false}
                       aria-current={activa ? "true" : undefined}
                       className={[
                         OPCION,
@@ -95,6 +96,7 @@ export function ListadoFiltros({
       {hayAlguno && (
         <Link
           href={sinFiltros(ruta, estado)}
+          scroll={false}
           className={[
             // En columna no hay margen automatico que empuje: se centra, y
             // desde sm se va al extremo derecho de la fila.

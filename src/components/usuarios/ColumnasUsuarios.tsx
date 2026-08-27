@@ -47,6 +47,11 @@ const NOMBRE_ROL: Record<NombreRol, string> = {
  * Son enlaces, no botones: abren un panel o un dialogo, y eso aqui significa
  * cambiar un parametro de la URL. Asi se puede compartir el enlace de "editar
  * a Fulano" y el boton atras del navegador cierra lo que se abrio.
+ *
+ * `scroll={false}` porque, sin el, Next sube al principio en cada navegacion.
+ * En una lista larga eso significa pulsar un boton de la fila 40 y perder de
+ * vista la fila 40: hay que volver a bajar a buscarla despues de cerrar el
+ * panel. La misma razon vale para los filtros y para el orden.
  */
 function AccionFila({
   href,
@@ -62,6 +67,7 @@ function AccionFila({
   return (
     <Link
       href={href}
+      scroll={false}
       aria-label={etiqueta}
       title={etiqueta}
       className={[
