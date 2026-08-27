@@ -1,0 +1,41 @@
+{
+  "name": "sombrero-conejo-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aplicacion web para centralizar y automatizar los procesos de El Conejo del Sombrero",
+  "scripts": {
+    "dev": "next dev",
+    "dev:webpack": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "seed": "node --env-file-if-exists=.env db/seed.mts",
+    "prueba:auditor": "npx tsx db/pruebas/auditor.mts",
+    "prueba:modelos": "npx tsx db/pruebas/modelos.mts",
+    "sql:produccion": "node db/generarSql.mts"
+  },
+  "dependencies": {
+    "bcryptjs": "3.0.3",
+    "jose": "6.2.10",
+    "lucide-react": "1.34.0",
+    "next": "16.3.2",
+    "pg": "8.23.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^24",
+    "@types/pg": "^8",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

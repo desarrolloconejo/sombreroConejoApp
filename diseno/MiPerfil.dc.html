@@ -1,0 +1,436 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600..900&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; }
+    a { color: #602249; text-decoration: none; }
+    a:hover { color: #321327; }
+
+    .app {
+      --navy: #051a2a; --gold: #fae890; --blackberry: #602249; --violet: #321327;
+      --fondo: #f2f4f6; --superficie: #ffffff; --texto: #040404;
+      --suave: #5a6b76; --borde: #e3e7ea; --campo: #f6f8f9; --acento: #602249;
+      --sombra: 0 1px 2px rgba(5,26,42,.06), 0 8px 24px rgba(5,26,42,.05);
+
+      width: 1440px; height: 900px; display: flex; overflow: hidden;
+      background: var(--fondo); color: var(--texto);
+      font-family: Poppins, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+    }
+    .app.oscuro {
+      --fondo: #041521; --superficie: #0a2436; --texto: #ffffff;
+      --suave: #9db0be; --borde: #14344a; --campo: #08283c; --acento: #fae890;
+      --sombra: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    }
+    .voz { font-family: Fraunces, Georgia, serif; font-optical-sizing: auto; }
+
+    /* --- lateral --- */
+    .lateral { width: 268px; flex-shrink: 0; background: var(--navy); color: #fff;
+      display: flex; flex-direction: column; padding: 26px 18px 20px;
+      border-right: 1px solid rgba(250,232,144,.10); }
+    .marca { display: flex; align-items: center; gap: 12px; padding: 0 8px 26px; }
+    .marca svg { width: 34px; height: 34px; color: var(--gold); }
+    .marca-txt b { display: block; font-size: 17px; font-weight: 700; letter-spacing: -.015em; }
+    .marca-txt span { display: block; font-size: 10.5px; color: var(--gold); letter-spacing: .1em; text-transform: uppercase; margin-top: 5px; }
+    .grupo { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.42);
+      padding: 0 10px; margin: 14px 0 8px; font-weight: 600; }
+    .nav { display: flex; flex-direction: column; gap: 3px; }
+    .item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px;
+      font-size: 14px; font-weight: 500; color: rgba(255,255,255,.74); cursor: pointer;
+      transition: background .18s ease, color .18s ease, transform .18s ease; }
+    .item svg { width: 19px; height: 19px; flex-shrink: 0; }
+    .item:hover { background: rgba(96,34,73,.55); color: #fff; transform: translateY(-2px); }
+    .item.activo { background: var(--gold); color: var(--navy); font-weight: 600; }
+    .item.pronto { color: rgba(255,255,255,.34); }
+    .item.pronto:hover { background: transparent; color: rgba(255,255,255,.34); transform: none; }
+    .pastilla { margin-left: auto; font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 2px 7px; font-weight: 600; }
+    .pie { margin-top: auto; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.1); }
+    .yo { display: flex; align-items: center; gap: 11px; padding: 9px 8px; border-radius: 11px; }
+    .av-mini { width: 38px; height: 38px; border-radius: 50%; background: var(--gold); color: var(--navy);
+      display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+    .yo b { display: block; font-size: 13px; font-weight: 600; }
+    .yo span { display: block; font-size: 11px; color: var(--gold); }
+
+    /* --- principal --- */
+    .principal { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .barra { height: 68px; flex-shrink: 0; display: flex; align-items: center; gap: 16px; padding: 0 34px;
+      background: var(--superficie); border-bottom: 1px solid var(--borde); }
+    .icono-btn { margin-left: auto; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+      color: var(--suave); border: 1px solid var(--borde); background: transparent; cursor: pointer; position: relative;
+      transition: background .18s ease, color .18s ease, transform .18s ease, border-color .18s ease; }
+    .icono-btn svg { width: 18px; height: 18px; }
+    .icono-btn:hover { background: var(--navy); border-color: var(--navy); color: var(--gold); transform: translateY(-2px); }
+    .punto { position: absolute; top: 9px; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--blackberry); }
+    .app.oscuro .punto { background: var(--gold); }
+    .buscar { flex: 1; max-width: 420px; display: flex; align-items: center; gap: 9px; background: var(--fondo);
+      border: 1px solid var(--borde); border-radius: 10px; padding: 9px 13px; color: var(--suave); font-size: 13px; }
+    .buscar svg { width: 16px; height: 16px; }
+
+    .lienzo { flex: 1; overflow: hidden; padding: 28px 34px; }
+    .migas { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--suave); margin-bottom: 13px; }
+    .migas svg { width: 13px; height: 13px; opacity: .5; }
+    .migas .hoy { color: var(--texto); font-weight: 600; }
+    .cabecera { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+      padding-bottom: 20px; border-bottom: 1px solid var(--borde); margin-bottom: 24px; }
+    .kicker { font-size: 13px; font-weight: 700; color: var(--acento); margin: 0 0 6px; }
+    h1 { font-size: 36px; font-weight: 800; letter-spacing: -.03em; margin: 0; line-height: 1.05; }
+    .sub { font-size: 13.5px; color: var(--suave); margin: 8px 0 0; }
+
+    .btn { display: inline-flex; align-items: center; gap: 9px; border: none; border-radius: 12px;
+      padding: 12px 20px; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+      background: var(--navy); color: #fff;
+      transition: background .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease; }
+    .btn svg { width: 17px; height: 17px; }
+    .btn:hover { background: var(--blackberry); transform: translateY(-3px); box-shadow: 0 10px 22px rgba(96,34,73,.28); }
+    .btn:active { background: var(--violet); transform: translateY(-1px); }
+    .app.oscuro .btn { background: var(--gold); color: var(--navy); }
+    .app.oscuro .btn:hover { background: #ffffff; }
+
+    .btn.fantasma { background: transparent; color: var(--texto); border: 1.5px solid var(--borde); }
+    .btn.fantasma:hover { background: var(--navy); border-color: var(--navy); color: var(--gold); box-shadow: none; }
+    .app.oscuro .btn.fantasma { background: transparent; color: var(--texto); border-color: var(--borde); }
+    .app.oscuro .btn.fantasma:hover { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+
+    .btn.peligro { background: transparent; color: var(--blackberry); border: 1.5px solid rgba(96,34,73,.4); }
+    .btn.peligro:hover { background: var(--blackberry); color: #fff; border-color: var(--blackberry); }
+    .app.oscuro .btn.peligro { color: #e9a9cd; border-color: rgba(233,169,205,.35); }
+    .app.oscuro .btn.peligro:hover { background: var(--blackberry); color: #fff; }
+
+    /* --- rejilla del perfil --- */
+    .rejilla { display: grid; grid-template-columns: 348px minmax(0, 1fr); gap: 20px; }
+    .tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 15px;
+      padding: 22px; box-shadow: var(--sombra); }
+    .t-cab { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .t-cab svg { width: 17px; height: 17px; color: var(--acento); }
+    .t-cab h2 { font-size: 15px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+    .t-cab p { margin: 3px 0 0; font-size: 12px; color: var(--suave); }
+
+    /* foto */
+    .foto-zona { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 4px 0 2px; }
+    .av-grande { width: 108px; height: 108px; border-radius: 50%; background: var(--navy); color: var(--gold);
+      display: grid; place-items: center; font-size: 36px; font-weight: 800; position: relative;
+      border: 3px solid var(--superficie); box-shadow: 0 0 0 1px var(--borde); }
+    .camara { position: absolute; right: -2px; bottom: -2px; width: 34px; height: 34px; border-radius: 50%;
+      background: var(--navy); color: var(--gold); display: grid; place-items: center;
+      border: 3px solid var(--superficie); cursor: pointer;
+      transition: transform .2s ease, background .2s ease, color .2s ease; }
+    .camara svg { width: 15px; height: 15px; }
+    /* El dorado solo es legal sobre azul, asi que el badge es navy y el icono
+       dorado. Al pasar por encima va a blackberry con el icono en blanco. */
+    .camara:hover { transform: translateY(-3px); background: var(--blackberry); color: #fff; }
+    .foto-zona b { font-size: 17px; font-weight: 700; margin-top: 14px; letter-spacing: -.015em; }
+    .foto-zona .correo { font-size: 12.5px; color: var(--suave); margin-top: 3px; }
+    .etiquetas { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
+    .etq { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+      border-radius: 999px; padding: 4px 11px; background: var(--navy); color: var(--gold); }
+    .etq.borde { background: transparent; color: var(--suave); border: 1px solid var(--borde); }
+    .nota-foto { font-size: 11.5px; color: var(--suave); line-height: 1.5; margin: 16px 0 0;
+      padding-top: 14px; border-top: 1px solid var(--borde); width: 100%; }
+
+    /* tema */
+    .temas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+    .opt { border: 1.5px solid var(--borde); border-radius: 11px; padding: 13px 8px; text-align: center;
+      cursor: pointer; background: var(--campo);
+      transition: border-color .18s ease, transform .18s ease, background .18s ease; }
+    .opt svg { width: 19px; height: 19px; color: var(--suave); }
+    .opt span { display: block; font-size: 11.5px; font-weight: 600; margin-top: 7px; }
+    .opt:hover { transform: translateY(-3px); border-color: var(--blackberry); }
+    .opt.sel { border-color: var(--navy); background: var(--navy); color: #fff; }
+    .opt.sel svg { color: var(--gold); }
+    .app.oscuro .opt.sel { border-color: var(--gold); background: var(--gold); color: var(--navy); }
+    .app.oscuro .opt.sel svg { color: var(--navy); }
+
+    /* formularios */
+    .campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+    .campo.ancho { grid-column: 1 / -1; }
+    label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 7px; }
+    .entrada { display: flex; align-items: center; gap: 10px; background: var(--campo);
+      border: 1.5px solid var(--borde); border-radius: 10px; padding: 12px 14px;
+      transition: border-color .18s ease, box-shadow .18s ease; }
+    .entrada svg { width: 16px; height: 16px; color: var(--suave); flex-shrink: 0; }
+    .entrada span { font-size: 13.5px; }
+    .entrada .marcador { color: var(--suave); }
+    .entrada.foco { border-color: var(--navy); box-shadow: 0 0 0 4px rgba(5,26,42,.07); }
+    .app.oscuro .entrada.foco { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(250,232,144,.13); }
+    .entrada.fija { background: transparent; border-style: dashed; }
+    .ayuda { font-size: 11.5px; color: var(--suave); margin: 6px 0 0; }
+
+    .acciones { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;
+      padding-top: 18px; border-top: 1px solid var(--borde); }
+
+    .reglas { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 6px; }
+    .reglas li { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--suave); }
+    .reglas svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .reglas li.ok { color: var(--texto); }
+    /* El acierto se marca con blackberry sobre claro y con dorado sobre
+       navy: ningun verde, que quedaria fuera de los seis de la marca. */
+    .reglas li.ok svg { color: var(--blackberry); }
+    .app.oscuro .reglas li.ok svg { color: var(--gold); }
+
+    .peligro-zona { display: flex; align-items: center; gap: 16px; margin-top: 20px; }
+    .peligro-zona div { flex: 1; }
+    .peligro-zona b { display: block; font-size: 13.5px; font-weight: 600; }
+    .peligro-zona p { margin: 3px 0 0; font-size: 12px; color: var(--suave); }
+
+    @keyframes surgir { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    .anim { animation: surgir .5s cubic-bezier(.22,.9,.28,1) both; }
+    @media (prefers-reduced-motion: reduce) { .anim { animation: none; } }
+  </style>
+</helmet>
+
+<div class="app {{tema}}">
+
+  <aside class="lateral">
+    <div class="marca">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12.4 13V6.6a1.7 1.7 0 0 1 3.4 0V13" stroke-width="1.8"/>
+        <path d="M16.6 13V8.4a1.7 1.7 0 0 1 3.4 0V13" stroke-width="1.8"/>
+        <path d="M4 24.5h24" stroke-width="2.3"/>
+        <path d="M8.6 24.5V16a1.6 1.6 0 0 1 1.6-1.6h11.6A1.6 1.6 0 0 1 23.4 16v8.5" stroke-width="1.8"/>
+        <path d="M8.6 19.6h14.8" stroke-width="1.8"/>
+      </svg>
+      <div class="marca-txt">
+        <b>Conejo App</b>
+        <span class="voz">El Conejo del Sombrero</span>
+      </div>
+    </div>
+    <div class="grupo">General</div>
+    <nav class="nav">
+      <div class="item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Inicio
+      </div>
+      <div class="item activo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Mi perfil
+      </div>
+      <div class="item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Usuarios
+      </div>
+    </nav>
+    <div class="pie">
+      <div class="yo">
+        <div class="av-mini">AR</div>
+        <div>
+          <b>Ana Rodriguez</b>
+          <span>Admin</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="principal">
+    <header class="barra">
+      <div class="buscar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Buscar en la plataforma
+      </div>
+      <button class="icono-btn" aria-label="Notificaciones">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+        <i class="punto"></i>
+      </button>
+    </header>
+
+    <div class="lienzo">
+      <div class="migas anim">
+        <span>Conejo App</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <span class="hoy">Mi perfil</span>
+      </div>
+
+      <div class="cabecera anim" style="animation-delay:.05s">
+        <div>
+          <p class="kicker voz">Tu cuenta</p>
+          <h1>Mi perfil</h1>
+          <p class="sub">Tus datos, tu foto y tus preferencias de la plataforma.</p>
+        </div>
+        <button class="btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg>
+          Guardar cambios
+        </button>
+      </div>
+
+      <div class="rejilla">
+        <!-- ===== columna izquierda ===== -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div class="tarjeta anim" style="animation-delay:.1s">
+            <div class="foto-zona">
+              <div class="av-grande">
+                AR
+                <span class="camara">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                </span>
+              </div>
+              <b>Ana Rodriguez</b>
+              <span class="correo">admin@conejo.test</span>
+              <div class="etiquetas">
+                <span class="etq">Admin</span>
+                <span class="etq borde">Trabajador</span>
+              </div>
+              <p class="nota-foto">JPG, PNG o WEBP, hasta 2 MB. La foto anterior se reemplaza al subir una nueva.</p>
+            </div>
+          </div>
+
+          <div class="tarjeta anim" style="animation-delay:.14s">
+            <div class="t-cab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+              <div>
+                <h2>Tema</h2>
+                <p>Se guarda en tu cuenta</p>
+              </div>
+            </div>
+            <div class="temas">
+              <div class="opt {{selSistema}}" onClick="{{ponSistema}}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+                <span>Sistema</span>
+              </div>
+              <div class="opt {{selClaro}}" onClick="{{ponClaro}}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                <span>Claro</span>
+              </div>
+              <div class="opt {{selOscuro}}" onClick="{{ponOscuro}}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                <span>Oscuro</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== columna derecha ===== -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div class="tarjeta anim" style="animation-delay:.12s">
+            <div class="t-cab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <div>
+                <h2>Datos personales</h2>
+                <p>El correo y el rol solo los cambia un administrador</p>
+              </div>
+            </div>
+            <div class="campos">
+              <div class="campo">
+                <label>Nombre</label>
+                <div class="entrada foco"><span>Ana</span></div>
+              </div>
+              <div class="campo">
+                <label>Apellido</label>
+                <div class="entrada"><span>Rodriguez</span></div>
+              </div>
+              <div class="campo">
+                <label>Telefono</label>
+                <div class="entrada">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>
+                  <span>+58 412 555 0101</span>
+                </div>
+              </div>
+              <div class="campo">
+                <label>Cargo</label>
+                <div class="entrada fija"><span class="marcador">Directora general</span></div>
+              </div>
+              <div class="campo ancho">
+                <label>Correo</label>
+                <div class="entrada fija">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                  <span class="marcador">admin@conejo.test</span>
+                </div>
+                <p class="ayuda">Es tu identificador de acceso. Para cambiarlo, pideselo a un administrador.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="tarjeta anim" style="animation-delay:.16s">
+            <div class="t-cab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <div>
+                <h2>Cambiar contrasena</h2>
+                <p>Ultima vez hace 42 dias</p>
+              </div>
+            </div>
+            <div class="campos">
+              <div class="campo ancho">
+                <label>Contrasena actual</label>
+                <div class="entrada"><span class="marcador">••••••••••</span></div>
+              </div>
+              <div class="campo">
+                <label>Nueva contrasena</label>
+                <div class="entrada"><span class="marcador">••••••••••</span></div>
+              </div>
+              <div class="campo">
+                <label>Repite la nueva</label>
+                <div class="entrada"><span class="marcador">••••••••••</span></div>
+              </div>
+            </div>
+            <ul class="reglas">
+              <li class="ok">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                Al menos 8 caracteres
+              </li>
+              <li class="ok">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                Una mayuscula y una minuscula
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>
+                Al menos un numero
+              </li>
+            </ul>
+            <div class="acciones">
+              <button class="btn fantasma">Cancelar</button>
+              <button class="btn">Actualizar contrasena</button>
+            </div>
+          </div>
+
+          <div class="tarjeta anim" style="animation-delay:.2s">
+            <div class="peligro-zona" style="margin-top:0">
+              <div>
+                <b>Cerrar sesion</b>
+                <p>Se cierra en este dispositivo. Tendras que volver a entrar con tu correo.</p>
+              </div>
+              <button class="btn peligro">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+                Cerrar sesion
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{
+  "tema": {"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Vista"}
+}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { temaLocal: null, eleccion: null };
+  }
+
+  renderVals() {
+    const tema = this.state.temaLocal ?? this.props.tema ?? 'claro';
+    const eleccion = this.state.eleccion ?? tema;
+
+    return {
+      tema,
+      selSistema: eleccion === 'sistema' ? 'sel' : '',
+      selClaro: eleccion === 'claro' ? 'sel' : '',
+      selOscuro: eleccion === 'oscuro' ? 'sel' : '',
+      ponSistema: () => this.setState({ eleccion: 'sistema' }),
+      ponClaro: () => this.setState({ eleccion: 'claro', temaLocal: 'claro' }),
+      ponOscuro: () => this.setState({ eleccion: 'oscuro', temaLocal: 'oscuro' })
+    };
+  }
+}
+</script>
+</body>
+</html>

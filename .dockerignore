@@ -1,0 +1,28 @@
+# Dependencias y artefactos: se instalan y compilan dentro de la imagen.
+# Copiarlos desde Windows traeria binarios nativos incompatibles con Linux.
+node_modules
+.next
+out
+build
+
+# Control de versiones y documentacion
+.git
+.gitignore
+.gitattributes
+*.md
+
+# Entorno: las variables se inyectan por docker compose
+.env
+.env.*
+!.env.example
+
+# Archivos subidos por usuarios
+public/uploads
+
+# Configuracion de editores y sistema
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+npm-debug.log*
+*.tsbuildinfo

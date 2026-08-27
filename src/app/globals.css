@@ -1,0 +1,358 @@
+@import "tailwindcss";
+
+/* ===========================================================================
+   MARCA
+   Los seis colores del contrato. Todo lo demas se deriva de aqui: ningun
+   componente escribe un color literal, todos usan un token semantico.
+   =========================================================================== */
+@theme {
+  --color-navy: #051a2a;
+  --color-white: #ffffff;
+  --color-gold: #fae890;
+  --color-blackberry: #602249;
+  --color-violet: #321327;
+  --color-black: #040404;
+
+  /* Una sola familia en toda la aplicacion, por decision del cliente. */
+  --font-sans: var(--fuente-sans), "Segoe UI", system-ui, sans-serif;
+
+  /*
+   * Curva de entrada y salida para los cambios de estado.
+   *
+   * Arranca decidida y frena larga, que es lo que hace que un hover se sienta
+   * suave en lugar de un salto. ease-out de serie frena demasiado pronto.
+   */
+  --ease-suave: cubic-bezier(0.32, 0.72, 0.24, 1);
+
+  /*
+   * Los dos tiempos del hover, y son DISTINTOS a proposito.
+   *
+   * Un hover con la misma duracion de ida y de vuelta se siente mecanico. Al
+   * entrar conviene algo mas corto, para que responda al cursor; al salir algo
+   * mas largo, para que el color se apague en lugar de cortarse de golpe. La
+   * diferencia entre los dos es lo que se lee como "suave", mas que la
+   * duracion en si.
+   */
+  --dur-entrada: 320ms;
+  --dur-salida: 500ms;
+
+  /* Un panel recorre distancia, no solo cambia de color: necesita mas tiempo */
+  --dur-panel: 460ms;
+}
+
+/* ===========================================================================
+   TOKENS SEMANTICOS
+
+   LA REGLA DEL ACENTO, que gobierna toda la interfaz:
+     tema claro   -> lo que se acentua o esta bajo el cursor va MORADO
+     tema oscuro  -> lo que se acentua o esta bajo el cursor va VAINILLA
+
+   Ningun componente escribe blackberry ni gold directamente para eso: usan
+   --acento y el tema decide. Asi la regla no se puede romper por descuido,
+   y de paso se respeta que el dorado solo aparezca sobre fondos oscuros.
+   Se definen tres veces a proposito:
+     :root                          -> tema claro, el valor por defecto
+     @media (prefers-color-scheme)  -> sigue al dispositivo cuando el usuario
+                                       eligio "sistema"
+     [data-tema="..."]              -> la eleccion explicita, que debe ganar
+                                       en AMBAS direcciones
+   Sin la tercera capa, elegir "claro" en un dispositivo oscuro no haria nada.
+   =========================================================================== */
+:root {
+  --fondo: #f2f4f6;
+  --superficie: #ffffff;
+  --campo: #f6f8f9;
+  --texto: #040404;
+  --suave: #5a6b76;
+  --borde: #e3e7ea;
+  --acento: #602249;
+  /* El color del texto que se pone ENCIMA del acento */
+  --acento-contraste: #ffffff;
+  /* Version muy diluida del acento, para fondos de hover */
+  --acento-tenue: rgb(96 34 73 / 0.09);
+  /* El escalon siguiente del acento, para cuando el reposo YA es el acento */
+  --acento-hover: #321327;
+
+  /*
+   * La navegacion tiene sus propios tokens porque no sigue a --superficie:
+   * en claro es blanca y en oscuro navy, que es mas profundo que el resto
+   * de superficies oscuras. Asi la barra lateral cambia con el tema igual
+   * que todo lo demas, en lugar de quedarse navy siempre.
+   */
+  --nav: #ffffff;
+  --nav-texto: #040404;
+  --nav-suave: #5a6b76;
+  --nav-borde: #e3e7ea;
+  /*
+   * Un realce dentro de la propia navegacion: el boton de cerrar, una pastilla.
+   * Va como color con alfa sobre --nav y no como color fijo, para que sirva
+   * igual sobre la nav blanca del tema claro y sobre la navy del oscuro.
+   */
+  --nav-realce: rgb(4 4 4 / 0.05);
+  --sombra: 0 1px 2px rgb(5 26 42 / 0.06), 0 8px 24px rgb(5 26 42 / 0.05);
+  --sombra-alta: 0 14px 30px rgb(5 26 42 / 0.1);
+  /*
+   * Campo enfocado: se ELEVA, no se rodea de color.
+   *
+   * Un halo coloreado alrededor del campo se lee como un error, sobre todo
+   * en blackberry, que sobre blanco parece un aviso. Una sombra suave dice
+   * lo mismo sin gritar, y deja el borde libre para senalar el error de
+   * verdad cuando lo haya.
+   */
+  --foco: 0 1px 2px rgb(5 26 42 / 0.05), 0 4px 14px rgb(5 26 42 / 0.1);
+}
+
+/* El dispositivo manda, salvo que haya una eleccion explicita de tema claro */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --fondo: #041521;
+    --superficie: #0a2436;
+    --campo: #08283c;
+    --texto: #ffffff;
+    --suave: #9db0be;
+    --borde: #14344a;
+    --acento: #fae890;
+    --acento-contraste: #051a2a;
+    --acento-tenue: rgb(250 232 144 / 0.12);
+  --acento-hover: #ffffff;
+    --nav: #051a2a;
+    --nav-texto: #ffffff;
+    --nav-suave: rgb(255 255 255 / 0.7);
+    --nav-borde: rgb(250 232 144 / 0.1);
+    --nav-realce: rgb(255 255 255 / 0.07);
+    --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
+    --sombra-alta: 0 14px 30px rgb(0 0 0 / 0.35);
+    --foco: 0 2px 6px rgb(0 0 0 / 0.3), 0 8px 20px rgb(0 0 0 / 0.35);
+  }
+}
+
+/* La eleccion explicita gana siempre */
+:root[data-tema="oscuro"] {
+  --fondo: #041521;
+  --superficie: #0a2436;
+  --campo: #08283c;
+  --texto: #ffffff;
+  --suave: #9db0be;
+  --borde: #14344a;
+  --acento: #fae890;
+  --acento-contraste: #051a2a;
+  --acento-tenue: rgb(250 232 144 / 0.12);
+  --acento-hover: #ffffff;
+  --nav: #051a2a;
+  --nav-texto: #ffffff;
+  --nav-suave: rgb(255 255 255 / 0.7);
+  --nav-borde: rgb(250 232 144 / 0.1);
+  --nav-realce: rgb(255 255 255 / 0.07);
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
+  --sombra-alta: 0 14px 30px rgb(0 0 0 / 0.35);
+  --foco: 0 2px 6px rgb(0 0 0 / 0.3), 0 8px 20px rgb(0 0 0 / 0.35);
+}
+
+/*
+ * Variante `dark-tema:` para las clases de Tailwind.
+ *
+ * No sirve la variante `dark:` de serie porque nuestro tema tiene tres
+ * estados, no dos: hay que cubrir el dispositivo en oscuro SIN eleccion
+ * explicita de claro, y ademas la eleccion explicita de oscuro.
+ */
+@custom-variant dark-tema {
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-tema="claro"]), :root:not([data-tema="claro"]) *) {
+      @slot;
+    }
+  }
+  &:where(:root[data-tema="oscuro"], :root[data-tema="oscuro"] *) {
+    @slot;
+  }
+}
+
+/* Se exponen a Tailwind para poder escribir bg-superficie, text-suave, etc. */
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-campo: var(--campo);
+  --color-texto: var(--texto);
+  --color-suave: var(--suave);
+  --color-borde: var(--borde);
+  --color-acento: var(--acento);
+  --color-acento-contraste: var(--acento-contraste);
+  --color-acento-tenue: var(--acento-tenue);
+  --color-acento-hover: var(--acento-hover);
+  --color-nav: var(--nav);
+  --color-nav-texto: var(--nav-texto);
+  --color-nav-suave: var(--nav-suave);
+  --color-nav-borde: var(--nav-borde);
+  --color-nav-realce: var(--nav-realce);
+}
+
+/* ===========================================================================
+   BASE
+   =========================================================================== */
+/*
+ * Va en la capa `base` a proposito. Tailwind coloca sus utilidades por encima,
+ * asi que una clase como `outline-none` puede desactivar el contorno global.
+ *
+ * Sin esa capa, un campo compuesto (icono + input + boton dentro de una caja)
+ * pintaba DOS focos a la vez: el borde de la caja por focus-within y ademas el
+ * contorno global sobre el input de dentro.
+ */
+@layer base {
+  body {
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Un enlace anadido sin clases no debe salir azul de navegador */
+  a {
+    color: var(--acento);
+    text-decoration: none;
+  }
+
+  /* El foco visible no se quita nunca: es como se navega con teclado */
+  :focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* ===========================================================================
+   HOVER SUAVE
+
+   Una sola utilidad, `suave`, en lugar de repartir clases `transition-*` por
+   cada componente. Se hizo asi porque el intento anterior fue justo lo
+   contrario y no funciono: con el tiempo escrito en cada boton, ajustar el
+   ritmo obligaba a repasar la aplicacion entera, y acabaron conviviendo
+   velocidades distintas que se notaban al pasar de un control a otro.
+   Ahora el ritmo se cambia en las dos variables de arriba.
+   =========================================================================== */
+@utility suave {
+  /*
+   * Se enumeran las propiedades en lugar de usar `all`.
+   *
+   * Con `all`, el navegador tambien intenta animar lo que cambia de tamano o
+   * de posicion en el mismo instante, y eso es justo lo que se percibe como
+   * un tiron: la propiedad de color llega suave pero el ancho da un salto.
+   *
+   * `translate`, `rotate` y `scale` van APARTE de `transform`, y hay que
+   * nombrarlas una a una: en Tailwind 4 una clase como `rotate-180` ya no
+   * escribe `transform: rotate(...)` sino la propiedad `rotate` suelta, que
+   * es independiente. Sin nombrarla, la transicion no la alcanza y el cambio
+   * sale de golpe aunque el resto vaya suave.
+   */
+  transition-property: color, background-color, border-color, box-shadow,
+    opacity, transform, translate, rotate, scale;
+  transition-timing-function: var(--ease-suave);
+
+  /* La duracion que manda es la del estado al que se VA: esta es la de salir */
+  transition-duration: var(--dur-salida);
+
+  &:hover {
+    transition-duration: var(--dur-entrada);
+  }
+}
+
+/*
+ * El desplazamiento de un panel. Solo transform y opacity, que son las dos
+ * unicas propiedades que el navegador puede mover sin recalcular la pagina en
+ * cada fotograma.
+ */
+@utility desliza {
+  /* translate va nombrada aparte: ver la nota de `suave`. Es justo lo que
+     mueve el panel, asi que sin ella no se anima nada. */
+  transition-property: transform, translate, opacity, visibility;
+  transition-timing-function: var(--ease-suave);
+
+  /*
+   * La duracion se lee de una variable para que cada estado pueda imponer la
+   * suya: abrir y cerrar no deben durar lo mismo. Se hace con una variable y
+   * no con la utilidad `duration-*` de Tailwind porque cual de las dos gana
+   * dependeria del orden en que salgan en la hoja, y eso es fragil.
+   */
+  transition-duration: var(--dur-desliza, var(--dur-panel));
+}
+
+/*
+ * El despliegue de un submenu o acordeon.
+ *
+ * Anima grid-template-rows, opacity y visibility con la curva y tiempos
+ * de la casa, para que abrir y cerrar un submodulo acompanie con armonia
+ * al giro del chevron en lugar de aparecer o desaparecer de golpe.
+ */
+@utility despliega {
+  display: grid;
+  transition-property: grid-template-rows, opacity, visibility;
+  transition-timing-function: var(--ease-suave);
+  transition-duration: var(--dur-entrada);
+}
+
+/* ===========================================================================
+   ANIMACIONES DE ENTRADA
+   Escalonadas con --retraso, que cada componente fija por indice.
+   =========================================================================== */
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility surge {
+  animation: surgir 0.62s var(--ease-suave) both;
+  animation-delay: var(--retraso, 0s);
+}
+
+@keyframes barrido {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* El brillo que recorre los esqueletos de carga */
+@utility hueso {
+  position: relative;
+  overflow: hidden;
+  background: var(--borde);
+  border-radius: 7px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.55),
+      transparent
+    );
+    animation: barrido 1.5s ease-in-out infinite;
+  }
+}
+
+:root[data-tema="oscuro"] .hueso::after,
+:root:not([data-tema="claro"]) .hueso::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.07),
+    transparent
+  );
+}
+
+/* Quien pidio menos movimiento no recibe ninguno */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

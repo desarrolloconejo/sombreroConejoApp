@@ -1,0 +1,285 @@
+import type { Metadata } from "next";
+import { Plus } from "lucide-react";
+
+import { Wrapper } from "@/components/layout/Wrapper";
+import {
+  Listado,
+  ListadoVacio,
+  ModalConfirmacion,
+  PanelLateral,
+} from "@/components/listado";
+import {
+  columnasUsuarios,
+  ConfirmarEstadoUsuario,
+  DetalleUsuario,
+  filtrosUsuarios,
+  FormularioEditarUsuario,
+  FormularioNuevoUsuario,
+} from "@/components/usuarios";
+import { BotonEnlace } from "@/components/ui";
+import { leerEstadoListado } from "@/lib/parametros";
+import { requerirAdmin } from "@/lib/sesion";
+import { conPanel } from "@/lib/urlListado";
+import * as cargosModelo from "@/models/cargos";
+import * as empresasModelo from "@/models/empresas";
+import * as rolesModelo from "@/models/roles";
+import * as usuariosModelo from "@/models/usuarios";
+import type {
+  Cargo,
+  FiltrosUsuarios,
+  NombreRol,
+  OrdenUsuarios,
+  SlugCargo,
+  TipoUsuario,
+} from "@/types";
+
+/**
+ * El listado de usuarios, y el ejemplo de como se usa el patron de listado.
+ *
+ * La page hace lo que le toca en este proyecto: exige el permiso, lee el
+ * estado de la URL, consulta los modelos e INYECTA todo como props. No pinta
+ * ninguna tabla: de eso se encarga el listado estandar.
+ */
+
+export const metadata: Metadata = {
+  title: "Usuarios",
+};
+
+const RUTA = "/dashboard/usuarios";
+
+/**
+ * Por que columnas se puede ordenar.
+ *
+ * Es la misma lista que acepta el modelo, y sirve para dos cosas: filtrar lo
+ * que llega por la URL y convertirlo despues sin inventar una clave. Un valor
+ * fuera de aqui haria que `identificadorSeguro` lanzara.
+ */
+const ORDEN_PERMITIDO: readonly OrdenUsuarios[] = [
+  "nombre",
+  "email",
+  "creadoEn",
+  "ultimoAcceso",
+];
+
+const TIPOS: readonly TipoUsuario[] = ["trabajador", "cliente"];
+const ROLES: readonly NombreRol[] = ["admin", "trabajador", "cliente"];
+
+const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Usuarios" }];
+
+/**
+ * Las conversiones de abajo existen porque `leerEstadoListado` devuelve texto
+ * (lo unico que hay en una URL) y el modelo espera valores tipados. Cada una
+ * descarta lo que no reconoce en lugar de arriesgar un cast: un parametro
+ * escrito a mano no debe llegar nunca a la consulta.
+ */
+function comoOrden(valor: string): OrdenUsuarios {
+  return ORDEN_PERMITIDO.find((clave) => clave === valor) ?? "creadoEn";
+}
+
+function comoTipo(valor: string | undefined): TipoUsuario | undefined {
+  return TIPOS.find((tipo) => tipo === valor);
+}
+
+function comoRol(valor: string | undefined): NombreRol | undefined {
+  return ROLES.find((rol) => rol === valor);
+}
+
+/** El area se valida contra las que existen en la base, no contra una lista. */
+function comoCargo(
+  valor: string | undefined,
+  cargos: Cargo[],
+): SlugCargo | undefined {
+  return cargos.find((cargo) => cargo.slug === valor)?.slug;
+}
+
+/** El chip manda "true" o "false"; el modelo espera un booleano o nada. */
+function comoActivo(valor: string | undefined): boolean | undefined {
+  if (valor === "true") return true;
+  if (valor === "false") return false;
+
+  return undefined;
+}
+
+/** Lo que necesitan los desplegables del alta y de la edicion. */
+async function cargarOpciones() {
+  const [roles, empresas] = await Promise.all([
+    rolesModelo.listarAsignables(),
+    empresasModelo.listarActivas(),
+  ]);
+
+  return { roles, empresas };
+}
+
+/**
+ * Los paneles que trabajan sobre un registro concreto.
+ *
+ * Se resuelve en una sola funcion para que la consulta salga una vez: los tres
+ * necesitan el usuario, y solo dos de ellos las opciones de los desplegables.
+ * Si el id no corresponde a nadie devuelve null y no se abre nada, que es lo
+ * que pasa al recargar un "?panel=editar&id=999" viejo.
+ */
+async function cargarPanelDeRegistro(panel: string | null, id: number | null) {
+  if (!panel || id === null) return null;
+  if (!["ver", "editar", "estado"].includes(panel)) return null;
+
+  const usuario = await usuariosModelo.buscarPorId(id);
+
+  if (!usuario) return null;
+
+  // La ficha y la confirmacion no llevan desplegables: no hace falta traerlos.
+  const opciones = panel === "editar" ? await cargarOpciones() : null;
+
+  return { usuario, opciones };
+}
+
+export default async function PaginaUsuarios(
+  props: PageProps<"/dashboard/usuarios">,
+) {
+  // El proxy ya filtra esta ruta por rol, pero la comprobacion tiene que estar
+  // tambien aqui: es lo que impide el acceso si su matcher cambia.
+  await requerirAdmin();
+
+  const parametros = await props.searchParams;
+
+  const estado = leerEstadoListado(parametros, {
+    ordenPermitido: ORDEN_PERMITIDO,
+    ordenPorDefecto: "creadoEn",
+    direccionPorDefecto: "desc",
+    filtrosPermitidos: ["tipo", "rol", "cargo", "activo"],
+  });
+
+  // Las areas se consultan siempre porque alimentan los chips del filtro, y de
+  // paso son la lista blanca contra la que se valida el parametro `cargo`.
+  const cargos = await cargosModelo.listar();
+
+  const filtros: FiltrosUsuarios = {
+    busqueda: estado.busqueda || undefined,
+    tipo: comoTipo(estado.filtros.tipo),
+    rol: comoRol(estado.filtros.rol),
+    cargo: comoCargo(estado.filtros.cargo, cargos),
+    activo: comoActivo(estado.filtros.activo),
+    orden: comoOrden(estado.orden),
+    direccion: estado.direccion,
+    pagina: estado.pagina,
+    porPagina: estado.porPagina,
+  };
+
+  const abrirAlta = estado.panel === "nuevo";
+
+  const [pagina, alta, registro] = await Promise.all([
+    usuariosModelo.listar(filtros),
+    abrirAlta ? cargarOpciones() : null,
+    cargarPanelDeRegistro(estado.panel, estado.panelId),
+  ]);
+
+  const hrefAlta = conPanel(RUTA, estado, "nuevo");
+  const hrefCerrar = conPanel(RUTA, estado, null);
+
+  return (
+    <Wrapper
+      migas={MIGAS}
+      kicker="Solo para administradores"
+      titulo="Usuarios"
+      descripcion="Trabajadores de la agencia y personas de contacto de cada empresa cliente."
+    >
+      <Listado
+        ruta={RUTA}
+        estado={estado}
+        columnas={columnasUsuarios(RUTA, estado)}
+        filtros={filtrosUsuarios(cargos)}
+        filas={pagina.filas}
+        total={pagina.total}
+        totalPaginas={pagina.totalPaginas}
+        claveFila={(usuario) => usuario.id}
+        titulo="Usuarios de la aplicacion"
+        etiquetaBusqueda="Buscar usuarios"
+        marcadorBusqueda="Buscar por nombre o correo"
+        accion={{
+          texto: "Nuevo usuario",
+          href: hrefAlta,
+          icono: <Plus aria-hidden="true" />,
+        }}
+        vacio={
+          <ListadoVacio
+            titulo="Todavia no hay usuarios"
+            descripcion="Las cuentas las crea un administrador. La primera que aparezca aqui sera la que crees ahora."
+            accion={
+              <BotonEnlace href={hrefAlta} tamano="chico">
+                <Plus aria-hidden="true" />
+                Nuevo usuario
+              </BotonEnlace>
+            }
+          />
+        }
+        panel={
+          <>
+            {alta && (
+              <PanelLateral
+                hrefCerrar={hrefCerrar}
+                kicker="Alta de cuenta"
+                titulo="Nuevo usuario"
+                descripcion="Se genera una contrasena provisional. No se envia ningun correo: hay que entregarsela en persona."
+              >
+                <FormularioNuevoUsuario
+                  roles={alta.roles}
+                  cargos={cargos}
+                  empresas={alta.empresas}
+                  hrefCancelar={hrefCerrar}
+                />
+              </PanelLateral>
+            )}
+
+            {registro && estado.panel === "ver" && (
+              <PanelLateral
+                hrefCerrar={hrefCerrar}
+                kicker="Ficha de la cuenta"
+                titulo={`${registro.usuario.nombre} ${registro.usuario.apellido}`}
+              >
+                <DetalleUsuario
+                  usuario={registro.usuario}
+                  hrefEditar={conPanel(RUTA, estado, "editar", registro.usuario.id)}
+                  hrefCerrar={hrefCerrar}
+                />
+              </PanelLateral>
+            )}
+
+            {registro && registro.opciones && estado.panel === "editar" && (
+              <PanelLateral
+                hrefCerrar={hrefCerrar}
+                kicker="Editar cuenta"
+                titulo={`${registro.usuario.nombre} ${registro.usuario.apellido}`}
+                descripcion="La contrasena no se cambia desde aqui: solo la cambia su duena, y le pide la actual."
+              >
+                <FormularioEditarUsuario
+                  usuario={registro.usuario}
+                  roles={registro.opciones.roles}
+                  cargos={cargos}
+                  empresas={registro.opciones.empresas}
+                  hrefCancelar={hrefCerrar}
+                />
+              </PanelLateral>
+            )}
+
+            {registro && estado.panel === "estado" && (
+              <ModalConfirmacion
+                hrefCerrar={hrefCerrar}
+                tono={registro.usuario.activo ? "aviso" : "normal"}
+                kicker={registro.usuario.activo ? "Desactivar" : "Reactivar"}
+                titulo={
+                  registro.usuario.activo
+                    ? "¿Desactivar esta cuenta?"
+                    : "¿Reactivar esta cuenta?"
+                }
+              >
+                <ConfirmarEstadoUsuario
+                  usuario={registro.usuario}
+                  hrefCerrar={hrefCerrar}
+                />
+              </ModalConfirmacion>
+            )}
+          </>
+        }
+      />
+    </Wrapper>
+  );
+}

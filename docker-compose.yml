@@ -1,0 +1,114 @@
+name: conejo-app
+
+# ---------------------------------------------------------------------------
+# Este compose es el ENTORNO DE DESARROLLO. Produccion vive en Vercel, que no
+# usa Docker: compila Next.js con su propio proceso e ignora el Dockerfile.
+#
+# El servicio de la app que se levanta depende de COMPOSE_PROFILES en el .env:
+#   COMPOSE_PROFILES=dev   -> app-dev + pgadmin  (bind mount + hot reload)
+#   COMPOSE_PROFILES=prod  -> app-prod           (build optimizado, sin root)
+#
+# El perfil prod existe para el dia que la aplicacion se mude a un VPS. Ahi
+# haria falta ademas un proxy inverso con TLS delante, copias de seguridad de
+# la base, y NO publicar el puerto de PostgreSQL al exterior.
+# ---------------------------------------------------------------------------
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: conejo_db
+    restart: unless-stopped
+    environment:
+      # Con valor por defecto a proposito: sin ellos, un .env ausente levanta
+      # el contenedor con superusuario y contrasena vacios, y lo unico que se
+      # ve es un healthcheck que falla sin decir por que.
+      POSTGRES_USER: ${POSTGRES_USER:-conejo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-conejo_local}
+      POSTGRES_DB: ${POSTGRES_DB:-conejo_app}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - datos_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-conejo} -d ${POSTGRES_DB:-conejo_app}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  # Solo en desarrollo. Corre sin contrasena maestra y con el modo servidor
+  # apagado, que en un portatil es comodo y en una maquina publica seria una
+  # consola de administracion de la base abierta a internet. Sin este perfil
+  # arrancaria tambien con COMPOSE_PROFILES=prod.
+  pgadmin:
+    image: dpage/pgadmin4:9
+    profiles: ["dev"]
+    container_name: conejo_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - datos_pgadmin:/var/lib/pgadmin
+      - ./docker/pgadmin-servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app-dev:
+    profiles: ["dev"]
+    container_name: conejo_app_dev
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: dev
+    command: npm run ${DEV_SCRIPT:-dev:webpack}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRACION: ${JWT_EXPIRACION}
+      COOKIE_SESION: ${COOKIE_SESION}
+      # El bind mount desde Windows no propaga eventos de archivo al
+      # contenedor Linux: hay que vigilar por sondeo.
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      # Bind mount del proyecto: los cambios en el host se ven al instante
+      - .:/app
+      # Volumenes anonimos: estas carpetas quedan dentro del contenedor y no
+      # las pisa el host (los binarios nativos difieren entre Windows y Linux)
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app-prod:
+    profiles: ["prod"]
+    container_name: conejo_app_prod
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: prod
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRACION: ${JWT_EXPIRACION}
+      COOKIE_SESION: ${COOKIE_SESION}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  datos_db:
+  datos_pgadmin:

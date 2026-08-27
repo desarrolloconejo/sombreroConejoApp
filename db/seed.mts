@@ -1,0 +1,251 @@
+/**
+ * Crea el esquema e inserta los datos minimos para que la aplicacion arranque.
+ *
+ *   docker compose exec app-dev npm run seed
+ *
+ * Es idempotente: ejecutarlo varias veces no duplica ni pisa nada. Las tablas
+ * se crean con IF NOT EXISTS y las inserciones usan ON CONFLICT DO NOTHING.
+ *
+ * No usa el pool de src/lib/db.ts a proposito: es un script suelto que abre su
+ * conexion, hace su trabajo y la cierra.
+ */
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { Client } from "pg";
+import bcrypt from "bcryptjs";
+import { APERTURAS } from "./datos/aperturas.mts";
+import {
+  EMAIL_CREADORA,
+  EMPRESA_DEMO,
+  REFERENCIA,
+  REGLAS,
+  RONDAS_BCRYPT,
+  ROLES,
+  USUARIOS,
+} from "./datos/semilla.mts";
+
+async function principal(): Promise<void> {
+  const cadenaConexion = process.env.DATABASE_URL;
+
+  if (!cadenaConexion) {
+    throw new Error("Falta la variable de entorno DATABASE_URL");
+  }
+
+  const cliente = new Client({ connectionString: cadenaConexion });
+  await cliente.connect();
+
+  try {
+    // -- Esquema ------------------------------------------------------------
+    const esquema = await readFile(join(import.meta.dirname, "schema.sql"), "utf8");
+    await cliente.query(esquema);
+    console.log("Esquema aplicado");
+
+    // -- Roles --------------------------------------------------------------
+    for (const rol of ROLES) {
+      await cliente.query(
+        `INSERT INTO roles (nombre, descripcion)
+         VALUES ($1, $2)
+         ON CONFLICT (nombre) DO NOTHING`,
+        [rol.nombre, rol.descripcion],
+      );
+    }
+    console.log(`Roles listos (${ROLES.length})`);
+
+    // -- Empresa demo -------------------------------------------------------
+    await cliente.query(
+      `INSERT INTO empresas (nombre, rif, telefono, direccion, sector)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (rif) DO UPDATE SET sector = EXCLUDED.sector`,
+      [
+        EMPRESA_DEMO.nombre,
+        EMPRESA_DEMO.rif,
+        EMPRESA_DEMO.telefono,
+        EMPRESA_DEMO.direccion,
+        EMPRESA_DEMO.sector,
+      ],
+    );
+
+    const { rows: empresas } = await cliente.query<{ id: number }>(
+      "SELECT id FROM empresas WHERE rif = $1",
+      [EMPRESA_DEMO.rif],
+    );
+    const empresaId = empresas[0]?.id;
+
+    if (!empresaId) {
+      throw new Error("No se pudo obtener la empresa de ejemplo");
+    }
+    console.log(`Empresa de ejemplo lista (id ${empresaId})`);
+
+    // -- Usuarios -----------------------------------------------------------
+    for (const usuario of USUARIOS) {
+      const hash = await bcrypt.hash(usuario.password, RONDAS_BCRYPT);
+
+      await cliente.query(
+        `INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (lower(email)) DO NOTHING`,
+        [
+          usuario.nombre,
+          usuario.apellido,
+          usuario.email,
+          hash,
+          usuario.telefono,
+        ],
+      );
+
+      const { rows: encontrados } = await cliente.query<{ id: number }>(
+        "SELECT id FROM usuarios WHERE lower(email) = lower($1)",
+        [usuario.email],
+      );
+      const usuarioId = encontrados[0]?.id;
+
+      if (!usuarioId) {
+        throw new Error(`No se pudo obtener el usuario ${usuario.email}`);
+      }
+
+      if (usuario.perfil.tipo === "trabajador") {
+        // DO UPDATE, no DO NOTHING: si el seed cambia el rol o el cargo de
+        // alguien, volver a ejecutarlo debe corregirlo.
+        await cliente.query(
+          `INSERT INTO trabajadores (usuario_id, rol_id, cargo_id, fecha_ingreso)
+           VALUES (
+             $1,
+             (SELECT id FROM roles  WHERE nombre = $2),
+             (SELECT id FROM cargos WHERE slug   = $3),
+             CURRENT_DATE
+           )
+           ON CONFLICT (usuario_id) DO UPDATE
+             SET rol_id   = EXCLUDED.rol_id,
+                 cargo_id = EXCLUDED.cargo_id`,
+          [usuarioId, usuario.perfil.rol, usuario.perfil.cargo],
+        );
+      } else {
+        await cliente.query(
+          `INSERT INTO clientes (usuario_id, empresa_id, cargo)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (usuario_id) DO NOTHING`,
+          [usuarioId, empresaId, usuario.perfil.cargo],
+        );
+      }
+
+      console.log(`Usuario listo: ${usuario.email} (${usuario.perfil.tipo})`);
+    }
+
+    // -- Modulo de hooks ----------------------------------------------------
+    //
+    // Las 42 aperturas se siembran con DO NOTHING: una vez en la base las
+    // gestiona la agencia, y volver a ejecutar el seed no debe pisar una
+    // redaccion que alguien haya mejorado.
+    for (const apertura of APERTURAS) {
+      await cliente.query(
+        `INSERT INTO aperturas_hook (
+           numero, territorio, mecanismos, plantilla, ejemplo,
+           insert_titulo, direccion_edicion, usala_cuando
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (numero) DO NOTHING`,
+        [
+          apertura.numero,
+          apertura.territorio,
+          apertura.mecanismos,
+          apertura.plantilla,
+          apertura.ejemplo,
+          apertura.insertTitulo,
+          apertura.direccionEdicion,
+          apertura.usalaCuando,
+        ],
+      );
+    }
+    console.log(`Aperturas listas (${APERTURAS.length})`);
+
+    // Quien firma lo que siembra el seed: la creadora de contenido.
+    const { rows: creadoras } = await cliente.query<{ id: number }>(
+      "SELECT id FROM usuarios WHERE lower(email) = lower($1)",
+      [EMAIL_CREADORA],
+    );
+    const creadoraId = creadoras[0]?.id;
+
+    if (!creadoraId) {
+      throw new Error("No se encontro la creadora de contenido del seed");
+    }
+
+    // Dos reglas que ensenan la resolucion: una de sector y una de cliente.
+    // La de sector amplia los limites, para que se vea el aviso en el auditor.
+    for (const regla of REGLAS) {
+      await cliente.query(
+        `INSERT INTO reglas_hook (
+           etiqueta, empresa_id, sector, max_palabras_voz, max_palabras_insert,
+           exigir_prueba, preambulos, formulas_gastadas, terminos_tension, creado_por
+         )
+         SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+         WHERE NOT EXISTS (SELECT 1 FROM reglas_hook WHERE etiqueta = $1)`,
+        [
+          regla.etiqueta,
+          regla.empresaId === null ? null : empresaId,
+          regla.sector,
+          regla.maxVoz,
+          regla.maxInsert,
+          regla.exigirPrueba,
+          "",
+          "",
+          "",
+          creadoraId,
+        ],
+      );
+    }
+    console.log(`Reglas listas (${REGLAS.length})`);
+
+    // Una referencia de ejemplo, para que el banco no arranque vacio.
+    await cliente.query(
+      `INSERT INTO referencias_hook (
+         hablado, insert_titulo, plataforma, territorio, url_fuente,
+         lectura, etiquetas, creado_por
+       )
+       SELECT $1, $2, $3, $4, $5, $6, $7, $8
+       WHERE NOT EXISTS (SELECT 1 FROM referencias_hook WHERE hablado = $1)`,
+      [
+        REFERENCIA.hablado,
+        REFERENCIA.insertTitulo,
+        REFERENCIA.plataforma,
+        REFERENCIA.territorio,
+        REFERENCIA.urlFuente,
+        REFERENCIA.lectura,
+        REFERENCIA.etiquetas,
+        creadoraId,
+      ],
+    );
+    console.log("Referencia de ejemplo lista");
+
+    // -- Resumen ------------------------------------------------------------
+    const { rows: resumen } = await cliente.query<{
+      email: string;
+      tipo: string | null;
+      rol: string | null;
+      ambito: string | null;
+    }>(
+      `SELECT email, tipo, rol,
+              COALESCE(cargo_slug, empresa_nombre) AS ambito
+       FROM vw_usuarios_completos
+       ORDER BY tipo, rol, email`,
+    );
+
+    console.log("\nUsuarios en la base de datos:");
+    for (const fila of resumen) {
+      const tipo = (fila.tipo ?? "sin tipo").padEnd(11);
+      const rol = (fila.rol ?? "sin rol").padEnd(11);
+      console.log(`  ${fila.email.padEnd(26)} ${tipo} ${rol} ${fila.ambito ?? "-"}`);
+    }
+
+    console.log("\nCredenciales de acceso:");
+    for (const usuario of USUARIOS) {
+      console.log(`  ${usuario.email}  ->  ${usuario.password}`);
+    }
+  } finally {
+    await cliente.end();
+  }
+}
+
+principal().catch((error: unknown) => {
+  console.error("\nFallo el seed:", error instanceof Error ? error.message : error);
+  process.exit(1);
+});

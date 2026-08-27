@@ -1,0 +1,15 @@
+# El proyecto se ejecuta en un contenedor Linux por bind mount:
+# los finales de linea se normalizan a LF para que scripts y SQL no se rompan.
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.sql  text eol=lf
+
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.woff  binary
+*.woff2 binary

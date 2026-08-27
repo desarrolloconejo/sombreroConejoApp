@@ -1,0 +1,237 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600..900&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; }
+    a { color: #602249; text-decoration: none; }
+    a:hover { color: #321327; }
+
+    .app {
+      --navy: #051a2a; --gold: #fae890; --blackberry: #602249; --violet: #321327;
+      --fondo: #ffffff; --superficie: #ffffff; --texto: #040404;
+      --suave: #5a6b76; --borde: #e3e7ea; --campo: #f6f8f9; --acento: #602249;
+
+      width: 1440px; height: 900px; display: flex; overflow: hidden;
+      background: var(--fondo); color: var(--texto);
+      font-family: Poppins, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+    }
+    .app.oscuro {
+      --fondo: #041521; --superficie: #0a2436; --texto: #ffffff;
+      --suave: #9db0be; --borde: #14344a; --campo: #08283c; --acento: #fae890;
+    }
+    .voz { font-family: Fraunces, Georgia, serif; font-optical-sizing: auto; }
+
+    /* ---------- panel de marca ---------- */
+    .marca-panel {
+      width: 46%; flex-shrink: 0; background: var(--navy); color: #fff; position: relative;
+      padding: 52px 56px; overflow: hidden;
+      /* Tres filas: logo arriba, sello abajo y el lema centrado en lo que
+         sobra, en lugar de repartir el hueco a partes iguales. */
+      display: grid; grid-template-rows: auto 1fr auto;
+    }
+    /* atmosfera: halo suave, sin degradado de fondo completo */
+    .halo { position: absolute; width: 560px; height: 560px; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle, rgba(250,232,144,.13) 0%, rgba(250,232,144,0) 68%);
+      right: -190px; top: -140px; }
+    .halo2 { position: absolute; width: 460px; height: 460px; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle, rgba(96,34,73,.42) 0%, rgba(96,34,73,0) 70%);
+      left: -160px; bottom: -170px; }
+    .rejilla { position: absolute; inset: 0; pointer-events: none; opacity: .5;
+      background-image: linear-gradient(rgba(255,255,255,.032) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,.032) 1px, transparent 1px);
+      background-size: 56px 56px; }
+
+    .marca-panel > * { position: relative; }
+    .logo { display: flex; align-items: center; gap: 13px; }
+    .logo svg { width: 40px; height: 40px; color: var(--gold); }
+    .logo b { font-size: 19px; font-weight: 700; letter-spacing: -.015em; }
+
+    .lema { max-width: 21ch; align-self: center; }
+    .lema .linea { font-size: 15px; font-weight: 700; color: var(--gold); letter-spacing: .01em; margin: 0 0 18px; }
+    .lema h2 { font-size: 52px; font-weight: 800; line-height: 1.04; letter-spacing: -.035em; margin: 0; }
+    .lema p { font-size: 15px; color: rgba(255,255,255,.62); line-height: 1.65; margin: 22px 0 0; max-width: 34ch; }
+
+    .sello { display: flex; align-items: center; gap: 10px; font-size: 12px; color: rgba(255,255,255,.45); }
+    .sello svg { width: 15px; height: 15px; }
+
+    /* ---------- panel del formulario ---------- */
+    .form-panel { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; position: relative; }
+    .tema-flot { position: absolute; top: 30px; right: 34px; display: flex; align-items: center; gap: 8px;
+      background: transparent; border: 1px solid var(--borde); color: var(--suave); border-radius: 10px;
+      padding: 9px 13px; font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer;
+      transition: background .18s ease, color .18s ease, transform .18s ease, border-color .18s ease; }
+    .tema-flot svg { width: 16px; height: 16px; }
+    .tema-flot:hover { background: var(--navy); border-color: var(--navy); color: var(--gold); transform: translateY(-2px); }
+
+    .caja { width: 400px; }
+    .kicker { font-size: 13.5px; font-weight: 700; color: var(--acento); margin: 0 0 8px; }
+    .app.oscuro .kicker { color: var(--gold); }
+    h1 { font-size: 40px; font-weight: 800; letter-spacing: -.035em; margin: 0 0 10px; line-height: 1.05; }
+    .intro { font-size: 14px; color: var(--suave); margin: 0 0 34px; line-height: 1.6; }
+
+    .campo { margin-bottom: 18px; }
+    label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 8px; }
+    .entrada { display: flex; align-items: center; gap: 11px; background: var(--campo);
+      border: 1.5px solid var(--borde); border-radius: 11px; padding: 13px 15px;
+      transition: border-color .18s ease, box-shadow .18s ease; }
+    .entrada svg { width: 17px; height: 17px; color: var(--suave); flex-shrink: 0; }
+    .entrada span { font-size: 14px; color: var(--texto); }
+    .entrada .marcador { color: var(--suave); }
+    .entrada.foco { border-color: var(--navy); box-shadow: 0 0 0 4px rgba(5,26,42,.08); background: var(--superficie); }
+    .app.oscuro .entrada.foco { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(250,232,144,.14); }
+    .ojo { margin-left: auto; cursor: pointer; }
+
+    .fila-op { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 26px; }
+    .check { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--suave); cursor: pointer; }
+    .cuadro { width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid var(--borde); background: var(--campo); }
+    .olvide { font-size: 13px; font-weight: 600; color: var(--acento); }
+    .app.oscuro .olvide { color: var(--gold); }
+
+    .btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+      border: none; border-radius: 12px; padding: 15px 20px; font: inherit; font-size: 14.5px; font-weight: 600;
+      cursor: pointer; background: var(--navy); color: #fff;
+      transition: background .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease; }
+    .btn svg { width: 18px; height: 18px; }
+    .btn:hover { background: var(--blackberry); transform: translateY(-3px); box-shadow: 0 12px 26px rgba(96,34,73,.3); }
+    .btn:active { background: var(--violet); transform: translateY(-1px); }
+    .app.oscuro .btn { background: var(--gold); color: var(--navy); }
+    .app.oscuro .btn:hover { background: #ffffff; }
+
+    /* aviso de credenciales invalidas: un solo mensaje, no delata si el correo existe */
+    .aviso { display: flex; align-items: flex-start; gap: 10px; background: rgba(96,34,73,.07);
+      border: 1px solid rgba(96,34,73,.24); border-left: 3px solid var(--blackberry);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 22px; }
+    .aviso svg { width: 17px; height: 17px; color: var(--blackberry); flex-shrink: 0; margin-top: 1px; }
+    .aviso p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--texto); }
+    .app.oscuro .aviso { background: rgba(250,232,144,.08); border-color: rgba(250,232,144,.3); border-left-color: var(--gold); }
+    .app.oscuro .aviso svg { color: var(--gold); }
+
+    .pie-form { margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--borde);
+      font-size: 12.5px; color: var(--suave); line-height: 1.6; }
+
+    @keyframes surgir { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+    .anim { animation: surgir .55s cubic-bezier(.22,.9,.28,1) both; }
+    @media (prefers-reduced-motion: reduce) { .anim { animation: none; } }
+  </style>
+</helmet>
+
+<div class="app {{tema}}">
+
+  <!-- ============ marca ============ -->
+  <section class="marca-panel">
+    <div class="halo"></div>
+    <div class="halo2"></div>
+    <div class="rejilla"></div>
+
+    <div class="logo anim">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12.4 13V6.6a1.7 1.7 0 0 1 3.4 0V13" stroke-width="1.8"/>
+        <path d="M16.6 13V8.4a1.7 1.7 0 0 1 3.4 0V13" stroke-width="1.8"/>
+        <path d="M4 24.5h24" stroke-width="2.3"/>
+        <path d="M8.6 24.5V16a1.6 1.6 0 0 1 1.6-1.6h11.6A1.6 1.6 0 0 1 23.4 16v8.5" stroke-width="1.8"/>
+        <path d="M8.6 19.6h14.8" stroke-width="1.8"/>
+      </svg>
+      <b>Conejo App</b>
+    </div>
+
+    <div class="lema anim" style="animation-delay:.1s">
+      <p class="linea voz">El Conejo del Sombrero</p>
+      <h2>Todo el dia a dia, en un solo sitio.</h2>
+      <p>La plataforma interna donde el equipo y los clientes de la agencia siguen cada proceso sin perder el hilo.</p>
+    </div>
+
+    <div class="sello anim" style="animation-delay:.18s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+      Acceso restringido al personal y clientes de la agencia
+    </div>
+  </section>
+
+  <!-- ============ formulario ============ -->
+  <section class="form-panel">
+    <button class="tema-flot" onClick="{{alternarTema}}" aria-label="Cambiar tema">
+      <sc-if value="{{esOscuro}}" hint-placeholder-val="{{ true }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      </sc-if>
+      <sc-if value="{{esClaro}}" hint-placeholder-val="{{ false }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      </sc-if>
+      Tema {{tema}}
+    </button>
+
+    <div class="caja">
+      <p class="kicker voz anim">Bienvenido de vuelta</p>
+      <h1 class="anim" style="animation-delay:.05s">Inicia sesion</h1>
+      <p class="intro anim" style="animation-delay:.09s">Entra con el correo que la agencia te asigno. Si aun no tienes acceso, un administrador debe crearte la cuenta.</p>
+
+      <sc-if value="{{conError}}" hint-placeholder-val="{{ true }}">
+        <div class="aviso anim">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+          <p>El correo o la contrasena no son correctos.</p>
+        </div>
+      </sc-if>
+
+      <div class="campo anim" style="animation-delay:.13s">
+        <label>Correo</label>
+        <div class="entrada foco">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          <span>admin@conejo.test</span>
+        </div>
+      </div>
+
+      <div class="campo anim" style="animation-delay:.17s">
+        <label>Contrasena</label>
+        <div class="entrada">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="marcador">••••••••••</span>
+          <svg class="ojo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+      </div>
+
+      <div class="fila-op anim" style="animation-delay:.2s">
+        <span class="check"><i class="cuadro"></i> Mantener la sesion</span>
+        <span class="olvide">Olvide mi contrasena</span>
+      </div>
+
+      <button class="btn anim" style="animation-delay:.24s">
+        Entrar
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+
+      <p class="pie-form anim" style="animation-delay:.28s">Las cuentas las crea unicamente un administrador. Si necesitas acceso, escribe a soporte interno.</p>
+    </div>
+  </section>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{
+  "tema": {"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Vista"},
+  "conError": {"editor":"boolean","default":false,"section":"Vista"}
+}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { temaLocal: null };
+  }
+
+  renderVals() {
+    const tema = this.state.temaLocal ?? this.props.tema ?? 'claro';
+    return {
+      tema,
+      esOscuro: tema === 'oscuro',
+      esClaro: tema === 'claro',
+      conError: this.props.conError ?? false,
+      alternarTema: () => this.setState({ temaLocal: tema === 'claro' ? 'oscuro' : 'claro' })
+    };
+  }
+}
+</script>
+</body>
+</html>

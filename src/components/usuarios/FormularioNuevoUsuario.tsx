@@ -1,0 +1,348 @@
+"use client";
+
+import { useActionState, useState } from "react";
+import {
+  Briefcase,
+  Building2,
+  CircleAlert,
+  CircleCheck,
+  Mail,
+  Phone,
+  Plus,
+} from "lucide-react";
+import type { ReactNode } from "react";
+
+import { crearUsuario } from "@/actions/usuarios";
+import { SeparadorPanel } from "@/components/listado";
+import { PanelCuerpo, PanelPie } from "@/components/listado";
+import { Alerta, Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
+import { ESTADO_INICIAL } from "@/types";
+import type { Cargo, Empresa, NombreRol, Rol, TipoUsuario } from "@/types";
+
+/**
+ * Formulario de alta, dentro del panel lateral.
+ *
+ * Es de cliente por dos motivos concretos: `useActionState` para pintar los
+ * errores que devuelve la action sin recargar, y el selector de tipo, que
+ * decide que campos se muestran. Los datos de los desplegables llegan como
+ * props desde la page: aqui no se consulta nada.
+ */
+
+const TARJETA =
+  "relative flex cursor-pointer flex-col rounded-[13px] border-[1.5px] px-3.5 py-[15px] " +
+
+  "suave hover:border-acento " +
+  "has-[:focus-visible]:outline has-[:focus-visible]:outline-2 " +
+  "has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-acento";
+
+// Seleccionada va navy con el icono dorado, que es donde el dorado es legal.
+// En tema oscuro el navy ya es el fondo, asi que se marca con un velo dorado.
+const TARJETA_ELEGIDA =
+  "border-navy bg-navy dark-tema:border-acento dark-tema:bg-gold/[0.12]";
+
+const TARJETA_SUELTA = "border-borde bg-campo";
+
+// En la base cada rol lleva una frase que lo explica, demasiado larga para un
+// desplegable estrecho. La explicacion que importa esta en la ayuda del campo.
+const ROTULO_ROL: Record<NombreRol, string> = {
+  admin: "Admin",
+  trabajador: "Trabajador",
+  cliente: "Cliente",
+};
+
+function TarjetaTipo({
+  valor,
+  titulo,
+  descripcion,
+  icono,
+  elegida,
+  alElegir,
+}: {
+  valor: TipoUsuario;
+  titulo: string;
+  descripcion: string;
+  icono: ReactNode;
+  elegida: boolean;
+  alElegir: (valor: TipoUsuario) => void;
+}) {
+  return (
+    <label className={[TARJETA, elegida ? TARJETA_ELEGIDA : TARJETA_SUELTA].join(" ")}>
+      {/*
+        Un radio de verdad, solo que invisible: asi el tipo viaja en el
+        FormData, se puede elegir con las flechas del teclado y el lector de
+        pantalla anuncia el grupo sin que haya que inventarle roles.
+      */}
+      <input
+        type="radio"
+        name="tipo"
+        value={valor}
+        checked={elegida}
+        onChange={() => alElegir(valor)}
+        className="sr-only"
+      />
+
+      <span
+        aria-hidden="true"
+        className={[
+          "[&>svg]:size-5",
+          elegida ? "text-acento" : "text-suave",
+        ].join(" ")}
+      >
+        {icono}
+      </span>
+
+      <span
+        className={[
+          "mt-[9px] text-[13.5px] font-bold",
+          elegida ? "text-white dark-tema:text-texto" : "text-texto",
+        ].join(" ")}
+      >
+        {titulo}
+      </span>
+
+      <span
+        className={[
+          "mt-[3px] text-[11.5px] leading-[1.4]",
+          elegida ? "text-white/60 dark-tema:text-suave" : "text-suave",
+        ].join(" ")}
+      >
+        {descripcion}
+      </span>
+    </label>
+  );
+}
+
+export function FormularioNuevoUsuario({
+  roles,
+  cargos,
+  empresas,
+  hrefCancelar,
+}: {
+  roles: Rol[];
+  cargos: Cargo[];
+  empresas: Empresa[];
+
+  /** A donde vuelve el boton de cancelar: la misma URL sin el panel. */
+  hrefCancelar: string;
+}) {
+  const [estado, enviar, enviando] = useActionState(crearUsuario, ESTADO_INICIAL);
+  const [tipo, setTipo] = useState<TipoUsuario>("trabajador");
+
+  const errores = estado.errores ?? {};
+  const esTrabajador = tipo === "trabajador";
+
+  // Un cliente pertenece siempre a una empresa, asi que sin empresas
+  // registradas no hay alta posible: mejor decirlo que dejar enviar el
+  // formulario para que falle.
+  const sinEmpresas = empresas.length === 0;
+
+  return (
+    <form action={enviar} noValidate className="flex min-h-0 flex-1 flex-col">
+      <PanelCuerpo>
+      {estado.mensaje && (
+        <Alerta
+          tono={estado.ok ? "info" : "aviso"}
+          icono={estado.ok ? <CircleCheck /> : <CircleAlert />}
+          className="mb-[18px]"
+        >
+          {estado.mensaje}
+        </Alerta>
+      )}
+
+      <fieldset className="min-w-0">
+        <legend className="sr-only">Tipo de usuario</legend>
+
+        <div className="grid grid-cols-2 gap-[11px]">
+          <TarjetaTipo
+            valor="trabajador"
+            titulo="Trabajador"
+            descripcion="Personal de la agencia. Lleva un rol."
+            icono={<Briefcase />}
+            elegida={esTrabajador}
+            alElegir={setTipo}
+          />
+
+          <TarjetaTipo
+            valor="cliente"
+            titulo="Cliente"
+            descripcion="Contacto de una empresa cliente."
+            icono={<Building2 />}
+            elegida={!esTrabajador}
+            alElegir={setTipo}
+          />
+        </div>
+
+        {errores.tipo && (
+          <p
+            role="alert"
+            className="mt-2 text-[11.5px] font-medium text-blackberry dark-tema:text-[#e9a9cd]"
+          >
+            {errores.tipo}
+          </p>
+        )}
+      </fieldset>
+
+      <SeparadorPanel>Datos de la persona</SeparadorPanel>
+
+      <div className="grid grid-cols-2 gap-3.5">
+        <Campo
+          id="nuevo-nombre"
+          name="nombre"
+          etiqueta="Nombre"
+          placeholder="Nombre"
+          autoComplete="off"
+          maxLength={60}
+          required
+          error={errores.nombre}
+        />
+
+        <Campo
+          id="nuevo-apellido"
+          name="apellido"
+          etiqueta="Apellido"
+          placeholder="Apellido"
+          autoComplete="off"
+          maxLength={60}
+          required
+          error={errores.apellido}
+        />
+
+        <Campo
+          id="nuevo-correo"
+          name="correo"
+          type="email"
+          inputMode="email"
+          etiqueta="Correo"
+          placeholder="nombre@dominio.com"
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          maxLength={254}
+          required
+          icono={<Mail />}
+          ayuda="Sera su identificador de acceso. No puede repetirse."
+          error={errores.correo}
+          className="col-span-2"
+        />
+
+        <Campo
+          id="nuevo-telefono"
+          name="telefono"
+          type="tel"
+          inputMode="tel"
+          etiqueta="Telefono"
+          opcional
+          placeholder="+58 412 000 0000"
+          autoComplete="off"
+          maxLength={30}
+          icono={<Phone />}
+          error={errores.telefono}
+          className="col-span-2"
+        />
+      </div>
+
+      <SeparadorPanel>
+        {esTrabajador ? "Rol dentro de la agencia" : "Empresa a la que pertenece"}
+      </SeparadorPanel>
+
+      {/*
+        Solo se monta la mitad que corresponde al tipo elegido. Al no estar en
+        el DOM, sus campos tampoco viajan en el FormData, y la action no tiene
+        que decidir cual de los dos juegos de datos ignorar.
+      */}
+      <div className="grid grid-cols-2 gap-3.5">
+        {esTrabajador ? (
+          <>
+            <Selector
+              id="nuevo-rol"
+              nombre="rolId"
+              etiqueta="Rol"
+              marcador="Elige un rol"
+              requerido
+              opciones={roles.map((rol) => ({
+                valor: String(rol.id),
+                texto: ROTULO_ROL[rol.nombre],
+                detalle: rol.descripcion ?? undefined,
+              }))}
+              ayuda="El rol admin puede crear usuarios. Solo se asigna a trabajadores."
+              error={errores.rolId}
+              className="col-span-2"
+            />
+
+            <Selector
+              id="nuevo-cargo"
+              nombre="cargoId"
+              etiqueta="Area"
+              marcador="Elige un area"
+              requerido
+              opciones={cargos.map((cargo) => ({
+                valor: String(cargo.id),
+                texto: cargo.nombre,
+                detalle: cargo.descripcion ?? undefined,
+              }))}
+              ayuda="Decide que contenido de la agencia ve esta persona."
+              error={errores.cargoId}
+              className="col-span-2"
+            />
+          </>
+        ) : (
+          <>
+            {sinEmpresas ? (
+              <Alerta icono={<CircleAlert />} className="col-span-2">
+                Todavia no hay ninguna empresa activa. Hay que registrar la
+                empresa antes de dar de alta a su persona de contacto.
+              </Alerta>
+            ) : (
+              <Selector
+                id="nuevo-empresa"
+                nombre="empresaId"
+                etiqueta="Empresa"
+                marcador="Elige una empresa"
+                requerido
+                opciones={empresas.map((empresa) => ({
+                  valor: String(empresa.id),
+                  texto: empresa.nombre,
+                  detalle: empresa.rif ?? undefined,
+                }))}
+                ayuda="Determina que contenido ve: nunca vera el de otra empresa."
+                error={errores.empresaId}
+                className="col-span-2"
+              />
+            )}
+
+            <Campo
+              id="nuevo-cargo-libre"
+              name="cargo"
+              etiqueta="Cargo"
+              opcional
+              placeholder="Gerente de mercadeo"
+              autoComplete="off"
+              maxLength={80}
+              ayuda="Su puesto en su propia empresa. Es descriptivo, no da permisos."
+              error={errores.cargo}
+              className="col-span-2"
+            />
+          </>
+        )}
+      </div>
+
+      </PanelCuerpo>
+
+      {/*
+        El pie es hermano del cuerpo, no parte de el: el boton de enviar tiene
+        que ser hijo de este <form>, pero si viviera dentro del area que se
+        desplaza quedaria flotando con contenido asomando por debajo.
+      */}
+      <PanelPie>
+        <BotonEnlace href={hrefCancelar} variante="fantasma">
+          Cancelar
+        </BotonEnlace>
+
+        <Boton type="submit" disabled={enviando || (!esTrabajador && sinEmpresas)}>
+          {enviando ? "Creando..." : "Crear usuario"}
+          {!enviando && <Plus aria-hidden="true" />}
+        </Boton>
+      </PanelPie>
+    </form>
+  );
+}

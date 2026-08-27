@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Conejo App",
+      "Group": "Servidores",
+      "Host": "db",
+      "Port": 5432,
+      "MaintenanceDB": "conejo_app",
+      "Username": "conejo",
+      "SSLMode": "prefer",
+      "Comment": "Base de datos local del proyecto, levantada por docker compose"
+    }
+  }
+}

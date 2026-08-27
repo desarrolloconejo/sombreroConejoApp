@@ -1,0 +1,337 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600..900&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; }
+    a { color: #602249; text-decoration: none; }
+    a:hover { color: #321327; }
+
+    .hoja {
+      --navy: #051a2a; --gold: #fae890; --blackberry: #602249; --violet: #321327;
+      --fondo: #f2f4f6; --superficie: #ffffff; --texto: #040404;
+      --suave: #5a6b76; --borde: #e3e7ea; --campo: #f6f8f9; --acento: #602249;
+      --sombra: 0 1px 2px rgba(5,26,42,.06), 0 8px 24px rgba(5,26,42,.05);
+
+      width: 1440px; height: 1240px; overflow: hidden; padding: 40px 44px;
+      background: var(--fondo); color: var(--texto);
+      font-family: Poppins, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+    }
+    .hoja.oscuro {
+      --fondo: #041521; --superficie: #0a2436; --texto: #ffffff;
+      --suave: #9db0be; --borde: #14344a; --campo: #08283c; --acento: #fae890;
+      --sombra: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    }
+    .voz { font-family: Fraunces, Georgia, serif; font-optical-sizing: auto; }
+
+    .cabeza { margin-bottom: 26px; padding-bottom: 20px; border-bottom: 1px solid var(--borde); }
+    .kicker { font-size: 13px; font-weight: 700; color: var(--acento); margin: 0 0 6px; }
+    h1 { font-size: 36px; font-weight: 800; letter-spacing: -.03em; margin: 0; line-height: 1.05; }
+    .sub { font-size: 13.5px; color: var(--suave); margin: 9px 0 0; max-width: 88ch; line-height: 1.6; }
+
+    .dos { display: grid; grid-template-columns: minmax(0, 1fr) 396px; gap: 26px; }
+
+    /* ---- pieza anotada ---- */
+    .pieza { position: relative; margin-bottom: 20px; }
+    .marca-n { position: absolute; left: -30px; top: 0; width: 22px; height: 22px; border-radius: 50%;
+      background: var(--navy); color: var(--gold); display: grid; place-items: center;
+      font-size: 11px; font-weight: 700; }
+    .titulo-p { font-size: 11px; letter-spacing: .11em; text-transform: uppercase; font-weight: 700;
+      color: var(--suave); margin: 0 0 9px; }
+
+    /* ---- el listado de ejemplo ---- */
+    .listado { background: var(--superficie); border: 1px solid var(--borde); border-radius: 15px;
+      box-shadow: var(--sombra); overflow: hidden; }
+
+    .listado-cab { padding: 16px 20px; border-bottom: 1px solid var(--borde);
+      display: flex; align-items: center; gap: 12px; }
+    .buscador { flex: 1; max-width: 340px; display: flex; align-items: center; gap: 9px;
+      background: var(--campo); border: 1.5px solid var(--borde); border-radius: 10px;
+      padding: 10px 13px; color: var(--suave); font-size: 13px; }
+    .buscador svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .btn { display: inline-flex; align-items: center; gap: 9px; border: none; border-radius: 12px;
+      padding: 11px 18px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+      background: var(--navy); color: #fff;
+      transition: background .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease; }
+    .btn svg { width: 16px; height: 16px; }
+    .btn:hover { background: var(--blackberry); transform: translateY(-3px); box-shadow: 0 10px 22px rgba(96,34,73,.28); }
+    .btn:active { background: var(--violet); transform: translateY(-1px); }
+    .hoja.oscuro .btn { background: var(--gold); color: var(--navy); }
+    .hoja.oscuro .btn:hover { background: #ffffff; }
+    .btn.chico { margin-left: auto; }
+
+    .filtros { padding: 13px 20px; border-bottom: 1px solid var(--borde);
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .chip { font-size: 12.5px; font-weight: 600; border: 1.5px solid var(--borde); border-radius: 999px;
+      padding: 7px 14px; cursor: pointer; color: var(--suave); background: transparent;
+      transition: transform .18s ease, border-color .18s ease, color .18s ease, background .18s ease; }
+    .chip:hover { transform: translateY(-2px); border-color: var(--blackberry); color: var(--texto); }
+    .chip.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .hoja.oscuro .chip.on { background: var(--gold); border-color: var(--gold); color: var(--navy); }
+    .chip.limpiar { margin-left: auto; border-style: dashed; }
+
+    .th, .tr { display: grid; grid-template-columns: 2.2fr 1.1fr 1.5fr 1fr 44px; align-items: center; gap: 14px; padding: 0 20px; }
+    .th { height: 44px; background: var(--campo); border-bottom: 1px solid var(--borde); }
+    .th span { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--suave);
+      display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+      transition: color .16s ease; }
+    .th span.orden { color: var(--texto); }
+    .th span:hover { color: var(--texto); }
+    .th svg { width: 12px; height: 12px; }
+    .th .apagado { opacity: .32; }
+
+    .tr { height: 62px; border-bottom: 1px solid var(--borde); }
+    .tr:last-of-type { border-bottom: none; }
+    .persona { display: flex; align-items: center; gap: 11px; }
+    .av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--navy); color: var(--gold); font-weight: 700; font-size: 12px; }
+    .persona b { display: block; font-size: 13px; font-weight: 600; }
+    .persona small { display: block; font-size: 11px; color: var(--suave); margin-top: 2px; }
+    .etq { display: inline-block; font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+      border-radius: 999px; padding: 4px 10px; background: var(--navy); color: var(--gold); }
+    .etq.gris { background: transparent; color: var(--suave); border: 1px solid var(--borde); }
+    .celda { font-size: 12.5px; color: var(--suave); }
+    .estado { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
+    .luz { width: 7px; height: 7px; border-radius: 50%; background: var(--blackberry); }
+    .hoja.oscuro .luz { background: var(--gold); }
+    .mas { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--suave); }
+    .mas svg { width: 15px; height: 15px; }
+
+    .pag { padding: 13px 20px; border-top: 1px solid var(--borde);
+      display: flex; align-items: center; gap: 12px; }
+    .pag-txt { font-size: 12.5px; color: var(--suave); }
+    .pag-nums { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .num { min-width: 34px; height: 34px; padding: 0 9px; border-radius: 9px; border: 1.5px solid var(--borde);
+      display: grid; place-items: center; font-size: 12.5px; font-weight: 600; color: var(--suave);
+      background: transparent; cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease; }
+    .num svg { width: 14px; height: 14px; }
+    .num:hover { transform: translateY(-2px); border-color: var(--blackberry); color: var(--texto); }
+    .num.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .hoja.oscuro .num.on { background: var(--gold); border-color: var(--gold); color: var(--navy); }
+    .num.mudo { opacity: .4; cursor: default; }
+    .num.mudo:hover { transform: none; border-color: var(--borde); color: var(--suave); }
+    .porpag { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--suave); }
+    .selector { display: flex; align-items: center; gap: 7px; border: 1.5px solid var(--borde);
+      border-radius: 9px; padding: 7px 11px; font-weight: 600; color: var(--texto); cursor: pointer; }
+    .selector svg { width: 13px; height: 13px; color: var(--suave); }
+
+    /* ---- columna de documentacion ---- */
+    .doc { background: var(--superficie); border: 1px solid var(--borde); border-radius: 15px;
+      padding: 20px; box-shadow: var(--sombra); margin-bottom: 18px; }
+    .doc h3 { font-size: 14px; font-weight: 700; margin: 0 0 4px; letter-spacing: -.01em; }
+    .doc .nota { font-size: 12px; color: var(--suave); margin: 0 0 14px; line-height: 1.55; }
+    pre { margin: 0; background: var(--navy); color: #dbe6ee; border-radius: 11px;
+      padding: 15px 16px; font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      font-size: 11.5px; line-height: 1.72; overflow: hidden; white-space: pre; }
+    pre .c { color: #7d94a5; }
+    pre .k { color: var(--gold); }
+    pre .s { color: #f2b8d8; }
+
+    .lista { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .lista li { display: flex; gap: 10px; font-size: 12.5px; line-height: 1.5; }
+    .lista .n { width: 20px; height: 20px; flex-shrink: 0; border-radius: 50%; background: var(--navy);
+      color: var(--gold); display: grid; place-items: center; font-size: 10.5px; font-weight: 700; }
+    .lista b { font-weight: 600; }
+    .lista span { color: var(--suave); }
+
+    .url { background: var(--campo); border: 1px dashed var(--borde); border-radius: 10px;
+      padding: 12px 14px; font-family: ui-monospace, Consolas, monospace; font-size: 11.5px;
+      line-height: 1.75; color: var(--texto); word-break: break-all; }
+    .url em { font-style: normal; color: var(--acento); font-weight: 700; }
+  </style>
+</helmet>
+
+<div class="hoja {{tema}}">
+
+  <div class="cabeza">
+    <p class="kicker voz">Un solo patron para todos los modulos</p>
+    <h1>Listado estandar</h1>
+    <p class="sub">Cualquier modulo que muestre registros usa este mismo componente: se le pasan los datos y las definiciones por props, y el estado de busqueda, filtros, orden y pagina vive en la URL. Ningun modulo vuelve a escribir su propia tabla.</p>
+  </div>
+
+  <div class="dos">
+    <!-- ================= anatomia ================= -->
+    <div>
+      <div class="pieza">
+        <span class="marca-n">1</span>
+        <p class="titulo-p">Cabecera: buscador y accion principal</p>
+      </div>
+
+      <div class="listado">
+        <div class="listado-cab">
+          <div class="buscador">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            Buscar por nombre o correo
+          </div>
+          <button class="btn chico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            Nuevo usuario
+          </button>
+        </div>
+
+        <div class="filtros">
+          <span class="chip on">Todos</span>
+          <span class="chip">Trabajadores</span>
+          <span class="chip">Clientes</span>
+          <span class="chip">Desactivados</span>
+          <span class="chip limpiar">Limpiar filtros</span>
+        </div>
+
+        <div class="th">
+          <span class="orden">Persona
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+          </span>
+          <span>Rol
+            <svg class="apagado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+          </span>
+          <span>Pertenece a
+            <svg class="apagado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+          </span>
+          <span>Estado</span>
+          <span></span>
+        </div>
+
+        <div class="tr">
+          <div class="persona">
+            <div class="av">AR</div>
+            <div><b>Ana Rodriguez</b><small>admin@conejo.test</small></div>
+          </div>
+          <div><span class="etq">Admin</span></div>
+          <div class="celda">La agencia</div>
+          <div class="estado"><i class="luz"></i> Activa</div>
+          <div class="mas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </div>
+        </div>
+        <div class="tr">
+          <div class="persona">
+            <div class="av">LP</div>
+            <div><b>Luis Perez</b><small>trabajador@conejo.test</small></div>
+          </div>
+          <div><span class="etq gris">Trabajador</span></div>
+          <div class="celda">La agencia</div>
+          <div class="estado"><i class="luz"></i> Activa</div>
+          <div class="mas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </div>
+        </div>
+        <div class="tr">
+          <div class="persona">
+            <div class="av">MG</div>
+            <div><b>Maria Gomez</b><small>cliente@empresa.test</small></div>
+          </div>
+          <div><span class="etq gris">Cliente</span></div>
+          <div class="celda">Distribuidora Ejemplo</div>
+          <div class="estado"><i class="luz"></i> Activa</div>
+          <div class="mas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </div>
+        </div>
+
+        <div class="pag">
+          <span class="pag-txt">1 a 3 de 47</span>
+          <div class="porpag">
+            <span>Mostrar</span>
+            <span class="selector">20
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+          <div class="pag-nums">
+            <span class="num mudo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </span>
+            <span class="num on">1</span>
+            <span class="num">2</span>
+            <span class="num">3</span>
+            <span class="num">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; margin-top:18px;">
+        <div class="pieza" style="margin:0"><span class="marca-n">2</span><p class="titulo-p" style="margin:0">Filtros</p></div>
+        <div class="pieza" style="margin:0"><span class="marca-n">3</span><p class="titulo-p" style="margin:0">Columnas ordenables</p></div>
+        <div class="pieza" style="margin:0"><span class="marca-n">4</span><p class="titulo-p" style="margin:0">Filas</p></div>
+        <div class="pieza" style="margin:0"><span class="marca-n">5</span><p class="titulo-p" style="margin:0">Paginacion</p></div>
+      </div>
+
+      <div class="doc" style="margin-top:22px">
+        <h3>El estado vive en la URL, no en el componente</h3>
+        <p class="nota">La page lee <b>searchParams</b> en el servidor y se los inyecta al componente. Cada filtro, cada orden y cada pagina es un enlace: se puede compartir, guardar en marcadores y volver atras con el boton del navegador.</p>
+        <div class="url">/dashboard/usuarios?<em>busqueda</em>=ana&amp;<em>tipo</em>=trabajador&amp;<em>estado</em>=activo&amp;<em>orden</em>=nombre&amp;<em>dir</em>=asc&amp;<em>pagina</em>=2&amp;<em>porPagina</em>=20</div>
+      </div>
+    </div>
+
+    <!-- ================= contrato ================= -->
+    <div>
+      <div class="doc">
+        <h3>Lo que recibe por props</h3>
+        <p class="nota">La page consulta el modelo e inyecta. El componente no sabe de que modulo se trata.</p>
+        <pre><span class="c">// definiciones, no datos</span>
+<span class="k">columnas</span>: [
+  { clave: <span class="s">"nombre"</span>, titulo: <span class="s">"Persona"</span>,
+    ordenable: true, render: fn },
+  ...
+]
+<span class="k">filtros</span>: [
+  { clave: <span class="s">"tipo"</span>, titulo: <span class="s">"Tipo"</span>,
+    opciones: [...] },
+  ...
+]
+
+<span class="c">// datos ya consultados</span>
+<span class="k">filas</span>: Usuario[]
+<span class="k">total</span>: 47
+<span class="k">pagina</span>: 1
+<span class="k">porPagina</span>: 20
+
+<span class="c">// estado leido de la URL</span>
+<span class="k">busqueda</span>: <span class="s">"ana"</span>
+<span class="k">orden</span>: <span class="s">"nombre"</span>
+<span class="k">direccion</span>: <span class="s">"asc"</span>
+
+<span class="c">// accion principal, opcional</span>
+<span class="k">accion</span>: { texto, icono, href }</pre>
+      </div>
+
+      <div class="doc">
+        <h3>Que aporta cada modulo</h3>
+        <ul class="lista">
+          <li><span class="n">1</span><div><b>Sus columnas</b><br><span>Que se muestra y como se pinta cada celda</span></div></li>
+          <li><span class="n">2</span><div><b>Sus filtros</b><br><span>Las opciones propias de la entidad</span></div></li>
+          <li><span class="n">3</span><div><b>Su consulta</b><br><span>Una funcion del modelo que ya acepta filtros, orden y pagina</span></div></li>
+          <li><span class="n">4</span><div><b>Su panel de alta</b><br><span>Solo el contenido del formulario; el panel es el mismo</span></div></li>
+        </ul>
+      </div>
+
+      <div class="doc" style="margin-bottom:0">
+        <h3>El panel lateral tambien es unico</h3>
+        <p class="nota">El mismo contenedor deslizante sirve para crear y para editar en cualquier modulo: cabecera con titulo y descripcion, cuerpo con el formulario que le pase el modulo, y pie con cancelar y confirmar. Se abre y se cierra con la URL, igual que los filtros.</p>
+        <div class="url">/dashboard/usuarios?<em>panel</em>=nuevo<br>/dashboard/usuarios?<em>panel</em>=editar&amp;<em>id</em>=12</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{
+  "tema": {"editor":"enum","options":["claro","oscuro"],"default":"claro","section":"Vista"}
+}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { tema: this.props.tema ?? 'claro' };
+  }
+}
+</script>
+</body>
+</html>

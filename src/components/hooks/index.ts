@@ -1,0 +1,22 @@
+/** Punto unico de importacion del modulo de hooks. */
+export { FormularioHook } from "./FormularioHook";
+export { FichaProduccion, textoDeFicha } from "./FichaProduccion";
+export type { ValoresFicha } from "./FichaProduccion";
+export { ResultadoAuditoria, ResultadoNeutro } from "./ResultadoAuditoria";
+export { FiltroCalidad } from "./FiltroCalidad";
+export { AuditorSuelto } from "./AuditorSuelto";
+export { ConfirmarDocumentacion } from "./ConfirmarDocumentacion";
+export { DetalleApertura } from "./DetalleApertura";
+export { DetalleReferencia } from "./DetalleReferencia";
+export { DetalleRegla } from "./DetalleRegla";
+export { FormularioApertura } from "./FormularioApertura";
+export { FormularioReferencia } from "./FormularioReferencia";
+export { FormularioRegla } from "./FormularioRegla";
+export {
+  RotuloSeccion,
+  SeccionAperturas,
+  SeccionReferencias,
+  SeccionReglas,
+} from "./SeccionesDocumentacion";
+
+
