@@ -16,6 +16,7 @@ import { crearUsuario } from "@/actions/usuarios";
 import { SeparadorPanel } from "@/components/listado";
 import { PanelCuerpo, PanelPie } from "@/components/listado";
 import { Alerta, Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
+import { CredencialProvisional } from "./CredencialProvisional";
 import { ESTADO_INICIAL } from "@/types";
 import type { Cargo, Empresa, NombreRol, Rol, TipoUsuario } from "@/types";
 
@@ -130,6 +131,38 @@ export function FormularioNuevoUsuario({
 
   const errores = estado.errores ?? {};
   const esTrabajador = tipo === "trabajador";
+
+  /*
+   * Creada la cuenta, el panel deja de ser un formulario.
+   *
+   * Antes seguia siendo el mismo formulario relleno con un aviso arriba, y ese
+   * aviso llevaba dentro la contrasena provisional. Como el cuerpo del panel
+   * se desplaza y el boton de enviar vive en el pie, quien acababa de pulsar
+   * estaba abajo y el aviso aparecia fuera de la vista: la clave no se veia
+   * nunca. Y como solo se muestra una vez, la cuenta nacia inservible.
+   *
+   * Sustituir la pantalla entera resuelve las dos cosas a la vez: no hay nada
+   * que perderse de vista, y no queda un formulario a medio camino invitando a
+   * crear la misma cuenta otra vez.
+   */
+  if (estado.ok && estado.credencial) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <PanelCuerpo>
+          <CredencialProvisional
+            email={estado.credencial.email}
+            password={estado.credencial.password}
+            titulo="Cuenta creada"
+            descripcion="Entregale estos datos a la persona. Al entrar podra cambiar la contrasena desde Mi perfil."
+          />
+        </PanelCuerpo>
+
+        <PanelPie>
+          <BotonEnlace href={hrefCancelar}>Listo</BotonEnlace>
+        </PanelPie>
+      </div>
+    );
+  }
 
   // Un cliente pertenece siempre a una empresa, asi que sin empresas
   // registradas no hay alta posible: mejor decirlo que dejar enviar el

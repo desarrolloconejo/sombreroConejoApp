@@ -40,6 +40,19 @@ export type EstadoFormulario = {
   ok: boolean;
   mensaje?: string;
   errores?: ErroresCampo;
+
+  /**
+   * Una contrasena provisional recien generada, para entregarla en mano.
+   *
+   * Va en su propio campo y no dentro de `mensaje` por una razon practica: es
+   * un dato que hay que poder copiar, destacar y mostrar en una pantalla
+   * aparte. Metida en una frase, lo unico que se puede hacer con ella es
+   * leerla, y solo si te fijas.
+   *
+   * La usan el alta de usuarios y el restablecimiento de contrasena. Se
+   * muestra UNA vez: en la base solo queda su hash.
+   */
+  credencial?: { email: string; password: string };
 };
 
 /** Estado inicial de cualquier formulario, antes del primer envio. */

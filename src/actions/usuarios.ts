@@ -296,11 +296,75 @@ export async function crearUsuario(
 
   revalidatePath(RUTA_LISTADO);
 
+  // La contrasena vuelve en `credencial` y NO dentro del mensaje: quien la
+  // reciba tiene que poder copiarla y verla destacada, no buscarla dentro de
+  // una frase.
   return {
     ok: true,
-    mensaje:
-      `Cuenta creada. La contrasena provisional es ${provisional}. ` +
-      "Anotala y entregasela: no se vuelve a mostrar.",
+    credencial: { email: persona.correo, password: provisional },
+  };
+}
+
+/**
+ * Genera una contrasena provisional nueva para una cuenta ajena.
+ *
+ * Es la red de seguridad que faltaba. La provisional del alta se muestra una
+ * sola vez, y sin esto una clave perdida dejaba la cuenta MUERTA: la persona
+ * no podia entrar, el administrador no podia darle otra —`editarUsuario` no
+ * toca la contrasena a proposito— y el cambio desde el perfil exige la actual,
+ * que es justo la que se perdio. Como el correo es unico, ni siquiera se podia
+ * recrear la cuenta.
+ *
+ * Sigue sin permitir suplantar: el administrador no elige la contrasena ni ve
+ * la anterior, solo provoca una nueva al azar que tendra que entregar en mano.
+ */
+export async function restablecerPassword(
+  _estadoPrevio: EstadoFormulario,
+  datos: FormData,
+): Promise<EstadoFormulario> {
+  const sesion = await requerirAdmin();
+
+  const id = comoIdentificador(datos.get("id"));
+
+  if (id === null) {
+    return { ok: false, mensaje: "No se pudo identificar la cuenta" };
+  }
+
+  const usuario = await usuarios.buscarPorId(id);
+
+  if (!usuario) {
+    return { ok: false, mensaje: "Esa cuenta ya no existe" };
+  }
+
+  /*
+   * Para la propia cuenta no.
+   *
+   * No es por seguridad —un administrador ya puede cambiarse la contrasena
+   * desde su perfil— sino porque el resultado seria peor: se quedaria con una
+   * clave al azar en lugar de la que eligio, y la sesion abierta seguiria
+   * valiendo hasta caducar, asi que ni siquiera notaria el cambio hasta el
+   * dia siguiente.
+   */
+  if (usuario.id === sesion.usuarioId) {
+    return {
+      ok: false,
+      mensaje: "Para tu propia cuenta usa el cambio de contrasena de Mi perfil",
+    };
+  }
+
+  const provisional = generarPasswordProvisional();
+  const guardada = await usuarios.actualizarPasswordHash(
+    usuario.id,
+    await hashear(provisional),
+  );
+
+  if (!guardada) {
+    return { ok: false, mensaje: "No se pudo restablecer la contrasena" };
+  }
+
+  return {
+    ok: true,
+    credencial: { email: usuario.email, password: provisional },
   };
 }
 

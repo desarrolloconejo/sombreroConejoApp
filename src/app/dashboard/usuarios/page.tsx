@@ -11,6 +11,7 @@ import {
 import {
   columnasUsuarios,
   ConfirmarEstadoUsuario,
+  ConfirmarRestablecer,
   DetalleUsuario,
   filtrosUsuarios,
   FormularioEditarUsuario,
@@ -113,14 +114,14 @@ async function cargarOpciones() {
 /**
  * Los paneles que trabajan sobre un registro concreto.
  *
- * Se resuelve en una sola funcion para que la consulta salga una vez: los tres
+ * Se resuelve en una sola funcion para que la consulta salga una vez: los cuatro
  * necesitan el usuario, y solo dos de ellos las opciones de los desplegables.
  * Si el id no corresponde a nadie devuelve null y no se abre nada, que es lo
  * que pasa al recargar un "?panel=editar&id=999" viejo.
  */
 async function cargarPanelDeRegistro(panel: string | null, id: number | null) {
   if (!panel || id === null) return null;
-  if (!["ver", "editar", "estado"].includes(panel)) return null;
+  if (!["ver", "editar", "estado", "clave"].includes(panel)) return null;
 
   const usuario = await usuariosModelo.buscarPorId(id);
 
@@ -272,6 +273,19 @@ export default async function PaginaUsuarios(
                 }
               >
                 <ConfirmarEstadoUsuario
+                  usuario={registro.usuario}
+                  hrefCerrar={hrefCerrar}
+                />
+              </ModalConfirmacion>
+            )}
+
+            {registro && estado.panel === "clave" && (
+              <ModalConfirmacion
+                hrefCerrar={hrefCerrar}
+                kicker="Restablecer contrasena"
+                titulo={`¿Generar una contrasena nueva para ${registro.usuario.nombre}?`}
+              >
+                <ConfirmarRestablecer
                   usuario={registro.usuario}
                   hrefCerrar={hrefCerrar}
                 />

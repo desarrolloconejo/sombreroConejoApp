@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eye, Pencil, Power, PowerOff } from "lucide-react";
+import { Eye, KeyRound, Pencil, Power, PowerOff } from "lucide-react";
 
 import { Avatar, Estado, Etiqueta } from "@/components/ui";
 import { conPanel } from "@/lib/urlListado";
@@ -19,9 +19,9 @@ const ANCHOS = {
   rol: "1.1fr",
   ambito: "1.5fr",
   estado: "1fr",
-  // Tres botones de 36 px con sus separaciones. Fija y no fraccion: las
+  // Cuatro botones de 36 px con sus separaciones. Fija y no fraccion: las
   // acciones no deben encoger cuando un nombre es largo.
-  acciones: "128px",
+  acciones: "164px",
 } as const;
 
 /**
@@ -175,6 +175,20 @@ export function columnasUsuarios(
               etiqueta={`Editar a ${quien}`}
             >
               <Pencil aria-hidden="true" />
+            </AccionFila>
+
+            {/*
+              Restablecer la contrasena es la unica forma de recuperar una
+              cuenta cuya provisional se perdio: solo se muestra al crearla, y
+              en la base queda cifrada. Sin esto, esa cuenta se quedaba sin
+              acceso y sin arreglo, porque el correo es unico y no se podia ni
+              recrear.
+            */}
+            <AccionFila
+              href={conPanel(ruta, estado, "clave", usuario.id)}
+              etiqueta={`Restablecer la contrasena de ${quien}`}
+            >
+              <KeyRound aria-hidden="true" />
             </AccionFila>
 
             {/*

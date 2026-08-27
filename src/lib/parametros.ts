@@ -48,7 +48,7 @@ const LIMITE_FILTRO = 60;
  * page, que decide con el que consultar. Lo que no este aqui se ignora y no se
  * abre nada, en lugar de fallar.
  */
-const PANELES: readonly string[] = ["nuevo", "ver", "editar", "estado"];
+const PANELES: readonly string[] = ["nuevo", "ver", "editar", "estado", "clave"];
 
 /**
  * Un parametro repetido ("?tipo=a&tipo=b") llega como arreglo. Se toma el

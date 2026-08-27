@@ -5,3 +5,5 @@ export { FormularioNuevoUsuario } from "./FormularioNuevoUsuario";
 export { FormularioEditarUsuario } from "./FormularioEditarUsuario";
 export { DetalleUsuario } from "./DetalleUsuario";
 export { ConfirmarEstadoUsuario } from "./ConfirmarEstadoUsuario";
+export { ConfirmarRestablecer } from "./ConfirmarRestablecer";
+export { CredencialProvisional } from "./CredencialProvisional";
