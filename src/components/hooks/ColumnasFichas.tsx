@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Copy, Eye, Pencil, Trash2 } from "lucide-react";
 
 import { Etiqueta } from "@/components/ui";
 import { metricaDe, nombrePlataforma, objetivoDe, porcentajeDe } from "@/lib/hooks/catalogo";
@@ -18,7 +18,7 @@ const ANCHOS = {
   cliente: "1.1fr",
   estado: "1.1fr",
   resultado: "0.9fr",
-  acciones: "128px",
+  acciones: "164px",
 } as const;
 
 export const REJILLA_FICHAS = Object.values(ANCHOS)
@@ -197,6 +197,18 @@ export function columnasFichas(
               etiqueta={`Editar «${corto}»`}
             >
               <Pencil aria-hidden="true" />
+            </AccionFila>
+
+            {/*
+              Usar como plantilla NO toca esta ficha: abre el canvas con sus
+              campos copiados y sin su id, asi que al guardar nace una pieza
+              nueva. El cliente se deja en blanco a proposito.
+            */}
+            <AccionFila
+              href={`/dashboard/hooks/nuevo?panel=plantilla&id=${ficha.id}`}
+              etiqueta={`Usar «${corto}» como plantilla`}
+            >
+              <Copy aria-hidden="true" />
             </AccionFila>
 
             <AccionFila

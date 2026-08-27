@@ -106,7 +106,7 @@ function validarFicha(datos: FormData): Validacion {
 export async function guardarBorrador(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
-): Promise<EstadoFormulario> {
+): Promise<EstadoAuditoria> {
   const usuario = await requerirCargo("redes");
 
   const { datos: ficha, errores } = validarFicha(datos);
@@ -121,13 +121,25 @@ export async function guardarBorrador(
     if (!actualizada) return { ok: false, mensaje: "Esa ficha ya no existe" };
 
     revalidatePath(RUTA_MODULO, "layout");
-    return { ok: true, mensaje: "Borrador actualizado" };
+    return { ok: true, mensaje: "Borrador actualizado", fichaId: id };
   }
 
   const creada = await fichas.crear(ficha, usuario.id);
 
   revalidatePath(RUTA_MODULO, "layout");
-  return { ok: true, mensaje: `Borrador guardado (ficha ${creada.id})` };
+
+  /*
+   * El id vuelve para que el formulario lo adopte.
+   *
+   * Sin esto, guardar dos veces seguidas crearia dos fichas iguales: el
+   * formulario no llevaba id, asi que cada envio tomaba el camino de crear.
+   * Se nota sobre todo al partir de una plantilla, donde nunca hubo id.
+   */
+  return {
+    ok: true,
+    mensaje: `Borrador guardado (ficha ${creada.id})`,
+    fichaId: creada.id,
+  };
 }
 
 /**

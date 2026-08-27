@@ -44,11 +44,20 @@ const CAMPOS_VACIOS = {
 
 type Campos = typeof CAMPOS_VACIOS;
 
-function desdeFicha(ficha: FichaHook | null): Campos {
+/**
+ * Los valores iniciales del formulario.
+ *
+ * En modo PLANTILLA se copia todo menos el cliente. Es a proposito: una
+ * plantilla sirve para repetir una formula que funciono, y lo normal es
+ * llevarla a otra cuenta. Heredar el cliente haria que se guardara sin
+ * mirarlo, y ademas es el cliente el que decide que regla aplica el auditor:
+ * elegirlo es una decision, no un tramite.
+ */
+function desdeFicha(ficha: FichaHook | null, plantilla = false): Campos {
   if (!ficha) return CAMPOS_VACIOS;
 
   return {
-    empresaId: String(ficha.empresaId),
+    empresaId: plantilla ? "" : String(ficha.empresaId),
     objetivo: ficha.objetivo,
     plataforma: ficha.plataforma,
     audiencia: ficha.audiencia ?? "",
@@ -91,9 +100,19 @@ export function FormularioHook({
   limiteInsert,
   etiquetaRegla,
   hrefNuevaEmpresa,
+  plantilla = false,
 }: {
   empresas: Empresa[];
   ficha: FichaHook | null;
+
+  /**
+   * Se parte de `ficha` pero se guarda como una pieza NUEVA.
+   *
+   * Lo unico que decide crear o actualizar es el input oculto con el id: en
+   * modo plantilla no se emite, asi que la action toma el camino de crear y la
+   * ficha de la que se partio queda intacta.
+   */
+  plantilla?: boolean;
 
   /** Los limites de la regla activa, o el estandar de la casa. */
   limiteVoz: number;
@@ -104,7 +123,17 @@ export function FormularioHook({
   hrefNuevaEmpresa: string;
 }) {
   const [estado, enviar, enviando] = useActionState(enviarCanvas, ESTADO_AUDITORIA);
-  const [campos, setCampos] = useState<Campos>(() => desdeFicha(ficha));
+  const [campos, setCampos] = useState<Campos>(() => desdeFicha(ficha, plantilla));
+
+  /*
+   * Sobre que ficha se esta escribiendo ahora mismo.
+   *
+   * Al abrir una plantilla no hay ninguna —se parte de otra pero se guarda
+   * como nueva—, y en cuanto el primer guardado devuelve su id, el formulario
+   * lo adopta y los siguientes actualizan esa misma. En modo edicion normal es
+   * el de la ficha desde el principio.
+   */
+  const idActual = estado.fichaId ?? (plantilla ? null : (ficha?.id ?? null));
 
   const errores = estado.errores ?? {};
   const cambiar = (clave: keyof Campos) => (valor: string) =>
@@ -132,7 +161,15 @@ export function FormularioHook({
 
   return (
     <form action={enviar} noValidate className="flex flex-col gap-5">
-      {ficha && <input type="hidden" name="id" value={ficha.id} />}
+      {/*
+        ESTE INPUT ES LO UNICO QUE DECIDE CREAR O ACTUALIZAR.
+
+        En modo plantilla no se emite al principio, asi que el primer guardado
+        crea una pieza nueva y la original no se toca. Pero en cuanto existe,
+        la action devuelve su id y a partir de ahi el formulario lo lleva: sin
+        eso, pulsar "Guardar" dos veces crearia dos fichas iguales.
+      */}
+      {idActual !== null && <input type="hidden" name="id" value={idActual} />}
 
       {/* Los controlados viajan igual, pero se declaran explicitos para que
           el formulario siga sirviendo si el estado se quedara atras. */}

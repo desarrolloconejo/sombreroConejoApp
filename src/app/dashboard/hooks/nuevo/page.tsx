@@ -55,6 +55,10 @@ export default async function PaginaNuevoHook(
 
   const abrirEmpresa = estado.panel === "nuevo";
 
+  // Partir de una ficha para crear otra: se copian sus campos pero NO su id,
+  // asi que el primer guardado crea una pieza nueva y la original no se toca.
+  const esPlantilla = estado.panel === "plantilla";
+
   const [empresas, ficha] = await Promise.all([
     empresasModelo.listarActivas(),
     estado.panelId !== null ? fichasModelo.buscarPorId(estado.panelId) : null,
@@ -81,8 +85,18 @@ export default async function PaginaNuevoHook(
     <Wrapper
       migas={MIGAS}
       kicker="03 / Hooks"
-      titulo={ficha ? "Sigue donde lo dejaste" : "Escribe la decision, no la frase"}
-      descripcion="Completa la decision antes de redactar. Al final genera una ficha que edicion puede ejecutar sin interpretar la idea."
+      titulo={
+        esPlantilla
+          ? "Parte de una que funciono"
+          : ficha
+            ? "Sigue donde lo dejaste"
+            : "Escribe la decision, no la frase"
+      }
+      descripcion={
+        esPlantilla
+          ? "Se copio todo menos el cliente: elige a quien va esta vez. La ficha original no se toca; al guardar nace una pieza nueva."
+          : "Completa la decision antes de redactar. Al final genera una ficha que edicion puede ejecutar sin interpretar la idea."
+      }
       accion={
         <BotonEnlace href={hrefEmpresa} variante="fantasma" tamano="chico">
           <Building2 aria-hidden="true" />
@@ -97,6 +111,7 @@ export default async function PaginaNuevoHook(
         limiteInsert={activos.maxPalabrasInsert}
         etiquetaRegla={activos.etiqueta}
         hrefNuevaEmpresa={hrefEmpresa}
+        plantilla={esPlantilla}
       />
 
       {abrirEmpresa && (
