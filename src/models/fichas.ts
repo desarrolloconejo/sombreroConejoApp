@@ -102,10 +102,10 @@ const RESULTADO = `
     'fichaId', r.ficha_id,
     'impresiones', r.impresiones,
     'vistas3s', r.vistas_3s,
-    'guardados', r.guardados,
+    'meGusta', r.me_gusta,
     'compartidos', r.compartidos,
     'clics', r.clics,
-    'conversiones', r.conversiones,
+    'guardados', r.guardados,
     'aprendizaje', r.aprendizaje,
     'observadoEn', r.observado_en,
     'actualizadoEn', r.actualizado_en

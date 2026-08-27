@@ -13,10 +13,10 @@ const COLUMNAS = `
   ficha_id       AS "fichaId",
   impresiones,
   vistas_3s      AS "vistas3s",
-  guardados,
+  me_gusta       AS "meGusta",
   compartidos,
   clics,
-  conversiones,
+  guardados,
   aprendizaje,
   observado_en   AS "observadoEn",
   actualizado_en AS "actualizadoEn"
@@ -25,10 +25,10 @@ const COLUMNAS = `
 export type DatosResultado = {
   impresiones: number;
   vistas3s: number;
-  guardados: number;
+  meGusta: number;
   compartidos: number;
   clics: number;
-  conversiones: number;
+  guardados: number;
   aprendizaje: string | null;
 };
 
@@ -61,27 +61,27 @@ export async function guardar(
   return transaccion(async (cliente) => {
     const resultado = await consultarUno<ResultadoHook>(
       `INSERT INTO resultados_hook (
-         ficha_id, impresiones, vistas_3s, guardados, compartidos, clics,
-         conversiones, aprendizaje
+         ficha_id, impresiones, vistas_3s, me_gusta, compartidos, clics,
+         guardados, aprendizaje
        )
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        ON CONFLICT (ficha_id) DO UPDATE
-         SET impresiones  = EXCLUDED.impresiones,
-             vistas_3s    = EXCLUDED.vistas_3s,
-             guardados    = EXCLUDED.guardados,
-             compartidos  = EXCLUDED.compartidos,
-             clics        = EXCLUDED.clics,
-             conversiones = EXCLUDED.conversiones,
-             aprendizaje  = EXCLUDED.aprendizaje
+         SET impresiones = EXCLUDED.impresiones,
+             vistas_3s   = EXCLUDED.vistas_3s,
+             me_gusta    = EXCLUDED.me_gusta,
+             compartidos = EXCLUDED.compartidos,
+             clics       = EXCLUDED.clics,
+             guardados   = EXCLUDED.guardados,
+             aprendizaje = EXCLUDED.aprendizaje
        RETURNING ${COLUMNAS}`,
       [
         fichaId,
         datos.impresiones,
         datos.vistas3s,
-        datos.guardados,
+        datos.meGusta,
         datos.compartidos,
         datos.clics,
-        datos.conversiones,
+        datos.guardados,
         datos.aprendizaje,
       ],
       cliente,

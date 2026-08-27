@@ -125,13 +125,24 @@ export function FormularioMetricas({ fichas }: { fichas: FichaConResultado[] }) 
               }
             />
 
+            {/*
+              LOS ROTULOS SON FIJOS, Y ESO ES EL ARREGLO.
+              Antes este primer campo tomaba su etiqueta de la metrica del
+              objetivo de la ficha. Con objetivo "compartidos" ponia
+              "Compartidos" —duplicando el campo siguiente— y escribia en la
+              columna `guardados`; con "consideracion" ponia "Clics" y pasaba lo
+              mismo. Habia datos guardados en la columna equivocada.
+
+              Cual es la metrica que manda se dice arriba, en el resumen de la
+              ficha, que es donde no puede confundirse con el nombre de un
+              campo.
+            */}
             <Campo
-              id="metricas-guardados"
-              name="guardados"
-              etiqueta={ficha ? metricaDe(ficha.objetivo).split(" ")[0] : "Guardados"}
+              id="metricas-me-gusta"
+              name="meGusta"
+              etiqueta="Me gusta"
               inputMode="numeric"
               placeholder="0"
-              ayuda={ficha ? "La metrica de su objetivo" : undefined}
             />
 
             <Campo
@@ -145,9 +156,9 @@ export function FormularioMetricas({ fichas }: { fichas: FichaConResultado[] }) 
             <Campo id="metricas-clics" name="clics" etiqueta="Clics" inputMode="numeric" placeholder="0" />
 
             <Campo
-              id="metricas-conversiones"
-              name="conversiones"
-              etiqueta="Conversiones"
+              id="metricas-guardados"
+              name="guardados"
+              etiqueta="Guardados"
               inputMode="numeric"
               placeholder="0"
             />

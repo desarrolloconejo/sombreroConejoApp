@@ -160,10 +160,10 @@ async function principal(): Promise<void> {
   await resultados.guardar(ficha.id, {
     impresiones: 12480,
     vistas3s: 3994,
-    guardados: 612,
+    meGusta: 980,
     compartidos: 148,
     clics: 0,
-    conversiones: 0,
+    guardados: 612,
     aprendizaje: "Primera pasada",
   });
 
@@ -184,14 +184,31 @@ async function principal(): Promise<void> {
     `guardados ${medida?.resultado?.guardados}`,
   );
 
+  /*
+   * Cada metrica en SU columna.
+   *
+   * No es una comprobacion de adorno. El formulario rotulaba el campo de
+   * `guardados` con la metrica del objetivo de la ficha, asi que con objetivo
+   * "compartidos" ponia "Compartidos" y escribia en `guardados`: habia datos
+   * en la columna equivocada. Los cuatro valores de la prueba son distintos a
+   * proposito, para que un cruce se vea.
+   */
+  comprobar(
+    "Cada metrica cae en su columna",
+    medida?.resultado?.meGusta === 980 &&
+      medida?.resultado?.compartidos === 148 &&
+      medida?.resultado?.guardados === 612,
+    `me gusta ${medida?.resultado?.meGusta}, compartidos ${medida?.resultado?.compartidos}, guardados ${medida?.resultado?.guardados}`,
+  );
+
   // El caso que justifica el UNIQUE sobre ficha_id
   await resultados.guardar(ficha.id, {
     impresiones: 13000,
     vistas3s: 4100,
-    guardados: 640,
+    meGusta: 1010,
     compartidos: 150,
     clics: 2,
-    conversiones: 1,
+    guardados: 640,
     aprendizaje: "Segunda pasada, corrigiendo cifras",
   });
 

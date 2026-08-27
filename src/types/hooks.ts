@@ -241,10 +241,10 @@ export type ResultadoHook = {
   fichaId: number;
   impresiones: number;
   vistas3s: number;
-  guardados: number;
+  meGusta: number;
   compartidos: number;
   clics: number;
-  conversiones: number;
+  guardados: number;
   aprendizaje: string | null;
   observadoEn: Date;
   actualizadoEn: Date;

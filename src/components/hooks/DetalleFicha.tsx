@@ -169,6 +169,7 @@ export function DetalleFicha({
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               <Cifra rotulo="Impresiones" valor={ficha.resultado.impresiones} />
               <Cifra rotulo="Vistas 3 s" valor={ficha.resultado.vistas3s} />
+              <Cifra rotulo="Me gusta" valor={ficha.resultado.meGusta} />
               <Cifra rotulo="Compartidos" valor={ficha.resultado.compartidos} />
               <Cifra rotulo="Clics" valor={ficha.resultado.clics} />
               <Cifra rotulo="Guardados" valor={ficha.resultado.guardados} />

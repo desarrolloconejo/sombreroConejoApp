@@ -334,22 +334,51 @@ CREATE TABLE IF NOT EXISTS resultados_hook (
   ficha_id       INTEGER     NOT NULL UNIQUE REFERENCES fichas_hook(id) ON DELETE CASCADE,
   impresiones    INTEGER     NOT NULL DEFAULT 0,
   vistas_3s      INTEGER     NOT NULL DEFAULT 0,
-  guardados      INTEGER     NOT NULL DEFAULT 0,
+  me_gusta       INTEGER     NOT NULL DEFAULT 0,
   compartidos    INTEGER     NOT NULL DEFAULT 0,
   clics          INTEGER     NOT NULL DEFAULT 0,
-  conversiones   INTEGER     NOT NULL DEFAULT 0,
+  guardados      INTEGER     NOT NULL DEFAULT 0,
   aprendizaje    TEXT,
   observado_en   TIMESTAMPTZ NOT NULL DEFAULT now(),
   actualizado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
 
   CONSTRAINT resultados_no_negativos CHECK (
-    impresiones >= 0 AND vistas_3s >= 0 AND guardados >= 0
-    AND compartidos >= 0 AND clics >= 0 AND conversiones >= 0
+    impresiones >= 0 AND vistas_3s >= 0 AND me_gusta >= 0
+    AND compartidos >= 0 AND clics >= 0 AND guardados >= 0
   ),
   -- No se puede ver mas veces de las que se muestra. Una tasa por encima de
   -- 100 no es un dato raro, es un dato mal copiado.
   CONSTRAINT resultados_vistas_coherentes CHECK (vistas_3s <= impresiones)
 );
+
+-- ---------------------------------------------------------------------------
+-- Migracion de las metricas de interaccion.
+--
+-- `me_gusta` no existia y `conversiones` si. El formulario, ademas, rotulaba
+-- el campo de `guardados` con la metrica del objetivo de la ficha: con
+-- objetivo "compartidos" ponia "Compartidos" y escribia en `guardados`, asi
+-- que habia datos en la columna equivocada. Los rotulos ahora son fijos.
+--
+-- `conversiones` se retira porque nadie la pedia: la conversion se mide en la
+-- plataforma de anuncios, no aqui.
+-- ---------------------------------------------------------------------------
+DO $metricas$
+BEGIN
+  ALTER TABLE resultados_hook ADD COLUMN IF NOT EXISTS me_gusta INTEGER NOT NULL DEFAULT 0;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'resultados_hook' AND column_name = 'conversiones'
+  ) THEN
+    ALTER TABLE resultados_hook DROP CONSTRAINT IF EXISTS resultados_no_negativos;
+    ALTER TABLE resultados_hook DROP COLUMN conversiones;
+    ALTER TABLE resultados_hook ADD CONSTRAINT resultados_no_negativos CHECK (
+      impresiones >= 0 AND vistas_3s >= 0 AND me_gusta >= 0
+      AND compartidos >= 0 AND clics >= 0 AND guardados >= 0
+    );
+  END IF;
+END
+$metricas$;
 
 
 -- ---------------------------------------------------------------------------

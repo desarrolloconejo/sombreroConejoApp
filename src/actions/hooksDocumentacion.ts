@@ -369,10 +369,10 @@ export async function guardarResultados(
   await resultados.guardar(fichaId, {
     impresiones,
     vistas3s,
-    guardados: comoContador(datos.get("guardados")),
+    meGusta: comoContador(datos.get("meGusta")),
     compartidos: comoContador(datos.get("compartidos")),
     clics: comoContador(datos.get("clics")),
-    conversiones: comoContador(datos.get("conversiones")),
+    guardados: comoContador(datos.get("guardados")),
     aprendizaje: limpiarOpcional(datos.get("aprendizaje"), LIMITES.texto),
   });
 
