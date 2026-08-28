@@ -150,7 +150,23 @@ export function ItemNavegacion({
           aria-controls={idLista}
           aria-label={`${abierto ? "Contraer" : "Desplegar"} ${modulo.titulo}`}
           onClick={() => setAbierto((x) => !x)}
-          className="absolute inset-y-0 right-0 grid w-10 cursor-pointer place-items-center"
+          className={[
+            "absolute inset-y-0 right-0 grid w-10 cursor-pointer place-items-center",
+            /*
+              EL CHEVRON SIGUE AL COLOR DE LA FILA, Y HAY QUE DECIRSELO.
+
+              Vive en este boton, que es HERMANO del enlace y no su hijo: un
+              boton dentro de un enlace es HTML invalido. El precio es que no
+              hereda nada, asi que con el modulo activo se quedaba en el color
+              de texto por defecto sobre el fondo de acento — negro sobre
+              blackberry, o sea invisible.
+            */
+            esActivo
+              ? "text-acento-contraste"
+              : tieneActivo
+                ? "text-acento"
+                : "suave text-nav-suave group-hover:text-acento",
+          ].join(" ")}
         >
           <ChevronDown
             aria-hidden="true"
