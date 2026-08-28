@@ -178,15 +178,15 @@ const HITOS_VENTANA = [
 
 export function MapaRetencion() {
   return (
-    <div className="surge overflow-hidden rounded-[15px] border border-nav-borde bg-navy text-white">
-      <div className="border-b border-white/12 px-[26px] py-5">
-        <p className="mb-1.5 text-[10.5px] font-bold tracking-[0.1em] text-white/50 uppercase">
+    <div className="surge overflow-hidden rounded-[15px] border border-borde bg-superficie shadow-[var(--sombra)]">
+      <div className="border-b border-borde px-[26px] py-5">
+        <p className="mb-1.5 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
           La ventana
         </p>
         <p className="text-[19px] leading-snug font-extrabold tracking-[-0.022em]">
           La audiencia decide antes de que termines la primera frase.
         </p>
-        <p className="mt-1.5 max-w-[68ch] text-[12.5px] leading-relaxed text-white/62">
+        <p className="mt-1.5 max-w-[68ch] text-[12.5px] leading-relaxed text-suave">
           La caida de espectadores es mas pronunciada al principio que en
           cualquier otro momento de la pieza. La curva es ilustrativa; los cuatro
           hitos no.
@@ -266,9 +266,9 @@ export function MapaRetencion() {
 
         {/* Tres columnas y no `justify-between`: asi el rotulo del medio cae
             exactamente sobre la linea de los 3 s, que esta en la mitad. */}
-        <div className="mt-2 grid grid-cols-3 text-[10.5px] font-semibold text-white/45">
+        <div className="mt-2 grid grid-cols-3 text-[10.5px] font-semibold text-suave">
           <span>0 s</span>
-          <span className="text-center text-gold">3 s · la ventana</span>
+          <span className="text-center text-acento">3 s · la ventana</span>
           <span className="text-right">6 s</span>
         </div>
       </div>
@@ -277,15 +277,15 @@ export function MapaRetencion() {
         {HITOS_VENTANA.map((hito, i) => (
           <li key={hito.titulo} className="xl:px-[18px] xl:first:pl-0 xl:last:pr-0">
             <div className="mb-2.5 flex items-center gap-2.5">
-              <span className="grid size-[26px] shrink-0 place-items-center rounded-lg bg-gold text-[11.5px] font-extrabold text-navy">
+              <span className="grid size-[26px] shrink-0 place-items-center rounded-lg bg-acento text-[11.5px] font-extrabold text-acento-contraste">
                 {i + 1}
               </span>
-              <span className="text-[11.5px] font-bold text-gold">{hito.tiempo}</span>
+              <span className="text-[11.5px] font-bold text-acento">{hito.tiempo}</span>
             </div>
             <h4 className="mb-1.5 text-[13.5px] font-bold tracking-[-0.012em]">
               {hito.titulo}
             </h4>
-            <p className="text-[12px] leading-relaxed text-white/62">{hito.texto}</p>
+            <p className="text-[12px] leading-relaxed text-suave">{hito.texto}</p>
           </li>
         ))}
       </ol>

@@ -303,16 +303,16 @@ export function DiagnosticoHookRate({
   const banda = bandaDe(tasa);
 
   return (
-    <div className="rounded-[15px] border border-nav-borde bg-navy p-[22px] text-white">
-      <p className="mb-4 text-[10.5px] font-bold tracking-[0.1em] text-white/50 uppercase">
+    <div className="rounded-[15px] border border-borde bg-superficie p-[22px] shadow-[var(--sombra)]">
+      <p className="mb-4 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
         Diagnostico de hook rate · Meta / trafico frio
       </p>
 
       <div className="py-1.5 pb-[18px] text-center">
-        <div className="text-5xl leading-none font-extrabold tracking-[-0.04em] text-gold">
+        <div className="text-5xl leading-none font-extrabold tracking-[-0.04em] text-acento">
           {tasa === null ? "—" : `${tasa.toFixed(1).replace(".", ",")}%`}
         </div>
-        <p className="mt-3 text-[11.5px] text-white/60">
+        <p className="mt-3 text-[11.5px] text-suave">
           {tasa === null
             ? "Introduce impresiones y vistas a 3 segundos."
             : `${vistas.toLocaleString("es-VE")} vistas de 3 s sobre ${impresiones.toLocaleString("es-VE")} impresiones`}
@@ -321,8 +321,8 @@ export function DiagnosticoHookRate({
 
       {compacto ? (
         banda && (
-          <p className="rounded-xl bg-white/[0.06] px-3.5 py-3 text-[11.5px] leading-relaxed text-white/60">
-            <b className="text-gold">{banda.nombre}.</b> {banda.lectura}
+          <p className="rounded-xl bg-campo px-3.5 py-3 text-[11.5px] leading-relaxed text-suave">
+            <b className="text-acento">{banda.nombre}.</b> {banda.lectura}
           </p>
         )
       ) : (
@@ -336,15 +336,15 @@ export function DiagnosticoHookRate({
               <div
                 key={b.nombre}
                 className={[
-                  "grid grid-cols-[86px_minmax(0,1fr)] items-center gap-4 border-b border-white/10 py-[11px] last:border-b-0",
-                  activa ? "-mx-3 rounded-[10px] bg-white/[0.06] px-3" : "",
+                  "grid grid-cols-[86px_minmax(0,1fr)] items-center gap-4 border-b border-borde py-[11px] last:border-b-0",
+                  activa ? "-mx-3 rounded-[10px] bg-campo px-3" : "",
                 ].join(" ")}
               >
-                <b className={["text-[12.5px] font-bold", activa ? "text-gold" : ""].join(" ")}>
+                <b className={["text-[12.5px] font-bold", activa ? "text-acento" : ""].join(" ")}>
                   {rango}
                 </b>
-                <span className="text-[11.5px] leading-relaxed text-white/60">
-                  <b className={activa ? "text-white" : ""}>{b.nombre}.</b> {b.lectura}
+                <span className="text-[11.5px] leading-relaxed text-suave">
+                  <b className={activa ? "text-texto" : ""}>{b.nombre}.</b> {b.lectura}
                 </span>
               </div>
             );
@@ -358,7 +358,7 @@ export function DiagnosticoHookRate({
         en una reunion como si fuera un resultado.
       */}
       {tasa !== null && impresiones < VOLUMEN_MINIMO && (
-        <p className="mt-4 rounded-xl border border-gold/25 bg-gold/12 px-3.5 py-2.5 text-[11.5px] leading-relaxed">
+        <p className="mt-4 rounded-xl border border-acento/25 bg-acento-tenue px-3.5 py-2.5 text-[11.5px] leading-relaxed">
           Con menos de {VOLUMEN_MINIMO.toLocaleString("es-VE")} impresiones la
           cifra puede ser ruido. Guardala igual, pero no la defiendas todavia.
         </p>

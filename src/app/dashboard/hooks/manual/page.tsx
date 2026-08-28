@@ -237,14 +237,14 @@ export default async function PaginaManual() {
             </ul>
           </div>
 
-          <div className="rounded-[13px] bg-navy p-5 text-white">
-            <p className="mb-1.5 text-[10.5px] font-bold tracking-[0.1em] text-white/50 uppercase">
+          <div className="rounded-[13px] border border-borde bg-campo p-5">
+            <p className="mb-1.5 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
               Las tres capas
             </p>
             <p className="mb-1.5 text-[17px] font-extrabold tracking-[-0.02em]">
               Cada una debe sostener la promesa.
             </p>
-            <p className="mb-4 text-[11.5px] leading-relaxed text-white/62">
+            <p className="mb-4 text-[11.5px] leading-relaxed text-suave">
               Las tres llegan a la vez, no en fila. Si una falla, las otras dos
               no la rescatan.
             </p>
@@ -252,14 +252,14 @@ export default async function PaginaManual() {
             <div className="flex flex-col gap-3.5">
               {CAPAS.map(([titulo, texto]) => (
                 <div key={titulo}>
-                  <p className="mb-1 text-[12.5px] font-bold text-gold">{titulo}</p>
-                  <p className="text-xs leading-relaxed text-white/62">{texto}</p>
+                  <p className="mb-1 text-[12.5px] font-bold text-acento">{titulo}</p>
+                  <p className="text-xs leading-relaxed text-suave">{texto}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-[18px] rounded-xl border border-gold/25 bg-gold/12 px-[15px] py-3.5">
-              <p className="mb-1.5 text-[12.5px] font-bold text-gold">
+            <div className="mt-[18px] rounded-xl border border-acento/25 bg-acento-tenue px-[15px] py-3.5">
+              <p className="mb-1.5 text-[12.5px] font-bold text-acento">
                 Test de las dos privaciones.
               </p>
               <p className="text-[11.5px] leading-relaxed">
@@ -325,17 +325,17 @@ export default async function PaginaManual() {
             filas={RELOJ.map(([m, f]) => [<b key="m">{m}</b>, <span key="f" className="text-suave">{f}</span>])}
           />
 
-          <div className="rounded-[15px] border border-nav-borde bg-navy px-5 py-[18px] text-white">
-            <p className="mb-3 text-[10.5px] font-bold tracking-[0.1em] text-white/50 uppercase">
+          <div className="rounded-[15px] border border-borde bg-superficie px-5 py-[18px] shadow-[var(--sombra)]">
+            <p className="mb-3 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
               Ajuste por plataforma
             </p>
             <div className="flex flex-col gap-3">
               {PLATAFORMAS.map((p) => (
                 <div key={p.slug}>
-                  <p className="mb-[3px] text-[12.5px] font-bold text-gold">
+                  <p className="mb-[3px] text-[12.5px] font-bold text-acento">
                     {p.nombre}
                   </p>
-                  <p className="text-[11.5px] leading-relaxed text-white/62">
+                  <p className="text-[11.5px] leading-relaxed text-suave">
                     {p.ajuste}
                   </p>
                 </div>
@@ -354,8 +354,8 @@ export default async function PaginaManual() {
       </RotuloSeccion>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-[15px] border border-nav-borde bg-navy px-[22px] py-5 text-white">
-          <p className="mb-1.5 text-[10.5px] font-bold tracking-[0.1em] text-white/50 uppercase">
+        <div className="rounded-[15px] border border-borde bg-superficie px-[22px] py-5 shadow-[var(--sombra)]">
+          <p className="mb-1.5 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
             No admite excepcion
           </p>
           <p className="mb-4 text-[17px] font-extrabold tracking-[-0.02em]">
@@ -366,10 +366,10 @@ export default async function PaginaManual() {
             {PROHIBIDO.map(([recurso, porque]) => (
               <li
                 key={recurso}
-                className="grid gap-1 border-b border-white/12 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] sm:gap-4"
+                className="grid gap-1 border-b border-borde py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] sm:gap-4"
               >
                 <b className="text-[12.5px]">{recurso}</b>
-                <span className="text-[12.5px] leading-relaxed text-white/62">
+                <span className="text-[12.5px] leading-relaxed text-suave">
                   {porque}
                 </span>
               </li>

@@ -85,7 +85,7 @@ export function DetalleRegla({
                 {regla.empresaId ? "Cliente" : "Sector"}
               </Etiqueta>
               {ampliada && (
-                <span className="rounded-md bg-gold px-2 py-0.5 text-[10px] font-extrabold tracking-[0.06em] text-violet uppercase">
+                <span className="rounded-md bg-acento px-2 py-0.5 text-[10px] font-extrabold tracking-[0.06em] text-acento-contraste uppercase">
                   Ampliado
                 </span>
               )}
@@ -119,7 +119,7 @@ export function DetalleRegla({
               ≤ {regla.maxPalabrasVoz} palabras
             </span>
             {regla.maxPalabrasVoz > ESTANDAR_VOZ && (
-              <span className="ml-2 text-[11.5px] text-gold">
+              <span className="ml-2 text-[11.5px] text-acento">
                 (Estándar agencia: ≤ {ESTANDAR_VOZ})
               </span>
             )}
@@ -130,7 +130,7 @@ export function DetalleRegla({
               ≤ {regla.maxPalabrasInsert} palabras
             </span>
             {regla.maxPalabrasInsert > ESTANDAR_INSERT && (
-              <span className="ml-2 text-[11.5px] text-gold">
+              <span className="ml-2 text-[11.5px] text-acento">
                 (Estándar agencia: ≤ {ESTANDAR_INSERT})
               </span>
             )}

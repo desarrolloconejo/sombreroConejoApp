@@ -404,13 +404,13 @@ export function FormularioHook({
             va sin sonido: si el Insert-Titulo no se sostiene solo aqui,
             tampoco se sostendra en el fotograma uno.
           */}
-          <div className="rounded-xl bg-navy px-[18px] py-4">
-            <p className="mb-2.5 text-[10.5px] font-bold tracking-[0.1em] text-white/50 uppercase">
+          <div className="rounded-xl border border-borde bg-campo px-[18px] py-4">
+            <p className="mb-2.5 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
               Vista en mudo
             </p>
-            <p className="text-[22px] leading-tight font-extrabold tracking-[-0.02em] text-gold">
+            <p className="text-[22px] leading-tight font-extrabold tracking-[-0.02em] text-acento">
               {campos.insertTitulo || (
-                <span className="text-white/35">El nucleo aparece aqui.</span>
+                <span className="text-suave">El nucleo aparece aqui.</span>
               )}
             </p>
           </div>

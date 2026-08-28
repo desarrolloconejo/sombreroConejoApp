@@ -28,13 +28,13 @@ import type { FichaConResultado } from "@/types";
  */
 
 const PANEL =
-  "surge rounded-[15px] border border-nav-borde bg-navy px-[26px] py-6 pb-[22px] text-white";
+  "surge rounded-[15px] border border-borde bg-superficie px-[26px] py-6 pb-[22px] shadow-[var(--sombra)]";
 
 const BOTON_ORO =
-  "suave inline-flex min-h-11 items-center justify-center gap-2.5 rounded-xl bg-gold px-5 text-[13.5px] font-semibold text-navy hover:bg-white";
+  "suave inline-flex min-h-11 items-center justify-center gap-2.5 rounded-xl bg-acento px-5 text-[13.5px] font-semibold text-acento-contraste hover:bg-acento-hover";
 
 const BOTON_LINEA =
-  "suave inline-flex min-h-11 items-center justify-center gap-2.5 rounded-xl border border-white/22 px-5 text-[13.5px] font-semibold text-white hover:border-gold hover:text-gold";
+  "suave inline-flex min-h-11 items-center justify-center gap-2.5 rounded-xl border border-borde px-5 text-[13.5px] font-semibold text-texto hover:border-acento hover:text-acento";
 
 /**
  * A donde lleva cada pieza segun donde se quedo.
@@ -51,9 +51,9 @@ function destinoDe(pieza: FichaConResultado): string {
 function Avance({ porcentaje }: { porcentaje: number }) {
   return (
     <div className="mt-[22px]">
-      <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="h-2 overflow-hidden rounded-full bg-campo">
         <div
-          className="h-full rounded-full bg-gold"
+          className="h-full rounded-full bg-acento"
           style={{ width: `${porcentaje}%` }}
         />
       </div>
@@ -68,17 +68,17 @@ function Avance({ porcentaje }: { porcentaje: number }) {
               className={[
                 "flex items-center gap-1.5 text-[11.5px] font-semibold",
                 i === 1 ? "justify-center" : i === 2 ? "justify-end" : "",
-                hecho ? "text-gold" : "text-white/62",
+                hecho ? "text-acento" : "text-suave",
               ].join(" ")}
             >
               <span
                 aria-hidden="true"
                 className={[
                   "grid size-[15px] shrink-0 place-items-center rounded-full border-[1.5px]",
-                  hecho ? "border-gold bg-gold" : "border-white/12",
+                  hecho ? "border-acento bg-acento" : "border-borde",
                 ].join(" ")}
               >
-                {hecho && <Check className="size-[9px] text-navy" strokeWidth={3.5} />}
+                {hecho && <Check className="size-[9px] text-acento-contraste" strokeWidth={3.5} />}
               </span>
               {hito.nombre}
             </span>
@@ -100,8 +100,8 @@ function Resto({ piezas }: { piezas: FichaConResultado[] }) {
   if (piezas.length === 0) return null;
 
   return (
-    <div className="mt-5 border-t border-white/12 pt-[18px]">
-      <p className="mb-2.5 text-[10.5px] font-bold tracking-[0.1em] text-white/50 uppercase">
+    <div className="mt-5 border-t border-borde pt-[18px]">
+      <p className="mb-2.5 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
         Tambien abiertas · {piezas.length}
       </p>
 
@@ -113,13 +113,13 @@ function Resto({ piezas }: { piezas: FichaConResultado[] }) {
             <li key={pieza.id}>
               <Link
                 href={destinoDe(pieza)}
-                className="suave -mx-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-xl px-3 py-2.5 hover:bg-white/[0.06]"
+                className="suave -mx-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-xl px-3 py-2.5 hover:bg-campo"
               >
                 <span className="min-w-0">
                   <span className="block truncate text-[13.5px] font-semibold">
                     {pieza.hablado}
                   </span>
-                  <span className="mt-0.5 block truncate text-[11.5px] text-white/62">
+                  <span className="mt-0.5 block truncate text-[11.5px] text-suave">
                     {pieza.empresaNombre} · {objetivoDe(pieza.objetivo).nombre}
                   </span>
                 </span>
@@ -128,7 +128,7 @@ function Resto({ piezas }: { piezas: FichaConResultado[] }) {
                   {/* La nota solo existe si ya paso el auditor. Sin ella la
                       fila no finge un hueco: simplemente no se pinta. */}
                   {pieza.notaAuditor !== null && (
-                    <span className="hidden rounded-md border border-gold/30 px-2 py-0.5 text-[11px] font-bold text-gold sm:inline">
+                    <span className="hidden rounded-md border border-acento/30 px-2 py-0.5 text-[11px] font-bold text-acento sm:inline">
                       nota {pieza.notaAuditor}
                     </span>
                   )}
@@ -136,20 +136,20 @@ function Resto({ piezas }: { piezas: FichaConResultado[] }) {
                   <span className="flex items-center gap-2">
                     <span
                       aria-hidden="true"
-                      className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-white/[0.09] sm:block"
+                      className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-borde sm:block"
                     >
                       <span
-                        className="block h-full rounded-full bg-gold"
+                        className="block h-full rounded-full bg-acento"
                         style={{ width: `${porcentaje}%` }}
                       />
                     </span>
 
-                    <span className="w-[38px] text-right text-[12.5px] font-bold text-gold">
+                    <span className="w-[38px] text-right text-[12.5px] font-bold text-acento">
                       {porcentaje}%
                     </span>
                   </span>
 
-                  <ArrowRight aria-hidden="true" className="size-4 text-white/50" />
+                  <ArrowRight aria-hidden="true" className="size-4 text-suave" />
                 </span>
               </Link>
             </li>
@@ -179,13 +179,13 @@ export function PiezaEnCurso({
       <div className={PANEL}>
         {ultima ? (
           <>
-            <p className="mb-2 text-[10.5px] font-bold tracking-[0.1em] text-white/50 uppercase">
+            <p className="mb-2 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
               Ultima pieza terminada
             </p>
             <p className="mb-1 text-[21px] leading-snug font-bold tracking-[-0.022em]">
               &laquo;{ultima.hablado}&raquo;
             </p>
-            <p className="text-[12.5px] text-white/62">
+            <p className="text-[12.5px] text-suave">
               {ultima.empresaNombre}
               {tasa !== null && tasa !== undefined
                 ? ` · ${tasa.toFixed(1).replace(".", ",")}% de hook rate`
@@ -197,8 +197,8 @@ export function PiezaEnCurso({
             {/* Lo que aprendio se lleva a la pieza siguiente, asi que se
                 muestra justo antes del boton de empezar otra. */}
             {ultima.resultado?.aprendizaje && (
-              <div className="mt-5 rounded-xl bg-white/[0.06] px-[15px] py-3.5">
-                <p className="mb-1.5 text-[10.5px] font-bold tracking-[0.1em] text-white/45 uppercase">
+              <div className="mt-5 rounded-xl bg-campo px-[15px] py-3.5">
+                <p className="mb-1.5 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
                   Lo que dejo escrito
                 </p>
                 <p className="text-[12.5px] leading-relaxed">
@@ -209,14 +209,14 @@ export function PiezaEnCurso({
           </>
         ) : (
           <div className="flex flex-wrap items-center gap-[22px]">
-            <span className="grid size-[52px] shrink-0 place-items-center rounded-[15px] bg-white/[0.06] text-white/62">
+            <span className="grid size-[52px] shrink-0 place-items-center rounded-[15px] bg-campo text-suave">
               <FilePlus2 aria-hidden="true" className="size-6" strokeWidth={1.8} />
             </span>
             <div className="min-w-[280px] flex-1">
               <p className="mb-1.5 text-[19px] font-extrabold tracking-[-0.022em]">
                 No tienes ninguna pieza en curso.
               </p>
-              <p className="text-[12.5px] text-white/62">
+              <p className="text-[12.5px] text-suave">
                 Empieza por el cliente y el objetivo; el resto sale de ahi.
               </p>
             </div>
@@ -226,7 +226,7 @@ export function PiezaEnCurso({
         <div
           className={[
             "flex flex-wrap items-center gap-3",
-            ultima ? "mt-5 border-t border-white/12 pt-5" : "mt-5",
+            ultima ? "mt-5 border-t border-borde pt-5" : "mt-5",
           ].join(" ")}
         >
           <Link href="/dashboard/hooks/nuevo" className={BOTON_ORO}>
@@ -252,40 +252,40 @@ export function PiezaEnCurso({
     <div className={PANEL}>
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div className="min-w-[320px] flex-1">
-          <p className="mb-2.5 text-[10.5px] font-bold tracking-[0.1em] text-white/50 uppercase">
+          <p className="mb-2.5 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
             Lo ultimo que escribiste ·{" "}
             {auditada ? `auditada con ${pieza.notaAuditor}` : "borrador"}
           </p>
           <p className="mb-1 text-[21px] leading-snug font-bold tracking-[-0.022em]">
             &laquo;{pieza.hablado}&raquo;
           </p>
-          <p className="text-[12.5px] text-white/62">
+          <p className="text-[12.5px] text-suave">
             {pieza.empresaNombre} · {objetivoDe(pieza.objetivo).nombre} · se leera
             con {metricaDe(pieza.objetivo).toLowerCase()}
           </p>
         </div>
 
         <div className="shrink-0 text-right">
-          <div className="text-[34px] leading-none font-extrabold tracking-[-0.035em] text-gold">
+          <div className="text-[34px] leading-none font-extrabold tracking-[-0.035em] text-acento">
             {porcentaje}%
           </div>
-          <p className="mt-1.5 text-[11px] text-white/62">del recorrido</p>
+          <p className="mt-1.5 text-[11px] text-suave">del recorrido</p>
         </div>
       </div>
 
       <Avance porcentaje={porcentaje} />
 
       {auditada && (
-        <div className="mt-5 rounded-xl border border-gold/25 bg-gold/12 px-[15px] py-3.5">
+        <div className="mt-5 rounded-xl border border-acento/25 bg-acento-tenue px-[15px] py-3.5">
           <p className="text-[12.5px] leading-relaxed">
             Le falta lo unico que la termina:{" "}
-            <b className="text-gold">los numeros</b>. Hasta que los tenga, esta
+            <b className="text-acento">los numeros</b>. Hasta que los tenga, esta
             pieza no le ensena nada a la cuenta.
           </p>
         </div>
       )}
 
-      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-white/12 pt-5">
+      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-borde pt-5">
         {auditada ? (
           <>
             <Link href={destinoDe(pieza)} className={BOTON_ORO}>

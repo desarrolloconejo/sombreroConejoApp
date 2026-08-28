@@ -72,7 +72,7 @@ function Accion({
     normal: "text-suave hover:border-acento hover:bg-acento hover:text-acento-contraste",
     aviso:
       "text-blackberry hover:border-blackberry hover:bg-blackberry hover:text-white dark-tema:text-[#e9a9cd]",
-    panel: "text-white/60 hover:border-gold hover:bg-gold hover:text-navy",
+    panel: "text-suave hover:border-acento hover:bg-acento hover:text-acento-contraste",
   } as const;
 
   return (
@@ -110,13 +110,13 @@ export function SeccionReglas({
   hrefBorrar: (id: number) => string;
 }) {
   return (
-    <div className="rounded-[15px] border border-nav-borde bg-navy px-[26px] py-6 text-white">
+    <div className="rounded-[15px] border border-borde bg-superficie px-[26px] py-6 shadow-[var(--sombra)]">
       <div className="mb-[18px] flex flex-wrap items-start justify-between gap-5">
         <div>
           <p className="mb-1.5 text-[18px] font-extrabold tracking-[-0.02em]">
             {reglas.length} {reglas.length === 1 ? "regla activa" : "reglas activas"}
           </p>
-          <p className="max-w-[66ch] text-[12.5px] leading-relaxed text-white/62">
+          <p className="max-w-[66ch] text-[12.5px] leading-relaxed text-suave">
             El estandar de agencia es voz ≤ {ESTANDAR_VOZ} palabras e
             Insert-Titulo ≤ {ESTANDAR_INSERT}. Una cuenta puede subirlos, pero la
             desviacion queda marcada en cada auditoria.
@@ -126,7 +126,7 @@ export function SeccionReglas({
         <Link
           href={hrefNueva}
           scroll={false}
-          className="suave inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-white/22 px-4 text-[12.5px] font-semibold text-white hover:border-gold hover:bg-gold hover:text-navy"
+          className="suave inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-borde px-4 text-[12.5px] font-semibold text-texto hover:border-acento hover:bg-acento hover:text-acento-contraste"
         >
           <Plus aria-hidden="true" className="size-4" />
           Nueva regla
@@ -134,7 +134,7 @@ export function SeccionReglas({
       </div>
 
       {reglas.length === 0 ? (
-        <p className="rounded-xl border border-white/12 bg-white/[0.06] px-4 py-6 text-center text-[12.5px] text-white/62">
+        <p className="rounded-xl border border-borde bg-campo px-4 py-6 text-center text-[12.5px] text-suave">
           Aun no hay reglas. La auditoria usa el estandar general de la agencia.
         </p>
       ) : (
@@ -148,8 +148,8 @@ export function SeccionReglas({
               <li
                 key={regla.id}
                 className={[
-                  "flex flex-col rounded-xl border bg-white/[0.07] px-4 py-[15px]",
-                  ampliada ? "border-gold" : "border-white/12",
+                  "flex flex-col rounded-xl border bg-campo px-4 py-[15px]",
+                  ampliada ? "border-acento" : "border-borde",
                 ].join(" ")}
               >
                 <div className="mb-2 flex items-start justify-between gap-2.5">
@@ -157,27 +157,27 @@ export function SeccionReglas({
                     El titulo NO es un enlace, y ademas lleva su color escrito.
                     Era un <Link>, asi que heredaba del `a` global el color de
                     acento: en tema claro eso es blackberry, y blackberry sobre
-                    esta tarjeta navy no se lee. Ademas repetia lo que ya hace
+                    esta tarjeta no se leia. Ademas repetia lo que ya hace
                     el ojo del pie, con la diferencia de que no lo parecia.
                   */}
-                  <h4 className="text-[14.5px] font-bold tracking-[-0.01em] text-white">
+                  <h4 className="text-[14.5px] font-bold tracking-[-0.01em] text-texto">
                     {regla.etiqueta}
                   </h4>
                   {ampliada && (
-                    <span className="shrink-0 rounded-md bg-gold px-2 py-0.5 text-[10px] font-extrabold tracking-[0.06em] text-violet uppercase">
+                    <span className="shrink-0 rounded-md bg-acento px-2 py-0.5 text-[10px] font-extrabold tracking-[0.06em] text-acento-contraste uppercase">
                       Ampliado
                     </span>
                   )}
                 </div>
 
-                <p className="mb-2 text-[11.5px] leading-relaxed text-white/62">
+                <p className="mb-2 text-[11.5px] leading-relaxed text-suave">
                   {regla.empresaId !== null ? "Cliente" : `Sector · ${regla.sector}`} ·
                   Voz ≤ {regla.maxPalabrasVoz} · Insert ≤ {regla.maxPalabrasInsert} ·{" "}
                   {regla.exigirPrueba ? "Prueba requerida" : "Prueba opcional"}
                 </p>
 
                 {ampliada && (
-                  <p className="text-[11px] leading-relaxed text-gold">
+                  <p className="text-[11px] leading-relaxed text-acento">
                     Supera el estandar {ESTANDAR_VOZ}/{ESTANDAR_INSERT}. El auditor
                     respeta la regla, pero la desviacion queda visible.
                   </p>
@@ -185,7 +185,7 @@ export function SeccionReglas({
 
                 {/* El pie se empuja al fondo: las tarjetas no miden lo mismo y
                     con las acciones colgando del texto la fila se lee torcida. */}
-                <Acciones className="mt-auto border-t border-white/12 pt-[11px]">
+                <Acciones className="mt-auto border-t border-borde pt-[11px]">
                   <Accion
                     href={hrefVer(regla.id)}
                     etiqueta={`Ver detalles de la regla ${regla.etiqueta}`}
@@ -214,33 +214,33 @@ export function SeccionReglas({
         </ul>
       )}
 
-      <div className="mt-[18px] border-t border-white/12 pt-[18px]">
-        <p className="mb-[11px] text-[10.5px] font-bold tracking-[0.1em] text-white/45 uppercase">
+      <div className="mt-[18px] border-t border-borde pt-[18px]">
+        <p className="mb-[11px] text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
           Cual gana cuando hay varias
         </p>
 
         <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-          <span className="rounded-[9px] bg-gold/16 px-3 py-1.5 text-xs font-bold text-gold">
+          <span className="rounded-[9px] bg-acento-tenue px-3 py-1.5 text-xs font-bold text-acento">
             1. Regla del cliente
           </span>
-          <span aria-hidden="true" className="text-white/40">
+          <span aria-hidden="true" className="text-suave">
             &rsaquo;
           </span>
-          <span className="rounded-[9px] bg-white/[0.06] px-3 py-1.5 text-xs font-semibold">
+          <span className="rounded-[9px] bg-campo px-3 py-1.5 text-xs font-semibold">
             2. Regla del sector
           </span>
-          <span aria-hidden="true" className="text-white/40">
+          <span aria-hidden="true" className="text-suave">
             &rsaquo;
           </span>
-          <span className="rounded-[9px] bg-white/[0.06] px-3 py-1.5 text-xs font-semibold">
+          <span className="rounded-[9px] bg-campo px-3 py-1.5 text-xs font-semibold">
             3. Estandar {ESTANDAR_VOZ}/{ESTANDAR_INSERT}
           </span>
         </div>
 
-        <p className="max-w-[76ch] text-[11.5px] leading-relaxed text-white/62">
+        <p className="max-w-[76ch] text-[11.5px] leading-relaxed text-suave">
           Se busca primero una regla para ese cliente concreto. Si no la hay,
           una de su sector. Si tampoco, el estandar de la casa.{" "}
-          <b className="text-white">Nunca se suman: gana una sola.</b>
+          <b className="text-texto">Nunca se suman: gana una sola.</b>
         </p>
       </div>
     </div>
