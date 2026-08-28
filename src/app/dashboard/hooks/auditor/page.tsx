@@ -5,9 +5,11 @@ import { Wrapper } from "@/components/layout/Wrapper";
 import {
   AuditorSuelto,
   FiltroCalidad,
+  PanelMetricasFicha,
   PendientesPaso,
   ResultadoAuditoria,
 } from "@/components/hooks";
+import { PanelLateral } from "@/components/listado";
 import { BotonEnlace, Etiqueta } from "@/components/ui";
 import { auditar, limitesPorDefecto } from "@/lib/hooks/auditor";
 import { objetivoDe } from "@/lib/hooks/catalogo";
@@ -87,6 +89,35 @@ export default async function PaginaAuditor(
 
   const estandar = limitesPorDefecto();
 
+  /*
+   * Las dos direcciones de la pieza auditada, en un solo sitio.
+   *
+   * `hrefVuelta` es tambien el cierre del panel: cerrar el registro de
+   * metricas deja al usuario mirando el veredicto de la misma ficha, que es de
+   * donde salio, y no en un auditor vacio.
+   */
+  const hrefVuelta = ficha ? `/dashboard/hooks/auditor?ficha=${ficha.id}` : "";
+  const hrefCorregir = ficha
+    ? `/dashboard/hooks/nuevo?panel=editar&id=${ficha.id}`
+    : "";
+
+  /*
+   * El panel se pide por la URL como en el resto de la app, pero NO pasa por
+   * la lista blanca de `parametros.ts`: esa gobierna los listados, y esta
+   * pagina no es uno. Se comprueba aqui, contra el unico valor que existe.
+   *
+   * Va cerrado tras `resultado.aprobado` a proposito, igual que el boton que
+   * lo abre: con la nota por debajo del umbral, ofrecer medir seria empujar a
+   * producir algo que el propio control acaba de desaconsejar. Y como el
+   * veredicto se recalcula arriba, escribir el parametro a mano tampoco abre
+   * el panel de una pieza suspendida.
+   */
+  const abrirMetricas =
+    ficha !== null &&
+    resultado !== null &&
+    resultado.aprobado &&
+    parametros.panel === "metricas";
+
   return (
     <Wrapper
       migas={MIGAS}
@@ -132,19 +163,30 @@ export default async function PaginaAuditor(
 
             <div className="mt-4 flex flex-wrap gap-2.5 border-t border-borde pt-4">
               <BotonEnlace
-                href={`/dashboard/hooks/nuevo?panel=editar&id=${ficha.id}`}
+                href={hrefCorregir}
                 variante="fantasma"
                 tamano="chico"
+                scroll={false}
               >
                 <Pencil aria-hidden="true" />
                 Corregir y volver a auditar
               </BotonEnlace>
 
-              {/* El paso siguiente solo se ofrece si la pieza lo merece: con la
-                  nota por debajo del umbral, invitar a medir seria empujar a
-                  producir algo que el propio control acaba de desaconsejar. */}
+              {/*
+                El paso siguiente solo se ofrece si la pieza lo merece: con la
+                nota por debajo del umbral, invitar a medir seria empujar a
+                producir algo que el propio control acaba de desaconsejar.
+
+                Abre un panel con ESTA ficha ya fijada, en lugar de llevar al
+                modulo general: alli habria que volver a buscar en un
+                desplegable la misma pieza que se acaba de auditar.
+              */}
               {resultado.aprobado && (
-                <BotonEnlace href="/dashboard/hooks/metricas" tamano="chico">
+                <BotonEnlace
+                  href={`${hrefVuelta}&panel=metricas`}
+                  tamano="chico"
+                  scroll={false}
+                >
                   Registrar sus metricas
                   <ArrowRight aria-hidden="true" />
                 </BotonEnlace>
@@ -182,6 +224,21 @@ export default async function PaginaAuditor(
       <div className="mt-5">
         <FiltroCalidad />
       </div>
+
+      {abrirMetricas && ficha && (
+        <PanelLateral
+          hrefCerrar={hrefVuelta}
+          kicker="05 / Metricas"
+          titulo="Lo que hizo la pieza"
+          descripcion="Solo esta ficha. Registrar dos veces actualiza, no duplica."
+        >
+          <PanelMetricasFicha
+            ficha={ficha}
+            hrefCorregir={hrefCorregir}
+            hrefCerrar={hrefVuelta}
+          />
+        </PanelLateral>
+      )}
     </Wrapper>
   );
 }

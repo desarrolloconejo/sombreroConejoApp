@@ -243,10 +243,27 @@ async function principal(): Promise<void> {
   // ------------------------------------------------------------ referencias
   const refs = await referencias.listar();
   comprobar("La referencia del seed esta", refs.length >= 1, `${refs.length} referencia(s)`);
+  /*
+   * Se busca la referencia del seed por su texto, no por su posicion.
+   *
+   * Antes esto miraba `refs[0]`, y en cuanto alguien creo una referencia a
+   * mano —sin etiquetas y mas reciente— la prueba empezo a fallar sin que
+   * nada estuviera roto. Lo que se comprueba es que la columna vuelve como
+   * arreglo de verdad y no como una cadena, y eso hay que preguntarselo a la
+   * fila que se sabe que tiene etiquetas.
+   */
+  const delSeed = refs.find((r) => r.hablado.startsWith("Publicar todos los dias"));
+
   comprobar(
     "Las etiquetas se parten en lista",
-    Array.isArray(refs[0]?.etiquetas) && (refs[0]?.etiquetas.length ?? 0) === 3,
-    JSON.stringify(refs[0]?.etiquetas),
+    Array.isArray(delSeed?.etiquetas) && (delSeed?.etiquetas.length ?? 0) === 3,
+    JSON.stringify(delSeed?.etiquetas),
+  );
+
+  comprobar(
+    "Toda referencia trae etiquetas como arreglo",
+    refs.every((r) => Array.isArray(r.etiquetas)),
+    `${refs.length} referencia(s) revisadas`,
   );
 
   const porLectura = await referencias.listar({ busqueda: "curva" });
