@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { auditar } from "@/lib/hooks/auditor";
 import { metricaDe, SLUGS_OBJETIVO, SLUGS_PLATAFORMA } from "@/lib/hooks/catalogo";
@@ -184,14 +185,24 @@ export async function auditarHook(
 
   revalidatePath(RUTA_MODULO, "layout");
 
-  return {
-    ok: true,
-    resultado,
-    fichaId: guardada.id,
-    mensaje: resultado.aprobado
-      ? `Auditada con ${resultado.nota}. Puede pasar a produccion.`
-      : `Auditada con ${resultado.nota}. Por debajo del umbral de 70.`,
-  };
+  /*
+   * Auditar TERMINA en el auditor, no en el canvas.
+   *
+   * Antes el resultado se desplegaba debajo del formulario, y eso mezclaba dos
+   * pasos que el modulo separa a proposito: el canvas es donde se decide y se
+   * escribe, el auditor es donde se juzga. Con el veredicto colgando del
+   * formulario, la pieza quedaba a medio camino entre los dos y el paso 04 del
+   * recorrido no llegaba a existir de verdad.
+   *
+   * La ficha ya quedo guardada y con su nota antes de salir de aqui, asi que
+   * el auditor no recibe nada por la URL salvo cual mirar: vuelve a calcular
+   * el veredicto sobre lo que hay en la base. El auditor es una funcion pura y
+   * determinista, de modo que la nota que se ve es la misma que se guardo.
+   *
+   * `redirect` lanza una excepcion de control de Next, asi que nada de lo que
+   * hubiera despues se ejecutaria: es la ultima linea a proposito.
+   */
+  redirect(`${RUTA_MODULO}/auditor?ficha=${guardada.id}`);
 }
 
 /**

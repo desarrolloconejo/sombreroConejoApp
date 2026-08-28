@@ -13,7 +13,6 @@ import type { Empresa, FichaHook } from "@/types";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 import { FichaProduccion, type ValoresFicha } from "./FichaProduccion";
-import { ResultadoAuditoria } from "./ResultadoAuditoria";
 
 /**
  * El canvas: la decision completa de una pieza.
@@ -466,15 +465,13 @@ export function FormularioHook({
       </section>
 
       {/*
-        El resultado aparece DEBAJO del boton que lo pidio, no en otra pagina:
-        auditar es el cierre de este paso, y mandar a otra pantalla para leer
-        la nota obligaria a volver para corregir.
+        El resultado YA NO se pinta aqui.
+
+        Auditar guarda la ficha, calcula la nota y lleva al Auditor, que es el
+        paso 04 del recorrido. Desplegarlo debajo del formulario mezclaba dos
+        pasos que el modulo separa a proposito —el canvas decide y escribe, el
+        auditor juzga— y dejaba la pieza a medio camino entre los dos.
       */}
-      {estado.resultado && (
-        <section className="surge [--retraso:0.02s]">
-          <ResultadoAuditoria resultado={estado.resultado} />
-        </section>
-      )}
     </form>
   );
 }
