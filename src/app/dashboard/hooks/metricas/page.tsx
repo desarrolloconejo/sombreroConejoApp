@@ -109,7 +109,7 @@ export default async function PaginaMetricas(
               : "Una pieza llega aqui despues de escribirse, auditarse y publicarse."
           }
           accion={
-            <BotonEnlace href="/dashboard/hooks/historial" tamano="chico" variante="fantasma">
+            <BotonEnlace href="/dashboard/hooks/historial" tamano="chico" variante="fantasma" scroll>
               Ver el historial
             </BotonEnlace>
           }

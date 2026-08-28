@@ -59,7 +59,7 @@ export default function ErrorAplicacion({
             Reintentar
           </Boton>
 
-          <BotonEnlace href="/dashboard" variante="fantasma">
+          <BotonEnlace href="/dashboard" variante="fantasma" scroll>
             Ir al panel
           </BotonEnlace>
         </div>

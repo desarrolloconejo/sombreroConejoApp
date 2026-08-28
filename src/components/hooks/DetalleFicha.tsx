@@ -209,12 +209,12 @@ export function DetalleFicha({
           Cerrar
         </BotonEnlace>
 
-        <BotonEnlace href={hrefPlantilla} variante="fantasma">
+        <BotonEnlace href={hrefPlantilla} variante="fantasma" scroll>
           <Copy aria-hidden="true" />
           Usar como plantilla
         </BotonEnlace>
 
-        <BotonEnlace href={hrefEditar}>
+        <BotonEnlace href={hrefEditar} scroll>
           <Pencil aria-hidden="true" />
           Editar
         </BotonEnlace>

@@ -90,16 +90,38 @@ export function Boton({
   );
 }
 
-/** Mismo aspecto que Boton, pero navega. Para acciones que son un enlace. */
+/**
+ * Mismo aspecto que Boton, pero navega. Para acciones que son un enlace.
+ *
+ * NO SUBE LA PAGINA, Y ESO ES DELIBERADO
+ * --------------------------------------
+ * Next restaura el scroll al principio en cada navegacion, salvo que se le
+ * diga que no. Aqui se le dice que no por defecto, al reves que `<Link>`.
+ *
+ * El motivo es que en esta app un boton-enlace es casi siempre una accion
+ * DENTRO de la misma pantalla: abrir un panel, cerrarlo, cancelar un
+ * formulario, confirmar un modal. La URL cambia, pero uno sigue mirando lo
+ * mismo. Con el comportamiento de serie, cerrar un panel desde el pie de una
+ * lista larga te devolvia al principio de la lista.
+ *
+ * Se intento marcarlos uno a uno y no funciono: de 33 usos, 29 se lo dejaban.
+ * El defecto correcto es el que acierta en la mayoria de los casos, y los
+ * pocos que SI cambian de pantalla —paginas de error, saltar a otro modulo—
+ * pasan `scroll` a mano.
+ *
+ * El `<Link>` pelado no se toca: la navegacion de verdad —sidebar, migas,
+ * tarjetas de modulo— sigue con el comportamiento de Next.
+ */
 export function BotonEnlace({
   variante = "primario",
   tamano = "normal",
+  scroll = false,
   className,
   children,
   ...resto
 }: PropiedadesComunes & Omit<ComponentProps<typeof Link>, "className" | "children">) {
   return (
-    <Link className={clases(variante, tamano, className)} {...resto}>
+    <Link className={clases(variante, tamano, className)} scroll={scroll} {...resto}>
       {children}
     </Link>
   );

@@ -246,7 +246,11 @@ export function FormularioHook({
             {empresas.length === 0 && (
               <p className="mt-2 text-[11.5px] leading-relaxed text-blackberry dark-tema:text-[#e9a9cd]">
                 Todavia no hay ninguna empresa registrada.{" "}
-                <Link href={hrefNuevaEmpresa} className="font-semibold underline">
+                <Link
+                  href={hrefNuevaEmpresa}
+                  scroll={false}
+                  className="font-semibold underline"
+                >
                   Registra la primera
                 </Link>{" "}
                 para poder escribir la ficha.

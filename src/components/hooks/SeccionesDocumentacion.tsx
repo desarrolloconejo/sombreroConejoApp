@@ -125,6 +125,7 @@ export function SeccionReglas({
 
         <Link
           href={hrefNueva}
+          scroll={false}
           className="suave inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-white/22 px-4 text-[12.5px] font-semibold text-white hover:border-gold hover:bg-gold hover:text-navy"
         >
           <Plus aria-hidden="true" className="size-4" />
@@ -357,6 +358,7 @@ export function SeccionAperturas({
         {hrefNueva && (
           <Link
             href={hrefNueva}
+            scroll={false}
             className="suave inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-lg bg-acento px-3 text-xs font-semibold text-acento-contraste hover:bg-acento-hover"
           >
             <Plus aria-hidden="true" className="size-3.5" />
@@ -522,6 +524,7 @@ export function SeccionReferencias({
 
         <Link
           href={hrefNueva}
+          scroll={false}
           className="suave inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-acento px-4 text-[12.5px] font-semibold text-acento-contraste hover:bg-acento-hover"
         >
           <Plus aria-hidden="true" className="size-4" />

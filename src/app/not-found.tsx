@@ -41,12 +41,12 @@ export default function NoEncontrada() {
         </p>
 
         <div className="mt-7 flex flex-wrap justify-center gap-2.5">
-          <BotonEnlace href="/dashboard">
+          <BotonEnlace href="/dashboard" scroll>
             <MoveLeft aria-hidden="true" />
             Volver al panel
           </BotonEnlace>
 
-          <BotonEnlace href="/login" variante="fantasma">
+          <BotonEnlace href="/login" variante="fantasma" scroll>
             Ir al acceso
           </BotonEnlace>
         </div>

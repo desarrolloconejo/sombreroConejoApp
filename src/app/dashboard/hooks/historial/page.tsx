@@ -145,7 +145,7 @@ export default async function PaginaHistorial(
       titulo="Todas las fichas y donde se quedo cada una"
       descripcion="Solo consulta y mantenimiento. Para escribir se va a Hooks, para auditar al Auditor y para registrar numeros a Metricas."
       accion={
-        <BotonEnlace href="/dashboard/hooks/nuevo" tamano="chico">
+        <BotonEnlace href="/dashboard/hooks/nuevo" tamano="chico" scroll>
           <Plus aria-hidden="true" />
           Nuevo hook
         </BotonEnlace>
@@ -168,7 +168,7 @@ export default async function PaginaHistorial(
             titulo="Todavia no hay ninguna ficha"
             descripcion="Una ficha se crea escribiendo la decision de una pieza. La primera que aparezca aqui sera la que escribas ahora."
             accion={
-              <BotonEnlace href="/dashboard/hooks/nuevo" tamano="chico">
+              <BotonEnlace href="/dashboard/hooks/nuevo" tamano="chico" scroll>
                 <Plus aria-hidden="true" />
                 Escribir el primero
               </BotonEnlace>
