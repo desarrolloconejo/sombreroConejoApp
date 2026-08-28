@@ -152,12 +152,16 @@ export function SeccionReglas({
                 ].join(" ")}
               >
                 <div className="mb-2 flex items-start justify-between gap-2.5">
-                  <Link
-                    href={hrefVer(regla.id)}
-                    className="text-[14.5px] font-bold tracking-[-0.01em] hover:text-gold hover:underline"
-                  >
+                  {/*
+                    El titulo NO es un enlace, y ademas lleva su color escrito.
+                    Era un <Link>, asi que heredaba del `a` global el color de
+                    acento: en tema claro eso es blackberry, y blackberry sobre
+                    esta tarjeta navy no se lee. Ademas repetia lo que ya hace
+                    el ojo del pie, con la diferencia de que no lo parecia.
+                  */}
+                  <h4 className="text-[14.5px] font-bold tracking-[-0.01em] text-white">
                     {regla.etiqueta}
-                  </Link>
+                  </h4>
                   {ampliada && (
                     <span className="shrink-0 rounded-md bg-gold px-2 py-0.5 text-[10px] font-extrabold tracking-[0.06em] text-violet uppercase">
                       Ampliado
@@ -532,12 +536,12 @@ export function SeccionReferencias({
                   {nombreTerritorio(ref.territorio)}
                 </p>
 
-                <Link
-                  href={hrefVer(ref.id)}
-                  className="mb-2.5 block text-base leading-snug font-bold tracking-[-0.01em] hover:text-acento hover:underline"
-                >
+                {/* Tampoco es enlace: el ojo del pie ya abre el detalle, y
+                    como <Link> heredaba el color de acento en lugar del color
+                    de texto, el hook se leia como si fuera otra cosa. */}
+                <h4 className="mb-2.5 text-base leading-snug font-bold tracking-[-0.01em] text-texto">
                   &laquo;{ref.hablado}&raquo;
-                </Link>
+                </h4>
 
                 {ref.insertTitulo && (
                   <span className="inline-flex items-center rounded-full bg-navy px-3 py-[5px] text-[11.5px] font-bold text-gold">
