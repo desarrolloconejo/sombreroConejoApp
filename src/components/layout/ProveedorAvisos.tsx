@@ -83,22 +83,23 @@ export function ProveedorAvisos({ children }: { children: ReactNode }) {
         primero.
       */}
       {/*
-        ARRIBA A LA IZQUIERDA, Y NO ABAJO A LA DERECHA.
-        Ahi es justo donde los paneles laterales ponen sus botones —cancelar,
-        corregir, guardar—, asi que el aviso de "se guardo" tapaba el boton que
-        acababa de pulsarse y el siguiente que hacia falta.
+        ABAJO A LA IZQUIERDA.
 
-        Se coloca por debajo de las dos cabeceras (la movil, de 64 px, y la de
-        escritorio, de 68) y a la derecha del sidebar de 268 px: sigue siendo la
-        esquina superior izquierda de lo que se esta mirando, sin taparle nada
-        al armazon.
+        Abajo a la DERECHA es justo donde los paneles laterales ponen su pie de
+        botones —cancelar, corregir, guardar—, asi que el aviso de "se guardo"
+        tapaba el boton que se acababa de pulsar y el siguiente que hacia falta.
+        La esquina opuesta es la unica que no compite con nada: el panel esta a
+        la derecha y el sidebar arriba a la izquierda.
+
+        En escritorio se desplaza los 268 px del sidebar para no montarse
+        encima de el.
       */}
       <div
         aria-live="polite"
         aria-relevant="additions"
         className={[
-          "pointer-events-none fixed inset-x-0 top-16 z-50 flex flex-col items-center gap-2.5 p-4",
-          "lg:inset-x-auto lg:top-[68px] lg:left-[268px] lg:items-start",
+          "pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2.5 p-4",
+          "lg:inset-x-auto lg:left-[268px] lg:items-start",
         ].join(" ")}
       >
         {avisos.map((aviso) => (
