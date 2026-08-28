@@ -376,6 +376,30 @@ export async function guardarResultados(
     return { ok: false, mensaje: "Elige la ficha que se esta midiendo" };
   }
 
+  /*
+   * Los numeros se registran UNA vez.
+   *
+   * Antes esta pantalla decia «registrar dos veces actualiza, no duplica», y
+   * era cierto. Redes pide lo contrario: cuando una pieza tiene sus metricas
+   * ha llegado a su ultimo estado y no la modifica nadie, porque lo que se
+   * guarda es el par completo —lo que se dijo y lo que paso— y ese par es lo
+   * que la cuenta aprende.
+   *
+   * Se comprueba contra la base y no solo en la interfaz: el modulo ya no
+   * ofrece las piezas medidas, pero una action es un POST.
+   */
+  const ficha = await fichas.buscarPorId(fichaId);
+
+  if (!ficha) return { ok: false, mensaje: "Esa ficha ya no existe" };
+
+  if (ficha.estado === "medida") {
+    return {
+      ok: false,
+      mensaje:
+        "Esta pieza ya tiene sus numeros registrados: quedo cerrada y no se puede modificar.",
+    };
+  }
+
   const impresiones = comoContador(datos.get("impresiones"));
   const vistas3s = comoContador(datos.get("vistas3s"));
 
@@ -443,17 +467,15 @@ export async function guardarResultados(
    * formulario de metricas no los lleva, y aunque los llevara serian datos
    * que escribe el navegador sobre una pieza que ya existe.
    *
-   * `yaGuardadas` evita el duplicado cuando alguien registra dos veces la
-   * misma ficha —cosa que este paso permite a proposito, porque actualiza— con
-   * la casilla marcada las dos veces.
+   * `yaGuardadas` evita el duplicado por si la pieza ya estaba en el banco,
+   * guardada a mano desde el historial antes de llegar aqui.
    */
   let alBancoHecho = false;
 
   if (alBanco && territorio !== null && aprendizaje) {
-    const ficha = await fichas.buscarPorId(fichaId);
     const yaGuardadas = await referencias.fichasGuardadas([fichaId]);
 
-    if (ficha && !yaGuardadas.has(fichaId)) {
+    if (!yaGuardadas.has(fichaId)) {
       await referencias.crear({
         hablado: ficha.hablado,
         insertTitulo: ficha.insertTitulo,

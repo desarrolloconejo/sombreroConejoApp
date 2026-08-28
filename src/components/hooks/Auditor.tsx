@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Eraser, Pencil, Zap } from "lucide-react";
+import { ArrowRight, Copy, Eraser, Pencil, Zap } from "lucide-react";
 
 import { enviarAuditor } from "@/actions/hooks";
 import { Boton, BotonEnlace, Etiqueta, Selector } from "@/components/ui";
@@ -109,6 +109,14 @@ export function Auditor({
   const esBorrador = ficha?.estado === "borrador";
 
   /*
+   * Una pieza medida esta cerrada: se puede volver a pasar por el auditor para
+   * mirarla, pero no se le guarda nada. Sus numeros describen el texto con el
+   * que se publico, y reescribirlo dejaria unas cifras hablando de algo que ya
+   * no existe. La action lo rechaza igualmente; aqui solo deja de ofrecerse.
+   */
+  const cerrada = ficha?.estado === "medida";
+
+  /*
    * Empezar de cero con una ficha delante NO es vaciar los campos: hay que
    * soltar tambien su veredicto, y eso vive en `useActionState`, que no se
    * puede resetear. Se navega al auditor sin `?ficha`, y la `key` de la page
@@ -160,12 +168,16 @@ export function Auditor({
               <input type="hidden" name="id" value={ficha.id} />
 
               <p className="mb-2 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
-                {esBorrador ? "Borrador cargado de la cola" : "La pieza auditada"}
+                {cerrada
+                  ? "Pieza cerrada"
+                  : esBorrador
+                    ? "Borrador cargado de la cola"
+                    : "La pieza auditada"}
               </p>
 
               <div className="flex flex-wrap items-center gap-2 text-[12px] text-suave">
                 <Etiqueta variante="contorno">
-                  {esBorrador ? "Borrador" : "Auditada"}
+                  {cerrada ? "Medida" : esBorrador ? "Borrador" : "Auditada"}
                 </Etiqueta>
                 <span>{ficha.empresaNombre}</span>
                 <span aria-hidden="true">·</span>
@@ -182,11 +194,34 @@ export function Auditor({
                 </p>
               )}
 
+              {cerrada && (
+                <p className="mt-2.5 text-[11.5px] leading-relaxed text-suave">
+                  Ya tiene sus metricas, asi que{" "}
+                  <b className="text-texto">no se le guarda nada</b>. Se puede
+                  volver a pasar por el auditor para mirarla, y probar cambios
+                  aqui no la toca.
+                </p>
+              )}
+
               <div className="mt-3.5 flex flex-wrap gap-2.5">
-                {hrefCorregir && (
+                {/* Corregir lleva al canvas, y una pieza cerrada no se abre
+                    alli para editar: se ofrece usarla como plantilla. */}
+                {hrefCorregir && !cerrada && (
                   <BotonEnlace href={hrefCorregir} variante="fantasma" tamano="chico">
                     <Pencil aria-hidden="true" />
                     Corregir y volver a auditar
+                  </BotonEnlace>
+                )}
+
+                {cerrada && (
+                  <BotonEnlace
+                    href={`/dashboard/hooks/nuevo?panel=plantilla&id=${ficha.id}`}
+                    variante="fantasma"
+                    tamano="chico"
+                    scroll
+                  >
+                    <Copy aria-hidden="true" />
+                    Usar como plantilla
                   </BotonEnlace>
                 )}
 
@@ -282,7 +317,7 @@ export function Auditor({
               guardar le pone la nota a la ficha. Es el mismo reparto que hace
               el canvas entre guardar y auditar.
             */}
-            {ficha ? (
+            {ficha && !cerrada ? (
               <>
                 <Boton type="submit" name="accion" value="guardar" disabled={enviando}>
                   <Zap aria-hidden="true" />
@@ -302,7 +337,7 @@ export function Auditor({
             ) : (
               <Boton type="submit" disabled={enviando}>
                 <Zap aria-hidden="true" />
-                {enviando ? "Auditando…" : "Auditar hook"}
+                {enviando ? "Auditando…" : cerrada ? "Probar sin guardar" : "Auditar hook"}
               </Boton>
             )}
 

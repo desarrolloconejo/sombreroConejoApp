@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Building2 } from "lucide-react";
+import { Building2, Copy, Lock } from "lucide-react";
 
 import { Wrapper } from "@/components/layout/Wrapper";
 import { PanelLateral } from "@/components/listado";
@@ -94,6 +94,9 @@ export default async function PaginaNuevoHook(
 
   const activos = limites ?? limitesPorDefecto();
 
+  // Cerrada solo cuando se abre PARA EDITAR: como plantilla se puede usar.
+  const cerrada = ficha?.estado === "medida" && !esPlantilla;
+
   // Se conserva el resto de la URL al abrir y cerrar el panel: si alguien
   // estaba editando una ficha, el alta de empresa no puede perdersela.
   const conservar = new URLSearchParams();
@@ -132,16 +135,66 @@ export default async function PaginaNuevoHook(
         </BotonEnlace>
       }
     >
-      <FormularioHook
-        empresas={empresas}
-        ficha={ficha}
-        referencia={referencia}
-        limiteVoz={activos.maxPalabrasVoz}
-        limiteInsert={activos.maxPalabrasInsert}
-        etiquetaRegla={activos.etiqueta}
-        hrefNuevaEmpresa={hrefEmpresa}
-        plantilla={esPlantilla}
-      />
+      {/*
+        UNA PIEZA MEDIDA NO SE ABRE PARA EDITAR.
+
+        Lo pide redes: con sus numeros registrados ha llegado a su ultimo
+        estado, y lo que se guarda es el par completo —lo que se dijo y lo que
+        paso—. La action lo rechaza igualmente, pero pintar el formulario
+        seria invitar a escribir algo que no se va a poder guardar.
+
+        En modo plantilla NO aplica: ahi la medida es el origen y lo que nace
+        es una ficha nueva, sin su id, que es exactamente la salida que se
+        ofrece cuando hace falta otra version.
+      */}
+      {cerrada ? (
+        <div className="surge rounded-[15px] border border-borde bg-superficie px-[26px] py-6 shadow-[var(--sombra)]">
+          <p className="mb-2 flex items-center gap-2.5 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
+            <Lock aria-hidden="true" className="size-4" />
+            Pieza cerrada
+          </p>
+
+          <p className="text-[17px] leading-snug font-bold tracking-[-0.02em]">
+            &laquo;{ficha?.hablado}&raquo;
+          </p>
+
+          <p className="mt-2.5 max-w-[70ch] text-[13px] leading-relaxed text-suave">
+            Ya tiene sus metricas registradas, asi que no la modifica nadie. Sus
+            numeros describen este texto: cambiarlo dejaria unas cifras hablando
+            de algo que ya no existe.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-2.5 border-t border-borde pt-5">
+            <BotonEnlace
+              href={`${RUTA}?panel=plantilla&id=${ficha?.id}`}
+              tamano="chico"
+            >
+              <Copy aria-hidden="true" />
+              Usar como plantilla
+            </BotonEnlace>
+
+            <BotonEnlace
+              href="/dashboard/hooks/historial"
+              variante="fantasma"
+              tamano="chico"
+              scroll
+            >
+              Volver al historial
+            </BotonEnlace>
+          </div>
+        </div>
+      ) : (
+        <FormularioHook
+          empresas={empresas}
+          ficha={ficha}
+          referencia={referencia}
+          limiteVoz={activos.maxPalabrasVoz}
+          limiteInsert={activos.maxPalabrasInsert}
+          etiquetaRegla={activos.etiqueta}
+          hrefNuevaEmpresa={hrefEmpresa}
+          plantilla={esPlantilla}
+        />
+      )}
 
       {abrirEmpresa && (
         <PanelLateral

@@ -52,6 +52,32 @@ type Validacion = {
 };
 
 /**
+ * Una pieza MEDIDA esta cerrada. No la modifica nadie.
+ *
+ * Lo pide redes, y la razon es del oficio: cuando una pieza tiene sus numeros
+ * ha llegado a su ultimo estado, y lo que se guarda es el par completo —lo que
+ * se dijo y lo que paso—. Cambiar el hook despues dejaria unas metricas
+ * describiendo un texto que ya no existe, y el aprendizaje de la cuenta se
+ * construye sobre ese par.
+ *
+ * Se comprueba en el SERVIDOR y contra la base, no escondiendo botones: la
+ * interfaz deja de ofrecerlo, pero una action es un POST y quien conozca el id
+ * puede llamarla igual.
+ *
+ * Devuelve el mensaje si esta cerrada, y null si se puede seguir.
+ */
+const CERRADA =
+  "Esta pieza ya tiene sus metricas registradas: quedo cerrada y no se puede modificar. Si hace falta una version distinta, usala como plantilla y nacera una ficha nueva.";
+
+async function siEstaCerrada(id: number): Promise<string | null> {
+  const actual = await fichas.buscarPorId(id);
+
+  if (!actual) return "Esa ficha ya no existe";
+
+  return actual.estado === "medida" ? CERRADA : null;
+}
+
+/**
  * Valida lo que llega del canvas.
  *
  * Solo cuatro campos son obligatorios —cliente, objetivo, plataforma y el
@@ -119,6 +145,9 @@ export async function guardarBorrador(
   const id = comoIdentificador(datos.get("id"));
 
   if (id !== null) {
+    const cerrada = await siEstaCerrada(id);
+    if (cerrada) return { ok: false, mensaje: cerrada };
+
     const actualizada = await fichas.actualizar(id, ficha);
 
     if (!actualizada) return { ok: false, mensaje: "Esa ficha ya no existe" };
@@ -172,6 +201,11 @@ export async function auditarHook(
   if (!ficha) return { ok: false, errores };
 
   const id = comoIdentificador(datos.get("id"));
+
+  if (id !== null) {
+    const cerrada = await siEstaCerrada(id);
+    if (cerrada) return { ok: false, mensaje: cerrada };
+  }
 
   const guardada =
     id !== null
@@ -301,6 +335,10 @@ export async function auditarFicha(
   const ficha = await fichas.buscarPorId(id);
 
   if (!ficha) return { ok: false, mensaje: "Esa ficha ya no existe" };
+
+  // Una pieza medida no se re-audita: su nota describe el texto con el que se
+  // publico, y ese par es lo que la cuenta aprende.
+  if (ficha.estado === "medida") return { ok: false, mensaje: CERRADA };
 
   const insertTitulo = limpiarOpcional(
     datos.get("insertTitulo"),

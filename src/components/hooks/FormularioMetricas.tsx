@@ -184,7 +184,7 @@ export function FormularioMetricas({
               </Boton>
 
               <p className="text-[11.5px] font-medium text-suave">
-                Registrar dos veces la misma ficha actualiza, no duplica.
+                Los numeros se registran una vez: al guardarlos la pieza queda cerrada.
               </p>
             </div>
           </div>

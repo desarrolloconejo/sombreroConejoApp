@@ -1,4 +1,4 @@
-import { Copy, Pencil } from "lucide-react";
+import { Copy, Lock, Pencil } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
@@ -214,10 +214,19 @@ export function DetalleFicha({
           Usar como plantilla
         </BotonEnlace>
 
-        <BotonEnlace href={hrefEditar} scroll>
-          <Pencil aria-hidden="true" />
-          Editar
-        </BotonEnlace>
+        {/* Cerrada: se dice, no se esconde. Usar como plantilla sigue estando
+            ahi al lado, que es la salida cuando hace falta otra version. */}
+        {ficha.estado === "medida" ? (
+          <span className="inline-flex min-h-11 items-center gap-2.5 rounded-xl border border-borde px-5 text-[12.5px] font-semibold text-suave">
+            <Lock aria-hidden="true" className="size-4" />
+            Cerrada: ya tiene sus metricas
+          </span>
+        ) : (
+          <BotonEnlace href={hrefEditar} scroll>
+            <Pencil aria-hidden="true" />
+            Editar
+          </BotonEnlace>
+        )}
       </PanelPie>
     </>
   );

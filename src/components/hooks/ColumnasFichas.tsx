@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookmarkCheck, BookmarkPlus, Copy, Eye, History, Pencil, Trash2 } from "lucide-react";
+import { BookmarkCheck, BookmarkPlus, Copy, Eye, History, Lock, Pencil, Trash2 } from "lucide-react";
 
 import { Etiqueta } from "@/components/ui";
 import { metricaDe, nombrePlataforma, objetivoDe, porcentajeDe } from "@/lib/hooks/catalogo";
@@ -201,12 +201,28 @@ export function columnasFichas(
               <Eye aria-hidden="true" />
             </AccionFila>
 
-            <AccionFila
-              href={`/dashboard/hooks/nuevo?panel=editar&id=${ficha.id}`}
-              etiqueta={`Editar «${corto}»`}
-            >
-              <Pencil aria-hidden="true" />
-            </AccionFila>
+            {/*
+              Una pieza medida esta cerrada: nadie la modifica. La accion no se
+              esconde sin mas, se sustituye por un candado que dice por que —un
+              hueco donde antes habia un boton se lee como un fallo—. La
+              prohibicion de verdad esta en la action; esto solo deja de
+              ofrecerla.
+            */}
+            {ficha.estado === "medida" ? (
+              <span
+                title="Cerrada: ya tiene sus metricas y no se puede modificar"
+                className="grid size-9 shrink-0 place-items-center rounded-[10px] text-suave/60 [&>svg]:size-4"
+              >
+                <Lock aria-label="Cerrada, no se puede modificar" />
+              </span>
+            ) : (
+              <AccionFila
+                href={`/dashboard/hooks/nuevo?panel=editar&id=${ficha.id}`}
+                etiqueta={`Editar «${corto}»`}
+              >
+                <Pencil aria-hidden="true" />
+              </AccionFila>
+            )}
 
             {/*
               Usar como plantilla NO toca esta ficha: abre el canvas con sus

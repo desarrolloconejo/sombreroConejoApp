@@ -114,7 +114,9 @@ export default async function PaginaAuditor(
    */
   const puedeMedir =
     ficha !== null &&
-    ficha.estado !== "borrador" &&
+    // Exactamente `auditada`: un borrador aun no ha pasado el control, y una
+    // medida ya esta cerrada y no admite que se le registre nada mas.
+    ficha.estado === "auditada" &&
     resultado !== null &&
     resultado.aprobado;
 

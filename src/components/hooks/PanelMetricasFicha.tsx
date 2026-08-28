@@ -47,7 +47,7 @@ export function PanelMetricasFicha({
   const [estado, enviar, enviando] = useActionState(guardarResultados, ESTADO_INICIAL);
 
   // Como en el resto de paneles: el resultado sale como aviso flotante y el
-  // panel se queda abierto. Registrar dos veces actualiza, no duplica.
+  // panel se queda abierto. Los numeros se registran una sola vez.
   useAvisoDeAccion(estado);
 
   const [impresiones, setImpresiones] = useState("");
