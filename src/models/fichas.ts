@@ -404,11 +404,20 @@ export async function guardarNota(
  * Devuelve si la ficha estaba medida, para que quien llama pueda decir en el
  * mensaje que se fue tambien el aprendizaje de esa cuenta.
  */
-export async function borrar(id: number): Promise<{ borrada: boolean; estabaMedida: boolean }> {
+export async function borrar(
+  id: number,
+): Promise<{ borrada: boolean; estado: EstadoFicha | null }> {
   const fila = await consultarUno<{ estado: EstadoFicha }>(
     "DELETE FROM fichas_hook WHERE id = $1 RETURNING estado",
     [id],
   );
 
-  return { borrada: fila !== null, estabaMedida: fila?.estado === "medida" };
+  /*
+   * Devuelve el ESTADO, no un booleano.
+   *
+   * Antes devolvia `estabaMedida`, y ahi se perdia informacion que el DELETE
+   * ya traia: los estados son tres y quien llamaba solo podia distinguir dos.
+   * El resultado era que borrar una ficha auditada avisaba «Borrador borrado.»
+   */
+  return { borrada: fila !== null, estado: fila?.estado ?? null };
 }

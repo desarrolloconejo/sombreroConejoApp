@@ -12,14 +12,20 @@ import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 /**
  * La confirmacion de borrar una ficha.
  *
- * Distingue dos casos que NO son el mismo, aunque el boton sea igual:
+ * Distingue los TRES estados, que no cuestan lo mismo:
  *
- * - Un borrador sin publicar no se lleva nada por delante.
- * - Una ficha medida arrastra sus resultados y el aprendizaje que alguien
- *   escribio despues de leer los numeros. Eso es lo unico que esa pieza le
- *   dejo a la cuenta, y no se puede recuperar.
+ * - Un borrador sin auditar no se lleva nada por delante.
+ * - Una auditada ya paso el control y tiene nota; si esta publicada, borrarla
+ *   deja la pieza sin sitio donde registrar sus numeros.
+ * - Una medida arrastra sus resultados y el aprendizaje que alguien escribio
+ *   despues de leer los numeros. Eso es lo unico que esa pieza le dejo a la
+ *   cuenta, y no se puede recuperar.
  *
- * Por eso el texto cambia y el tono tambien: la misma advertencia para los dos
+ * Antes eran dos ramas sobre tres estados, asi que una ficha auditada leia
+ * «es un borrador sin publicar»: falso por partida doble, porque ya estaba
+ * auditada y porque el propio modulo de metricas llama publicadas a esas.
+ *
+ * El texto cambia con el coste a proposito: la misma advertencia para los tres
  * casos entrena a la gente a ignorarla.
  */
 export function ConfirmarBorradoFicha({
@@ -35,7 +41,14 @@ export function ConfirmarBorradoFicha({
   // arriba queda fuera de la vista de quien acaba de pulsar el boton.
   useAvisoDeAccion(estado);
 
-  const conResultados = ficha.estado === "medida" || ficha.resultado !== null;
+  /*
+   * `resultado !== null` manda sobre el estado por si acaso: guardar un
+   * resultado y pasar la ficha a `medida` ocurre en la misma transaccion, asi
+   * que no deberian discrepar — pero si alguna vez lo hicieran, lo que importa
+   * es que hay datos que se van.
+   */
+  const medida = ficha.estado === "medida" || ficha.resultado !== null;
+  const auditada = !medida && ficha.estado === "auditada";
 
   return (
     <form action={enviar}>
@@ -50,15 +63,22 @@ export function ConfirmarBorradoFicha({
         .
       </p>
 
-      {conResultados ? (
+      {medida ? (
         <p className="mt-3">
           Es una pieza <b>medida</b>: con ella se van sus resultados y el
           aprendizaje que dejo escrito. Eso es justo lo que sirve para la
           siguiente pieza, y no hay forma de recuperarlo.
         </p>
+      ) : auditada ? (
+        <p className="mt-3">
+          Es una pieza <b>auditada</b>
+          {ficha.notaAuditor !== null && `, con nota ${ficha.notaAuditor}`}: ya
+          paso el control previo. Si esta publicada, al borrarla no quedara
+          donde registrar sus numeros.
+        </p>
       ) : (
         <p className="mt-3 text-suave">
-          Es un borrador sin publicar, asi que no se lleva ningun dato real por
+          Es un borrador sin auditar, asi que no se lleva ningun dato real por
           delante.
         </p>
       )}
@@ -72,7 +92,13 @@ export function ConfirmarBorradoFicha({
             otra vez sobre algo que ya no esta. */}
         {!estado.ok && (
           <Boton type="submit" tamano="chico" variante="peligro" disabled={enviando}>
-            {enviando ? "Borrando…" : conResultados ? "Borrar la pieza" : "Borrar el borrador"}
+            {enviando
+              ? "Borrando…"
+              : medida
+                ? "Borrar la pieza"
+                : auditada
+                  ? "Borrar la ficha"
+                  : "Borrar el borrador"}
             {!enviando && <Trash2 aria-hidden="true" />}
           </Boton>
         )}

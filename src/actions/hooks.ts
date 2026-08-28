@@ -12,6 +12,7 @@ import * as reglas from "@/models/reglasHook";
 import type {
   ErroresCampo,
   EstadoAuditoria,
+  EstadoFicha,
   EstadoFormulario,
   SlugObjetivo,
   SlugPlataforma,
@@ -267,16 +268,21 @@ export async function borrarFicha(
     return { ok: false, mensaje: "No se pudo identificar la ficha" };
   }
 
-  const { borrada, estabaMedida } = await fichas.borrar(id);
+  const { borrada, estado } = await fichas.borrar(id);
 
   if (!borrada) return { ok: false, mensaje: "Esa ficha ya no existe" };
 
   revalidatePath(RUTA_MODULO, "layout");
 
-  return {
-    ok: true,
-    mensaje: estabaMedida
-      ? "Ficha borrada. Con ella se fueron sus resultados y el aprendizaje que dejo escrito."
-      : "Borrador borrado.",
+  /* Tres estados, tres mensajes. Con dos ramas, una ficha auditada —que ya
+     paso el control y esta publicada— se despedia como si fuera un borrador. */
+  const MENSAJES: Record<EstadoFicha, string> = {
+    borrador: "Borrador borrado.",
+    auditada:
+      "Ficha auditada borrada. Con ella se va su nota; si la pieza estaba publicada, ya no habra donde registrar sus numeros.",
+    medida:
+      "Ficha borrada. Con ella se fueron sus resultados y el aprendizaje que dejo escrito.",
   };
+
+  return { ok: true, mensaje: MENSAJES[estado ?? "borrador"] };
 }

@@ -85,9 +85,19 @@ async function principal(): Promise<void> {
     resuelta ? `${resuelta.etiqueta} (empresaId ${resuelta.empresaId})` : "ninguna",
   );
 
-  // Se retira la del cliente para ver caer la resolucion al sector
-  const guardada = resuelta;
-  if (guardada) await reglas.borrar(guardada.id);
+  /*
+   * Se retiran TODAS las del cliente para ver caer la resolucion al sector.
+   *
+   * Antes se quitaba solo la que gana, y bastaba con que alguien hubiera
+   * creado una segunda regla para esa cuenta desde la interfaz para que la
+   * prueba fallara sin que nada estuviera roto: al borrar una quedaba la otra,
+   * y la resolucion seguia siendo de cliente.
+   */
+  const delCliente = (await reglas.listar()).filter(
+    (regla) => regla.empresaId === empresa.id,
+  );
+
+  for (const regla of delCliente) await reglas.borrar(regla.id);
 
   const porSector = await reglas.resolverParaEmpresa(empresa.id);
   comprobar(
@@ -103,19 +113,19 @@ async function principal(): Promise<void> {
     limites ? `voz ${limites.maxPalabrasVoz}, insert ${limites.maxPalabrasInsert}` : "ninguno",
   );
 
-  // Se repone la que se retiro
-  if (guardada) {
+  // Se reponen todas las que se retiraron, tal cual estaban.
+  for (const regla of delCliente) {
     await reglas.crear({
-      etiqueta: guardada.etiqueta,
-      empresaId: guardada.empresaId,
-      sector: guardada.sector,
-      maxPalabrasVoz: guardada.maxPalabrasVoz,
-      maxPalabrasInsert: guardada.maxPalabrasInsert,
-      exigirPrueba: guardada.exigirPrueba,
-      preambulos: guardada.preambulos,
-      formulasGastadas: guardada.formulasGastadas,
-      terminosTension: guardada.terminosTension,
-      creadoPor: guardada.creadoPor,
+      etiqueta: regla.etiqueta,
+      empresaId: regla.empresaId,
+      sector: regla.sector,
+      maxPalabrasVoz: regla.maxPalabrasVoz,
+      maxPalabrasInsert: regla.maxPalabrasInsert,
+      exigirPrueba: regla.exigirPrueba,
+      preambulos: regla.preambulos,
+      formulasGastadas: regla.formulasGastadas,
+      terminosTension: regla.terminosTension,
+      creadoPor: regla.creadoPor,
     });
   }
 
@@ -251,8 +261,14 @@ async function principal(): Promise<void> {
    * nada estuviera roto. Lo que se comprueba es que la columna vuelve como
    * arreglo de verdad y no como una cadena, y eso hay que preguntarselo a la
    * fila que se sabe que tiene etiquetas.
+   *
+   * El texto tampoco basta por si solo: guardar una ficha en el banco copia su
+   * hablado, asi que puede haber otra referencia con el mismo. La del seed es
+   * la que ademas no viene de ninguna ficha.
    */
-  const delSeed = refs.find((r) => r.hablado.startsWith("Publicar todos los dias"));
+  const delSeed = refs.find(
+    (r) => r.fichaId === null && r.hablado.startsWith("Publicar todos los dias"),
+  );
 
   comprobar(
     "Las etiquetas se parten en lista",
@@ -315,9 +331,17 @@ async function principal(): Promise<void> {
   // ------------------------------------------------------------------ borrado
   const borrado = await fichas.borrar(ficha.id);
   comprobar(
-    "Borrar la ficha dice si estaba medida",
-    borrado.borrada && borrado.estabaMedida,
+    "Borrar la ficha devuelve en que estado estaba",
+    borrado.borrada && borrado.estado === "medida",
     JSON.stringify(borrado),
+  );
+
+  // Borrar algo que ya no esta no debe inventarse un estado: sin fila, null.
+  const repetido = await fichas.borrar(ficha.id);
+  comprobar(
+    "Borrar dos veces no inventa estado",
+    !repetido.borrada && repetido.estado === null,
+    JSON.stringify(repetido),
   );
 
   const huerfanos = await consultar<{ total: string }>(
