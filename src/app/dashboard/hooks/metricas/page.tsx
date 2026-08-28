@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 import { Wrapper } from "@/components/layout/Wrapper";
-import { FormularioMetricas } from "@/components/hooks/FormularioMetricas";
 import { ListadoVacio } from "@/components/listado";
+import { FormularioMetricas, PendientesPaso } from "@/components/hooks";
 import { BotonEnlace } from "@/components/ui";
 import { requerirCargo } from "@/lib/sesion";
 import * as fichasModelo from "@/models/fichas";
@@ -10,14 +10,15 @@ import * as fichasModelo from "@/models/fichas";
 /**
  * El registro de metricas: el final del recorrido.
  *
- * Solo ofrece las fichas que aun no tienen resultado. Ofrecer las medidas
- * mezclaria dos cosas distintas —registrar y corregir— en el mismo
- * desplegable, y corregir se hace desde el historial, sobre la ficha.
+ * Una pieza esta terminada cuando tiene sus numeros, no cuando saca buena nota
+ * en el auditor. Por eso este paso existe aparte y no dentro del canvas.
  */
 
 export const metadata: Metadata = {
   title: "Metricas de hooks",
 };
+
+const RUTA = "/dashboard/hooks/metricas";
 
 const MIGAS = [
   { texto: "Conejo App", href: "/dashboard" },
@@ -25,8 +26,12 @@ const MIGAS = [
   { texto: "Metricas" },
 ];
 
-export default async function PaginaMetricas() {
+export default async function PaginaMetricas(
+  props: PageProps<"/dashboard/hooks/metricas">,
+) {
   const usuario = await requerirCargo("redes");
+
+  const parametros = await props.searchParams;
 
   // Se piden mas de las que caben en un desplegable comodo y se cortan aqui:
   // si hay veinte pendientes, el problema no es el desplegable.
@@ -41,6 +46,18 @@ export default async function PaginaMetricas() {
   // piezas propias faltan por cerrar, no cuantas tiene la agencia.
   const conteo = await fichasModelo.contarPorEstado(usuario.id);
 
+  /*
+   * La ficha que llega ya elegida desde la lista.
+   *
+   * Se valida contra las pendientes en lugar de confiar en la URL: un
+   * "?ficha=999" escrito a mano no debe dejar el desplegable en un estado que
+   * no corresponde a ninguna opcion.
+   */
+  const pedida = typeof parametros.ficha === "string" ? parametros.ficha : "";
+  const fichaInicial = pendientes.filas.some((f) => String(f.id) === pedida)
+    ? pedida
+    : "";
+
   return (
     <Wrapper
       migas={MIGAS}
@@ -49,7 +66,28 @@ export default async function PaginaMetricas() {
       descripcion="El final del recorrido. Una pieza esta terminada cuando tiene sus numeros registrados: la nota del auditor es un control por el camino, no un resultado."
     >
       {pendientes.filas.length > 0 ? (
-        <FormularioMetricas fichas={pendientes.filas} />
+        <>
+          {/*
+            La cola va antes del formulario. Escondida dentro del desplegable
+            no se veia hasta abrirlo, asi que para saber que faltaba por medir
+            habia que ir al historial y volver.
+          */}
+          <PendientesPaso
+            fichas={pendientes.filas}
+            titulo="Esperan sus numeros"
+            descripcion="Piezas auditadas y publicadas a las que solo les faltan las metricas para quedar terminadas."
+            accion="Registrar"
+            hrefDe={(ficha) => `${RUTA}?ficha=${ficha.id}`}
+            vacio="Ninguna pieza espera numeros."
+          />
+
+          <div className="mt-5">
+            <FormularioMetricas
+              fichas={pendientes.filas}
+              fichaInicial={fichaInicial}
+            />
+          </div>
+        </>
       ) : (
         <ListadoVacio
           titulo={

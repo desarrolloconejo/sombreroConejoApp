@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 
 import { Wrapper } from "@/components/layout/Wrapper";
-import { AuditorSuelto, FiltroCalidad } from "@/components/hooks";
+import { AuditorSuelto, FiltroCalidad, PendientesPaso } from "@/components/hooks";
 import { limitesPorDefecto } from "@/lib/hooks/auditor";
 import { requerirCargo } from "@/lib/sesion";
 import * as empresasModelo from "@/models/empresas";
+import * as fichasModelo from "@/models/fichas";
 
 export const metadata: Metadata = {
   title: "Auditor de hooks",
@@ -19,7 +20,19 @@ const MIGAS = [
 export default async function PaginaAuditor() {
   await requerirCargo("redes");
 
-  const empresas = await empresasModelo.listarActivas();
+  const [empresas, pendientes] = await Promise.all([
+    empresasModelo.listarActivas(),
+
+    // Un borrador es, por definicion, una pieza escrita que aun no ha pasado
+    // por aqui: son exactamente las que este paso tiene pendientes.
+    fichasModelo.listar({
+      estado: ["borrador"],
+      orden: "actualizadoEn",
+      direccion: "desc",
+      porPagina: 50,
+    }),
+  ]);
+
   const estandar = limitesPorDefecto();
 
   return (
@@ -42,11 +55,28 @@ export default async function PaginaAuditor() {
         como oraculo.
       </div>
 
-      <AuditorSuelto
-        empresas={empresas}
-        limiteVoz={estandar.maxPalabrasVoz}
-        limiteInsert={estandar.maxPalabrasInsert}
+      {/*
+        La cola va primero, antes del auditor de texto suelto. Auditar una
+        pieza escrita es el trabajo; probar una frase suelta es la herramienta
+        que ayuda mientras se escribe. Con la cola debajo, quien entraba aqui
+        no llegaba a enterarse de que tenia borradores esperando.
+      */}
+      <PendientesPaso
+        fichas={pendientes.filas}
+        titulo="Esperan auditoria"
+        descripcion="Borradores escritos que todavia no han pasado el control. Se auditan desde el canvas, con el boton Auditar."
+        accion="Auditar"
+        hrefDe={(ficha) => `/dashboard/hooks/nuevo?panel=editar&id=${ficha.id}`}
+        vacio="Ningun borrador espera auditoria. Todo lo escrito ya paso el control."
       />
+
+      <div className="mt-5">
+        <AuditorSuelto
+          empresas={empresas}
+          limiteVoz={estandar.maxPalabrasVoz}
+          limiteInsert={estandar.maxPalabrasInsert}
+        />
+      </div>
 
       <div className="mt-5">
         <FiltroCalidad />

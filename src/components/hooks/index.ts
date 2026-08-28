@@ -5,6 +5,7 @@ export type { ValoresFicha } from "./FichaProduccion";
 export { ResultadoAuditoria, ResultadoNeutro } from "./ResultadoAuditoria";
 export { FiltroCalidad } from "./FiltroCalidad";
 export { AuditorSuelto } from "./AuditorSuelto";
+export { PendientesPaso } from "./PendientesPaso";
 export { ConfirmarDocumentacion } from "./ConfirmarDocumentacion";
 export { DetalleApertura } from "./DetalleApertura";
 export { DetalleReferencia } from "./DetalleReferencia";
@@ -20,3 +21,4 @@ export {
 } from "./SeccionesDocumentacion";
 
 
+export { FormularioMetricas } from "./FormularioMetricas";

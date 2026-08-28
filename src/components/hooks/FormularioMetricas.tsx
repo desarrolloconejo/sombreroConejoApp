@@ -37,14 +37,29 @@ function aNumero(texto: string): number {
   return Number.isFinite(numero) && numero > 0 ? Math.trunc(numero) : 0;
 }
 
-export function FormularioMetricas({ fichas }: { fichas: FichaConResultado[] }) {
+export function FormularioMetricas({
+  fichas,
+  fichaInicial = "",
+}: {
+  fichas: FichaConResultado[];
+
+  /**
+   * La ficha que llega ya elegida desde la lista de pendientes.
+   *
+   * Viaja por la URL y no por estado compartido porque la lista es de
+   * servidor: asi el enlace "Registrar" de una fila deja el formulario listo
+   * para escribir cifras, en lugar de obligar a buscarla otra vez en el
+   * desplegable.
+   */
+  fichaInicial?: string;
+}) {
   const [estado, enviar, enviando] = useActionState(guardarResultados, ESTADO_INICIAL);
 
   // El resultado sale como aviso flotante: en un formulario largo, una alerta
   // arriba queda fuera de la vista de quien acaba de pulsar el boton.
   useAvisoDeAccion(estado);
 
-  const [fichaId, setFichaId] = useState("");
+  const [fichaId, setFichaId] = useState(fichaInicial);
   const [impresiones, setImpresiones] = useState("");
   const [vistas, setVistas] = useState("");
 
