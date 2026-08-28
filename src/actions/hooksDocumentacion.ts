@@ -7,6 +7,7 @@ import { SLUGS_PLATAFORMA, TERRITORIOS } from "@/lib/hooks/catalogo";
 import { requerirCargo } from "@/lib/sesion";
 import { comoIdentificador, limpiarOpcional, limpiarTexto } from "@/lib/validaciones";
 import * as aperturas from "@/models/aperturas";
+import * as ediciones from "@/models/ediciones";
 import * as fichas from "@/models/fichas";
 import * as referencias from "@/models/referencias";
 import * as reglas from "@/models/reglasHook";
@@ -432,6 +433,10 @@ export async function guardarResultados(
     guardados: comoContador(datos.get("guardados")),
     aprendizaje,
   });
+
+  // Registrar numeros mueve la ficha a `medida`, asi que cuenta como cambio y
+  // se anota igual que auditarla o editarla.
+  await ediciones.registrar(fichaId, usuario.id, "medida");
 
   /*
    * El hablado y la plataforma salen de la BASE, no del formulario: el

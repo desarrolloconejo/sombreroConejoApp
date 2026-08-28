@@ -7,6 +7,7 @@ import { auditar } from "@/lib/hooks/auditor";
 import { metricaDe, SLUGS_OBJETIVO, SLUGS_PLATAFORMA } from "@/lib/hooks/catalogo";
 import { requerirCargo } from "@/lib/sesion";
 import { comoIdentificador, limpiarOpcional, limpiarTexto } from "@/lib/validaciones";
+import * as ediciones from "@/models/ediciones";
 import * as fichas from "@/models/fichas";
 import * as reglas from "@/models/reglasHook";
 import type {
@@ -122,11 +123,17 @@ export async function guardarBorrador(
 
     if (!actualizada) return { ok: false, mensaje: "Esa ficha ya no existe" };
 
+    // Quien la toco queda anotado: en el historial cualquiera edita la ficha
+    // de cualquiera, y la ficha sola solo sabe quien la creo.
+    await ediciones.registrar(id, usuario.id, "editada");
+
     revalidatePath(RUTA_MODULO, "layout");
     return { ok: true, mensaje: "Borrador actualizado", fichaId: id };
   }
 
   const creada = await fichas.crear(ficha, usuario.id);
+
+  await ediciones.registrar(creada.id, usuario.id, "creada");
 
   revalidatePath(RUTA_MODULO, "layout");
 
@@ -183,6 +190,10 @@ export async function auditarHook(
   });
 
   await fichas.guardarNota(guardada.id, resultado.nota);
+
+  /* Se anota una sola linea, «auditada»: guardar y auditar son aqui un mismo
+     gesto, y dos filas con la misma hora contarian dos veces lo mismo. */
+  await ediciones.registrar(guardada.id, usuario.id, "auditada");
 
   revalidatePath(RUTA_MODULO, "layout");
 
@@ -275,7 +286,7 @@ export async function auditarFicha(
   _estadoPrevio: EstadoAuditoria,
   datos: FormData,
 ): Promise<EstadoAuditoria> {
-  await requerirCargo("redes");
+  const usuario = await requerirCargo("redes");
 
   const id = comoIdentificador(datos.get("id"));
 
@@ -325,6 +336,8 @@ export async function auditarFicha(
   });
 
   await fichas.guardarNota(id, resultado.nota);
+
+  await ediciones.registrar(id, usuario.id, "auditada");
 
   revalidatePath(RUTA_MODULO, "layout");
 

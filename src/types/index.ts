@@ -55,6 +55,8 @@ export type {
   ResultadoHook,
   FichaConResultado,
   ReferenciaHook,
+  AccionEdicion,
+  EdicionFicha,
   DatosNuevaReferencia,
 } from "./hooks";
 

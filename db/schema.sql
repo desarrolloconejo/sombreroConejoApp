@@ -442,6 +442,42 @@ CREATE INDEX IF NOT EXISTS referencias_ficha_idx
   ON referencias_hook (ficha_id) WHERE ficha_id IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
+-- ediciones_ficha: quien ha tocado cada ficha, y cuando.
+--
+-- En el historial cualquiera puede editar la ficha de cualquiera, y hasta
+-- ahora la ficha solo guardaba quien la creo y la fecha del ultimo cambio: no
+-- habia forma de saber quien lo hizo, ni cuantas manos habian pasado.
+--
+-- Es un registro de SOLO ANADIR: nada lo actualiza ni lo borra. Reescribir un
+-- historial de cambios lo convertiria en algo que no se puede creer, que es
+-- justo lo contrario de para lo que sirve.
+--
+-- No guarda que campos cambiaron ni sus valores anteriores. Eso serviria para
+-- deshacer, que es otra funcionalidad; aqui la pregunta es quien ha metido
+-- mano, y para responderla basta con esto.
+--
+-- ON DELETE CASCADE: el registro habla de una ficha concreta y no significa
+-- nada sin ella. Es al reves que el banco de referencias, donde lo que se
+-- guarda —por que funciono un hook— vale por si solo.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ediciones_ficha (
+  id         SERIAL      PRIMARY KEY,
+  ficha_id   INTEGER     NOT NULL REFERENCES fichas_hook(id) ON DELETE CASCADE,
+  usuario_id INTEGER     NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
+  accion     TEXT        NOT NULL,
+  creado_en  TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  CONSTRAINT ediciones_accion_valida CHECK (
+    accion IN ('creada', 'editada', 'auditada', 'medida')
+  )
+);
+
+-- Se consulta siempre igual: el historial de UNA ficha, de lo mas nuevo a lo
+-- mas viejo.
+CREATE INDEX IF NOT EXISTS ediciones_ficha_idx
+  ON ediciones_ficha (ficha_id, creado_en DESC);
+
+-- ---------------------------------------------------------------------------
 -- Un usuario es trabajador o cliente, nunca ambos.
 -- La restriccion cruza dos tablas, asi que no puede expresarse con un CHECK.
 -- ---------------------------------------------------------------------------

@@ -236,6 +236,26 @@ export type FichaHook = {
   actualizadoEn: Date;
 };
 
+/** Que se le hizo a la ficha. Los mismos cuatro que acepta el CHECK. */
+export type AccionEdicion = "creada" | "editada" | "auditada" | "medida";
+
+/**
+ * Una linea del historial de cambios de una ficha.
+ *
+ * Dice quien y cuando, no que campos cambiaron: la pregunta que responde es
+ * quien ha metido mano, en un modulo donde cualquiera edita la ficha de
+ * cualquiera.
+ */
+export type EdicionFicha = {
+  id: number;
+  fichaId: number;
+  usuarioId: number;
+  /** Null si la cuenta se borro. El cambio ocurrio igual. */
+  usuarioNombre: string | null;
+  accion: AccionEdicion;
+  creadoEn: Date;
+};
+
 export type ResultadoHook = {
   id: number;
   fichaId: number;

@@ -9,7 +9,7 @@ import {
   PanelLateral,
 } from "@/components/listado";
 import { columnasFichas, filtrosFichas } from "@/components/hooks/ColumnasFichas";
-import { FormularioReferencia } from "@/components/hooks";
+import { CambiosFicha, FormularioReferencia } from "@/components/hooks";
 import { objetivoDe } from "@/lib/hooks/catalogo";
 import { ConfirmarBorradoFicha } from "@/components/hooks/ConfirmarBorradoFicha";
 import { DetalleFicha } from "@/components/hooks/DetalleFicha";
@@ -18,6 +18,7 @@ import { leerEstadoListado } from "@/lib/parametros";
 import { conPanel } from "@/lib/urlListado";
 import { requerirCargo } from "@/lib/sesion";
 import * as empresasModelo from "@/models/empresas";
+import * as edicionesModelo from "@/models/ediciones";
 import * as fichasModelo from "@/models/fichas";
 import * as referenciasModelo from "@/models/referencias";
 import type { EstadoFicha, SlugObjetivo } from "@/types";
@@ -102,7 +103,7 @@ export default async function PaginaHistorial(
     filtrosPermitidos: ["estado", "empresa", "objetivo"],
   });
 
-  const [pagina, empresas, fichaPanel] = await Promise.all([
+  const [pagina, empresas, fichaPanel, cambios] = await Promise.all([
     fichasModelo.listar({
       busqueda: estado.busqueda || undefined,
       estado: comoEstados(estado.filtros.estado),
@@ -120,9 +121,15 @@ export default async function PaginaHistorial(
     // al recargar un "?panel=ver&id=999" viejo.
     (estado.panel === "ver" ||
       estado.panel === "borrar" ||
+      estado.panel === "cambios" ||
       estado.panel === "referencia") && estado.panelId !== null
       ? fichasModelo.buscarConResultado(estado.panelId)
       : null,
+
+    // El historial de cambios solo se consulta si su panel se va a abrir.
+    estado.panel === "cambios" && estado.panelId !== null
+      ? edicionesModelo.listarDeFicha(estado.panelId)
+      : [],
   ]);
 
   /*
@@ -202,6 +209,17 @@ export default async function PaginaHistorial(
               >
                 <ConfirmarBorradoFicha ficha={fichaPanel} hrefCerrar={hrefCerrar} />
               </ModalConfirmacion>
+            )}
+
+            {fichaPanel && estado.panel === "cambios" && (
+              <PanelLateral
+                hrefCerrar={hrefCerrar}
+                kicker="Historial de cambios"
+                titulo="Quien ha tocado esta ficha"
+                descripcion={`«${fichaPanel.hablado.length > 64 ? `${fichaPanel.hablado.slice(0, 64)}…` : fichaPanel.hablado}»`}
+              >
+                <CambiosFicha cambios={cambios} hrefCerrar={hrefCerrar} />
+              </PanelLateral>
             )}
 
             {fichaPanel && estado.panel === "referencia" && (

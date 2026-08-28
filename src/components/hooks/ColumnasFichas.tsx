@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookmarkCheck, BookmarkPlus, Copy, Eye, Pencil, Trash2 } from "lucide-react";
+import { BookmarkCheck, BookmarkPlus, Copy, Eye, History, Pencil, Trash2 } from "lucide-react";
 
 import { Etiqueta } from "@/components/ui";
 import { metricaDe, nombrePlataforma, objetivoDe, porcentajeDe } from "@/lib/hooks/catalogo";
@@ -18,7 +18,7 @@ const ANCHOS = {
   cliente: "1.1fr",
   estado: "1.1fr",
   resultado: "0.9fr",
-  acciones: "204px",
+  acciones: "244px",
 } as const;
 
 export const REJILLA_FICHAS = Object.values(ANCHOS)
@@ -241,6 +241,17 @@ export function columnasFichas(
                 <BookmarkPlus aria-hidden="true" />
               </AccionFila>
             )}
+
+            {/*
+              Quien ha tocado la ficha. Aqui cualquiera edita la de cualquiera,
+              asi que saber cuantas manos han pasado es parte de la fila.
+            */}
+            <AccionFila
+              href={conPanel(ruta, estado, "cambios", ficha.id)}
+              etiqueta={`Ver quien ha modificado «${corto}»`}
+            >
+              <History aria-hidden="true" />
+            </AccionFila>
 
             <AccionFila
               href={conPanel(ruta, estado, "borrar", ficha.id)}

@@ -11,6 +11,7 @@
  */
 import { consultar, ejecutar, obtenerPool } from "@/lib/db";
 import * as aperturas from "@/models/aperturas";
+import * as ediciones from "@/models/ediciones";
 import * as fichas from "@/models/fichas";
 import * as referencias from "@/models/referencias";
 import * as reglas from "@/models/reglasHook";
@@ -236,6 +237,38 @@ async function principal(): Promise<void> {
     "Editar una ficha conserva a su autor",
     editada?.creadoPor === creadora.id && editada.audiencia === "Editada por otra persona",
     `autor ${editada?.creadoPor}, audiencia "${editada?.audiencia}"`,
+  );
+
+  // ------------------------------------------------------- historial de cambios
+  await ediciones.registrar(ficha.id, creadora.id, "creada");
+  await ediciones.registrar(ficha.id, creadora.id, "editada");
+
+  const cambios = await ediciones.listarDeFicha(ficha.id);
+
+  comprobar(
+    "El historial de cambios guarda quien y que hizo",
+    cambios.length === 2 && cambios.every((c) => c.usuarioId === creadora.id),
+    cambios.map((c) => c.accion).join(", ") || "ninguno",
+  );
+
+  // De lo mas reciente a lo mas antiguo: es como se lee un historial.
+  comprobar(
+    "El historial de cambios llega del ultimo al primero",
+    cambios[0]?.accion === "editada" && cambios[1]?.accion === "creada",
+    cambios.map((c) => c.accion).join(" → "),
+  );
+
+  comprobar(
+    "El historial de cambios trae el nombre de quien lo hizo",
+    cambios.every((c) => c.usuarioNombre !== null),
+    cambios[0]?.usuarioNombre ?? "sin nombre",
+  );
+
+  const conteoCambios = await ediciones.contarPorFicha([ficha.id]);
+  comprobar(
+    "Se pueden contar los cambios de varias fichas de una vez",
+    conteoCambios.get(ficha.id) === 2,
+    `${conteoCambios.get(ficha.id) ?? 0} cambios`,
   );
 
   // -------------------------------------------------------------- resultados
