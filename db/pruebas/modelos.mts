@@ -175,9 +175,67 @@ async function principal(): Promise<void> {
 
   const enCurso = await fichas.enCurso(creadora.id);
   comprobar(
-    "La pieza en curso prefiere la que espera numeros",
-    enCurso?.id === ficha.id && enCurso.estado === "auditada",
-    enCurso ? `id ${enCurso.id} (${enCurso.estado})` : "ninguna",
+    "Las piezas en curso incluyen la recien auditada",
+    enCurso.some((p) => p.id === ficha.id && p.estado === "auditada"),
+    `${enCurso.length} en curso`,
+  );
+
+  // Ninguna medida: esas ya no estan en curso, estan terminadas.
+  comprobar(
+    "Las piezas en curso excluyen las medidas",
+    enCurso.every((p) => p.estado !== "medida"),
+    enCurso.map((p) => p.estado).join(", ") || "ninguna",
+  );
+
+  /*
+   * El orden es el de creacion, la ultima primero. Antes se ordenaba por lo
+   * avanzada que estuviera la pieza y la portada acababa ensenando algo que no
+   * tenia que ver con lo que se estaba escribiendo.
+   */
+  const enOrden = enCurso.every(
+    (p, i) => i === 0 || enCurso[i - 1]!.creadoEn >= p.creadoEn,
+  );
+
+  comprobar("Las piezas en curso llegan de la mas reciente a la mas vieja", enOrden,
+    enCurso.map((p) => p.id).join(", ") || "ninguna");
+
+  // El alcance es de quien mira: la portada responde "que estoy haciendo YO".
+  comprobar(
+    "Las piezas en curso son solo de su autor",
+    enCurso.every((p) => p.creadoPor === creadora.id),
+    `${enCurso.length} revisadas`,
+  );
+
+  /*
+   * EDITAR NO CAMBIA DE AUTOR.
+   *
+   * En el historial cualquiera puede editar la ficha de cualquiera, y quien la
+   * escribio tiene que seguir siendo quien la escribio: es lo que dice a quien
+   * preguntar por una pieza, y lo que decide de quien es en su portada. La
+   * garantia es que `creado_por` no esta en la lista de columnas que escribe
+   * `actualizar`, y esto lo deja fijado por si algun dia se anade.
+   */
+  const editada = await fichas.actualizar(ficha.id, {
+    empresaId: ficha.empresaId,
+    objetivo: ficha.objetivo,
+    plataforma: ficha.plataforma,
+    audiencia: "Editada por otra persona",
+    tension: ficha.tension,
+    verdadMarca: ficha.verdadMarca,
+    prueba: ficha.prueba,
+    hablado: ficha.hablado,
+    insertTitulo: ficha.insertTitulo,
+    primerFotograma: ficha.primerFotograma,
+    pagoPromesa: ficha.pagoPromesa,
+    cta: ficha.cta,
+    riesgoClaim: ficha.riesgoClaim,
+    metricaPrincipal: ficha.metricaPrincipal,
+  });
+
+  comprobar(
+    "Editar una ficha conserva a su autor",
+    editada?.creadoPor === creadora.id && editada.audiencia === "Editada por otra persona",
+    `autor ${editada?.creadoPor}, audiencia "${editada?.audiencia}"`,
   );
 
   // -------------------------------------------------------------- resultados

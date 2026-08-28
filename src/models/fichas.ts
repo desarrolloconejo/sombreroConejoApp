@@ -224,24 +224,31 @@ export async function listar(
 }
 
 /**
- * La pieza en curso: la que muestra la raiz del modulo.
+ * Las piezas en curso: las que muestra la raiz del modulo.
  *
- * Es la mas avanzada que aun NO este medida — primero la que espera numeros,
- * y si no hay ninguna, el borrador tocado mas recientemente. El motivo es que
- * una pieza publicada sin metricas es la que mas urge cerrar: el video ya
- * esta fuera y los datos se enfrian.
+ * Son las que aun NO estan medidas, en ORDEN DE CREACION, la ultima primero.
+ *
+ * Antes esto devolvia una sola y ordenaba por lo avanzada que estuviera —las
+ * que solo esperaban numeros por delante de los borradores—. La idea era que
+ * una pieza publicada sin metricas es la que mas urge cerrar, pero el efecto
+ * practico era otro: la portada ensenaba una pieza que podia no tener nada que
+ * ver con lo que se estaba escribiendo, y las demas no existian.
+ *
+ * Devolver la lista deja que sea quien mira el que decida cual retomar, que es
+ * una decision suya y no del ORDER BY.
  */
 export async function enCurso(
   creadoPor: number,
-): Promise<FichaConResultado | null> {
-  return consultarUno<FichaConResultado>(
+  limite = 10,
+): Promise<FichaConResultado[]> {
+  return consultar<FichaConResultado>(
     `SELECT ${COLUMNAS}, ${RESULTADO}, ${HOOK_RATE}
      ${DESDE}
      LEFT JOIN resultados_hook r ON r.ficha_id = f.id
      WHERE f.creado_por = $1 AND f.estado <> 'medida'
-     ORDER BY (f.estado = 'auditada') DESC, f.actualizado_en DESC
-     LIMIT 1`,
-    [creadoPor],
+     ORDER BY f.creado_en DESC
+     LIMIT $2`,
+    [creadoPor, limite],
   );
 }
 

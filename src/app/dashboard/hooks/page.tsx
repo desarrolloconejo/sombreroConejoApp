@@ -36,7 +36,7 @@ const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Hooks" }];
 export default async function PaginaHooks() {
   const usuario = await requerirCargo("redes");
 
-  const [pieza, ultima, conteo, aperturas, reglas, referencias] = await Promise.all([
+  const [piezas, ultima, conteo, aperturas, reglas, referencias] = await Promise.all([
     // La portada responde "que estoy haciendo YO", asi que las tres van
     // filtradas por quien mira. El historial sigue siendo del equipo.
     fichasModelo.enCurso(usuario.id),
@@ -117,7 +117,7 @@ export default async function PaginaHooks() {
       titulo="Hooks"
       descripcion="Decide el hook antes de grabar, auditalo antes de producir y registra lo que paso. Cada paso deja algo escrito para el siguiente."
     >
-      <PiezaEnCurso pieza={pieza} ultima={ultima} borradores={conteo.borrador} />
+      <PiezaEnCurso piezas={piezas} ultima={ultima} />
 
       <div className="surge mt-5 overflow-hidden rounded-[15px] border border-borde bg-superficie shadow-[var(--sombra)] [--retraso:0.06s]">
         <div className="flex flex-wrap items-end justify-between gap-5 border-b border-borde px-5 py-4">
