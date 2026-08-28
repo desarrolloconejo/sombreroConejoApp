@@ -1389,3 +1389,127 @@ CREATE INDEX IF NOT EXISTS referencias_ficha_idx
 
 Es idempotente y ya esta dentro de `db/schema.sql`, asi que un `sql:produccion`
 nuevo lo incluye.
+
+---
+
+## Etapa 22 — Segunda pasada sobre la app desplegada
+
+Cinco cosas, tres de ellas fallos. Uno tenia riesgo de datos y no lo habia
+reportado nadie.
+
+### El scroll: se arregla en la raiz, no sitio por sitio
+
+La pasada anterior puso `scroll={false}` en los enlaces del listado y **no toco
+ni un solo `BotonEnlace`** — que es donde viven los «Cerrar», «Cancelar» y
+«Listo» de paneles y modales. De sus 33 usos, 29 se dejaban el scroll.
+
+Marcar veintiocho sitios a mano ya se habia intentado y fallado, asi que el
+arreglo va en el componente: **`BotonEnlace` deja de subir la pagina por
+defecto**, al reves que `<Link>`. En esta app un boton-enlace es casi siempre
+una accion *dentro de* la misma pantalla; los nueve que si cambian de pantalla
+lo piden a mano con `scroll`. El `<Link>` pelado no se toca, asi que sidebar,
+migas y tarjetas de navegacion siguen igual.
+
+### React vaciaba los formularios, segunda parte
+
+Ya estaba resuelto en la etapa 21, pero conviene dejar escrito el corolario que
+aparecio aqui: **`useState(prop)` solo lee la prop al montar**. Es el mismo
+malentendido con otra cara, y es lo que hacia que en Metricas pulsar una fila
+de la lista no rellenara nada si ya estabas en la pantalla. Solo funcionaba
+recargando, asi que parecia que funcionaba.
+
+### Tres estados, dos ramas
+
+`EstadoFicha` tiene tres valores y **dos sitios distintos** ramificaban sobre
+dos, asi que una ficha auditada se despedia como si fuera un borrador: el modal
+decia «es un borrador sin publicar» —falso por partida doble, porque ya estaba
+auditada y porque el modulo de metricas llama publicadas a esas— y el aviso
+decia «Borrador borrado.»
+
+Lo interesante estaba en el modelo: el `DELETE ... RETURNING estado` **ya traia
+el estado** y lo aplastaba a `estabaMedida: boolean`. La informacion se leia y
+se tiraba, y por eso la action no podia distinguir aunque quisiera. Ahora
+devuelve el estado y cada capa compone sus tres textos.
+
+### El auditor montaba el resultado dos veces
+
+Al llegar desde el canvas, la pagina pintaba la nota real arriba y, debajo, un
+formulario vacio con un `ResultadoNeutro` que decia «el score aparece solo
+despues de pulsar Auditar» — justo debajo de un score que ya existia. De ahi la
+sensacion de que habia dos auditores y el de abajo no habia evaluado nada.
+
+Ahora la pieza **aterriza en el propio auditor**: el formulario llega relleno y
+el veredicto al lado, sembrando `useActionState` con el resultado que el
+servidor ya calculo. Funciona porque `useAvisoDeAccion` compara la identidad
+del estado y sale en el primer render, asi que sembrarlo no dispara un aviso
+fantasma.
+
+Dos detalles que costaria depurar:
+
+- **La prueba viaja oculta.** El formulario no la muestra —no es texto del
+  hook— pero el auditor la mira si la regla del cliente exige prueba visible.
+  Sin ese input, volver a pulsar «Auditar» ahi daria una nota distinta de la
+  guardada.
+- **`key` en la page.** El auditor es de cliente y sus `useState` solo leen las
+  props al montar; sin `key`, ir de `?ficha=1` a `?ficha=2` no re-sembraria
+  nada. Es el mismo `useState(prop)` de siempre.
+
+Y nada de resultado se pinta hasta que hay auditoria: la segunda columna solo
+existe cuando hay algo que poner en ella.
+
+### Las dos listas de nueve no dicen lo mismo
+
+Parecia que el Filtro de calidad duplicaba los nueve controles del algoritmo.
+Puestas una al lado de otra, **solo se repite una** de las dieciocho, el
+Insert-Titulo de seis palabras: el auditor mira **el texto del hook** y el
+filtro mira **la pieza entera antes de rodar** —si el contenido puede demostrar
+lo que promete, si el primer fotograma aporta algo en silencio, si el tono es
+de este cliente—. Seis de las nueve **no se pueden automatizar**: la app no
+tiene el video, y lo unico comprobable seria que el campo de la ficha este
+escrito, que no es lo mismo que este bien.
+
+Asi que las dos se quedan como estan. Lo que cambia es que el filtro **baja
+dentro del auditor** y solo aparece con resultado, tambien tras auditar un
+texto suelto — antes se pintaba siempre, incluso con la pantalla en blanco.
+
+### El riesgo de datos que nadie habia visto
+
+En Metricas, cambiar de pieza **no limpiaba nada**. El estado vivia en tres
+nidos —los dos campos del formulario, los cinco de `useCampos` y el checkbox
+del banco dentro de `CamposMetricas`, y el territorio dentro de su `Selector`—
+y ninguno se enteraba. Con el desplegable costaba provocarlo; con las filas
+clicables era facil **registrar las cifras de una pieza sobre otra**.
+
+Se limpia por dos caminos, y hacen falta los dos: los del padre se ajustan
+**durante el render** (no en un efecto, para que no haya un fotograma con las
+cifras viejas bajo la cabecera nueva), y el resto por remontaje con `key`.
+
+> **La `key` NO puede ir en la page.** Al guardar, la ficha pasa a `medida` y
+> sale de las pendientes, asi que la ficha elegida vuelve a ser nula: si la
+> `key` estuviera sobre `FormularioMetricas`, el componente se destruiria con
+> `useActionState` dentro y **el aviso de exito se perderia**. Va sobre
+> `CamposMetricas`, un nivel mas abajo.
+
+### Verificado
+
+| Comprobacion | Resultado |
+| --- | --- |
+| `tsc --noEmit` y `eslint` | limpios |
+| `prueba:auditor` / `prueba:modelos` | 19/19 y 32/32 |
+| Modal de borrado en los tres estados | tres textos y tres rotulos de boton distintos |
+| Auditor sin auditar | sin nota, sin controles, sin filtro, a una columna |
+| Auditor con ficha aprobada (73) | una sola tarjeta de resultado, textarea relleno, «Registrar sus metricas» |
+| Auditor con ficha suspendida (25) | igual, pero sin «Registrar sus metricas» |
+| Prueba oculta con ficha | presente en el formulario |
+| Metricas sin pieza | estado vacio, sin campos que no se puedan guardar |
+| Metricas con `?ficha=22` | cabecera de la pieza, campos, fila marcada «Rellenando» |
+| Metricas con `?ficha=9999` | se rechaza y cae al estado vacio |
+| Desplegable de fichas | ya no existe en ninguna de las tres |
+
+### Dos pruebas que dependian de una base intacta
+
+`prueba:modelos` empezo a fallar sin que nada estuviera roto, por datos creados
+desde la interfaz. Se arreglan las dos causas: la del sector retira **todas**
+las reglas de cliente y no solo la primera, y la referencia del seed se busca
+por ser **la que no viene de ninguna ficha** —guardar una ficha en el banco
+copia su hablado, asi que el texto ya no basta para identificarla—.
