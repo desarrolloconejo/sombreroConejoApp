@@ -2,9 +2,9 @@
 export { FormularioHook } from "./FormularioHook";
 export { FichaProduccion, textoDeFicha } from "./FichaProduccion";
 export type { ValoresFicha } from "./FichaProduccion";
-export { ResultadoAuditoria, ResultadoNeutro } from "./ResultadoAuditoria";
+export { ResultadoAuditoria } from "./ResultadoAuditoria";
 export { FiltroCalidad } from "./FiltroCalidad";
-export { AuditorSuelto } from "./AuditorSuelto";
+export { Auditor } from "./Auditor";
 export { PendientesPaso } from "./PendientesPaso";
 export { ConfirmarDocumentacion } from "./ConfirmarDocumentacion";
 export { DetalleApertura } from "./DetalleApertura";
