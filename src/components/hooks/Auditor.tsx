@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Eraser, Pencil, Zap } from "lucide-react";
 
-import { auditarTexto } from "@/actions/hooks";
+import { enviarAuditor } from "@/actions/hooks";
 import { Boton, BotonEnlace, Etiqueta, Selector } from "@/components/ui";
 import { contarPalabras } from "@/lib/hooks/auditor";
 import { objetivoDe } from "@/lib/hooks/catalogo";
@@ -87,7 +87,7 @@ export function Auditor({
       ? { ok: true, resultado: resultadoInicial, fichaId: ficha.id }
       : ESTADO_AUDITORIA;
 
-  const [estado, enviar, enviando] = useActionState(auditarTexto, inicial);
+  const [estado, enviar, enviando] = useActionState(enviarAuditor, inicial);
 
   useAvisoDeAccion(estado);
 
@@ -100,6 +100,13 @@ export function Auditor({
   const palabrasInsert = contarPalabras(insertTitulo);
 
   const resultado = estado.resultado ?? null;
+
+  /*
+   * Un borrador llega de la cola de «Esperan auditoria»; una auditada, del
+   * canvas. Se distinguen porque lo que se ofrece no es lo mismo: al borrador
+   * hay que poder ponerle la nota desde aqui, y a la auditada ya la tiene.
+   */
+  const esBorrador = ficha?.estado === "borrador";
 
   /*
    * Empezar de cero con una ficha delante NO es vaciar los campos: hay que
@@ -150,16 +157,30 @@ export function Auditor({
           */}
           {ficha && (
             <div className="-mx-[26px] -mt-6 border-b border-borde px-[26px] pt-[22px] pb-5">
+              <input type="hidden" name="id" value={ficha.id} />
+
               <p className="mb-2 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
-                La pieza que vienes de escribir
+                {esBorrador ? "Borrador cargado de la cola" : "La pieza auditada"}
               </p>
 
               <div className="flex flex-wrap items-center gap-2 text-[12px] text-suave">
-                <Etiqueta variante="contorno">Auditada</Etiqueta>
+                <Etiqueta variante="contorno">
+                  {esBorrador ? "Borrador" : "Auditada"}
+                </Etiqueta>
                 <span>{ficha.empresaNombre}</span>
                 <span aria-hidden="true">·</span>
                 <span>{objetivoDe(ficha.objetivo).nombre}</span>
               </div>
+
+              {/* Un borrador llega con el veredicto ya calculado, pero sin
+                  guardar: la nota no es suya hasta que se pulsa el boton. */}
+              {esBorrador && (
+                <p className="mt-2.5 text-[11.5px] leading-relaxed text-suave">
+                  El resultado de al lado es una <b className="text-texto">prueba</b>:
+                  la ficha sigue siendo un borrador y sigue en la cola hasta que
+                  guardes la auditoria.
+                </p>
+              )}
 
               <div className="mt-3.5 flex flex-wrap gap-2.5">
                 {hrefCorregir && (
@@ -255,16 +276,49 @@ export function Auditor({
           </div>
 
           <div className="flex flex-wrap gap-2.5 pt-1">
-            <Boton type="submit" disabled={enviando}>
-              <Zap aria-hidden="true" />
-              {enviando ? "Auditando…" : "Auditar hook"}
-            </Boton>
+            {/*
+              Con una ficha delante hay DOS envios sobre el mismo formulario, y
+              el valor del boton pulsado decide cual: probar no toca la base y
+              guardar le pone la nota a la ficha. Es el mismo reparto que hace
+              el canvas entre guardar y auditar.
+            */}
+            {ficha ? (
+              <>
+                <Boton type="submit" name="accion" value="guardar" disabled={enviando}>
+                  <Zap aria-hidden="true" />
+                  {enviando ? "Auditando…" : "Auditar y guardar"}
+                </Boton>
+
+                <Boton
+                  type="submit"
+                  name="accion"
+                  value="probar"
+                  variante="fantasma"
+                  disabled={enviando}
+                >
+                  Probar sin guardar
+                </Boton>
+              </>
+            ) : (
+              <Boton type="submit" disabled={enviando}>
+                <Zap aria-hidden="true" />
+                {enviando ? "Auditando…" : "Auditar hook"}
+              </Boton>
+            )}
 
             <Boton type="button" variante="fantasma" onClick={empezarDeCero}>
               <Eraser aria-hidden="true" />
               {ficha ? "Empezar de cero" : "Limpiar"}
             </Boton>
           </div>
+
+          {ficha && (
+            <p className="-mt-2 text-[11.5px] leading-relaxed text-suave">
+              {esBorrador
+                ? "Guardar le pone la nota a la ficha, la saca de la cola y guarda el hablado y el Insert-Titulo tal como estan aqui."
+                : "Guardar recalcula su nota con el texto que haya ahora en los dos campos."}
+            </p>
+          )}
         </form>
 
         {/*

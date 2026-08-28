@@ -255,6 +255,103 @@ export async function auditarTexto(
   return { ok: true, resultado };
 }
 
+/**
+ * Audita una ficha desde el propio auditor, y guarda.
+ *
+ * Es lo que cierra la cola de «Esperan auditoria»: se pulsa un borrador, se
+ * carga aqui, y desde aqui se le pone la nota. Antes ese ultimo paso obligaba
+ * a volver al canvas, que es donde vive la decision entera, para pulsar un
+ * boton que solo necesitaba el texto.
+ *
+ * Guarda TAMBIEN el hablado y el Insert-Titulo, no solo la nota. Son los dos
+ * campos que este formulario deja tocar, y almacenar una nota calculada sobre
+ * un texto que no se guarda dejaria a la ficha con una puntuacion que no
+ * corresponde a lo que dice.
+ *
+ * El resto de la ficha —objetivo, audiencia, tension— no se toca: no esta en
+ * esta pantalla y se relee de la base tal cual estaba.
+ */
+export async function auditarFicha(
+  _estadoPrevio: EstadoAuditoria,
+  datos: FormData,
+): Promise<EstadoAuditoria> {
+  await requerirCargo("redes");
+
+  const id = comoIdentificador(datos.get("id"));
+
+  if (id === null) return { ok: false, mensaje: "No se pudo identificar la ficha" };
+
+  const hablado = limpiarTexto(datos.get("hablado"), LIMITES_HOOK.hablado);
+
+  if (!hablado) {
+    return { ok: false, errores: { hablado: "Escribe el hook que quieres auditar" } };
+  }
+
+  const ficha = await fichas.buscarPorId(id);
+
+  if (!ficha) return { ok: false, mensaje: "Esa ficha ya no existe" };
+
+  const insertTitulo = limpiarOpcional(
+    datos.get("insertTitulo"),
+    LIMITES_HOOK.insertTitulo,
+  );
+
+  const guardada = await fichas.actualizar(id, {
+    empresaId: ficha.empresaId,
+    objetivo: ficha.objetivo,
+    plataforma: ficha.plataforma,
+    audiencia: ficha.audiencia,
+    tension: ficha.tension,
+    verdadMarca: ficha.verdadMarca,
+    prueba: ficha.prueba,
+    hablado,
+    insertTitulo,
+    primerFotograma: ficha.primerFotograma,
+    pagoPromesa: ficha.pagoPromesa,
+    cta: ficha.cta,
+    riesgoClaim: ficha.riesgoClaim,
+    metricaPrincipal: metricaDe(ficha.objetivo),
+  });
+
+  if (!guardada) return { ok: false, mensaje: "Esa ficha ya no existe" };
+
+  const limites = await reglas.limitesDeEmpresa(ficha.empresaId);
+
+  const resultado = auditar({
+    hablado,
+    insertTitulo,
+    prueba: ficha.prueba,
+    regla: limites,
+  });
+
+  await fichas.guardarNota(id, resultado.nota);
+
+  revalidatePath(RUTA_MODULO, "layout");
+
+  /*
+   * Se vuelve a la misma pieza, ya auditada.
+   *
+   * El redirect no es adorno: sin el, la ficha habria cambiado de estado —sale
+   * de la cola, gana su nota— y la pantalla seguiria mostrando los datos de
+   * antes, incluida la etiqueta «Borrador» sobre algo que ya no lo es.
+   */
+  redirect(`${RUTA_MODULO}/auditor?ficha=${id}`);
+}
+
+/**
+ * El auditor tiene dos botones sobre el MISMO formulario, como el canvas:
+ * probar sin guardar y auditar de verdad. Se despacha por el valor del boton
+ * pulsado, que viaja en el FormData como cualquier otro campo.
+ */
+export async function enviarAuditor(
+  estadoPrevio: EstadoAuditoria,
+  datos: FormData,
+): Promise<EstadoAuditoria> {
+  return datos.get("accion") === "guardar"
+    ? auditarFicha(estadoPrevio, datos)
+    : auditarTexto(estadoPrevio, datos);
+}
+
 /** Borra una ficha. Avisa si con ella se fue el aprendizaje de la cuenta. */
 export async function borrarFicha(
   _estadoPrevio: EstadoFormulario,

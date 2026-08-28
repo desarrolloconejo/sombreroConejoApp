@@ -96,26 +96,35 @@ export default async function PaginaAuditor(
     : "";
 
   /*
-   * El panel se pide por la URL como en el resto de la app, pero NO pasa por
-   * la lista blanca de `parametros.ts`: esa gobierna los listados, y esta
-   * pagina no es uno. Se comprueba aqui, contra el unico valor que existe.
+   * QUIEN PUEDE PASAR A METRICAS.
    *
-   * Va cerrado tras `resultado.aprobado` a proposito, igual que el boton que
-   * lo abre: con la nota por debajo del umbral, ofrecer medir seria empujar a
-   * producir algo que el propio control acaba de desaconsejar. Y como el
-   * veredicto se recalcula arriba, escribir el parametro a mano tampoco abre
-   * el panel de una pieza suspendida.
+   * Dos condiciones, y las dos hacen falta:
+   *
+   * - La ficha tiene que estar AUDITADA. La cola carga borradores aqui, y su
+   *   veredicto es una prueba mientras no se guarde; como registrar resultados
+   *   pone la ficha en `medida` de un salto, ofrecerlo antes se saltaria el
+   *   paso entero y quedaria una pieza medida que nunca paso el control.
+   * - Y tiene que pasar el umbral. Con la nota por debajo, invitar a medir
+   *   seria empujar a producir lo que el propio control desaconseja.
+   *
+   * El panel se pide por la URL, pero NO pasa por la lista blanca de
+   * `parametros.ts`: esa gobierna los listados y esta pagina no es uno. Como
+   * las dos condiciones se comprueban aqui contra la base y el veredicto se
+   * recalcula arriba, escribir el parametro a mano tampoco lo abre.
    */
-  const abrirMetricas =
+  const puedeMedir =
     ficha !== null &&
+    ficha.estado !== "borrador" &&
     resultado !== null &&
-    resultado.aprobado &&
-    parametros.panel === "metricas";
+    resultado.aprobado;
+
+  const abrirMetricas = puedeMedir && parametros.panel === "metricas";
 
   // Solo se pregunta si el panel se va a abrir: fuera de el nadie usa el dato.
-  const enBanco = abrirMetricas
-    ? await referenciasModelo.fichasGuardadas([ficha.id])
-    : new Set<number>();
+  const enBanco =
+    abrirMetricas && ficha
+      ? await referenciasModelo.fichasGuardadas([ficha.id])
+      : new Set<number>();
 
   return (
     <Wrapper
@@ -138,53 +147,46 @@ export default async function PaginaAuditor(
       </div>
 
       {/*
-        EL ORDEN CAMBIA SEGUN A QUE SE VENGA.
+        LA COLA ARRIBA Y EL AUDITOR DEBAJO, SIEMPRE EN ESE ORDEN.
 
-        Llegando desde el canvas, el auditor va primero: es exactamente lo que
-        uno viene a ver, y con la cola encima habria que pasar por delante de
-        una lista de otras piezas para leer la nota de la propia.
+        Las filas cargan la pieza AQUI, no en el canvas: antes cada una llevaba
+        al formulario de escritura para pulsar alli un boton que solo necesitaba
+        el texto, o sea que para auditar habia que salir del auditor.
 
-        Entrando a pelo, manda la cola. Ese fue el motivo de subirla: quien
-        abria esta pantalla solo veia un formulario en blanco y no llegaba a
-        enterarse de que tenia borradores esperando.
+        El orden no cambia con la pieza elegida a proposito. Los enlaces de la
+        cola conservan la posicion de la pagina, asi que si el auditor se
+        colara por encima al pulsar una fila, el contenido se desplazaria hacia
+        abajo justo debajo del cursor y se acabaria mirando otra cosa.
       */}
-      {ficha && (
-        <div className="mb-5">
-          <Auditor
-            key={ficha.id}
-            empresas={empresas}
-            limiteVoz={estandar.maxPalabrasVoz}
-            limiteInsert={estandar.maxPalabrasInsert}
-            ficha={ficha}
-            resultadoInicial={resultado}
-            hrefCorregir={hrefCorregir}
-            /* El panel de metricas solo se ofrece si la pieza pasa el umbral. */
-            hrefMetricas={resultado?.aprobado ? `${hrefVuelta}&panel=metricas` : null}
-            rutaLimpia={RUTA}
-          />
-        </div>
-      )}
-
       <PendientesPaso
         fichas={pendientes.filas}
         titulo="Esperan auditoria"
-        descripcion="Borradores escritos que todavia no han pasado el control. Se auditan desde el canvas, con el boton Auditar."
+        descripcion="Borradores escritos que todavia no han pasado el control. Pulsa uno para auditarlo aqui mismo."
         accion="Auditar"
-        hrefDe={(pendiente) => `/dashboard/hooks/nuevo?panel=editar&id=${pendiente.id}`}
+        hrefDe={(pendiente) => `${RUTA}?ficha=${pendiente.id}`}
+        activoId={ficha?.id ?? null}
         vacio="Ningun borrador espera auditoria. Todo lo escrito ya paso el control."
       />
 
-      {!ficha && (
-        <div className="mt-5">
-          <Auditor
-            key="suelto"
-            empresas={empresas}
-            limiteVoz={estandar.maxPalabrasVoz}
-            limiteInsert={estandar.maxPalabrasInsert}
-            rutaLimpia={RUTA}
-          />
-        </div>
-      )}
+      <div className="mt-5">
+        {/*
+          La `key` re-siembra el formulario al cambiar de pieza: es de cliente y
+          sus estados solo leen las props al montar, asi que sin ella pasar de
+          una ficha a otra dejaria el texto de la anterior.
+        */}
+        <Auditor
+          key={ficha?.id ?? "suelto"}
+          empresas={empresas}
+          limiteVoz={estandar.maxPalabrasVoz}
+          limiteInsert={estandar.maxPalabrasInsert}
+          ficha={ficha}
+          resultadoInicial={resultado}
+          hrefCorregir={ficha ? hrefCorregir : undefined}
+          /* El panel de metricas solo se ofrece si la pieza pasa el umbral. */
+          hrefMetricas={puedeMedir ? `${hrefVuelta}&panel=metricas` : null}
+          rutaLimpia={RUTA}
+        />
+      </div>
 
       {abrirMetricas && ficha && (
         <PanelLateral
