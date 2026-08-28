@@ -1271,3 +1271,121 @@ Los errores de campo no se mueven: siguen pegados a su campo.
 | Portada de otro usuario | no ve el borrador ajeno; el historial si |
 | Plantilla | copia el texto, sin id y sin cliente; editar si lleva los dos |
 | Region de avisos | presente en el dashboard, ausente en el login |
+
+---
+
+## Etapa 21 — El banco de referencias se conecta al recorrido
+
+La segunda pasada por la aplicacion desplegada saco seis cosas. Dos eran
+funcionalidad que faltaba, dos eran fallos y dos eran ruido en la interfaz.
+
+### El auditor deja de mandarte al modulo de metricas
+
+Al aprobar una pieza, el boton llevaba a `/dashboard/hooks/metricas`, donde
+habia que buscar en un desplegable **la misma pieza que se acababa de auditar**.
+Ahora se abre un panel lateral con esa ficha fijada, y con el boton de corregir
+al lado: al escribir las cifras es cuando se ve que la pieza no funciono.
+
+Los seis campos y el diagnostico de hook rate se sacan a `CamposMetricas`,
+compartido por el modulo y el panel. No es factorizar por gusto: el fallo mas
+caro de este modulo fue una etiqueta que no correspondia a su columna, y con la
+lista duplicada en dos formularios ese error puede volver por un solo lado y
+pasar desapercibido. Una lista, un sitio.
+
+El panel se cierra tras `resultado.aprobado`, y el veredicto se recalcula en el
+servidor: escribir `?panel=metricas` a mano sobre una pieza suspendida no lo
+abre.
+
+### React vaciaba los formularios al fallar la validacion
+
+Es el fallo mas caro de esta tanda y el menos visible. Con `<form action={...}>`,
+**React 19 vacia los campos no controlados en cuanto la action termina** — tanto
+si guardo como si no. Rellenar ocho campos, olvidar uno y pulsar guardar borraba
+los ocho: el mensaje decia cual faltaba, y para entonces no quedaba nada que
+completar.
+
+No hay forma de desactivar ese vaciado: la salida sancionada es que el valor
+viva en React y no en el DOM. Se anade `useCampos`, que es el patron que el
+canvas de hooks ya hacia a mano, y se aplica al alta y edicion de usuarios, a
+reglas, aperturas, referencias y a los seis campos de metricas. **Las casillas
+tampoco sobrevivian**, asi que los mecanismos de una apertura y el «exigir
+prueba» de una regla pasan a estado tambien.
+
+Lo que NO hizo falta tocar: los `Selector` del proyecto ya guardan su valor en
+estado propio.
+
+### El banco de referencias estaba desconectado por los dos extremos
+
+Se podian guardar referencias de fuera y no se podia hacer nada mas con ellas.
+Faltaban las dos conexiones con el recorrido:
+
+- **Entrada.** Una pieza propia que funciono no se podia guardar. Ahora se hace
+  desde el historial, con un panel que llega relleno —el hook, el Insert-Titulo
+  y la plataforma ya estaban escritos—, y tambien con una casilla al registrar
+  metricas, que es el momento en que se sabe si merece repetirse.
+- **Salida.** Para partir de una referencia habia que copiar el texto a mano.
+  Ahora abre el canvas con sus tres campos.
+
+Dos decisiones que conviene tener escritas:
+
+`referencias_hook` gana **`ficha_id` con `ON DELETE SET NULL`**, no `CASCADE`.
+La lectura de por que funciono un hook vale por si sola, y borrar la pieza no
+debe llevarse el aprendizaje del equipo: la referencia se queda y solo pierde de
+donde vino. Hay una prueba que lo fija.
+
+Al partir de una referencia **se copian tres campos y ni uno mas**. Una
+referencia no tiene objetivo ni audiencia porque es material observado, no una
+decision tomada; rellenarlos a ojo seria inventarle a la pieza una intencion que
+nadie eligio. El territorio si se **sugiere** al guardar, porque cada objetivo
+del catalogo declara con cuales se escribe.
+
+Y la lectura que pide el banco es el **aprendizaje** que el registro de metricas
+ya pide: por que funciono. Marcando la casilla, ese campo pasa a obligatorio en
+lugar de pedirse dos veces con dos nombres.
+
+### Los avisos tapaban los botones que acababas de pulsar
+
+Abajo a la derecha es exactamente donde los paneles laterales ponen su pie de
+acciones. Suben a la esquina superior izquierda, por debajo de las dos
+cabeceras y a la derecha del sidebar.
+
+### Titulos que eran enlaces y no se leian
+
+Las tarjetas de reglas y las filas de referencias tenian el titulo enlazado al
+mismo panel que ya abre el boton del ojo. Al ser un `<Link>` heredaban del
+estilo global `a { color: var(--acento) }`, y en tema claro el acento es
+blackberry: **el titulo de una regla salia blackberry sobre navy**, donde no se
+lee. Pasan a ser titulos con su color escrito.
+
+### Verificado
+
+| Comprobacion | Resultado |
+| --- | --- |
+| `tsc --noEmit` y `eslint` | limpios |
+| `prueba:auditor` / `prueba:modelos` | 19/19 y 31/31 |
+| Panel de metricas sobre ficha aprobada (73/100) | abre con los seis campos |
+| `?panel=metricas` sobre ficha suspendida (25/100) | no abre |
+| Cada campo de metricas, en los dos formularios | una vez y con su `name` |
+| Panel de referencia desde el historial | trae plataforma `tiktok` y territorio `d` sugerido por el objetivo `compartidos` |
+| Casilla de referencia en metricas | aparece con ficha elegida, ausente sin ella |
+| Canvas desde referencia | plataforma copiada, cliente y objetivo vacios, **sin input `id`** |
+| Ficha ya guardada | el historial dice «ya guardada» en vez de ofrecerlo |
+| Borrar una ficha con referencia | la referencia sobrevive con `ficha_id` a null |
+| Titulos de reglas y referencias | ya no son enlaces |
+
+### Lo que hay que ejecutar en Neon
+
+```sql
+DO $referencias$
+BEGIN
+  ALTER TABLE referencias_hook
+    ADD COLUMN IF NOT EXISTS ficha_id INTEGER REFERENCES fichas_hook(id) ON DELETE SET NULL;
+END
+$referencias$;
+
+CREATE INDEX IF NOT EXISTS referencias_ficha_idx
+  ON referencias_hook (ficha_id) WHERE ficha_id IS NOT NULL;
+```
+
+Es idempotente y ya esta dentro de `db/schema.sql`, asi que un `sql:produccion`
+nuevo lo incluye.
