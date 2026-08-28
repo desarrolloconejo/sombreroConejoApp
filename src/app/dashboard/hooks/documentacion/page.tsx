@@ -251,6 +251,7 @@ export default async function PaginaDocumentacion(
           hrefVer={(refId) => enlace(territorios, "ver-referencia", refId)}
           hrefEditar={(refId) => enlace(territorios, "editar-referencia", refId)}
           hrefBorrar={(refId) => enlace(territorios, "borrar-referencia", refId)}
+          hrefPlantilla={(refId) => `/dashboard/hooks/nuevo?panel=plantilla&ref=${refId}`}
         />
       </div>
 

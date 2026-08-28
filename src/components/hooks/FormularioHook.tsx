@@ -9,7 +9,7 @@ import { Boton, Campo, Selector } from "@/components/ui";
 import { contarPalabras } from "@/lib/hooks/auditor";
 import { metricaDe, OBJETIVOS, PLATAFORMAS } from "@/lib/hooks/catalogo";
 import { ESTADO_AUDITORIA } from "@/types";
-import type { Empresa, FichaHook } from "@/types";
+import type { Empresa, FichaHook, ReferenciaHook } from "@/types";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 import { FichaProduccion, type ValoresFicha } from "./FichaProduccion";
@@ -73,6 +73,24 @@ function desdeFicha(ficha: FichaHook | null, plantilla = false): Campos {
   };
 }
 
+/**
+ * Los valores iniciales al partir de una referencia del banco.
+ *
+ * Se copian TRES campos y ni uno mas, porque son los tres que una referencia
+ * tiene: el hook observado, su Insert-Titulo y la plataforma donde se vio. El
+ * objetivo, la audiencia y la tension no se heredan porque no existen ahi —
+ * una referencia es material observado, no una decision tomada— y rellenarlos
+ * a ojo seria inventarle a la pieza una intencion que nadie eligio.
+ */
+function desdeReferencia(referencia: ReferenciaHook): Campos {
+  return {
+    ...CAMPOS_VACIOS,
+    plataforma: referencia.plataforma,
+    hablado: referencia.hablado,
+    insertTitulo: referencia.insertTitulo ?? "",
+  };
+}
+
 /** El contador de palabras: verde dentro del limite, morado al pasarse. */
 function Contador({ texto, maximo }: { texto: string; maximo: number }) {
   const palabras = contarPalabras(texto);
@@ -96,6 +114,7 @@ function Contador({ texto, maximo }: { texto: string; maximo: number }) {
 export function FormularioHook({
   empresas,
   ficha,
+  referencia = null,
   limiteVoz,
   limiteInsert,
   etiquetaRegla,
@@ -104,6 +123,15 @@ export function FormularioHook({
 }: {
   empresas: Empresa[];
   ficha: FichaHook | null;
+
+  /**
+   * Se parte de una referencia del banco en lugar de una ficha.
+   *
+   * Nunca llega junto con `ficha`: son dos origenes distintos de la misma
+   * pantalla. Tiene prioridad porque la page solo la resuelve cuando el enlace
+   * la pidio expresamente.
+   */
+  referencia?: ReferenciaHook | null;
 
   /**
    * Se parte de `ficha` pero se guarda como una pieza NUEVA.
@@ -127,7 +155,9 @@ export function FormularioHook({
   // El resultado sale como aviso flotante: en un formulario largo, una alerta
   // arriba queda fuera de la vista de quien acaba de pulsar el boton.
   useAvisoDeAccion(estado);
-  const [campos, setCampos] = useState<Campos>(() => desdeFicha(ficha, plantilla));
+  const [campos, setCampos] = useState<Campos>(() =>
+    referencia ? desdeReferencia(referencia) : desdeFicha(ficha, plantilla),
+  );
 
   /*
    * Sobre que ficha se esta escribiendo ahora mismo.

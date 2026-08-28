@@ -11,6 +11,7 @@ import { leerEstadoListado } from "@/lib/parametros";
 import { requerirCargo } from "@/lib/sesion";
 import * as empresasModelo from "@/models/empresas";
 import * as fichasModelo from "@/models/fichas";
+import * as referenciasModelo from "@/models/referencias";
 import * as reglasModelo from "@/models/reglasHook";
 
 /**
@@ -32,6 +33,12 @@ export const metadata: Metadata = {
 };
 
 const RUTA = "/dashboard/hooks/nuevo";
+
+/** Un id que llega por la URL. Nunca lanza: la basura cae a null. */
+function comoId(valor: unknown): number | null {
+  const numero = Number(valor);
+  return Number.isInteger(numero) && numero > 0 ? numero : null;
+}
 
 const MIGAS = [
   { texto: "Conejo App", href: "/dashboard" },
@@ -59,9 +66,26 @@ export default async function PaginaNuevoHook(
   // asi que el primer guardado crea una pieza nueva y la original no se toca.
   const esPlantilla = estado.panel === "plantilla";
 
-  const [empresas, ficha] = await Promise.all([
+  /*
+   * Una plantilla puede venir de dos sitios, y no son el mismo.
+   *
+   * De una FICHA propia (`?id=`) se copia la decision entera menos el cliente.
+   * De una REFERENCIA del banco (`?ref=`) solo hay tres cosas que copiar —el
+   * hook, el Insert-Titulo y la plataforma— porque una referencia no tiene
+   * objetivo ni audiencia: es material observado, no una decision tomada.
+   *
+   * El id de la referencia va en su propio parametro para que no se confunda
+   * con el de una ficha: si compartieran `id`, un enlace viejo abriria la
+   * ficha 7 creyendo abrir la referencia 7.
+   */
+  const idReferencia = comoId(parametros.ref);
+
+  const [empresas, ficha, referencia] = await Promise.all([
     empresasModelo.listarActivas(),
     estado.panelId !== null ? fichasModelo.buscarPorId(estado.panelId) : null,
+    esPlantilla && idReferencia !== null
+      ? referenciasModelo.buscarPorId(idReferencia)
+      : null,
   ]);
 
   const limites = ficha
@@ -86,16 +110,20 @@ export default async function PaginaNuevoHook(
       migas={MIGAS}
       kicker="03 / Hooks"
       titulo={
-        esPlantilla
-          ? "Parte de una que funciono"
-          : ficha
-            ? "Sigue donde lo dejaste"
-            : "Escribe la decision, no la frase"
+        referencia
+          ? "Parte de una referencia del banco"
+          : esPlantilla
+            ? "Parte de una que funciono"
+            : ficha
+              ? "Sigue donde lo dejaste"
+              : "Escribe la decision, no la frase"
       }
       descripcion={
-        esPlantilla
-          ? "Se copio todo menos el cliente: elige a quien va esta vez. La ficha original no se toca; al guardar nace una pieza nueva."
-          : "Completa la decision antes de redactar. Al final genera una ficha que edicion puede ejecutar sin interpretar la idea."
+        referencia
+          ? "Se trajo el hook, su Insert-Titulo y la plataforma. Lo demas es tuyo: una referencia se adapta, no se copia. La del banco no se toca."
+          : esPlantilla
+            ? "Se copio todo menos el cliente: elige a quien va esta vez. La ficha original no se toca; al guardar nace una pieza nueva."
+            : "Completa la decision antes de redactar. Al final genera una ficha que edicion puede ejecutar sin interpretar la idea."
       }
       accion={
         <BotonEnlace href={hrefEmpresa} variante="fantasma" tamano="chico">
@@ -107,6 +135,7 @@ export default async function PaginaNuevoHook(
       <FormularioHook
         empresas={empresas}
         ficha={ficha}
+        referencia={referencia}
         limiteVoz={activos.maxPalabrasVoz}
         limiteInsert={activos.maxPalabrasInsert}
         etiquetaRegla={activos.etiqueta}

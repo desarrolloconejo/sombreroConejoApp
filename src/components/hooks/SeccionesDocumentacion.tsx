@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Archive, Eye, Pencil, Plus, Trash2 } from "lucide-react";
+import { Archive, Copy, Eye, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { nombreMecanismo, nombreTerritorio, TERRITORIOS } from "@/lib/hooks/catalogo";
 import { ESTANDAR_INSERT, ESTANDAR_VOZ } from "@/lib/hooks/listas";
@@ -489,12 +489,22 @@ export function SeccionReferencias({
   hrefVer,
   hrefEditar,
   hrefBorrar,
+  hrefPlantilla,
 }: {
   referencias: ReferenciaHook[];
   hrefNueva: string;
   hrefVer: (id: number) => string;
   hrefEditar: (id: number) => string;
   hrefBorrar: (id: number) => string;
+
+  /**
+   * Abrir el canvas partiendo de esta referencia.
+   *
+   * Es el motivo por el que existe el banco: una referencia se guarda para
+   * volver a usarla, y sin esto habia que copiar el texto a mano. Se copia el
+   * mecanismo, no la cuenta: el canvas nace sin cliente y sin objetivo.
+   */
+  hrefPlantilla: (id: number) => string;
 }) {
   return (
     <div className="overflow-hidden rounded-[15px] border border-borde bg-superficie shadow-[var(--sombra)]">
@@ -582,6 +592,12 @@ export function SeccionReferencias({
                 <Acciones>
                   <Accion href={hrefVer(ref.id)} etiqueta="Ver la referencia">
                     <Eye aria-hidden="true" />
+                  </Accion>
+                  <Accion
+                    href={hrefPlantilla(ref.id)}
+                    etiqueta="Usar esta referencia como plantilla"
+                  >
+                    <Copy aria-hidden="true" />
                   </Accion>
                   <Accion href={hrefEditar(ref.id)} etiqueta="Editar la referencia">
                     <Pencil aria-hidden="true" />
