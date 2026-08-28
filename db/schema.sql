@@ -397,6 +397,19 @@ CREATE TABLE IF NOT EXISTS referencias_hook (
   url_fuente    TEXT,
   lectura       TEXT        NOT NULL,
   etiquetas     TEXT        NOT NULL DEFAULT '',
+
+  -- De que pieza propia salio, si salio de una.
+  --
+  -- Es NULL en las referencias de fuera, que son la mayoria: el banco nacio
+  -- para guardar hooks ajenos. Cuando apunta a una ficha sirve para no volver
+  -- a ofrecer "guardar como referencia" en el historial de algo que ya esta
+  -- guardado.
+  --
+  -- ON DELETE SET NULL y no CASCADE: la lectura de por que funciono un hook
+  -- vale por si sola, y borrar la ficha no debe llevarse el aprendizaje. La
+  -- referencia se queda; solo pierde de donde vino.
+  ficha_id      INTEGER     REFERENCES fichas_hook(id) ON DELETE SET NULL,
+
   creado_por    INTEGER     NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
   creado_en     TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -409,6 +422,24 @@ CREATE TABLE IF NOT EXISTS referencias_hook (
 );
 
 CREATE INDEX IF NOT EXISTS referencias_territorio_idx ON referencias_hook (territorio);
+
+-- ---------------------------------------------------------------------------
+-- Migracion: ficha_id en referencias_hook.
+--
+-- Va aparte del CREATE TABLE porque las bases ya sembradas —la de produccion
+-- entre ellas— no lo recrean. El bloque es idempotente: se puede ejecutar
+-- tantas veces como haga falta.
+-- ---------------------------------------------------------------------------
+DO $referencias$
+BEGIN
+  ALTER TABLE referencias_hook
+    ADD COLUMN IF NOT EXISTS ficha_id INTEGER REFERENCES fichas_hook(id) ON DELETE SET NULL;
+END
+$referencias$;
+
+-- Se consulta siempre igual: "de esta ficha, hay referencia?".
+CREATE INDEX IF NOT EXISTS referencias_ficha_idx
+  ON referencias_hook (ficha_id) WHERE ficha_id IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
 -- Un usuario es trabajador o cliente, nunca ambos.

@@ -12,17 +12,47 @@ import type { ReferenciaHook } from "@/types";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
+ * Una pieza propia de la que parte la referencia.
+ *
+ * La arma la page a partir de la ficha: el formulario no consulta nada. La
+ * plataforma y el hook vienen ya escritos porque son los mismos; lo que hay
+ * que aportar es la lectura, que es justo lo que el banco pide y una ficha no
+ * tiene.
+ */
+export type OrigenReferencia = {
+  fichaId: number;
+  hablado: string;
+  insertTitulo: string;
+  plataforma: string;
+
+  /** Sugerido desde el objetivo de la ficha. Se puede cambiar. */
+  territorio: string;
+
+  /** El aprendizaje que se escribio al registrar metricas, si lo hubo. */
+  lectura: string;
+};
+
+/**
  * El alta y la edicion de una referencia del banco.
  *
  * La lectura —por que funciona— es obligatoria, y es la unica regla de
  * negocio que impone esta pantalla. Sin ella queda un recorte suelto que
  * dentro de un mes no le dice nada a nadie, ni siquiera a quien lo guardo.
+ *
+ * Sirve para las dos entradas al banco: un hook de fuera, que es para lo que
+ * nacio, y una pieza propia que funciono, que llega con `origen` desde el
+ * historial ya rellena.
  */
 export function FormularioReferencia({
   referencia,
+  origen = null,
   hrefCancelar,
 }: {
   referencia: ReferenciaHook | null;
+
+  /** Solo al guardar una pieza propia. Nunca junto con `referencia`. */
+  origen?: OrigenReferencia | null;
+
   hrefCancelar: string;
 }) {
   const [estado, enviar, enviando] = useActionState(guardarReferencia, ESTADO_INICIAL);
@@ -36,9 +66,9 @@ export function FormularioReferencia({
   // la action termina, tambien cuando devuelve errores. Sin esto, olvidar la
   // lectura borraba el hook que se acababa de transcribir.
   const { campo } = useCampos({
-    hablado: referencia?.hablado ?? "",
-    insertTitulo: referencia?.insertTitulo ?? "",
-    lectura: referencia?.lectura ?? "",
+    hablado: referencia?.hablado ?? origen?.hablado ?? "",
+    insertTitulo: referencia?.insertTitulo ?? origen?.insertTitulo ?? "",
+    lectura: referencia?.lectura ?? origen?.lectura ?? "",
     urlFuente: referencia?.urlFuente ?? "",
     etiquetas: referencia?.etiquetas.join(", ") ?? "",
   });
@@ -47,6 +77,17 @@ export function FormularioReferencia({
     <form action={enviar} noValidate className="flex min-h-0 flex-1 flex-col">
       <PanelCuerpo>
         {referencia && <input type="hidden" name="id" value={referencia.id} />}
+
+        {/* De que pieza propia sale. La action lo comprueba contra la base:
+            este campo lo escribe el navegador. */}
+        {origen && <input type="hidden" name="fichaId" value={origen.fichaId} />}
+
+        {origen && (
+          <p className="mb-1 rounded-xl border border-borde bg-campo px-4 py-3 text-[12px] leading-relaxed text-suave">
+            Sale de una pieza vuestra, ya escrita. Lo unico que el banco pide y
+            la ficha no tiene es <b className="text-texto">por que funciono</b>.
+          </p>
+        )}
 
 
         <SeparadorPanel>Lo que se observo</SeparadorPanel>
@@ -122,7 +163,7 @@ export function FormularioReferencia({
             etiqueta="Plataforma"
             marcador="Elige una"
             requerido
-            valorInicial={referencia?.plataforma ?? ""}
+            valorInicial={referencia?.plataforma ?? origen?.plataforma ?? ""}
             opciones={PLATAFORMAS.map((p) => ({ valor: p.slug, texto: p.nombre }))}
             error={errores.plataforma}
           />
@@ -133,7 +174,7 @@ export function FormularioReferencia({
             etiqueta="Territorio"
             marcador="Elige uno"
             requerido
-            valorInicial={referencia?.territorio ?? ""}
+            valorInicial={referencia?.territorio ?? origen?.territorio ?? ""}
             opciones={TERRITORIOS.map((t) => ({
               valor: t.slug,
               texto: `${t.letra} · ${t.nombre}`,

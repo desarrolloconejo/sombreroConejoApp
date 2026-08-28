@@ -6,6 +6,7 @@ import { FormularioMetricas, PendientesPaso } from "@/components/hooks";
 import { BotonEnlace } from "@/components/ui";
 import { requerirCargo } from "@/lib/sesion";
 import * as fichasModelo from "@/models/fichas";
+import * as referenciasModelo from "@/models/referencias";
 
 /**
  * El registro de metricas: el final del recorrido.
@@ -46,6 +47,12 @@ export default async function PaginaMetricas(
   // piezas propias faltan por cerrar, no cuantas tiene la agencia.
   const conteo = await fichasModelo.contarPorEstado(usuario.id);
 
+  // Cuales de las pendientes ya estan en el banco: decide si el formulario
+  // ofrece guardarla como referencia o dice que ya lo esta.
+  const guardadas = await referenciasModelo.fichasGuardadas(
+    pendientes.filas.map((ficha) => ficha.id),
+  );
+
   /*
    * La ficha que llega ya elegida desde la lista.
    *
@@ -85,6 +92,7 @@ export default async function PaginaMetricas(
             <FormularioMetricas
               fichas={pendientes.filas}
               fichaInicial={fichaInicial}
+              guardadas={[...guardadas]}
             />
           </div>
         </>

@@ -267,6 +267,15 @@ export type ReferenciaHook = {
   /** Por que funciona. Sin esto una referencia es un recorte suelto. */
   lectura: string;
   etiquetas: string[];
+
+  /**
+   * De que pieza propia salio, si salio de una.
+   *
+   * Null en las referencias de fuera, que son la mayoria. Cuando apunta a una
+   * ficha, el historial deja de ofrecer "guardar como referencia" para ella.
+   */
+  fichaId: number | null;
+
   creadoPor: number;
   creadoEn: Date;
 };

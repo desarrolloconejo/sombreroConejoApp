@@ -29,6 +29,7 @@ const COLUMNAS = `
   r.url_fuente    AS "urlFuente",
   r.lectura,
   r.etiquetas,
+  r.ficha_id      AS "fichaId",
   r.creado_por    AS "creadoPor",
   r.creado_en     AS "creadoEn"
 `;
@@ -103,6 +104,26 @@ export async function buscarPorId(
   return fila ? comoReferencia(fila) : null;
 }
 
+/**
+ * De las fichas que se pasan, cuales ya estan guardadas como referencia.
+ *
+ * Se pregunta por el lote visible y no ficha a ficha: el historial pinta hasta
+ * veinte filas, y una consulta por fila serian veinte viajes para pintar un
+ * boton. Devuelve un Set porque quien llama solo pregunta "esta?".
+ */
+export async function fichasGuardadas(ids: number[]): Promise<Set<number>> {
+  if (ids.length === 0) return new Set();
+
+  const filas = await consultar<{ fichaId: number }>(
+    `SELECT DISTINCT ficha_id AS "fichaId"
+     FROM referencias_hook
+     WHERE ficha_id = ANY($1)`,
+    [ids],
+  );
+
+  return new Set(filas.map((fila) => fila.fichaId));
+}
+
 export async function contar(): Promise<number> {
   const fila = await consultarUno<{ total: string }>(
     "SELECT count(*)::text AS total FROM referencias_hook",
@@ -118,9 +139,9 @@ export async function crear(
   const fila = await consultarUno<FilaReferencia>(
     `INSERT INTO referencias_hook (
        hablado, insert_titulo, plataforma, territorio, url_fuente,
-       lectura, etiquetas, creado_por
+       lectura, etiquetas, ficha_id, creado_por
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      RETURNING ${COLUMNAS.replace(/r\./g, "")}`,
     [
       datos.hablado,
@@ -130,6 +151,7 @@ export async function crear(
       datos.urlFuente,
       datos.lectura,
       datos.etiquetas.join(", "),
+      datos.fichaId,
       datos.creadoPor,
     ],
     ejecutor,
@@ -142,9 +164,16 @@ export async function crear(
   return comoReferencia(fila);
 }
 
+/**
+ * Edita una referencia. NO toca `ficha_id`.
+ *
+ * De donde salio una referencia es un hecho, no un campo editable: si se
+ * pudiera reasignar, el historial dejaria de saber que piezas ya estan
+ * guardadas. Por eso el tipo lo excluye en lugar de ignorarlo en silencio.
+ */
 export async function actualizar(
   id: number,
-  datos: Omit<DatosNuevaReferencia, "creadoPor">,
+  datos: Omit<DatosNuevaReferencia, "creadoPor" | "fichaId">,
 ): Promise<ReferenciaHook | null> {
   const fila = await consultarUno<FilaReferencia>(
     `UPDATE referencias_hook

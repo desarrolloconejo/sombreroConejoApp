@@ -9,6 +9,8 @@ import {
   PanelLateral,
 } from "@/components/listado";
 import { columnasFichas, filtrosFichas } from "@/components/hooks/ColumnasFichas";
+import { FormularioReferencia } from "@/components/hooks";
+import { objetivoDe } from "@/lib/hooks/catalogo";
 import { ConfirmarBorradoFicha } from "@/components/hooks/ConfirmarBorradoFicha";
 import { DetalleFicha } from "@/components/hooks/DetalleFicha";
 import { BotonEnlace } from "@/components/ui";
@@ -17,6 +19,7 @@ import { conPanel } from "@/lib/urlListado";
 import { requerirCargo } from "@/lib/sesion";
 import * as empresasModelo from "@/models/empresas";
 import * as fichasModelo from "@/models/fichas";
+import * as referenciasModelo from "@/models/referencias";
 import type { EstadoFicha, SlugObjetivo } from "@/types";
 
 /**
@@ -115,10 +118,23 @@ export default async function PaginaHistorial(
     // Solo se consulta la ficha que el panel va a mostrar. Si el id no
     // corresponde a nadie devuelve null y no se abre nada, que es lo que pasa
     // al recargar un "?panel=ver&id=999" viejo.
-    (estado.panel === "ver" || estado.panel === "borrar") && estado.panelId !== null
+    (estado.panel === "ver" ||
+      estado.panel === "borrar" ||
+      estado.panel === "referencia") && estado.panelId !== null
       ? fichasModelo.buscarConResultado(estado.panelId)
       : null,
   ]);
+
+  /*
+   * Que fichas de esta pagina ya estan en el banco.
+   *
+   * Va despues del listado porque necesita sus ids, y se pregunta por el lote
+   * entero de una vez: una consulta por fila serian veinte viajes para decidir
+   * un icono.
+   */
+  const guardadas = await referenciasModelo.fichasGuardadas(
+    pagina.filas.map((ficha) => ficha.id),
+  );
 
   const hrefCerrar = conPanel(RUTA, estado, null);
 
@@ -138,7 +154,7 @@ export default async function PaginaHistorial(
       <Listado
         ruta={RUTA}
         estado={estado}
-        columnas={columnasFichas(RUTA, estado)}
+        columnas={columnasFichas(RUTA, estado, guardadas)}
         filtros={filtrosFichas(empresas)}
         filas={pagina.filas}
         total={pagina.total}
@@ -186,6 +202,42 @@ export default async function PaginaHistorial(
               >
                 <ConfirmarBorradoFicha ficha={fichaPanel} hrefCerrar={hrefCerrar} />
               </ModalConfirmacion>
+            )}
+
+            {fichaPanel && estado.panel === "referencia" && (
+              <PanelLateral
+                hrefCerrar={hrefCerrar}
+                kicker="Banco de referencias"
+                titulo="Guardar como referencia"
+                descripcion="Lo que merece repetirse deja de vivir en el historial de una cuenta y pasa al banco del equipo."
+              >
+                <FormularioReferencia
+                  referencia={null}
+                  origen={{
+                    fichaId: fichaPanel.id,
+                    hablado: fichaPanel.hablado,
+                    insertTitulo: fichaPanel.insertTitulo ?? "",
+                    plataforma: fichaPanel.plataforma,
+
+                    /*
+                     * El territorio se SUGIERE desde el objetivo, no se decide.
+                     * Cada objetivo del catalogo declara con que territorios se
+                     * escribe; se propone el primero y queda a la vista para
+                     * cambiarlo, que es mejor que dejar el desplegable vacio
+                     * sabiendo la respuesta probable.
+                     */
+                    territorio: objetivoDe(fichaPanel.objetivo).territorios[0] ?? "",
+
+                    /*
+                     * El aprendizaje que se escribio al registrar metricas es
+                     * literalmente lo que el banco llama lectura: por que
+                     * funciono. Si existe, no hay que escribirlo dos veces.
+                     */
+                    lectura: fichaPanel.resultado?.aprendizaje ?? "",
+                  }}
+                  hrefCancelar={hrefCerrar}
+                />
+              </PanelLateral>
             )}
           </>
         }

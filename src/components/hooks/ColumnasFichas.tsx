@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Copy, Eye, Pencil, Trash2 } from "lucide-react";
+import { BookmarkCheck, BookmarkPlus, Copy, Eye, Pencil, Trash2 } from "lucide-react";
 
 import { Etiqueta } from "@/components/ui";
 import { metricaDe, nombrePlataforma, objetivoDe, porcentajeDe } from "@/lib/hooks/catalogo";
@@ -18,7 +18,7 @@ const ANCHOS = {
   cliente: "1.1fr",
   estado: "1.1fr",
   resultado: "0.9fr",
-  acciones: "164px",
+  acciones: "204px",
 } as const;
 
 export const REJILLA_FICHAS = Object.values(ANCHOS)
@@ -66,6 +66,15 @@ function AccionFila({
 export function columnasFichas(
   ruta: string,
   estado: EstadoListado,
+
+  /**
+   * Que fichas de esta pagina ya estan en el banco de referencias.
+   *
+   * Se recibe resuelto porque una columna no consulta: la page pregunta una
+   * vez por el lote visible y aqui solo se decide si la fila ofrece guardar o
+   * dice que ya esta guardada.
+   */
+  guardadas: Set<number> = new Set(),
 ): Columna<FichaConResultado>[] {
   return [
     {
@@ -210,6 +219,28 @@ export function columnasFichas(
             >
               <Copy aria-hidden="true" />
             </AccionFila>
+
+            {/*
+              El banco de referencias es para lo que merece repetirse, asi que
+              esta fila ofrece dos cosas distintas segun el caso: guardarla, o
+              decir que ya esta guardada. Ocultar la marca dejaria la duda de
+              si el boton falto o si ya se hizo.
+            */}
+            {guardadas.has(ficha.id) ? (
+              <span
+                title="Ya esta en el banco de referencias"
+                className="grid size-9 shrink-0 place-items-center rounded-[10px] text-acento [&>svg]:size-4"
+              >
+                <BookmarkCheck aria-label="Ya guardada como referencia" />
+              </span>
+            ) : (
+              <AccionFila
+                href={conPanel(ruta, estado, "referencia", ficha.id)}
+                etiqueta={`Guardar «${corto}» como referencia`}
+              >
+                <BookmarkPlus aria-hidden="true" />
+              </AccionFila>
+            )}
 
             <AccionFila
               href={conPanel(ruta, estado, "borrar", ficha.id)}

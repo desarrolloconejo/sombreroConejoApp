@@ -26,8 +26,17 @@ import { aNumero, CamposMetricas, DiagnosticoHookRate } from "./CamposMetricas";
 export function FormularioMetricas({
   fichas,
   fichaInicial = "",
+  guardadas = [],
 }: {
   fichas: FichaConResultado[];
+
+  /**
+   * Que fichas ya estan en el banco de referencias.
+   *
+   * Llega resuelto desde la page, como arreglo y no como Set porque cruza la
+   * frontera de servidor a cliente y un Set no viaja por ahi.
+   */
+  guardadas?: number[];
 
   /**
    * La ficha que llega ya elegida desde la lista de pendientes.
@@ -100,6 +109,17 @@ export function FormularioMetricas({
             alCambiarVistas={setVistas}
             cruzados={cruzados}
             errorVistas={estado.errores?.vistas3s}
+            errorTerritorio={estado.errores?.territorioReferencia}
+            errorAprendizaje={estado.errores?.aprendizaje}
+            banco={
+              ficha
+                ? {
+                    yaGuardada: guardadas.includes(ficha.id),
+                    territorioSugerido:
+                      objetivoDe(ficha.objetivo).territorios[0] ?? "",
+                  }
+                : null
+            }
           />
 
           <div className="mt-5 flex flex-wrap items-center gap-2.5">

@@ -24,3 +24,4 @@ export {
 export { FormularioMetricas } from "./FormularioMetricas";
 export { PanelMetricasFicha } from "./PanelMetricasFicha";
 export { CamposMetricas, DiagnosticoHookRate } from "./CamposMetricas";
+export type { OrigenReferencia } from "./FormularioReferencia";

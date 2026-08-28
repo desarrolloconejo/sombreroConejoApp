@@ -31,10 +31,15 @@ import { aNumero, CamposMetricas, DiagnosticoHookRate } from "./CamposMetricas";
  */
 export function PanelMetricasFicha({
   ficha,
+  yaEnBanco = false,
   hrefCorregir,
   hrefCerrar,
 }: {
   ficha: FichaHook;
+
+  /** Ya esta en el banco de referencias: entonces no se ofrece, se dice. */
+  yaEnBanco?: boolean;
+
   /** Volver al canvas a arreglar la pieza antes de medirla. */
   hrefCorregir: string;
   hrefCerrar: string;
@@ -85,6 +90,12 @@ export function PanelMetricasFicha({
           alCambiarVistas={setVistas}
           cruzados={cruzados}
           errorVistas={estado.errores?.vistas3s}
+          errorTerritorio={estado.errores?.territorioReferencia}
+          errorAprendizaje={estado.errores?.aprendizaje}
+          banco={{
+            yaGuardada: yaEnBanco,
+            territorioSugerido: objetivoDe(ficha.objetivo).territorios[0] ?? "",
+          }}
         />
 
         <div className="mt-[18px]">

@@ -56,6 +56,7 @@ const PANELES: readonly string[] = [
   "clave",
   "borrar",
   "plantilla",
+  "referencia",
 ];
 
 /**

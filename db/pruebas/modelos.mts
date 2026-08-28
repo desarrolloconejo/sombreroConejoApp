@@ -273,6 +273,45 @@ async function principal(): Promise<void> {
     `${porLectura.length} resultado(s)`,
   );
 
+  // -------------------------------------------- referencias nacidas de ficha
+  const sinBanco = await referencias.fichasGuardadas([ficha.id]);
+  comprobar(
+    "Una ficha empieza sin referencia",
+    !sinBanco.has(ficha.id),
+    `${sinBanco.size} ficha(s) marcadas`,
+  );
+
+  const delaFicha = await referencias.crear({
+    hablado: ficha.hablado,
+    insertTitulo: ficha.insertTitulo,
+    plataforma: ficha.plataforma,
+    territorio: "a",
+    urlFuente: null,
+    lectura: "Se guarda desde el historial: la lectura sale del aprendizaje.",
+    etiquetas: [],
+    fichaId: ficha.id,
+    creadoPor: creadora.id,
+  });
+
+  comprobar(
+    "La referencia recuerda de que ficha salio",
+    delaFicha.fichaId === ficha.id,
+    `fichaId ${delaFicha.fichaId}`,
+  );
+
+  const conBanco = await referencias.fichasGuardadas([ficha.id]);
+  comprobar(
+    "El historial sabe que esa ficha ya esta guardada",
+    conBanco.has(ficha.id),
+    `${conBanco.size} ficha(s) marcadas`,
+  );
+
+  comprobar(
+    "Sin ids no se consulta nada",
+    (await referencias.fichasGuardadas([])).size === 0,
+    "0 ficha(s) marcadas",
+  );
+
   // ------------------------------------------------------------------ borrado
   const borrado = await fichas.borrar(ficha.id);
   comprobar(
@@ -285,6 +324,25 @@ async function principal(): Promise<void> {
     "SELECT count(*)::text AS total FROM resultados_hook WHERE ficha_id = $1",
     [ficha.id],
   );
+  /*
+   * La referencia SOBREVIVE a la ficha, y pierde el vinculo.
+   *
+   * Es la diferencia entre ON DELETE SET NULL y CASCADE, y aqui esta escrita
+   * como prueba porque es una decision de producto: la lectura de por que
+   * funciono un hook vale por si sola, y borrar la pieza no debe llevarse el
+   * aprendizaje del equipo.
+   */
+  const sobrevive = await referencias.buscarPorId(delaFicha.id);
+  comprobar(
+    "Borrar la ficha no borra su referencia, solo el vinculo",
+    sobrevive !== null && sobrevive.fichaId === null,
+    sobrevive === null ? "se borro" : `fichaId ${sobrevive.fichaId}`,
+  );
+
+  // Se recoge lo que ensucio esta prueba: sin esto el banco crece una
+  // referencia por ejecucion y las comprobaciones de conteo dejan de valer.
+  await referencias.borrar(delaFicha.id);
+
   comprobar(
     "El resultado cae con la ficha",
     huerfanos[0]?.total === "0",

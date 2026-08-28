@@ -16,6 +16,7 @@ import { objetivoDe } from "@/lib/hooks/catalogo";
 import { requerirCargo } from "@/lib/sesion";
 import * as empresasModelo from "@/models/empresas";
 import * as fichasModelo from "@/models/fichas";
+import * as referenciasModelo from "@/models/referencias";
 import * as reglasModelo from "@/models/reglasHook";
 
 /**
@@ -117,6 +118,11 @@ export default async function PaginaAuditor(
     resultado !== null &&
     resultado.aprobado &&
     parametros.panel === "metricas";
+
+  // Solo se pregunta si el panel se va a abrir: fuera de el nadie usa el dato.
+  const enBanco = abrirMetricas
+    ? await referenciasModelo.fichasGuardadas([ficha.id])
+    : new Set<number>();
 
   return (
     <Wrapper
@@ -234,6 +240,7 @@ export default async function PaginaAuditor(
         >
           <PanelMetricasFicha
             ficha={ficha}
+            yaEnBanco={enBanco.has(ficha.id)}
             hrefCorregir={hrefCorregir}
             hrefCerrar={hrefVuelta}
           />

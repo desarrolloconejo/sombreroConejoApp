@@ -7,6 +7,7 @@ import { SLUGS_PLATAFORMA, TERRITORIOS } from "@/lib/hooks/catalogo";
 import { requerirCargo } from "@/lib/sesion";
 import { comoIdentificador, limpiarOpcional, limpiarTexto } from "@/lib/validaciones";
 import * as aperturas from "@/models/aperturas";
+import * as fichas from "@/models/fichas";
 import * as referencias from "@/models/referencias";
 import * as reglas from "@/models/reglasHook";
 import * as resultados from "@/models/resultados";
@@ -295,14 +296,40 @@ export async function guardarReferencia(
   const id = comoIdentificador(datos.get("id"));
 
   if (id !== null) {
+    // `actualizar` no toca ficha_id a proposito: de donde salio la referencia
+    // es un hecho del pasado, no un campo del formulario.
     const actualizada = await referencias.actualizar(id, campos);
     if (!actualizada) return { ok: false, mensaje: "Esa referencia ya no existe" };
-  } else {
-    await referencias.crear({ ...campos, creadoPor: usuario.id });
+
+    revalidatePath(RUTA_MODULO, "layout");
+    return { ok: true, mensaje: "Referencia guardada." };
   }
 
+  /*
+   * De que pieza propia sale, si sale de una.
+   *
+   * Llega del formulario cuando se abrio desde el historial, y se comprueba
+   * contra la base: es un campo que escribe el navegador. Si apunta a algo que
+   * no existe se guarda igual, pero sin origen — una referencia con la lectura
+   * escrita vale por si sola, y perder el trabajo por un id malo seria peor.
+   */
+  const fichaPedida = comoIdentificador(datos.get("fichaId"));
+
+  const fichaId =
+    fichaPedida !== null && (await fichas.buscarPorId(fichaPedida)) !== null
+      ? fichaPedida
+      : null;
+
+  await referencias.crear({ ...campos, fichaId, creadoPor: usuario.id });
+
   revalidatePath(RUTA_MODULO, "layout");
-  return { ok: true, mensaje: "Referencia guardada." };
+
+  return {
+    ok: true,
+    mensaje: fichaId !== null
+      ? "Referencia guardada. La pieza queda marcada en el historial."
+      : "Referencia guardada.",
+  };
 }
 
 export async function borrarReferencia(
@@ -340,7 +367,7 @@ export async function guardarResultados(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
 ): Promise<EstadoFormulario> {
-  await requerirCargo("redes");
+  const usuario = await requerirCargo("redes");
 
   const fichaId = comoIdentificador(datos.get("fichaId"));
 
@@ -366,6 +393,36 @@ export async function guardarResultados(
     };
   }
 
+  const aprendizaje = limpiarOpcional(datos.get("aprendizaje"), LIMITES.texto);
+
+  /*
+   * Guardarla ademas en el banco de referencias.
+   *
+   * Se valida ANTES de escribir nada. Si faltara el territorio o el
+   * aprendizaje despues de guardar los numeros, la pantalla diria "no se
+   * guardo" habiendo guardado la mitad, que es la peor de las respuestas.
+   *
+   * La lectura del banco es el aprendizaje que ya se pide aqui: por que
+   * funciono la pieza. Pedirlo dos veces con dos nombres seria pedir lo mismo.
+   */
+  const alBanco = datos.get("guardarReferencia") === "on";
+  const territorio = comoTerritorio(datos.get("territorioReferencia"));
+
+  if (alBanco) {
+    const fallos: ErroresCampo = {};
+
+    if (territorio === null) {
+      fallos.territorioReferencia = "Elige el territorio de la referencia";
+    }
+
+    if (!aprendizaje) {
+      fallos.aprendizaje =
+        "Para guardarla como referencia hace falta explicar por que funciono";
+    }
+
+    if (Object.keys(fallos).length > 0) return { ok: false, errores: fallos };
+  }
+
   await resultados.guardar(fichaId, {
     impresiones,
     vistas3s,
@@ -373,8 +430,40 @@ export async function guardarResultados(
     compartidos: comoContador(datos.get("compartidos")),
     clics: comoContador(datos.get("clics")),
     guardados: comoContador(datos.get("guardados")),
-    aprendizaje: limpiarOpcional(datos.get("aprendizaje"), LIMITES.texto),
+    aprendizaje,
   });
+
+  /*
+   * El hablado y la plataforma salen de la BASE, no del formulario: el
+   * formulario de metricas no los lleva, y aunque los llevara serian datos
+   * que escribe el navegador sobre una pieza que ya existe.
+   *
+   * `yaGuardadas` evita el duplicado cuando alguien registra dos veces la
+   * misma ficha —cosa que este paso permite a proposito, porque actualiza— con
+   * la casilla marcada las dos veces.
+   */
+  let alBancoHecho = false;
+
+  if (alBanco && territorio !== null && aprendizaje) {
+    const ficha = await fichas.buscarPorId(fichaId);
+    const yaGuardadas = await referencias.fichasGuardadas([fichaId]);
+
+    if (ficha && !yaGuardadas.has(fichaId)) {
+      await referencias.crear({
+        hablado: ficha.hablado,
+        insertTitulo: ficha.insertTitulo,
+        plataforma: ficha.plataforma,
+        territorio,
+        urlFuente: null,
+        lectura: aprendizaje,
+        etiquetas: [],
+        fichaId,
+        creadoPor: usuario.id,
+      });
+
+      alBancoHecho = true;
+    }
+  }
 
   revalidatePath(RUTA_MODULO, "layout");
 
@@ -382,6 +471,8 @@ export async function guardarResultados(
 
   return {
     ok: true,
-    mensaje: `Resultados registrados. Hook rate ${tasa.toFixed(1)}%. La pieza queda terminada.`,
+    mensaje: alBancoHecho
+      ? `Resultados registrados. Hook rate ${tasa.toFixed(1)}%. La pieza queda terminada y guardada en el banco de referencias.`
+      : `Resultados registrados. Hook rate ${tasa.toFixed(1)}%. La pieza queda terminada.`,
   };
 }

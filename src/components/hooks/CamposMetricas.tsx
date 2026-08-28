@@ -1,6 +1,10 @@
 "use client";
 
-import { Campo, useCampos } from "@/components/ui";
+import { useState } from "react";
+import { BookmarkCheck } from "lucide-react";
+
+import { Campo, Selector, useCampos } from "@/components/ui";
+import { TERRITORIOS } from "@/lib/hooks/catalogo";
 
 /**
  * Los campos de un registro de metricas, y la lectura del hook rate.
@@ -39,6 +43,20 @@ export function bandaDe(tasa: number | null) {
   return BANDAS.find((b) => tasa < b.hasta) ?? BANDAS[4];
 }
 
+/**
+ * Lo que hay que saber para ofrecer guardar la pieza en el banco.
+ *
+ * Se pasa resuelto desde arriba: estos campos no consultan nada. Es null
+ * mientras no haya ficha elegida, que en el modulo pasa al abrir la pantalla.
+ */
+export type BancoDeLaFicha = {
+  /** Ya esta en el banco. Entonces no se ofrece, se dice. */
+  yaGuardada: boolean;
+
+  /** Sugerido desde el objetivo de la ficha. Se puede cambiar. */
+  territorioSugerido: string;
+};
+
 export function CamposMetricas({
   prefijo,
   impresiones,
@@ -47,6 +65,9 @@ export function CamposMetricas({
   alCambiarVistas,
   cruzados,
   errorVistas,
+  banco = null,
+  errorTerritorio,
+  errorAprendizaje,
 }: {
   /** Distingue los ids cuando dos formularios comparten pantalla. */
   prefijo: string;
@@ -57,7 +78,14 @@ export function CamposMetricas({
   /** Hay mas vistas que impresiones: casi siempre, dos campos cruzados. */
   cruzados: boolean;
   errorVistas?: string;
+
+  /** Null mientras no haya ficha elegida: no hay nada que ofrecer. */
+  banco?: BancoDeLaFicha | null;
+
+  errorTerritorio?: string;
+  errorAprendizaje?: string;
 }) {
+  const [alBanco, setAlBanco] = useState(false);
   /*
    * Impresiones y vistas las lleva el padre porque con ellas pinta el hook
    * rate en vivo. Las otras cuatro y el aprendizaje se controlan aqui por otra
@@ -165,9 +193,91 @@ export function CamposMetricas({
             "suave w-full rounded-xl border-[1.5px] border-borde bg-campo px-3.5 py-3",
             "text-[13.5px] leading-relaxed text-texto placeholder:text-suave",
             "focus:border-acento focus:bg-superficie focus:shadow-[var(--foco)] focus:outline-none",
+            errorAprendizaje ? "border-blackberry" : "",
           ].join(" ")}
         />
+
+        {errorAprendizaje && (
+          <p
+            role="alert"
+            className="mt-1.5 text-[11.5px] font-medium text-blackberry dark-tema:text-[#e9a9cd]"
+          >
+            {errorAprendizaje}
+          </p>
+        )}
       </div>
+
+      {/*
+        GUARDARLA EN EL BANCO, AQUI Y NO EN OTRO SITIO.
+
+        Es el momento en el que se sabe si la pieza merece repetirse: se
+        acaban de escribir sus numeros. Y el aprendizaje que se pide justo
+        arriba ES lo que el banco llama lectura —por que funciono—, asi que no
+        hay que escribirlo dos veces.
+
+        Lo unico que el banco pide y la ficha no tiene es el territorio, y por
+        eso el desplegable aparece solo al marcar la casilla: quien no vaya a
+        guardarla no tiene por que verlo.
+      */}
+      {banco !== null && (
+        <div className="mt-[18px] rounded-xl border border-borde bg-campo p-4">
+          {banco.yaGuardada ? (
+            <p className="flex items-start gap-3 text-[12.5px] leading-relaxed text-suave">
+              <BookmarkCheck
+                aria-hidden="true"
+                className="mt-px size-4 shrink-0 text-acento"
+              />
+              Esta pieza ya esta en el banco de referencias. Si quieres cambiar
+              su lectura, se edita desde Documentacion.
+            </p>
+          ) : (
+            <>
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  name="guardarReferencia"
+                  checked={alBanco}
+                  onChange={(evento) => setAlBanco(evento.target.checked)}
+                  className="mt-0.5 size-[18px] shrink-0 accent-[var(--acento)]"
+                />
+                <span>
+                  <span className="mb-1 block text-[13px] font-bold">
+                    Guardarla tambien como referencia
+                  </span>
+                  <span className="block text-xs leading-relaxed text-suave">
+                    Para lo que merece repetirse. Se guarda con el aprendizaje
+                    que escribiste arriba, asi que ese pasa a ser obligatorio.
+                  </span>
+                </span>
+              </label>
+
+              {alBanco && (
+                <div className="mt-3.5">
+                  {/* La `key` fuerza a re-sembrarlo al cambiar de ficha: el
+                      Selector guarda su valor en estado propio y `valorInicial`
+                      solo lo lee al montar, asi que sin esto el territorio se
+                      quedaria en el sugerido por la ficha anterior. */}
+                  <Selector
+                    key={banco.territorioSugerido}
+                    id={`${prefijo}-territorio`}
+                    nombre="territorioReferencia"
+                    etiqueta="Territorio"
+                    marcador="Elige uno"
+                    requerido
+                    valorInicial={banco.territorioSugerido}
+                    opciones={TERRITORIOS.map((t) => ({
+                      valor: t.slug,
+                      texto: `${t.letra} · ${t.nombre}`,
+                    }))}
+                    ayuda="Viene sugerido por el objetivo de la pieza. Cambialo si la intencion fue otra."
+                    error={errorTerritorio}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </>
   );
 }
