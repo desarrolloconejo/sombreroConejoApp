@@ -1513,3 +1513,124 @@ desde la interfaz. Se arreglan las dos causas: la del sector retira **todas**
 las reglas de cliente y no solo la primera, y la referencia del seed se busca
 por ser **la que no viene de ninguna ficha** —guardar una ficha en el banco
 copia su hablado, asi que el texto ya no basta para identificarla—.
+
+---
+
+## Etapa 23 — Trazabilidad, cierre de piezas y el tema
+
+Cinco cosas pedidas sobre la marcha, y una de ellas cambia una regla de
+negocio.
+
+### Auditar desde la cola, como en metricas
+
+Las tarjetas de «Esperan auditoria» llevaban al canvas para pulsar alli un boton
+que solo necesitaba el texto: para auditar habia que **salir del auditor**. Ahora
+la fila carga la pieza en el propio auditor, rellena los dos campos y muestra su
+veredicto.
+
+**El clic no escribe en la base.** Carga y evalua. Un enlace de una lista que
+guardara se disparia con el boton de atras, con la precarga del navegador y con
+un clic sin querer. Para que el borrador salga de la cola hay un boton explicito
+de auditar y guardar, con «probar sin guardar» al lado.
+
+Guarda tambien el hablado y el Insert-Titulo, no solo la nota: una nota
+calculada sobre un texto que no se guarda no corresponde a lo que la ficha dice.
+
+### Quien ha tocado cada ficha
+
+En el historial cualquiera edita la ficha de cualquiera, y la ficha solo sabia
+quien la creo y la fecha del ultimo cambio. Se anade `ediciones_ficha`, un
+registro de **solo anadir** con quien, cuando y que hizo.
+
+Lo escriben las **actions**, que son las que conocen la sesion; los modelos no,
+igual que pasa con `creado_por`. Cae con la ficha por CASCADE, al reves que el
+banco de referencias: un registro de cambios no significa nada sin la pieza de
+la que habla.
+
+No guarda que campos cambiaron. Eso serviria para deshacer, que es otra
+funcionalidad; la pregunta aqui es quien ha metido mano.
+
+Un detalle que costaria depurar: la hora se **fija** a `America/Caracas`. Esto
+se pinta en el servidor, que corre en UTC en Docker y en Ohio en produccion, asi
+que sin fijarla un cambio hecho a las dos de la tarde se leia a las seis. Una
+hora equivocada en un registro de cambios es peor que no tenerlo.
+
+Se confirma de paso, y queda fijado con una prueba, que **editar no cambia de
+autor**: `creado_por` no esta entre las columnas que escribe `actualizar`.
+
+### Una pieza medida queda cerrada
+
+Lo pide redes. Cuando una pieza tiene sus metricas ha llegado a su ultimo
+estado, y lo que se guarda es el **par completo** —lo que se dijo y lo que
+paso—. Cambiar el hook despues dejaria unas cifras describiendo un texto que ya
+no existe, y el aprendizaje de la cuenta se construye sobre ese par.
+
+Se bloquea en el **servidor**: guardar el borrador, auditar desde el canvas,
+auditar desde el auditor y registrar numeros comprueban el estado contra la base
+antes de escribir. Esconder botones no basta — una action es un POST y quien
+conozca el id puede llamarla igual.
+
+La interfaz deja de ofrecerlo **y dice por que**, que no es lo mismo que dejar
+un hueco: candado en la fila, aviso en el detalle, la pantalla del canvas
+sustituida por una explicacion, y el auditor sin boton de guardar. En los cuatro
+sitios se ofrece usarla como plantilla, que es la salida cuando hace falta otra
+version.
+
+Efecto colateral asumido: **un numero mal tecleado ya no se corrige**. Deja de
+ser cierto que «registrar dos veces actualiza», y ese texto se corrige.
+
+### La portada lista, y por orden
+
+`enCurso` ordenaba `(estado = 'auditada') DESC` y devolvia **una sola**: la
+portada podia destacar una pieza sin relacion con lo que se estaba escribiendo,
+y las demas no aparecian. Ahora llegan por orden de creacion, la ultima primero,
+con su avance y su nota.
+
+### El navy fijo no era tema, era un color
+
+Las tarjetas de inicio, documentacion y manual iban en `bg-navy`. El numero lo
+dice todo: en tema oscuro eso es **#051a2a sobre un fondo #041521**, o sea la
+tarjeta desaparece, mientras el resto de la app usa una superficie que si
+contrasta. Pasan a los tokens del tema.
+
+El dorado se queda solo donde el contrato lo permite —sobre navy, en las
+pildoras de Insert-Titulo—. Y se corrige el mismo fallo de siempre en el detalle
+de una regla, que pintaba dorado sobre fondo claro.
+
+### Verificado
+
+| Comprobacion | Resultado |
+| --- | --- |
+| `tsc --noEmit` y `eslint` | limpios |
+| `prueba:auditor` / `prueba:modelos` | 19/19 y 40/40 |
+| Cola del auditor | la fila carga la pieza, rellena los campos y marca la fila |
+| Panel de cambios | tres lineas, con nombre y hora de Caracas |
+| Canvas sobre una medida | sin formulario; explicacion y salida por plantilla |
+| Historial sobre una medida | candado en vez de editar |
+| Auditor sobre una medida | sin guardar, sin corregir y sin metricas |
+| Plantilla desde una medida | si abre el formulario, que es la salida |
+| Las tres pantallas del tema | sin `bg-navy` salvo las pildoras de Insert-Titulo |
+
+### Lo que hay que ejecutar en Neon
+
+Se suma una tabla a las dos migraciones que ya estaban pendientes. Todo esta en
+`db/schema.sql`, asi que un `sql:produccion` nuevo lo incluye.
+
+```sql
+CREATE TABLE IF NOT EXISTS ediciones_ficha (
+  id         SERIAL      PRIMARY KEY,
+  ficha_id   INTEGER     NOT NULL REFERENCES fichas_hook(id) ON DELETE CASCADE,
+  usuario_id INTEGER     NOT NULL REFERENCES usuarios(id) ON DELETE RESTRICT,
+  accion     TEXT        NOT NULL,
+  creado_en  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT ediciones_accion_valida CHECK (
+    accion IN ('creada', 'editada', 'auditada', 'medida')
+  )
+);
+
+CREATE INDEX IF NOT EXISTS ediciones_ficha_idx
+  ON ediciones_ficha (ficha_id, creado_en DESC);
+```
+
+Las fichas anteriores no tienen lineas, y el panel lo dice en lugar de fingir
+que no paso nada.
