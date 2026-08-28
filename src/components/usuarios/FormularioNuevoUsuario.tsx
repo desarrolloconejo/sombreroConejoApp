@@ -15,7 +15,7 @@ import type { ReactNode } from "react";
 import { crearUsuario } from "@/actions/usuarios";
 import { SeparadorPanel } from "@/components/listado";
 import { PanelCuerpo, PanelPie } from "@/components/listado";
-import { Alerta, Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
+import { Alerta, Boton, BotonEnlace, Campo, Selector, useCampos } from "@/components/ui";
 import { CredencialProvisional } from "./CredencialProvisional";
 import { ESTADO_INICIAL } from "@/types";
 import type { Cargo, Empresa, NombreRol, Rol, TipoUsuario } from "@/types";
@@ -134,6 +134,18 @@ export function FormularioNuevoUsuario({
   useAvisoDeAccion(estado);
   const [tipo, setTipo] = useState<TipoUsuario>("trabajador");
 
+  // Controlados a proposito: React vacia los campos no controlados en cuanto
+  // la action termina, tambien cuando devuelve errores. Sin esto, un correo
+  // repetido —el fallo mas comun de esta pantalla— obligaba a teclear otra vez
+  // los cuatro datos de la persona.
+  const { campo } = useCampos({
+    nombre: "",
+    apellido: "",
+    correo: "",
+    telefono: "",
+    cargo: "",
+  });
+
   const errores = estado.errores ?? {};
   const esTrabajador = tipo === "trabajador";
 
@@ -216,7 +228,7 @@ export function FormularioNuevoUsuario({
       <div className="grid grid-cols-2 gap-3.5">
         <Campo
           id="nuevo-nombre"
-          name="nombre"
+          {...campo("nombre")}
           etiqueta="Nombre"
           placeholder="Nombre"
           autoComplete="off"
@@ -227,7 +239,7 @@ export function FormularioNuevoUsuario({
 
         <Campo
           id="nuevo-apellido"
-          name="apellido"
+          {...campo("apellido")}
           etiqueta="Apellido"
           placeholder="Apellido"
           autoComplete="off"
@@ -238,7 +250,7 @@ export function FormularioNuevoUsuario({
 
         <Campo
           id="nuevo-correo"
-          name="correo"
+          {...campo("correo")}
           type="email"
           inputMode="email"
           etiqueta="Correo"
@@ -256,7 +268,7 @@ export function FormularioNuevoUsuario({
 
         <Campo
           id="nuevo-telefono"
-          name="telefono"
+          {...campo("telefono")}
           type="tel"
           inputMode="tel"
           etiqueta="Telefono"
@@ -354,7 +366,7 @@ export function FormularioNuevoUsuario({
 
             <Campo
               id="nuevo-cargo-libre"
-              name="cargo"
+              {...campo("cargo")}
               etiqueta="Cargo"
               opcional
               placeholder="Gerente de mercadeo"

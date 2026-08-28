@@ -8,3 +8,4 @@ export { Avatar, iniciales } from "./Avatar";
 export type { TamanoAvatar } from "./Avatar";
 export { Etiqueta, Estado } from "./Etiqueta";
 export { Alerta } from "./Alerta";
+export { useCampos } from "./useCampos";

@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 
 import { guardarRegla } from "@/actions/hooksDocumentacion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, Selector, useCampos } from "@/components/ui";
 import { ESTANDAR_INSERT, ESTANDAR_VOZ } from "@/lib/hooks/listas";
 import { ESTADO_INICIAL } from "@/types";
 import type { Empresa, ReglaHook } from "@/types";
@@ -42,6 +42,19 @@ export function FormularioRegla({
     String(regla?.maxPalabrasInsert ?? ESTANDAR_INSERT),
   );
 
+  // Controlados a proposito: React vacia los campos no controlados en cuanto
+  // la action termina, tambien cuando devuelve errores. Los limites y el
+  // cliente ya lo estaban porque el aviso de limite ampliado se pinta en vivo.
+  const { campo } = useCampos({
+    etiqueta: regla?.etiqueta ?? "",
+    sector: regla?.sector ?? "",
+    preambulos: regla?.preambulos.join(", ") ?? "",
+    formulasGastadas: regla?.formulasGastadas.join(", ") ?? "",
+    terminosTension: regla?.terminosTension.join(", ") ?? "",
+  });
+
+  const [exigirPrueba, setExigirPrueba] = useState(regla?.exigirPrueba ?? true);
+
   const errores = estado.errores ?? {};
   const ampliada =
     Number(voz) > ESTANDAR_VOZ || Number(insert) > ESTANDAR_INSERT;
@@ -58,9 +71,8 @@ export function FormularioRegla({
         <div className="flex flex-col gap-3.5">
           <Campo
             id="regla-etiqueta"
-            name="etiqueta"
             etiqueta="Nombre de la regla"
-            defaultValue={regla?.etiqueta ?? ""}
+            {...campo("etiqueta")}
             placeholder="Estandar hosteleria"
             maxLength={120}
             required
@@ -85,10 +97,9 @@ export function FormularioRegla({
 
           <Campo
             id="regla-sector"
-            name="sector"
             etiqueta="Sector"
             opcional
-            defaultValue={regla?.sector ?? ""}
+            {...campo("sector")}
             placeholder="Hosteleria"
             maxLength={120}
             disabled={empresaId !== ""}
@@ -144,30 +155,27 @@ export function FormularioRegla({
         <div className="flex flex-col gap-3.5">
           <Campo
             id="regla-preambulos"
-            name="preambulos"
             etiqueta="Preambulos a detectar"
             opcional
-            defaultValue={regla?.preambulos.join(", ") ?? ""}
+            {...campo("preambulos")}
             placeholder="hola, buenas, chicos"
             maxLength={1200}
           />
 
           <Campo
             id="regla-formulas"
-            name="formulasGastadas"
             etiqueta="Formulas gastadas"
             opcional
-            defaultValue={regla?.formulasGastadas.join(", ") ?? ""}
+            {...campo("formulasGastadas")}
             placeholder="espera al final, no vas a creer"
             maxLength={1200}
           />
 
           <Campo
             id="regla-tension"
-            name="terminosTension"
             etiqueta="Terminos de tension"
             opcional
-            defaultValue={regla?.terminosTension.join(", ") ?? ""}
+            {...campo("terminosTension")}
             placeholder="error, deja de, falla"
             maxLength={1200}
           />
@@ -177,7 +185,8 @@ export function FormularioRegla({
           <input
             type="checkbox"
             name="exigirPrueba"
-            defaultChecked={regla?.exigirPrueba ?? true}
+            checked={exigirPrueba}
+            onChange={(evento) => setExigirPrueba(evento.target.checked)}
             className="mt-0.5 size-[18px] shrink-0 accent-[var(--acento)]"
           />
           <span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Campo } from "@/components/ui";
+import { Campo, useCampos } from "@/components/ui";
 
 /**
  * Los campos de un registro de metricas, y la lectura del hook rate.
@@ -58,6 +58,21 @@ export function CamposMetricas({
   cruzados: boolean;
   errorVistas?: string;
 }) {
+  /*
+   * Impresiones y vistas las lleva el padre porque con ellas pinta el hook
+   * rate en vivo. Las otras cuatro y el aprendizaje se controlan aqui por otra
+   * razon: React vacia los campos no controlados al terminar la action, asi
+   * que cruzar impresiones y vistas —el error que este formulario detecta a
+   * proposito— borraba de paso las cuatro cifras que ya estaban bien.
+   */
+  const { campo } = useCampos({
+    meGusta: "",
+    compartidos: "",
+    clics: "",
+    guardados: "",
+    aprendizaje: "",
+  });
+
   return (
     <>
       <div className="grid gap-3.5 sm:grid-cols-3">
@@ -99,7 +114,7 @@ export function CamposMetricas({
         */}
         <Campo
           id={`${prefijo}-me-gusta`}
-          name="meGusta"
+          {...campo("meGusta")}
           etiqueta="Me gusta"
           inputMode="numeric"
           placeholder="0"
@@ -107,7 +122,7 @@ export function CamposMetricas({
 
         <Campo
           id={`${prefijo}-compartidos`}
-          name="compartidos"
+          {...campo("compartidos")}
           etiqueta="Compartidos"
           inputMode="numeric"
           placeholder="0"
@@ -115,7 +130,7 @@ export function CamposMetricas({
 
         <Campo
           id={`${prefijo}-clics`}
-          name="clics"
+          {...campo("clics")}
           etiqueta="Clics"
           inputMode="numeric"
           placeholder="0"
@@ -123,7 +138,7 @@ export function CamposMetricas({
 
         <Campo
           id={`${prefijo}-guardados`}
-          name="guardados"
+          {...campo("guardados")}
           etiqueta="Guardados"
           inputMode="numeric"
           placeholder="0"
@@ -142,7 +157,7 @@ export function CamposMetricas({
 
         <textarea
           id={`${prefijo}-aprendizaje`}
-          name="aprendizaje"
+          {...campo("aprendizaje")}
           rows={3}
           maxLength={600}
           placeholder="Que mecanismo repetir la proxima vez, y cual no."

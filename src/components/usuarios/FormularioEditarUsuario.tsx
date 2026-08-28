@@ -5,7 +5,7 @@ import { Check, Mail, Phone } from "lucide-react";
 
 import { editarUsuario } from "@/actions/usuarios";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, Selector, useCampos } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import type {
@@ -57,6 +57,17 @@ export function FormularioEditarUsuario({
   // arriba queda fuera de la vista de quien acaba de pulsar el boton.
   useAvisoDeAccion(estado);
 
+  // Controlados a proposito: React vacia los campos no controlados en cuanto
+  // la action termina, tambien cuando devuelve errores. Sin esto, un correo
+  // repetido borraba tambien el nombre y el telefono ya corregidos.
+  const { campo } = useCampos({
+    nombre: usuario.nombre,
+    apellido: usuario.apellido,
+    correo: usuario.email,
+    telefono: usuario.telefono ?? "",
+    cargo: usuario.cargo ?? "",
+  });
+
   const errores = estado.errores ?? {};
   const esTrabajador = usuario.tipo === "trabajador";
 
@@ -77,9 +88,8 @@ export function FormularioEditarUsuario({
         <div className="grid grid-cols-2 gap-3.5">
           <Campo
             id="editar-nombre"
-            name="nombre"
             etiqueta="Nombre"
-            defaultValue={usuario.nombre}
+            {...campo("nombre")}
             autoComplete="off"
             maxLength={60}
             required
@@ -88,9 +98,8 @@ export function FormularioEditarUsuario({
 
           <Campo
             id="editar-apellido"
-            name="apellido"
             etiqueta="Apellido"
-            defaultValue={usuario.apellido}
+            {...campo("apellido")}
             autoComplete="off"
             maxLength={60}
             required
@@ -99,11 +108,10 @@ export function FormularioEditarUsuario({
 
           <Campo
             id="editar-correo"
-            name="correo"
             type="email"
             inputMode="email"
             etiqueta="Correo"
-            defaultValue={usuario.email}
+            {...campo("correo")}
             autoComplete="off"
             autoCapitalize="none"
             spellCheck={false}
@@ -117,12 +125,11 @@ export function FormularioEditarUsuario({
 
           <Campo
             id="editar-telefono"
-            name="telefono"
             type="tel"
             inputMode="tel"
             etiqueta="Telefono"
             opcional
-            defaultValue={usuario.telefono ?? ""}
+            {...campo("telefono")}
             autoComplete="off"
             maxLength={30}
             icono={<Phone />}
@@ -192,10 +199,9 @@ export function FormularioEditarUsuario({
 
               <Campo
                 id="editar-cargo-libre"
-                name="cargo"
                 etiqueta="Cargo"
                 opcional
-                defaultValue={usuario.cargo ?? ""}
+                {...campo("cargo")}
                 autoComplete="off"
                 maxLength={80}
                 ayuda="Su puesto en su propia empresa. Es descriptivo, no da permisos."

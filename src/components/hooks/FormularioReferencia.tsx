@@ -5,7 +5,7 @@ import { Check, CircleAlert } from "lucide-react";
 
 import { guardarReferencia } from "@/actions/hooksDocumentacion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, Selector, useCampos } from "@/components/ui";
 import { PLATAFORMAS, TERRITORIOS } from "@/lib/hooks/catalogo";
 import { ESTADO_INICIAL } from "@/types";
 import type { ReferenciaHook } from "@/types";
@@ -32,6 +32,17 @@ export function FormularioReferencia({
   useAvisoDeAccion(estado);
   const errores = estado.errores ?? {};
 
+  // Controlados a proposito: React vacia los campos no controlados en cuanto
+  // la action termina, tambien cuando devuelve errores. Sin esto, olvidar la
+  // lectura borraba el hook que se acababa de transcribir.
+  const { campo } = useCampos({
+    hablado: referencia?.hablado ?? "",
+    insertTitulo: referencia?.insertTitulo ?? "",
+    lectura: referencia?.lectura ?? "",
+    urlFuente: referencia?.urlFuente ?? "",
+    etiquetas: referencia?.etiquetas.join(", ") ?? "",
+  });
+
   return (
     <form action={enviar} noValidate className="flex min-h-0 flex-1 flex-col">
       <PanelCuerpo>
@@ -47,10 +58,9 @@ export function FormularioReferencia({
             </label>
             <textarea
               id="ref-hablado"
-              name="hablado"
+              {...campo("hablado")}
               rows={3}
               maxLength={600}
-              defaultValue={referencia?.hablado ?? ""}
               placeholder="La frase, pregunta o escena de apertura…"
               className={[
                 "suave w-full rounded-xl border-[1.5px] border-borde bg-campo px-3.5 py-3",
@@ -68,10 +78,9 @@ export function FormularioReferencia({
 
           <Campo
             id="ref-insert"
-            name="insertTitulo"
+            {...campo("insertTitulo")}
             etiqueta="Insert-Titulo"
             opcional
-            defaultValue={referencia?.insertTitulo ?? ""}
             placeholder="El nucleo breve que aparece en pantalla"
             maxLength={600}
           />
@@ -82,10 +91,9 @@ export function FormularioReferencia({
         <div>
           <textarea
             id="ref-lectura"
-            name="lectura"
+            {...campo("lectura")}
             rows={4}
             maxLength={600}
-            defaultValue={referencia?.lectura ?? ""}
             placeholder="Ej.: abre con contraste y muestra la prueba antes del segundo tres."
             className={[
               "suave w-full rounded-xl border-[1.5px] border-borde bg-campo px-3.5 py-3",
@@ -135,12 +143,11 @@ export function FormularioReferencia({
 
           <Campo
             id="ref-url"
-            name="urlFuente"
+            {...campo("urlFuente")}
             etiqueta="Fuente"
             opcional
             type="url"
             inputMode="url"
-            defaultValue={referencia?.urlFuente ?? ""}
             placeholder="https://…"
             maxLength={1000}
             error={errores.urlFuente}
@@ -149,10 +156,9 @@ export function FormularioReferencia({
 
           <Campo
             id="ref-etiquetas"
-            name="etiquetas"
+            {...campo("etiquetas")}
             etiqueta="Etiquetas"
             opcional
-            defaultValue={referencia?.etiquetas.join(", ") ?? ""}
             placeholder="antes/despues, precio, tutorial"
             maxLength={500}
             ayuda="Separadas por comas. Alimentan la busqueda del banco."

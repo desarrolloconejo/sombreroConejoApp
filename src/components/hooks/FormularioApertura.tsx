@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, type ComponentProps } from "react";
 import { Check, CircleAlert } from "lucide-react";
 
 import { guardarApertura } from "@/actions/hooksDocumentacion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, Selector } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, Selector, useCampos } from "@/components/ui";
 import { MECANISMOS, TERRITORIOS } from "@/lib/hooks/catalogo";
 import { ESTADO_INICIAL } from "@/types";
 import type { Apertura } from "@/types";
@@ -31,25 +31,26 @@ const TEXTAREA = [
 
 const ERROR = "mt-1.5 text-[11.5px] font-medium text-blackberry dark-tema:text-[#e9a9cd]";
 
+/**
+ * `resto` recibe lo que devuelve `campo(...)`: name, value y onChange. El area
+ * queda controlada, y por eso un error de validacion ya no borra lo escrito.
+ */
 function Area({
   id,
-  name,
   etiqueta,
   filas = 3,
-  valor,
   marcador,
   ayuda,
   error,
+  ...resto
 }: {
   id: string;
-  name: string;
   etiqueta: string;
   filas?: number;
-  valor: string;
   marcador: string;
   ayuda?: string;
   error?: string;
-}) {
+} & Omit<ComponentProps<"textarea">, "id" | "className" | "rows" | "placeholder">) {
   return (
     <div>
       <label htmlFor={id} className="mb-2 block text-xs font-semibold">
@@ -57,12 +58,11 @@ function Area({
       </label>
       <textarea
         id={id}
-        name={name}
         rows={filas}
         maxLength={600}
-        defaultValue={valor}
         placeholder={marcador}
         className={[TEXTAREA, error ? "border-blackberry" : ""].join(" ")}
+        {...resto}
       />
       {ayuda && (
         <p className="mt-1.5 text-[11.5px] leading-relaxed text-suave">{ayuda}</p>
@@ -89,7 +89,19 @@ export function FormularioApertura({
   // arriba queda fuera de la vista de quien acaba de pulsar el boton.
   useAvisoDeAccion(estado);
   const errores = estado.errores ?? {};
-  const marcados = apertura?.mecanismos ?? [];
+
+  // Controlados a proposito: React vacia los campos no controlados en cuanto
+  // la action termina, tambien cuando devuelve errores.
+  const { campo } = useCampos({
+    plantilla: apertura?.plantilla ?? "",
+    ejemplo: apertura?.ejemplo ?? "",
+    insertTitulo: apertura?.insertTitulo ?? "",
+    direccionEdicion: apertura?.direccionEdicion ?? "",
+    usalaCuando: apertura?.usalaCuando ?? "",
+  });
+
+  // Las casillas tampoco sobreviven al vaciado, asi que su marca vive aqui.
+  const [marcados, setMarcados] = useState<string[]>(apertura?.mecanismos ?? []);
 
   return (
     <form action={enviar} noValidate className="flex min-h-0 flex-1 flex-col">
@@ -129,7 +141,14 @@ export function FormularioApertura({
                   type="checkbox"
                   name="mecanismos"
                   value={m.slug}
-                  defaultChecked={marcados.includes(m.slug)}
+                  checked={marcados.includes(m.slug)}
+                  onChange={(evento) =>
+                    setMarcados((previos) =>
+                      evento.target.checked
+                        ? [...previos, m.slug]
+                        : previos.filter((uno) => uno !== m.slug),
+                    )
+                  }
                   className="sr-only"
                 />
                 {m.nombre}
@@ -148,9 +167,8 @@ export function FormularioApertura({
         <div className="flex flex-col gap-3.5">
           <Area
             id="ap-plantilla"
-            name="plantilla"
+            {...campo("plantilla")}
             etiqueta="Plantilla"
-            valor={apertura?.plantilla ?? ""}
             marcador="Nadie te dice que [lo que se calla] cuando [situacion]…"
             ayuda="Lo que va entre [corchetes] es lo que hay que sustituir por la verdad del cliente. Se adapta la estructura, nunca las palabras."
             error={errores.plantilla}
@@ -158,19 +176,17 @@ export function FormularioApertura({
 
           <Area
             id="ap-ejemplo"
-            name="ejemplo"
+            {...campo("ejemplo")}
             etiqueta="Ejemplo hablado"
             filas={2}
-            valor={apertura?.ejemplo ?? ""}
             marcador="La plantilla ya resuelta para un cliente concreto"
             error={errores.ejemplo}
           />
 
           <Campo
             id="ap-insert"
-            name="insertTitulo"
+            {...campo("insertTitulo")}
             etiqueta="Insert-Titulo sugerido"
-            defaultValue={apertura?.insertTitulo ?? ""}
             placeholder="Seis palabras o menos"
             maxLength={600}
             error={errores.insertTitulo}
@@ -182,20 +198,18 @@ export function FormularioApertura({
         <div className="flex flex-col gap-3.5">
           <Area
             id="ap-direccion"
-            name="direccionEdicion"
+            {...campo("direccionEdicion")}
             etiqueta="Direccion para edicion"
             filas={2}
-            valor={apertura?.direccionEdicion ?? ""}
             marcador="Plano, corte y ritmo: lo que edicion ejecuta sin interpretar"
             error={errores.direccionEdicion}
           />
 
           <Area
             id="ap-cuando"
-            name="usalaCuando"
+            {...campo("usalaCuando")}
             etiqueta="Usala cuando"
             filas={2}
-            valor={apertura?.usalaCuando ?? ""}
             marcador="La situacion en la que esta apertura es la acertada"
             error={errores.usalaCuando}
           />
