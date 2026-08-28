@@ -54,16 +54,17 @@ export default async function PaginaMetricas(
   );
 
   /*
-   * La ficha que llega ya elegida desde la lista.
+   * La ficha que llega elegida desde la lista.
    *
-   * Se valida contra las pendientes en lugar de confiar en la URL: un
-   * "?ficha=999" escrito a mano no debe dejar el desplegable en un estado que
-   * no corresponde a ninguna opcion.
+   * Se resuelve contra las pendientes en lugar de confiar en la URL: un
+   * "?ficha=999" escrito a mano, o el de una pieza que ya se midio, no debe
+   * dejar el formulario apuntando a algo que no esta en la lista.
+   *
+   * Se pasa la ficha entera y no las cincuenta: quitado el desplegable, el
+   * formulario solo necesita la que se esta midiendo.
    */
   const pedida = typeof parametros.ficha === "string" ? parametros.ficha : "";
-  const fichaInicial = pendientes.filas.some((f) => String(f.id) === pedida)
-    ? pedida
-    : "";
+  const elegida = pendientes.filas.find((f) => String(f.id) === pedida) ?? null;
 
   return (
     <Wrapper
@@ -82,17 +83,18 @@ export default async function PaginaMetricas(
           <PendientesPaso
             fichas={pendientes.filas}
             titulo="Esperan sus numeros"
-            descripcion="Piezas auditadas y publicadas a las que solo les faltan las metricas para quedar terminadas."
+            descripcion="Pulsa una para rellenar sus metricas aqui debajo."
             accion="Registrar"
             hrefDe={(ficha) => `${RUTA}?ficha=${ficha.id}`}
+            activoId={elegida?.id ?? null}
             vacio="Ninguna pieza espera numeros."
           />
 
           <div className="mt-5">
             <FormularioMetricas
-              fichas={pendientes.filas}
-              fichaInicial={fichaInicial}
-              guardadas={[...guardadas]}
+              ficha={elegida}
+              yaEnBanco={elegida !== null && guardadas.has(elegida.id)}
+              rutaLimpia={RUTA}
             />
           </div>
         </>

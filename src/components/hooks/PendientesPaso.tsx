@@ -30,6 +30,7 @@ export function PendientesPaso({
   descripcion,
   accion,
   hrefDe,
+  activoId = null,
   vacio,
 }: {
   fichas: FichaConResultado[];
@@ -38,6 +39,14 @@ export function PendientesPaso({
   /** El verbo del boton de cada fila: "Auditar", "Registrar"... */
   accion: string;
   hrefDe: (ficha: FichaConResultado) => string;
+
+  /**
+   * La fila que se esta trabajando ahora mismo, si la lista manda sobre algo
+   * que hay debajo. Opcional: en el auditor cada fila lleva a otra pantalla y
+   * no hay nada que resaltar.
+   */
+  activoId?: number | null;
+
   /** Que decir cuando no hay ninguna. */
   vacio: string;
 }) {
@@ -60,12 +69,23 @@ export function PendientesPaso({
         <p className="px-5 py-6 text-center text-[12.5px] text-suave">{vacio}</p>
       ) : (
         <ul>
-          {fichas.map((ficha) => (
+          {fichas.map((ficha) => {
+            const activa = ficha.id === activoId;
+
+            return (
             <li key={ficha.id}>
               <Link
                 href={hrefDe(ficha)}
                 scroll={false}
-                className="suave grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-borde px-5 py-3.5 last:border-b-0 hover:bg-acento-tenue"
+                aria-current={activa ? "true" : undefined}
+                className={[
+                  "suave grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4",
+                  "border-b border-borde px-5 py-3.5 last:border-b-0 hover:bg-acento-tenue",
+                  // La elegida se marca con una barra a la izquierda y fondo
+                  // tenue: sin esto, con el formulario debajo no se sabe cual
+                  // de las filas es la que se esta rellenando.
+                  activa ? "border-l-[3px] border-l-acento bg-acento-tenue pl-[17px]" : "",
+                ].join(" ")}
               >
                 <span className="min-w-0">
                   <span className="block truncate text-[13.5px] font-semibold">
@@ -96,13 +116,14 @@ export function PendientesPaso({
                   )}
 
                   <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-acento">
-                    {accion}
-                    <ArrowRight aria-hidden="true" className="size-4" />
+                    {activa ? "Rellenando" : accion}
+                    {!activa && <ArrowRight aria-hidden="true" className="size-4" />}
                   </span>
                 </span>
               </Link>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </section>
