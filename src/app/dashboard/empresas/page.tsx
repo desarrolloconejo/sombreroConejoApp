@@ -166,12 +166,6 @@ export default async function PaginaEmpresas(
       kicker="Clientes"
       titulo="Empresas"
       descripcion="Las cuentas que atiende la agencia. Aqui se registran y se mantienen; las personas que las representan se dan de alta en Usuarios."
-      accion={
-        <BotonEnlace href={hrefAlta} tamano="chico">
-          <Plus aria-hidden="true" />
-          Nueva empresa
-        </BotonEnlace>
-      }
     >
       <Listado
         ruta={RUTA}
