@@ -116,7 +116,7 @@ Las dos baterias de pruebas del modulo de hooks:
 
 ```bash
 docker compose exec app-dev npm run prueba:auditor  # 19 casos, sin base de datos
-docker compose exec app-dev npm run prueba:modelos  # 40 casos, contra la base real
+docker compose exec app-dev npm run prueba:modelos  # 52 casos, contra la base real
 ```
 
 `prueba:modelos` escribe y borra sus propios registros, asi que se puede

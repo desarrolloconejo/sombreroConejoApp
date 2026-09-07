@@ -1634,3 +1634,114 @@ CREATE INDEX IF NOT EXISTS ediciones_ficha_idx
 
 Las fichas anteriores no tienen lineas, y el panel lo dice en lugar de fingir
 que no paso nada.
+
+---
+
+## Etapa 24 — Modulo de empresas
+
+Las empresas se podian crear desde un panel escondido en el canvas de hooks, y
+una vez creadas **no habia forma de verlas, editarlas ni retirarlas**. El
+modelo tenia `listarActivas` y `crear`, lo justo para alimentar un desplegable.
+
+### La division con Usuarios
+
+Aqui estan las **cuentas** que atiende la agencia; en Usuarios, las **personas**
+que las representan. Una empresa no da acceso a nada por si misma: lo que da
+permisos es vincularle un usuario, y eso sigue siendo cosa del otro modulo.
+
+La ficha de una empresa enlaza a sus contactos con `?empresa=N`. Ese filtro ya
+lo admitia el modelo de usuarios y no se ofrecia por ningun sitio; ahora la page
+lo valida, pero **no se anade a los chips**: es un filtro que existe y solo se
+alcanza por enlace.
+
+### El alta pasa a ser de administradores
+
+Nacio abierta al cargo `redes` por una razon buena: no existia otro sitio donde
+registrar una empresa, y quien escribe hooks era quien se topaba con que faltaba
+el cliente. Con el modulo ya hecho, la cartera vuelve a donde corresponde.
+
+El boton de «Nueva empresa» del canvas **no desaparece**. Quitarlo dejaria el
+mismo callejon sin salida de antes —un desplegable al que le falta un cliente y
+ninguna pista— y mandar a redes al modulo seria peor, porque el proxy le corta
+la ruta. Asi que el boton se queda y, segun quien lo pulse, lleva al modulo o
+abre un modal que dice a quien pedirselo.
+
+### Dos decisiones de datos
+
+**Los enlaces son columnas fijas, no una tabla puente.** Sitio, Instagram,
+TikTok, Facebook, YouTube y LinkedIn: la lista es corta y estable, y lo que se
+guarda es un enlace POR plataforma, no una coleccion de enlaces sueltos. Con una
+tabla aparte habria que hacer un JOIN y decidir un orden para pintar cinco
+campos que siempre son los mismos cinco.
+
+La lista vive en `validaciones` y la recorren **tanto la validacion como el
+formulario**. Con dos copias, anadir una red en un sitio y no en el otro deja un
+campo que se escribe y no se guarda. Se piden como URL completa: un handle
+suelto no se puede abrir, y adivinar el dominio para completarlo es inventarse
+un dato.
+
+**Los recuentos van por lote.** Contactos y piezas se piden para la pagina
+visible, como los demas del proyecto. Con un JOIN en la consulta principal
+habria que agrupar por todas las columnas de la empresa para pintar dos numeros
+y, peor, los dos agregados se multiplicarian entre si: una cuenta con 3
+contactos y 4 piezas daria 12 filas.
+
+### No se borra, se desactiva
+
+`clientes` y `fichas_hook` referencian a `empresas` con ON DELETE RESTRICT, asi
+que una cuenta con personas o con piezas no se puede borrar sin perder su
+historia. La confirmacion dice justo lo que NO se pierde —sus piezas siguen en
+el historial, sus contactos conservan la cuenta—, que es lo que de verdad quita
+el miedo a pulsar.
+
+Editar **no toca `activo`**: si viajara en el mismo UPDATE, guardar el telefono
+podria reactivar una cuenta que alguien cerro a proposito.
+
+### Un solo formulario para alta y edicion
+
+Al contrario que en usuarios, aqui no hacen falta dos. Alli el alta y la edicion
+piden cosas distintas —el tipo se elige al crear y no se cambia, la contrasena
+solo existe en el alta—; una empresa se describe con los mismos campos el primer
+dia y el ultimo. Con dos formularios habria dos copias de la lista de enlaces
+esperando a desincronizarse.
+
+### Verificado
+
+| Comprobacion | Resultado |
+| --- | --- |
+| `tsc --noEmit` y `eslint` | limpios |
+| `prueba:auditor` / `prueba:modelos` | 19/19 y 52/52 |
+| `/dashboard/empresas` como admin | 200, con listado, filtros y buscador |
+| `/dashboard/empresas` como redes | 307: el proxy lo corta |
+| Panel de alta | los once campos, incluidos los seis enlaces |
+| Paneles de ver, editar y estado | los tres abren con su contenido |
+| «Nueva empresa» en hooks siendo redes | modal explicando que lo hace un admin |
+| Enlaces sin rellenar | quedan NULL, no cadena vacia |
+| Busqueda | encuentra por nombre y por RIF |
+| Desactivar | la saca de las activas y la deja en el filtro |
+
+### Lo que hay que ejecutar en Neon
+
+Se suma a las tres migraciones que ya estaban pendientes. **Ningun cambio pisa
+datos existentes**: las seis columnas son TEXT anulables sin valor por defecto,
+asi que las empresas que ya hay quedan con NULL en todas.
+
+```sql
+DO $redes$
+BEGIN
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS sitio_web TEXT;
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS instagram TEXT;
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS tiktok    TEXT;
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS facebook  TEXT;
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS youtube   TEXT;
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS linkedin  TEXT;
+END
+$redes$;
+
+CREATE INDEX IF NOT EXISTS empresas_activo_idx ON empresas (activo);
+CREATE INDEX IF NOT EXISTS empresas_nombre_idx ON empresas (lower(nombre));
+```
+
+Los dos indices son nuevos porque el listado filtra por estado y ordena por
+nombre, y hasta ahora ninguna de las dos columnas tenia uno: la tabla se leia
+entera.
