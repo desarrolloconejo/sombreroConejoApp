@@ -564,6 +564,16 @@ async function principal(): Promise<void> {
     `${desactivadas.total} desactivada(s)`,
   );
 
+  // Es justo la diferencia con `listarActivas`, y de ella depende que el chip
+  // de Empresa en el listado de usuarios pueda nombrar lo que trae la URL.
+  const paraElChip = await empresas.nombres();
+
+  comprobar(
+    "Los nombres del filtro incluyen tambien las desactivadas",
+    paraElChip.some((e) => e.id === nueva.id && e.nombre === nueva.nombre),
+    `${paraElChip.length} nombre(s)`,
+  );
+
   const sinNadie = await clientes.contarPorEmpresas([nueva.id]);
   const sinPiezas = await fichas.contarPorEmpresas([nueva.id]);
 

@@ -1,4 +1,4 @@
-import type { Cargo, DefinicionFiltro } from "@/types";
+import type { Cargo, DefinicionFiltro, NombreEmpresa } from "@/types";
 
 /**
  * Los filtros del listado de usuarios.
@@ -11,7 +11,10 @@ import type { Cargo, DefinicionFiltro } from "@/types";
  * que se llame igual en toda la aplicacion.
  */
 
-export function filtrosUsuarios(cargos: Cargo[]): DefinicionFiltro[] {
+export function filtrosUsuarios(
+  cargos: Cargo[],
+  empresas: NombreEmpresa[],
+): DefinicionFiltro[] {
   return [
     {
       clave: "tipo",
@@ -41,6 +44,24 @@ export function filtrosUsuarios(cargos: Cargo[]): DefinicionFiltro[] {
       opciones: cargos.map((cargo) => ({
         valor: cargo.slug,
         texto: cargo.nombre,
+      })),
+    },
+
+    /*
+     * La empresa es al cliente lo que el area es al trabajador, y por eso va
+     * justo detras.
+     *
+     * Tiene chip porque tambien se llega por enlace: la ficha de una empresa
+     * manda aqui con "?empresa=N" para ver sus contactos. Sin chip, esa lista
+     * salia recortada sin nada que dijera por que ni como volver a verla
+     * entera; el parametro estaba en la URL y en ningun sitio mas.
+     */
+    {
+      clave: "empresa",
+      titulo: "Empresa",
+      opciones: empresas.map((empresa) => ({
+        valor: String(empresa.id),
+        texto: empresa.nombre,
       })),
     },
 

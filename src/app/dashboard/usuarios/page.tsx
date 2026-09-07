@@ -28,6 +28,7 @@ import * as usuariosModelo from "@/models/usuarios";
 import type {
   Cargo,
   FiltrosUsuarios,
+  NombreEmpresa,
   NombreRol,
   OrdenUsuarios,
   SlugCargo,
@@ -114,13 +115,18 @@ function comoCargos(
 }
 
 /**
- * La empresa NO tiene chip: llega solo por enlace, desde la ficha de un cliente
- * en el modulo de Empresas. Por eso se valida aqui y no se anade a
- * `filtrosUsuarios`: es un filtro que existe pero que no se ofrece.
+ * La empresa se valida contra las que existen, igual que el area: asi
+ * "?empresa=999" consulta como si no hubiera filtro en lugar de devolver una
+ * lista vacia sin explicacion.
  */
-function comoEmpresas(valores: string[] | undefined): number[] | undefined {
+function comoEmpresas(
+  valores: string[] | undefined,
+  empresas: NombreEmpresa[],
+): number[] | undefined {
   return soloValidos(
-    (valores ?? []).map(Number).filter((n) => Number.isInteger(n) && n > 0),
+    (valores ?? [])
+      .map(Number)
+      .filter((id) => empresas.some((empresa) => empresa.id === id)),
   );
 }
 
@@ -181,9 +187,13 @@ export default async function PaginaUsuarios(
     filtrosPermitidos: ["tipo", "rol", "cargo", "activo", "empresa"],
   });
 
-  // Las areas se consultan siempre porque alimentan los chips del filtro, y de
-  // paso son la lista blanca contra la que se valida el parametro `cargo`.
-  const cargos = await cargosModelo.listar();
+  // Areas y empresas se consultan siempre porque alimentan los chips del
+  // filtro, y de paso son la lista blanca contra la que se validan `cargo` y
+  // `empresa`. Las dos son consultas cortas y sin paginar.
+  const [cargos, empresas] = await Promise.all([
+    cargosModelo.listar(),
+    empresasModelo.nombres(),
+  ]);
 
   const filtros: FiltrosUsuarios = {
     busqueda: estado.busqueda || undefined,
@@ -191,7 +201,7 @@ export default async function PaginaUsuarios(
     rol: comoRoles(estado.filtros.rol),
     cargo: comoCargos(estado.filtros.cargo, cargos),
     activo: comoActivos(estado.filtros.activo),
-    empresaId: comoEmpresas(estado.filtros.empresa),
+    empresaId: comoEmpresas(estado.filtros.empresa, empresas),
     orden: comoOrden(estado.orden),
     direccion: estado.direccion,
     pagina: estado.pagina,
@@ -220,7 +230,7 @@ export default async function PaginaUsuarios(
         ruta={RUTA}
         estado={estado}
         columnas={columnasUsuarios(RUTA, estado)}
-        filtros={filtrosUsuarios(cargos)}
+        filtros={filtrosUsuarios(cargos, empresas)}
         filas={pagina.filas}
         total={pagina.total}
         totalPaginas={pagina.totalPaginas}

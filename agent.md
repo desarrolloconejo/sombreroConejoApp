@@ -1650,9 +1650,27 @@ que las representan. Una empresa no da acceso a nada por si misma: lo que da
 permisos es vincularle un usuario, y eso sigue siendo cosa del otro modulo.
 
 La ficha de una empresa enlaza a sus contactos con `?empresa=N`. Ese filtro ya
-lo admitia el modelo de usuarios y no se ofrecia por ningun sitio; ahora la page
-lo valida, pero **no se anade a los chips**: es un filtro que existe y solo se
-alcanza por enlace.
+lo admitia el modelo de usuarios y no se ofrecia por ningun sitio.
+
+Se probo primero **sin chip**, con el razonamiento de que era un filtro que
+solo se alcanza por enlace y no hacia falta ofrecerlo. Salio mal: al pulsar
+«contactos» la tabla llegaba recortada y **nada en la pantalla decia por que**.
+El parametro estaba en la URL y en ningun otro sitio; para volver a ver la
+lista entera habia que editar la barra de direcciones a mano.
+
+Asi que la empresa tiene chip, y va detras del area de la agencia porque es lo
+mismo para un cliente que el area para un trabajador. Sus opciones salen de
+`empresas.nombres()`, que devuelve **todas, tambien las desactivadas** —al
+reves que `listarActivas`, que alimenta las altas. Un desplegable de alta
+ofrece lo que se puede elegir; uno de filtro tiene que poder ponerle nombre a
+lo que ya viene en la URL, y a los contactos de una empresa cerrada se sigue
+llegando desde su ficha.
+
+De paso, `ListadoFiltros` dejo de creerse la URL a pies juntillas. Antes leia
+el parametro en crudo, asi que un `?empresa=999` escrito a mano pintaba un chip
+que anunciaba «999» sobre una tabla sin filtrar —las pages ya descartaban el
+valor antes de consultar—. Ahora el chip descarta lo que su propio grupo no
+sabe pintar, y las dos mitades cuentan la misma historia.
 
 ### El alta pasa a ser de administradores
 

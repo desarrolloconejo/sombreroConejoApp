@@ -26,6 +26,7 @@ export type {
   OrdenEmpresas,
   FiltrosEmpresas,
   ResumenEmpresa,
+  NombreEmpresa,
   Trabajador,
   Cliente,
 } from "./organizacion";

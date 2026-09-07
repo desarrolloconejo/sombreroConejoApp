@@ -108,6 +108,18 @@ export type ResumenEmpresa = Empresa & {
   piezas: number;
 };
 
+/**
+ * Una empresa reducida a lo que hace falta para nombrarla en una lista.
+ *
+ * Existe para el desplegable de filtro del modulo de usuarios, que solo pinta
+ * texto: traer la fila entera —RIF, direccion, seis enlaces— para eso seria
+ * pagar el ancho de banda de una ficha por cada opcion de un menu.
+ */
+export type NombreEmpresa = {
+  id: number;
+  nombre: string;
+};
+
 /** Vinculo de un usuario con el personal de la empresa. */
 export type Trabajador = {
   id: number;

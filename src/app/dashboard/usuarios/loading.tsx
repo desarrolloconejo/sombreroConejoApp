@@ -15,7 +15,7 @@ import { REJILLA_USUARIOS } from "@/components/usuarios";
  * el nombre del grupo y lo elegido: "Tipo de usuario Todos" ocupa menos que
  * "Estado de la cuenta Activos y desactivados".
  */
-const FILTROS = ["168px", "148px", "224px", "268px"];
+const FILTROS = ["168px", "148px", "224px", "150px", "268px"];
 
 /** Anchos de las celdas de cada fila, para que no salgan todas iguales. */
 const FILAS = [
@@ -55,7 +55,7 @@ export default function CargandoUsuarios() {
           </div>
 
           {/* Chips de filtro, agrupados igual que los de verdad */}
-          {/* Cuatro desplegables en una fila, no pastillas sueltas: es la
+          {/* Cinco desplegables en una fila, no pastillas sueltas: es la
               forma que tienen los filtros desde que se agruparon. */}
           <div className="flex flex-wrap items-center gap-2 border-b border-borde px-5 py-3">
             {FILTROS.map((ancho, indice) => (

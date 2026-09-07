@@ -48,13 +48,27 @@ export function ListadoFiltros({
 }) {
   if (filtros.length === 0) return null;
 
-  const hayAlguno = filtros.some((f) => (estado.filtros[f.clave] ?? []).length > 0);
+  /*
+   * SOLO CUENTA LO QUE EL GRUPO SABE PINTAR.
+   *
+   * La URL es texto y cualquiera puede escribir "?empresa=999". Las pages ya
+   * descartan esos valores antes de consultar, asi que la lista sale sin
+   * filtrar; el chip, en cambio, leia el parametro en crudo y acababa
+   * anunciando "999" sobre una tabla completa. Descartarlos aqui tambien deja
+   * las dos cosas contando la misma historia.
+   */
+  const elegidosDe = (filtro: DefinicionFiltro): string[] =>
+    (estado.filtros[filtro.clave] ?? []).filter((valor) =>
+      filtro.opciones.some((opcion) => opcion.valor === valor),
+    );
+
+  const hayAlguno = filtros.some((filtro) => elegidosDe(filtro).length > 0);
 
   return (
     // En movil se apilan, uno por fila; desde sm vuelven a compartirla
     <div className="flex flex-col gap-2 border-b border-borde px-5 py-3 sm:flex-row sm:flex-wrap sm:items-center">
       {filtros.map((filtro) => {
-        const elegidos = estado.filtros[filtro.clave] ?? [];
+        const elegidos = elegidosDe(filtro);
         const opciones = conOpcionTodos(filtro.opciones);
 
         /*

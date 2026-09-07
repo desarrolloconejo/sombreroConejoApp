@@ -10,6 +10,7 @@ import type {
   DatosNuevaEmpresa,
   Empresa,
   FiltrosEmpresas,
+  NombreEmpresa,
   Pagina,
 } from "@/types";
 
@@ -52,6 +53,22 @@ const COLUMNAS_ORDEN = {
 export async function listarActivas(): Promise<Empresa[]> {
   return consultar<Empresa>(
     `SELECT ${COLUMNAS} FROM empresas WHERE activo ORDER BY lower(nombre)`,
+  );
+}
+
+/**
+ * Solo el id y el nombre, de TODAS: lo que necesita un desplegable de filtro y
+ * nada mas.
+ *
+ * Incluye las desactivadas a proposito, al reves que `listarActivas`. Un
+ * desplegable de alta ofrece lo que se PUEDE ELEGIR; uno de filtro tiene que
+ * poder poner nombre a lo que ya viene en la URL, y a los contactos de una
+ * empresa desactivada se sigue llegando desde su ficha. Con solo las activas,
+ * ese enlace acabaria pintando un filtro sin nombre.
+ */
+export async function nombres(): Promise<NombreEmpresa[]> {
+  return consultar<NombreEmpresa>(
+    "SELECT id, nombre FROM empresas ORDER BY lower(nombre)",
   );
 }
 
