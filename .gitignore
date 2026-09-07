@@ -63,3 +63,8 @@ cookie-*.txt
 # SQL de produccion: se regenera con `npm run sql:produccion` y lleva dentro
 # los hashes de las contrasenas del seed. No hace falta versionarlo.
 /db/produccion.sql
+
+# SQL de migraciones sueltas para pegar en el panel de Neon. Es un apunte de un
+# despliegue concreto, no una fuente de verdad: el esquema vive entero en
+# db/schema.sql y de ahi se extraen estos bloques.
+/db/migraciones-pendientes.sql
