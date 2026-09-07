@@ -242,8 +242,11 @@ export function HeaderMovil({
           id={ID_CAJON}
           aria-label="Menu principal"
           className={[
-            "desliza absolute inset-y-0 left-0 flex w-[286px] flex-col overflow-y-auto",
-            "border-r border-nav-borde bg-nav px-4 pt-[22px] pb-[18px] text-nav-texto",
+            // Igual que el sidebar: el cajon NO se desplaza, solo la lista de
+            // modulos. Desplegando Hooks se iban de la vista la marca, el aspa
+            // de cerrar y el pie con el perfil.
+            "desliza absolute inset-y-0 left-0 flex w-[286px] flex-col overflow-hidden",
+            "border-r border-nav-borde bg-nav pt-[22px] pb-[18px] text-nav-texto",
             "shadow-[12px_0_40px_rgb(4_4_4/0.35)]",
             // Anclado a la izquierda: entra desplazandose hacia la derecha y se
             // retira por donde vino. La visibilidad se apaga al final del
@@ -254,7 +257,7 @@ export function HeaderMovil({
               : "invisible -translate-x-full [--dur-desliza:430ms]",
           ].join(" ")}
         >
-          <div className="flex items-center gap-[11px] px-1.5 pb-[22px]">
+          <div className="mx-4 flex shrink-0 items-center gap-[11px] px-1.5 pb-[22px]">
             <Marca tamano={30} className="shrink-0" />
             <span className="flex min-w-0 flex-col leading-none">
               <span className="text-[15px] font-bold tracking-[-0.015em]">
@@ -280,24 +283,31 @@ export function HeaderMovil({
             </button>
           </div>
 
-          <p className="px-2.5 pt-3 pb-[7px] text-[9.5px] font-semibold tracking-[0.14em] text-nav-suave uppercase">
-            General
-          </p>
+          {/*
+            Solo se desplaza la lista, igual que en el sidebar. `min-h-0` es lo
+            que deja encoger a un hijo flexible por debajo de su contenido; sin
+            el, el desbordamiento se escaparia al cajon entero.
+          */}
+          <div className="barra-fina min-h-0 flex-1 overflow-y-auto px-4">
+            <p className="px-2.5 pt-3 pb-[7px] text-[9.5px] font-semibold tracking-[0.14em] text-nav-suave uppercase">
+              General
+            </p>
 
-          <nav aria-label="Modulos" className="flex flex-col gap-[3px]">
-            {modulos.map((modulo) => (
-              <ItemNavegacion
-                key={modulo.href}
-                modulo={modulo}
-                ruta={ruta}
-                activo={activo}
-                medidas={MEDIDAS}
-                alNavegar={() => setAbierto(false)}
-              />
-            ))}
-          </nav>
+            <nav aria-label="Modulos" className="flex flex-col gap-[3px] pb-2">
+              {modulos.map((modulo) => (
+                <ItemNavegacion
+                  key={modulo.href}
+                  modulo={modulo}
+                  ruta={ruta}
+                  activo={activo}
+                  medidas={MEDIDAS}
+                  alNavegar={() => setAbierto(false)}
+                />
+              ))}
+            </nav>
+          </div>
 
-          <div className="mt-auto border-t border-nav-borde pt-3.5">
+          <div className="mx-4 shrink-0 border-t border-nav-borde pt-3.5">
 
             <form action={cerrarSesion}>
               <button

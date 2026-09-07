@@ -66,15 +66,25 @@ export function Sidebar({
   const nombreCompleto = `${usuario.nombre} ${usuario.apellido}`;
 
   return (
+    /*
+      SOLO SE DESPLAZA LA LISTA, NO EL SIDEBAR ENTERO.
+
+      Antes el `overflow-y-auto` estaba aqui, en el <aside>, asi que al
+      desplegar Hooks —seis submodulos— se iban de la vista la marca y, sobre
+      todo, el pie con el perfil y el cerrar sesion. Se notaba al anadir
+      Empresas, que fue el modulo que colmo el alto disponible.
+
+      Ahora el aside no se desplaza: reparte en tres tramos y solo el del medio
+      cede. La marca y el pie se quedan siempre donde estan.
+    */
     <aside
       className={[
         "hidden w-[268px] shrink-0 flex-col border-r border-nav-borde bg-nav",
-        "px-[18px] pt-[26px] pb-5 text-nav-texto",
-        "  ",
-        "lg:sticky lg:top-0 lg:flex lg:h-svh lg:overflow-y-auto",
+        "pt-[26px] pb-5 text-nav-texto",
+        "lg:sticky lg:top-0 lg:flex lg:h-svh lg:overflow-hidden",
       ].join(" ")}
     >
-      <div className="flex items-center gap-2.5 px-3 pb-6">
+      <div className="flex shrink-0 items-center gap-2.5 px-[30px] pb-6">
         <Marca tamano={30} className="text-acento" />
         <span className="flex min-w-0 flex-col leading-none">
           <span className="text-[15.5px] font-bold tracking-[-0.015em]">
@@ -86,23 +96,30 @@ export function Sidebar({
         </span>
       </div>
 
-      <p className="px-3 pt-2 pb-2.5 text-[9.5px] font-semibold tracking-[0.16em] text-nav-suave/70 uppercase">
-        General
-      </p>
+      {/*
+        `min-h-0` es lo que hace que esto funcione: sin el, un hijo flexible se
+        niega a encoger por debajo de su contenido y el desbordamiento se
+        escaparia al padre, que es justo lo que se quiere evitar.
+      */}
+      <div className="barra-fina min-h-0 flex-1 overflow-y-auto px-[18px]">
+        <p className="px-3 pt-2 pb-2.5 text-[9.5px] font-semibold tracking-[0.16em] text-nav-suave/70 uppercase">
+          General
+        </p>
 
-      <nav aria-label="Modulos" className="flex flex-col gap-1.5">
-        {modulos.map((modulo) => (
-          <ItemNavegacion
-            key={modulo.href}
-            modulo={modulo}
-            ruta={ruta}
-            activo={activo}
-            medidas={MEDIDAS}
-          />
-        ))}
-      </nav>
+        <nav aria-label="Modulos" className="flex flex-col gap-1.5 pb-2">
+          {modulos.map((modulo) => (
+            <ItemNavegacion
+              key={modulo.href}
+              modulo={modulo}
+              ruta={ruta}
+              activo={activo}
+              medidas={MEDIDAS}
+            />
+          ))}
+        </nav>
+      </div>
 
-      <div className="mt-auto flex flex-col gap-1 border-t border-nav-borde pt-4">
+      <div className="mx-[18px] flex shrink-0 flex-col gap-1 border-t border-nav-borde pt-4">
         <Link
           href="/dashboard/perfil"
           className={[

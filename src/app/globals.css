@@ -346,6 +346,65 @@
   );
 }
 
+/* ===========================================================================
+   BARRA FINA
+
+   Para las zonas que se desplazan dentro de un panel —la lista de modulos del
+   sidebar, sin ir mas lejos— donde la barra de siempre del navegador es una
+   franja gris que parte el fondo en dos.
+
+   Va en dos dialectos porque ninguno de los dos vale por si solo:
+   `scrollbar-width` y `scrollbar-color` los entienden Firefox y los Chromium
+   recientes; `::-webkit-scrollbar` cubre Safari y los Chromium viejos. Y se
+   pinta transparente en reposo: la barra aparece al pasar por encima, para que
+   la lista quieta se lea como una lista y no como un contenedor.
+   =========================================================================== */
+@utility barra-fina {
+  /*
+   * EL HUECO SE RESERVA SIEMPRE, HAYA BARRA O NO.
+   *
+   * Sin esto, la lista salta hacia la izquierda en cuanto aparece la barra: se
+   * nota al desplegar Hooks, que de golpe anade seis submodulos y convierte un
+   * contenedor que cabia en uno que no. El contenido se movia bajo el cursor
+   * justo cuando se acababa de pulsar algo.
+   *
+   * `stable` reserva el ancho de la barra desde el principio, asi que abrir y
+   * cerrar el desplegable ya no mueve nada de sitio. El precio son unos pocos
+   * pixeles de asimetria contra el borde derecho, invisibles en una columna de
+   * 268 px, y a cambio no hay dos numeros —hueco y relleno— que mantener
+   * cuadrados a mano.
+   */
+  scrollbar-gutter: stable;
+
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s var(--ease-suave);
+
+  &:hover,
+  &:focus-within {
+    scrollbar-color: var(--nav-borde) transparent;
+  }
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+    transition: background 0.2s var(--ease-suave);
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:focus-within::-webkit-scrollbar-thumb {
+    background: var(--nav-borde);
+  }
+}
+
 /* Quien pidio menos movimiento no recibe ninguno */
 @media (prefers-reduced-motion: reduce) {
   *,
