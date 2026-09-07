@@ -1,4 +1,4 @@
-import { consultarUno, ejecutar, type Ejecutor } from "@/lib/db";
+import { consultar, consultarUno, ejecutar, type Ejecutor } from "@/lib/db";
 import type { Cliente } from "@/types";
 
 /**
@@ -47,6 +47,33 @@ export async function buscarPorUsuarioId(
     [usuarioId],
     ejecutor,
   );
+}
+
+/**
+ * Cuantas personas de contacto ACTIVAS tiene cada empresa del lote.
+ *
+ * Se pregunta por la pagina entera de una vez: el listado pinta hasta veinte
+ * filas, y una consulta por fila serian veinte viajes para escribir un numero.
+ * Es el mismo patron que `referencias.fichasGuardadas`.
+ *
+ * Cuenta solo las activas porque el numero responde «a cuanta gente puedo
+ * escribirle en esta cuenta», y una cuenta desactivada no recibe nada.
+ */
+export async function contarPorEmpresas(
+  ids: number[],
+): Promise<Map<number, number>> {
+  if (ids.length === 0) return new Map();
+
+  const filas = await consultar<{ empresaId: number; total: string }>(
+    `SELECT c.empresa_id AS "empresaId", count(*)::text AS total
+     FROM clientes c
+     JOIN usuarios u ON u.id = c.usuario_id
+     WHERE c.empresa_id = ANY($1) AND u.activo
+     GROUP BY c.empresa_id`,
+    [ids],
+  );
+
+  return new Map(filas.map((fila) => [fila.empresaId, Number(fila.total)]));
 }
 
 /** Cambia la empresa o el cargo de un cliente. */

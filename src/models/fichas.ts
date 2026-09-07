@@ -268,6 +268,57 @@ export async function ultimaMedida(
 }
 
 /** Cuantas fichas hay en cada estado. Alimenta los contadores del recorrido. */
+/**
+ * Cuantas piezas tiene cada empresa del lote, en cualquier estado.
+ *
+ * Para el listado de empresas. Va por lote y no por fila, como los demas
+ * recuentos del proyecto. No filtra por usuario: la cartera es de la agencia,
+ * no de quien mira.
+ */
+export async function contarPorEmpresas(
+  ids: number[],
+): Promise<Map<number, number>> {
+  if (ids.length === 0) return new Map();
+
+  const filas = await consultar<{ empresaId: number; total: string }>(
+    `SELECT empresa_id AS "empresaId", count(*)::text AS total
+     FROM fichas_hook
+     WHERE empresa_id = ANY($1)
+     GROUP BY empresa_id`,
+    [ids],
+  );
+
+  return new Map(filas.map((fila) => [fila.empresaId, Number(fila.total)]));
+}
+
+/**
+ * Las piezas de UNA empresa, repartidas por estado. Para su ficha de detalle.
+ *
+ * Es `contarPorEstado` con otra condicion: alli la pregunta es «que estoy
+ * haciendo yo» y aqui «en que punto esta la cuenta».
+ */
+export async function contarPorEstadoDeEmpresa(
+  empresaId: number,
+): Promise<Record<EstadoFicha, number>> {
+  const filas = await consultar<{ estado: EstadoFicha; total: string }>(
+    `SELECT estado, count(*)::text AS total
+     FROM fichas_hook
+     WHERE empresa_id = $1
+     GROUP BY estado`,
+    [empresaId],
+  );
+
+  const conteo: Record<EstadoFicha, number> = {
+    borrador: 0,
+    auditada: 0,
+    medida: 0,
+  };
+
+  for (const fila of filas) conteo[fila.estado] = Number(fila.total);
+
+  return conteo;
+}
+
 export async function contarPorEstado(
   creadoPor: number,
 ): Promise<Record<EstadoFicha, number>> {

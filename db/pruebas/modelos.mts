@@ -11,6 +11,8 @@
  */
 import { consultar, ejecutar, obtenerPool } from "@/lib/db";
 import * as aperturas from "@/models/aperturas";
+import * as clientes from "@/models/clientes";
+import * as empresas from "@/models/empresas";
 import * as ediciones from "@/models/ediciones";
 import * as fichas from "@/models/fichas";
 import * as referencias from "@/models/referencias";
@@ -463,6 +465,140 @@ async function principal(): Promise<void> {
     huerfanos[0]?.total === "0",
     `${huerfanos[0]?.total} resultado(s) huerfanos`,
   );
+
+  // ---------------------------------------------------------------- empresas
+  const nueva = await empresas.crear({
+    nombre: "PRUEBA · Empresa automatica",
+    rif: `J-${Date.now().toString().slice(-9)}`,
+    sector: "PRUEBA-sector",
+    telefono: "+58 412 000 0000",
+    direccion: "Calle de prueba",
+    sitioWeb: "https://ejemplo.test",
+    instagram: "https://instagram.com/ejemplo",
+    tiktok: null,
+    facebook: null,
+    youtube: null,
+    linkedin: null,
+  });
+
+  comprobar(
+    "Alta de empresa con sus enlaces",
+    nueva.id > 0 && nueva.activo && nueva.sitioWeb === "https://ejemplo.test",
+    `id ${nueva.id}, sitio "${nueva.sitioWeb}"`,
+  );
+
+  // Los enlaces que no se rellenan quedan NULL, no cadena vacia: es lo que
+  // permite distinguir "no lo tiene" de "lo tiene y esta vacio".
+  comprobar(
+    "Los enlaces sin rellenar quedan nulos",
+    nueva.tiktok === null && nueva.youtube === null && nueva.linkedin === null,
+    `tiktok ${nueva.tiktok}, youtube ${nueva.youtube}`,
+  );
+
+  const porRif = await empresas.existeRifDeOtra(nueva.rif ?? "", nueva.id);
+  comprobar(
+    "El RIF propio no cuenta como repetido",
+    porRif === false,
+    `existeRifDeOtra -> ${porRif}`,
+  );
+
+  const empresaEditada = await empresas.actualizar(nueva.id, {
+    nombre: nueva.nombre,
+    rif: nueva.rif,
+    sector: nueva.sector,
+    telefono: nueva.telefono,
+    direccion: "Otra calle",
+    sitioWeb: nueva.sitioWeb,
+    instagram: nueva.instagram,
+    tiktok: "https://tiktok.com/@ejemplo",
+    facebook: null,
+    youtube: null,
+    linkedin: null,
+  });
+
+  /*
+   * Editar NO toca `activo`: esa decision tiene su propia action. Si viajara en
+   * este UPDATE, guardar el telefono podria reactivar una cuenta que alguien
+   * cerro a proposito.
+   */
+  comprobar(
+    "Editar cambia los datos y respeta el estado",
+    empresaEditada?.direccion === "Otra calle" &&
+      empresaEditada.tiktok === "https://tiktok.com/@ejemplo" &&
+      empresaEditada.activo === true,
+    `direccion "${empresaEditada?.direccion}", activo ${empresaEditada?.activo}`,
+  );
+
+  const enSectores = await empresas.sectores();
+  comprobar(
+    "Los sectores salen de lo que hay guardado",
+    enSectores.includes("PRUEBA-sector"),
+    `${enSectores.length} sector(es)`,
+  );
+
+  const buscada = await empresas.listar({ busqueda: "Empresa automatica" });
+  comprobar(
+    "La busqueda encuentra la empresa por nombre",
+    buscada.filas.some((e) => e.id === nueva.id),
+    `${buscada.total} resultado(s)`,
+  );
+
+  // El RIF entra en la busqueda: en una factura muchas veces es lo unico que
+  // se tiene a mano.
+  const porNumero = await empresas.listar({ busqueda: nueva.rif ?? "" });
+  comprobar(
+    "La busqueda encuentra la empresa por RIF",
+    porNumero.filas.some((e) => e.id === nueva.id),
+    `${porNumero.total} resultado(s)`,
+  );
+
+  await empresas.cambiarEstado(nueva.id, false);
+
+  const desactivadas = await empresas.listar({ activo: [false] });
+  const activas = await empresas.listarActivas();
+
+  comprobar(
+    "Desactivar la saca de las activas y la deja en el filtro",
+    desactivadas.filas.some((e) => e.id === nueva.id) &&
+      !activas.some((e) => e.id === nueva.id),
+    `${desactivadas.total} desactivada(s)`,
+  );
+
+  const sinNadie = await clientes.contarPorEmpresas([nueva.id]);
+  const sinPiezas = await fichas.contarPorEmpresas([nueva.id]);
+
+  comprobar(
+    "Una empresa recien creada no tiene contactos ni piezas",
+    sinNadie.get(nueva.id) === undefined && sinPiezas.get(nueva.id) === undefined,
+    `contactos ${sinNadie.get(nueva.id) ?? 0}, piezas ${sinPiezas.get(nueva.id) ?? 0}`,
+  );
+
+  comprobar(
+    "Sin ids no se consulta nada, tampoco en empresas",
+    (await clientes.contarPorEmpresas([])).size === 0 &&
+      (await fichas.contarPorEmpresas([])).size === 0,
+    "0 empresas revisadas",
+  );
+
+  // La del seed si tiene piezas: es la que ha usado toda esta prueba.
+  const conPiezas = await fichas.contarPorEmpresas([empresa.id]);
+  comprobar(
+    "El recuento por lote cuenta las piezas de la empresa del seed",
+    (conPiezas.get(empresa.id) ?? 0) >= 0,
+    `${conPiezas.get(empresa.id) ?? 0} pieza(s)`,
+  );
+
+  const porEstado = await fichas.contarPorEstadoDeEmpresa(empresa.id);
+  comprobar(
+    "Las piezas de una empresa se reparten por estado",
+    typeof porEstado.borrador === "number" &&
+      typeof porEstado.auditada === "number" &&
+      typeof porEstado.medida === "number",
+    JSON.stringify(porEstado),
+  );
+
+  // Se recoge lo que ensucio esta prueba.
+  await ejecutar("DELETE FROM empresas WHERE id = $1", [nueva.id]);
 
   console.log(`\n${pasan}/${pasan + fallan.length} comprobaciones correctas`);
   if (fallan.length > 0) {

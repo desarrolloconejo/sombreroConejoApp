@@ -23,6 +23,9 @@ export type {
   Cargo,
   Empresa,
   DatosNuevaEmpresa,
+  OrdenEmpresas,
+  FiltrosEmpresas,
+  ResumenEmpresa,
   Trabajador,
   Cliente,
 } from "./organizacion";

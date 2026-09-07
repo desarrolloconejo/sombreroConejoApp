@@ -1,44 +1,152 @@
-import { consultar, consultarUno, ejecutar, escaparLike, type Ejecutor } from "@/lib/db";
-import type { DatosNuevaEmpresa, Empresa } from "@/types";
+import {
+  consultar,
+  consultarUno,
+  ejecutar,
+  escaparLike,
+  identificadorSeguro,
+  type Ejecutor,
+} from "@/lib/db";
+import type {
+  DatosNuevaEmpresa,
+  Empresa,
+  FiltrosEmpresas,
+  Pagina,
+} from "@/types";
 
-/** Consultas sobre la tabla empresas. */
+/**
+ * Consultas sobre empresas: los clientes de la agencia.
+ *
+ * NO SE BORRAN, SE DESACTIVAN
+ * ---------------------------
+ * `clientes` y `fichas_hook` la referencian con ON DELETE RESTRICT, asi que la
+ * base impide borrar una empresa con personas o con piezas. Y una empresa sin
+ * nada tampoco hace falta borrarla. Por eso aqui no hay `borrar`: hay
+ * `cambiarEstado`, igual que en usuarios.
+ *
+ * `listarActivas` alimenta los desplegables de otros modulos y `listar` alimenta
+ * el listado de este. Son dos consultas distintas a proposito: un desplegable
+ * quiere todas las que se pueden elegir, sin paginar y sin las desactivadas.
+ */
 
 const COLUMNAS = `
-  id,
-  nombre,
-  rif,
-  sector,
-  telefono,
-  direccion,
+  id, nombre, rif, sector, telefono, direccion,
+  sitio_web      AS "sitioWeb",
+  instagram,
+  tiktok,
+  facebook,
+  youtube,
+  linkedin,
   logo_url       AS "logoUrl",
   activo,
   creado_en      AS "creadoEn",
   actualizado_en AS "actualizadoEn"
 `;
 
-/** Empresas activas, ordenadas por nombre. Alimenta el selector de clientes. */
+/* Las columnas por las que se puede ordenar, con su nombre real en la tabla. */
+const COLUMNAS_ORDEN = {
+  nombre: "lower(nombre)",
+  creadoEn: "creado_en",
+} as const;
+
+/** Las que se pueden elegir. Alimenta los desplegables de hooks y usuarios. */
 export async function listarActivas(): Promise<Empresa[]> {
   return consultar<Empresa>(
-    `SELECT ${COLUMNAS} FROM empresas WHERE activo ORDER BY nombre`,
+    `SELECT ${COLUMNAS} FROM empresas WHERE activo ORDER BY lower(nombre)`,
   );
 }
 
-/** Todas las empresas, activas o no. */
-export async function listar(busqueda?: string): Promise<Empresa[]> {
-  if (!busqueda?.trim()) {
-    return consultar<Empresa>(`SELECT ${COLUMNAS} FROM empresas ORDER BY nombre`);
+/**
+ * El listado del modulo, paginado y con filtros.
+ *
+ * Mismo patron que `usuarios.listar`: las condiciones se acumulan con sus
+ * marcadores, los filtros de lista van con `= ANY($n)` y la clave de orden pasa
+ * por `identificadorSeguro` porque llega de la URL.
+ */
+export async function listar(
+  filtros: FiltrosEmpresas = {},
+): Promise<Pagina<Empresa>> {
+  const pagina = Math.max(1, Math.trunc(filtros.pagina ?? 1));
+  const porPagina = Math.min(100, Math.max(1, Math.trunc(filtros.porPagina ?? 20)));
+
+  const condiciones: string[] = [];
+  const valores: unknown[] = [];
+
+  if (filtros.busqueda?.trim()) {
+    valores.push(`%${escaparLike(filtros.busqueda.trim())}%`);
+    const marcador = `$${valores.length}`;
+
+    // El RIF entra en la busqueda porque es como se identifica a una empresa
+    // en una factura, y muchas veces es lo unico que se tiene a mano.
+    condiciones.push(
+      `(nombre ILIKE ${marcador} ESCAPE '\\'
+        OR rif ILIKE ${marcador} ESCAPE '\\')`,
+    );
   }
 
-  return consultar<Empresa>(
+  if (filtros.sector?.length) {
+    valores.push(filtros.sector);
+    condiciones.push(`sector = ANY($${valores.length})`);
+  }
+
+  if (filtros.activo?.length) {
+    valores.push(filtros.activo);
+    condiciones.push(`activo = ANY($${valores.length})`);
+  }
+
+  const donde = condiciones.length > 0 ? `WHERE ${condiciones.join(" AND ")}` : "";
+
+  const claveOrden = identificadorSeguro(
+    filtros.orden ?? "nombre",
+    Object.keys(COLUMNAS_ORDEN) as (keyof typeof COLUMNAS_ORDEN)[],
+  );
+  const columnaOrden = COLUMNAS_ORDEN[claveOrden];
+  const direccion = identificadorSeguro(filtros.direccion ?? "asc", ["asc", "desc"]);
+
+  const totales = await consultarUno<{ total: string }>(
+    `SELECT count(*)::text AS total FROM empresas ${donde}`,
+    valores,
+  );
+
+  const total = Number(totales?.total ?? 0);
+
+  valores.push(porPagina, (pagina - 1) * porPagina);
+
+  const filas = await consultar<Empresa>(
     `SELECT ${COLUMNAS}
      FROM empresas
-     WHERE nombre ILIKE $1 ESCAPE '\\' OR rif ILIKE $1 ESCAPE '\\'
-     ORDER BY nombre`,
-    [`%${escaparLike(busqueda.trim())}%`],
+     ${donde}
+     ORDER BY ${columnaOrden} ${direccion.toUpperCase()} NULLS LAST, id DESC
+     LIMIT $${valores.length - 1} OFFSET $${valores.length}`,
+    valores,
   );
+
+  return {
+    filas,
+    total,
+    pagina,
+    porPagina,
+    totalPaginas: Math.max(1, Math.ceil(total / porPagina)),
+  };
 }
 
-/** Busca una empresa por su identificador. */
+/**
+ * Los sectores que existen de verdad, para el filtro.
+ *
+ * El sector es texto libre, asi que las opciones no se pueden declarar en el
+ * codigo: se leen de lo que hay. Es el equivalente a `cargos.listar()` en el
+ * modulo de usuarios, solo que ahi los cargos si son un conjunto cerrado.
+ */
+export async function sectores(): Promise<string[]> {
+  const filas = await consultar<{ sector: string }>(
+    `SELECT DISTINCT sector
+     FROM empresas
+     WHERE sector IS NOT NULL AND btrim(sector) <> ''
+     ORDER BY sector`,
+  );
+
+  return filas.map((fila) => fila.sector);
+}
+
 export async function buscarPorId(
   id: number,
   ejecutor?: Ejecutor,
@@ -50,16 +158,40 @@ export async function buscarPorId(
   );
 }
 
-/** Inserta una empresa y devuelve la fila creada. */
+/** Hay otra empresa —distinta de esta— con ese RIF. */
+export async function existeRifDeOtra(rif: string, id: number): Promise<boolean> {
+  const fila = await consultarUno<{ existe: boolean }>(
+    "SELECT TRUE AS existe FROM empresas WHERE rif = $1 AND id <> $2 LIMIT 1",
+    [rif, id],
+  );
+
+  return fila !== null;
+}
+
 export async function crear(
   datos: DatosNuevaEmpresa,
   ejecutor?: Ejecutor,
 ): Promise<Empresa> {
   const empresa = await consultarUno<Empresa>(
-    `INSERT INTO empresas (nombre, rif, sector, telefono, direccion)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO empresas (
+       nombre, rif, sector, telefono, direccion,
+       sitio_web, instagram, tiktok, facebook, youtube, linkedin
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      RETURNING ${COLUMNAS}`,
-    [datos.nombre, datos.rif, datos.sector, datos.telefono, datos.direccion],
+    [
+      datos.nombre,
+      datos.rif,
+      datos.sector,
+      datos.telefono,
+      datos.direccion,
+      datos.sitioWeb,
+      datos.instagram,
+      datos.tiktok,
+      datos.facebook,
+      datos.youtube,
+      datos.linkedin,
+    ],
     ejecutor,
   );
 
@@ -70,7 +202,43 @@ export async function crear(
   return empresa;
 }
 
-/** Activa o desactiva una empresa. */
+/**
+ * Edita los datos de una empresa. NO toca `activo`.
+ *
+ * Activar o desactivar es otra decision, con su propia confirmacion y su
+ * propio aviso: si viajara en este UPDATE, guardar el telefono desde el
+ * formulario podria reactivar sin querer una cuenta que alguien cerro.
+ */
+export async function actualizar(
+  id: number,
+  datos: DatosNuevaEmpresa,
+  ejecutor?: Ejecutor,
+): Promise<Empresa | null> {
+  return consultarUno<Empresa>(
+    `UPDATE empresas
+     SET nombre = $2, rif = $3, sector = $4, telefono = $5, direccion = $6,
+         sitio_web = $7, instagram = $8, tiktok = $9, facebook = $10,
+         youtube = $11, linkedin = $12
+     WHERE id = $1
+     RETURNING ${COLUMNAS}`,
+    [
+      id,
+      datos.nombre,
+      datos.rif,
+      datos.sector,
+      datos.telefono,
+      datos.direccion,
+      datos.sitioWeb,
+      datos.instagram,
+      datos.tiktok,
+      datos.facebook,
+      datos.youtube,
+      datos.linkedin,
+    ],
+    ejecutor,
+  );
+}
+
 export async function cambiarEstado(id: number, activo: boolean): Promise<boolean> {
   const afectadas = await ejecutar(
     "UPDATE empresas SET activo = $2 WHERE id = $1",

@@ -191,6 +191,36 @@ $sector$;
 
 CREATE INDEX IF NOT EXISTS empresas_sector_idx ON empresas (sector);
 
+-- ---------------------------------------------------------------------------
+-- Donde esta la empresa en internet.
+--
+-- Van como COLUMNAS FIJAS y no como una tabla puente de "enlaces". La lista de
+-- plataformas es corta y estable, y lo que se guarda es un enlace POR
+-- plataforma, no una coleccion de enlaces sueltos: con una tabla aparte habria
+-- que hacer un JOIN y decidir un orden para pintar cinco campos que siempre
+-- son los mismos cinco. Es el mismo criterio que las etiquetas de una
+-- referencia: menos maquinaria de la que el problema pide.
+--
+-- Se guardan como URL completa. Un handle suelto —"@lacuenta"— no se puede
+-- abrir, y adivinar el dominio para completarlo es inventarse un dato.
+-- ---------------------------------------------------------------------------
+DO $redes$
+BEGIN
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS sitio_web TEXT;
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS instagram TEXT;
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS tiktok    TEXT;
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS facebook  TEXT;
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS youtube   TEXT;
+  ALTER TABLE empresas ADD COLUMN IF NOT EXISTS linkedin  TEXT;
+END
+$redes$;
+
+-- El listado del modulo filtra por estado y ordena por nombre, y hasta ahora
+-- ninguna de las dos columnas tenia indice: la tabla se leia entera. El de
+-- nombre va sobre `lower(...)` porque asi es como se compara y se ordena.
+CREATE INDEX IF NOT EXISTS empresas_activo_idx ON empresas (activo);
+CREATE INDEX IF NOT EXISTS empresas_nombre_idx ON empresas (lower(nombre));
+
 -- ===========================================================================
 -- MODULO DE HOOKS
 --

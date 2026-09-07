@@ -36,19 +36,76 @@ export type Empresa = {
   sector: string | null;
   telefono: string | null;
   direccion: string | null;
+
+  /*
+   * Donde esta la empresa en internet.
+   *
+   * Son columnas fijas y no una lista de enlaces porque las plataformas son
+   * siempre las mismas cinco. Se guardan como URL completa: un handle suelto
+   * no se puede abrir.
+   */
+  sitioWeb: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  facebook: string | null;
+  youtube: string | null;
+  linkedin: string | null;
+
   logoUrl: string | null;
   activo: boolean;
   creadoEn: Date;
   actualizadoEn: Date;
 };
 
-/** Datos necesarios para registrar una empresa. */
+/**
+ * Datos necesarios para registrar o editar una empresa.
+ *
+ * Sirve para las dos cosas: los campos que se escriben son los mismos, y lo
+ * unico que no se toca al editar —`activo`— tiene su propia action.
+ */
 export type DatosNuevaEmpresa = {
   nombre: string;
   rif: string | null;
   sector: string | null;
   telefono: string | null;
   direccion: string | null;
+  sitioWeb: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  facebook: string | null;
+  youtube: string | null;
+  linkedin: string | null;
+};
+
+/** Por que columna se puede ordenar el listado de empresas. */
+export type OrdenEmpresas = "nombre" | "creadoEn";
+
+export type FiltrosEmpresas = {
+  busqueda?: string;
+
+  /* Listas, como en usuarios: el listado admite varios valores por grupo. */
+  sector?: string[];
+  activo?: boolean[];
+
+  orden?: OrdenEmpresas;
+  direccion?: "asc" | "desc";
+  pagina?: number;
+  porPagina?: number;
+};
+
+/**
+ * Una empresa con lo que se ve de ella de un vistazo en el listado.
+ *
+ * Los dos recuentos no salen de un JOIN en la consulta principal: se piden
+ * por lote para la pagina visible, igual que hace el historial de hooks. Un
+ * JOIN con dos agregados obligaria a agrupar por todas las columnas de la
+ * empresa para pintar dos numeros.
+ */
+export type ResumenEmpresa = Empresa & {
+  /** Personas de contacto activas. */
+  contactos: number;
+  /** Fichas de hook de esta cuenta, en cualquier estado. */
+  piezas: number;
 };
 
 /** Vinculo de un usuario con el personal de la empresa. */

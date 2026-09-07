@@ -22,6 +22,7 @@ export const LIMITES = {
   rif: 20,
   sector: 120,
   direccion: 200,
+  url: 1000,
   passwordMinima: 8,
 } as const;
 
@@ -188,12 +189,41 @@ export function validarPerfil(
  * —cliente, luego sector, luego el estandar de la casa—. Una empresa sin
  * sector se queda sin ese escalon.
  */
+/**
+ * Las cinco redes que la agencia gestiona, y el sitio propio.
+ *
+ * La clave es el `name` del campo en el formulario y la propiedad del tipo; el
+ * rotulo es lo que se lee. Estan aqui y no en el componente porque la
+ * validacion y el formulario tienen que recorrer la MISMA lista: con dos
+ * copias, anadir una red en un sitio y no en el otro deja un campo que se
+ * escribe y no se guarda.
+ */
+export const ENLACES_EMPRESA = [
+  { clave: "sitioWeb", rotulo: "Sitio web" },
+  { clave: "instagram", rotulo: "Instagram" },
+  { clave: "tiktok", rotulo: "TikTok" },
+  { clave: "facebook", rotulo: "Facebook" },
+  { clave: "youtube", rotulo: "YouTube" },
+  { clave: "linkedin", rotulo: "LinkedIn" },
+] as const;
+
+export type ClaveEnlace = (typeof ENLACES_EMPRESA)[number]["clave"];
+
+/** Una URL http(s) completa. La misma comprobacion que la fuente de una referencia. */
+const URL_VALIDA = /^https?:\/\/\S+$/;
+
 export function validarEmpresa(datos: FormData): Validacion<{
   nombre: string;
   rif: string | null;
   sector: string | null;
   telefono: string | null;
   direccion: string | null;
+  sitioWeb: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  facebook: string | null;
+  youtube: string | null;
+  linkedin: string | null;
 }> {
   const nombre = limpiarTexto(datos.get("nombre"), LIMITES.empresa);
   const rif = limpiarOpcional(datos.get("rif"), LIMITES.rif);
@@ -209,7 +239,26 @@ export function validarEmpresa(datos: FormData): Validacion<{
     errores.telefono = "El telefono solo puede tener numeros, espacios y + ( ) -";
   }
 
-  return resultado({ nombre, rif, sector, telefono, direccion }, errores);
+  /*
+   * Los enlaces son opcionales, pero uno mal escrito NO se guarda a medias.
+   * Un enlace roto en una ficha de cliente se descubre el dia que alguien lo
+   * pulsa delante del cliente.
+   */
+  const enlaces = {} as Record<ClaveEnlace, string | null>;
+
+  for (const { clave, rotulo } of ENLACES_EMPRESA) {
+    const valor = limpiarOpcional(datos.get(clave), LIMITES.url);
+    enlaces[clave] = valor;
+
+    if (valor && !URL_VALIDA.test(valor)) {
+      errores[clave] = `${rotulo} tiene que ser un enlace completo, con https://`;
+    }
+  }
+
+  return resultado(
+    { nombre, rif, sector, telefono, direccion, ...enlaces },
+    errores,
+  );
 }
 
 /** Cambio de contrasena desde el perfil. */
