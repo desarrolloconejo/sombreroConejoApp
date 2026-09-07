@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Building2, Copy, Lock } from "lucide-react";
 
 import { Wrapper } from "@/components/layout/Wrapper";
-import { PanelLateral } from "@/components/listado";
-import { FormularioEmpresa } from "@/components/empresas/FormularioEmpresa";
+import { ModalConfirmacion } from "@/components/listado";
+import { AvisoAltaEmpresa } from "@/components/empresas";
 import { FormularioHook } from "@/components/hooks";
 import { BotonEnlace } from "@/components/ui";
 import { limitesPorDefecto } from "@/lib/hooks/auditor";
@@ -23,9 +23,10 @@ import * as reglasModelo from "@/models/reglasHook";
  * se escribe: se pasan los del que trae la ficha, y la action vuelve a
  * resolverlos con el definitivo al guardar.
  *
- * Aqui vive tambien el alta de empresas, y no es un capricho de colocacion:
- * es donde uno se encuentra con que falta el cliente. La ficha exige uno, y
- * antes el desplegable salia vacio sin explicacion y sin salida.
+ * El boton de «Nueva empresa» se queda aqui, que es donde uno se encuentra
+ * con que falta el cliente, pero el alta ya no: vive en el modulo de Empresas,
+ * que es solo de administradores. Quien no lo sea ve un aviso que dice a quien
+ * pedirselo, en lugar de un boton que no lleva a ningun sitio.
  */
 
 export const metadata: Metadata = {
@@ -49,7 +50,7 @@ const MIGAS = [
 export default async function PaginaNuevoHook(
   props: PageProps<"/dashboard/hooks/nuevo">,
 ) {
-  await requerirCargo("redes");
+  const sesion = await requerirCargo("redes");
 
   const parametros = await props.searchParams;
 
@@ -61,6 +62,9 @@ export default async function PaginaNuevoHook(
   });
 
   const abrirEmpresa = estado.panel === "nuevo";
+
+  // Un administrador va al modulo; el resto ve por que no puede.
+  const esAdmin = sesion.rol === "admin";
 
   // Partir de una ficha para crear otra: se copian sus campos pero NO su id,
   // asi que el primer guardado crea una pieza nueva y la original no se toca.
@@ -105,7 +109,9 @@ export default async function PaginaNuevoHook(
     conservar.set("id", String(estado.panelId));
   }
 
-  const hrefEmpresa = `${RUTA}?panel=nuevo`;
+  const hrefEmpresa = esAdmin
+    ? "/dashboard/empresas?panel=nuevo"
+    : `${RUTA}?panel=nuevo`;
   const hrefCerrar = conservar.toString() ? `${RUTA}?${conservar}` : RUTA;
 
   return (
@@ -129,7 +135,12 @@ export default async function PaginaNuevoHook(
             : "Completa la decision antes de redactar. Al final genera una ficha que edicion puede ejecutar sin interpretar la idea."
       }
       accion={
-        <BotonEnlace href={hrefEmpresa} variante="fantasma" tamano="chico">
+        <BotonEnlace
+          href={hrefEmpresa}
+          variante="fantasma"
+          tamano="chico"
+          scroll={esAdmin}
+        >
           <Building2 aria-hidden="true" />
           Nueva empresa
         </BotonEnlace>
@@ -196,15 +207,20 @@ export default async function PaginaNuevoHook(
         />
       )}
 
-      {abrirEmpresa && (
-        <PanelLateral
+      {/*
+        El alta de empresas ya NO vive aqui.
+        Se movio a su propio modulo, que es solo de administradores, porque la
+        cartera de clientes es informacion de la agencia y no material de
+        trabajo de un cargo. Quien no puede darlas de alta ve por que.
+      */}
+      {abrirEmpresa && !esAdmin && (
+        <ModalConfirmacion
           hrefCerrar={hrefCerrar}
-          kicker="Alta de cliente"
-          titulo="Nueva empresa"
-          descripcion="Solo hace falta el nombre. El resto se puede completar despues."
+          kicker="Nueva empresa"
+          titulo="Esto lo hace un administrador"
         >
-          <FormularioEmpresa hrefCancelar={hrefCerrar} />
-        </PanelLateral>
+          <AvisoAltaEmpresa hrefCerrar={hrefCerrar} />
+        </ModalConfirmacion>
       )}
     </Wrapper>
   );

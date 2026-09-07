@@ -113,6 +113,17 @@ function comoCargos(
   );
 }
 
+/**
+ * La empresa NO tiene chip: llega solo por enlace, desde la ficha de un cliente
+ * en el modulo de Empresas. Por eso se valida aqui y no se anade a
+ * `filtrosUsuarios`: es un filtro que existe pero que no se ofrece.
+ */
+function comoEmpresas(valores: string[] | undefined): number[] | undefined {
+  return soloValidos(
+    (valores ?? []).map(Number).filter((n) => Number.isInteger(n) && n > 0),
+  );
+}
+
 /** El chip manda "true" o "false"; el modelo espera booleanos. */
 function comoActivos(valores: string[] | undefined): boolean[] | undefined {
   return soloValidos(
@@ -167,7 +178,7 @@ export default async function PaginaUsuarios(
     ordenPermitido: ORDEN_PERMITIDO,
     ordenPorDefecto: "creadoEn",
     direccionPorDefecto: "desc",
-    filtrosPermitidos: ["tipo", "rol", "cargo", "activo"],
+    filtrosPermitidos: ["tipo", "rol", "cargo", "activo", "empresa"],
   });
 
   // Las areas se consultan siempre porque alimentan los chips del filtro, y de
@@ -180,6 +191,7 @@ export default async function PaginaUsuarios(
     rol: comoRoles(estado.filtros.rol),
     cargo: comoCargos(estado.filtros.cargo, cargos),
     activo: comoActivos(estado.filtros.activo),
+    empresaId: comoEmpresas(estado.filtros.empresa),
     orden: comoOrden(estado.orden),
     direccion: estado.direccion,
     pagina: estado.pagina,

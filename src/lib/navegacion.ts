@@ -1,6 +1,7 @@
 import { createElement, type ReactNode } from "react";
 import {
   BookOpen,
+  Building2,
   ChartNoAxesColumn,
   FileText,
   History,
@@ -125,6 +126,30 @@ const MODULOS: readonly Modulo[] = [
       "cuentas",
       "permisos",
       "alta",
+    ],
+  },
+  /*
+   * Empresas va JUNTO a Usuarios, y en ese orden.
+   *
+   * Son los dos lados de lo mismo: aqui estan las cuentas que atiende la
+   * agencia, y en Usuarios las personas que las representan. Y el orden no es
+   * casual: una persona de contacto solo se puede dar de alta si su empresa ya
+   * existe, asi que el modulo que va primero es el que se usa primero.
+   */
+  {
+    titulo: "Empresas",
+    subtitulo: "Los clientes que atiende la agencia",
+    href: "/dashboard/empresas",
+    icono: Building2,
+    roles: ["admin"],
+    alias: [
+      "clientes",
+      "cuentas",
+      "marcas",
+      "cartera",
+      "empresa",
+      "companias",
+      "rif",
     ],
   },
 

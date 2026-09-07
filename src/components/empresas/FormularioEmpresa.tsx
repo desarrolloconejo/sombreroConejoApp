@@ -3,41 +3,81 @@
 import { useActionState } from "react";
 import { Building2, Check } from "lucide-react";
 
-import { crearEmpresa } from "@/actions/empresas";
+import { crearEmpresa, editarEmpresa } from "@/actions/empresas";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Boton, BotonEnlace, Campo } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, useCampos } from "@/components/ui";
+import { ENLACES_EMPRESA } from "@/lib/validaciones";
 import { ESTADO_INICIAL } from "@/types";
+import type { Empresa } from "@/types";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 
 /**
- * Alta rapida de una empresa cliente, dentro del panel lateral.
+ * Alta y edicion de una empresa cliente, dentro del panel lateral.
+ *
+ * UNO SOLO PARA LAS DOS COSAS
+ * ---------------------------
+ * Al contrario que en usuarios, aqui no hacen falta dos formularios. Alli el
+ * alta y la edicion piden cosas distintas —el tipo se elige al crear y no se
+ * cambia, y la contrasena solo existe en el alta—; una empresa se describe con
+ * los mismos campos el primer dia y el ultimo. Con dos formularios habria dos
+ * copias de la lista de enlaces esperando a desincronizarse.
  *
  * Es de cliente por `useActionState`: el RIF es unico en la base y ese choque
  * vuelve como error de campo, que hay que poder leer junto al campo sin
- * recargar.
+ * recargar. Y los campos van CONTROLADOS porque React vacia los formularios no
+ * controlados en cuanto la action termina, tambien cuando devuelve errores: sin
+ * eso, un RIF repetido borraba los otros diez campos ya escritos.
  *
- * Solo el nombre es obligatorio. Lo demas se puede completar despues, y pedirlo
- * todo aqui convertiria un desatasco de diez segundos en un formulario que se
+ * Solo el nombre es obligatorio. Lo demas se completa cuando se sabe, y pedirlo
+ * todo de golpe convierte un alta de diez segundos en un formulario que se
  * abandona a la mitad.
  */
-export function FormularioEmpresa({ hrefCancelar }: { hrefCancelar: string }) {
-  const [estado, enviar, enviando] = useActionState(crearEmpresa, ESTADO_INICIAL);
+export function FormularioEmpresa({
+  empresa = null,
+  hrefCancelar,
+}: {
+  /** La que se edita. Null en el alta. */
+  empresa?: Empresa | null;
+  hrefCancelar: string;
+}) {
+  const [estado, enviar, enviando] = useActionState(
+    empresa ? editarEmpresa : crearEmpresa,
+    ESTADO_INICIAL,
+  );
 
   // El resultado sale como aviso flotante: en un formulario largo, una alerta
   // arriba queda fuera de la vista de quien acaba de pulsar el boton.
   useAvisoDeAccion(estado);
+
+  const { campo } = useCampos({
+    nombre: empresa?.nombre ?? "",
+    rif: empresa?.rif ?? "",
+    sector: empresa?.sector ?? "",
+    telefono: empresa?.telefono ?? "",
+    direccion: empresa?.direccion ?? "",
+    sitioWeb: empresa?.sitioWeb ?? "",
+    instagram: empresa?.instagram ?? "",
+    tiktok: empresa?.tiktok ?? "",
+    facebook: empresa?.facebook ?? "",
+    youtube: empresa?.youtube ?? "",
+    linkedin: empresa?.linkedin ?? "",
+  });
+
   const errores = estado.errores ?? {};
 
   return (
     <form action={enviar} noValidate className="flex min-h-0 flex-1 flex-col">
       <PanelCuerpo>
+        {/* Cual se edita viaja aqui, no en la URL de la action. La action lo
+            vuelve a comprobar: este campo lo escribe el navegador. */}
+        {empresa && <input type="hidden" name="id" value={empresa.id} />}
 
         <SeparadorPanel>Quien es</SeparadorPanel>
 
         <div className="grid grid-cols-2 gap-3.5">
           <Campo
             id="empresa-nombre"
-            name="nombre"
+            {...campo("nombre")}
             etiqueta="Nombre"
             placeholder="Distribuidora Ejemplo, C.A."
             autoComplete="off"
@@ -49,7 +89,7 @@ export function FormularioEmpresa({ hrefCancelar }: { hrefCancelar: string }) {
 
           <Campo
             id="empresa-rif"
-            name="rif"
+            {...campo("rif")}
             etiqueta="RIF"
             opcional
             placeholder="J-30123456-7"
@@ -67,7 +107,7 @@ export function FormularioEmpresa({ hrefCancelar }: { hrefCancelar: string }) {
           */}
           <Campo
             id="empresa-sector"
-            name="sector"
+            {...campo("sector")}
             etiqueta="Sector"
             opcional
             placeholder="Hosteleria"
@@ -83,7 +123,7 @@ export function FormularioEmpresa({ hrefCancelar }: { hrefCancelar: string }) {
         <div className="grid grid-cols-2 gap-3.5">
           <Campo
             id="empresa-telefono"
-            name="telefono"
+            {...campo("telefono")}
             etiqueta="Telefono"
             opcional
             type="tel"
@@ -96,7 +136,7 @@ export function FormularioEmpresa({ hrefCancelar }: { hrefCancelar: string }) {
 
           <Campo
             id="empresa-direccion"
-            name="direccion"
+            {...campo("direccion")}
             etiqueta="Direccion"
             opcional
             placeholder="Av. Principal, Caracas"
@@ -107,11 +147,40 @@ export function FormularioEmpresa({ hrefCancelar }: { hrefCancelar: string }) {
           />
         </div>
 
+        <SeparadorPanel>Donde esta en internet</SeparadorPanel>
+
+        {/*
+          La lista viene de `validaciones` y no de aqui: la recorren tanto la
+          validacion como este formulario. Con dos copias, anadir una red en un
+          sitio y no en el otro deja un campo que se escribe y no se guarda.
+        */}
+        <div className="grid grid-cols-2 gap-3.5">
+          {ENLACES_EMPRESA.map(({ clave, rotulo }) => (
+            <Campo
+              key={clave}
+              id={`empresa-${clave}`}
+              {...campo(clave)}
+              etiqueta={rotulo}
+              opcional
+              type="url"
+              inputMode="url"
+              placeholder="https://…"
+              autoComplete="off"
+              maxLength={1000}
+              error={errores[clave]}
+            />
+          ))}
+        </div>
+
+        <p className="mt-[18px] text-[11.5px] leading-relaxed text-suave">
+          El enlace completo, con <b className="text-texto">https://</b>. Un
+          nombre de usuario suelto no se puede abrir.
+        </p>
+
         <p className="mt-[18px] flex items-start gap-3 rounded-xl border border-borde bg-campo p-4 text-[12.5px] leading-relaxed text-suave">
           <Building2 aria-hidden="true" className="mt-px size-4 shrink-0 text-acento" />
           Registrar la empresa no le da acceso a nadie. Para que alguien de esa
-          empresa pueda entrar, un administrador tiene que crearle su cuenta
-          desde Usuarios.
+          empresa pueda entrar, hay que crearle su cuenta desde Usuarios.
         </p>
       </PanelCuerpo>
 
@@ -121,7 +190,11 @@ export function FormularioEmpresa({ hrefCancelar }: { hrefCancelar: string }) {
         </BotonEnlace>
 
         <Boton type="submit" disabled={enviando}>
-          {enviando ? "Registrando…" : "Registrar empresa"}
+          {enviando
+            ? "Guardando…"
+            : empresa
+              ? "Guardar cambios"
+              : "Registrar empresa"}
           {!enviando && <Check aria-hidden="true" />}
         </Boton>
       </PanelPie>

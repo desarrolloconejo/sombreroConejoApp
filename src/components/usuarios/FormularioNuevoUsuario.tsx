@@ -339,7 +339,7 @@ export function FormularioNuevoUsuario({
                 Todavia no hay ninguna empresa activa. Hay que registrarla antes
                 de dar de alta a su persona de contacto:{" "}
                 <Link
-                  href="/dashboard/hooks/nuevo?panel=nuevo"
+                  href="/dashboard/empresas?panel=nuevo"
                   className="font-semibold underline"
                 >
                   registrar una empresa

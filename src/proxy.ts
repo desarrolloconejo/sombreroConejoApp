@@ -21,7 +21,7 @@ import type { SlugCargo } from "@/types";
 const RUTAS_PUBLICAS = ["/login"];
 
 /** Prefijos de ruta reservados al rol admin. */
-const RUTAS_SOLO_ADMIN = ["/dashboard/usuarios"];
+const RUTAS_SOLO_ADMIN = ["/dashboard/usuarios", "/dashboard/empresas"];
 
 /**
  * Prefijos reservados a un area de la agencia.
