@@ -535,7 +535,7 @@ construyen, y eso lo dicen las secciones 2 a 6 de este plan.
 | **El cargo `cuentas` empieza a servir** | Es quien opera la bandeja de briefs y el tablero |
 | **Empresas muestra el trabajo real** | La ficha de una empresa cuenta hoy contactos y hooks; suma proyectos activos y saldo |
 | **El alta de un cliente se puede hacer sola** | Al aceptar el brief de un prospecto se crean la empresa y su usuario en una transaccion, en lugar de dos altas a mano en dos modulos |
-| **La foto de perfil puede volver** | El dia que los archivos pasen por el adaptador, el codigo comentado se reconecta a el |
+| **La foto de perfil vuelve con la mudanza** | Su codigo esta comentado, no borrado, y la carpeta `public/uploads/avatares` se conserva. **Al cambiar de servidor hay que decidir donde viven las fotos**: en el disco del VPS —con un volumen que sobreviva a los despliegues y entre en las copias de seguridad— o en el adaptador de archivos, como los comprobantes. Lo segundo evita tener dos sitios donde se guardan archivos |
 
 ---
 
@@ -670,7 +670,7 @@ Tres decisiones de diseno del menu:
 | --- | --- |
 | `src/lib/navegacion.ts` | Cada modulo declara su `seccion`. Criterios nuevos de visibilidad: solo clientes, un permiso del cliente, y «tiene tareas asignadas» |
 | `Sidebar` | Pinta un rotulo por seccion; hoy solo existe «General». Una seccion sin modulos visibles no se pinta |
-| Navegacion movil | **El cajon de hamburguesa se sustituye por una barra inferior con hoja de navegacion** (`docs/planMejoraDiseno.md`, fase 2). La hoja agrupa por las mismas secciones, y cada modulo declara su prioridad para la barra. Los modulos del portal se construyen ya sobre esa navegacion |
+| Navegacion movil | **El cajon de hamburguesa se sustituye por una barra inferior de atajos y una hoja con el menu completo** (`docs/planMejoraDiseno.md`, fase 2). Sin boton central. La hoja agrupa por las mismas secciones, se desplaza y trae buscador, porque el menu va a ser largo; cada modulo declara su prioridad para la barra. Los modulos del portal se construyen ya sobre esa navegacion |
 | Buscador global | Sin cambios: sigue leyendo del mismo registro |
 | `src/proxy.ts` | Lista de rutas por tipo de usuario, la ruta publica del enlace y el paso de peticiones con cookie de renovacion |
 | `components/ui` | Componente nuevo: la bateria de cinco segmentos, con texto ademas de color y `aria-label` con el porcentaje |
