@@ -1,7 +1,8 @@
 /**
  * Las listas con las que el auditor detecta.
  *
- * Copiadas literales de docs/creacionHooks.md, seccion 11.4. No se "mejoran":
+ * Copiadas literales de la especificacion original de la herramienta, seccion
+ * 11.4 (retirada del repositorio; sigue en su historial). No se "mejoran":
  * cada entrada esta calibrada contra como se habla de verdad en castellano, y
  * tocarla cambia lo que el auditor encuentra.
  *

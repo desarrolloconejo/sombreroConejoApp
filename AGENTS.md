@@ -35,10 +35,8 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 | `CLAUDE.md` | Contrato: stack, principios, alcance por fases |
 | `README.md` | Puesta en marcha, comandos, convenciones, despliegue |
 | `docs/planIntegracionPortal.md` | Plan maestro de la integracion. Manda sobre los demas |
-| `docs/integracionFinanzas.md` | Capitulo de finanzas del plan |
 | `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7 |
 | `docs/planMejoraDiseno.md` | Plan de mejora del diseno y navegacion movil nueva |
-| `docs/creacionHooks.md` | Especificacion de la herramienta antigua de hooks |
 
 El paquete de especificacion original del portal vive fuera, en la carpeta
 hermana `appFacturas` (reglas de negocio de fases, briefs y finanzas, maquetas).

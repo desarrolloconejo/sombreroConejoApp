@@ -191,7 +191,8 @@ permitiran la creacion de hooks para videos, ahora, este modulo debe ser para
 los roles trabajadores con el cargo creadoras de contenido, la forma en como la
 vas a incorporar en el sidebar es Hooks y sera un desplegable que liste los
 submodulos necesarios para esa entidad hooks o ese proceso de creacion de hooks,
-tienes la documentacion para la logica en docs/creacionHooks.md, esta logica era
+tienes la documentacion para la logica en docs/creacionHooks.md (retirada del
+repositorio al terminar la fase; sigue en el historial de git), esta logica era
 como se hacia en la app vieja de forma que debes conservar el flujo como tal de
 trabajo pero rediseñarlo completamente para que se vea como una app moderna,
 ademas quiero que la documentacion sea para cada submodulo correspondiente, me

@@ -1,5 +1,6 @@
 /**
- * Las 42 aperturas, tal como estan en docs/creacionHooks.md (anexo A).
+ * Las 42 aperturas, tal como estaban en la especificacion original de la
+ * herramienta (anexo A), que se retiro del repositorio y sigue en su historial.
  *
  * Solo son la SEMILLA. Una vez sembradas viven en la base y la agencia las
  * gestiona desde el modulo: puede corregir una redaccion, anadir la 43 y

@@ -1,8 +1,9 @@
 # Plan de integracion del portal completo en Conejo App
 
 Fecha: 2026-10-13. Revisado tres veces ese dia; la ultima fija el modelo de
-tareas, las herramientas y el menu. Sustituye como plan maestro a `docs/integracionFinanzas.md`,
-que pasa a ser el capitulo de finanzas (seccion 7).
+tareas, las herramientas y el menu. Es el unico plan de la integracion: el
+documento anterior de finanzas se retiro y su contenido vigente esta en la
+seccion 7.
 
 **Fuentes.** El paquete de especificacion `appFacturas` (documentos 01 a 10,
 esquema, reglas SQL, configuracion y maquetas), su diagnostico, y el codigo de
@@ -41,7 +42,7 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Servicios del catalogo | Se arranca con los dos definidos: redes sociales y desarrollo de producto |
 | Rutas API | Aceptadas |
 | Cierre de sesiones al publicar | Aceptado: el dia que salgan las sesiones nuevas, quien este dentro vuelve a entrar una vez |
-| Impresion de la factura | **PDF generado con libreria**, para que salga siempre igual. Sustituye a la impresion desde el navegador (seccion 4.3) |
+| Impresion de la factura | **PDF generado con libreria**, para que salga siempre igual (seccion 7.8) |
 | Moneda de facturacion | Los montos se arman en **dolares** y la factura se emite en **bolivares a la tasa del dia** |
 | Medios de pago | Los carga un operador de finanzas desde la app, en Ajustes |
 | Ramas | Una rama por funcionalidad, que se une a `main` cuando esta terminada |
@@ -125,7 +126,7 @@ Tres bloques que hoy no existen en Conejo App, mas finanzas:
 | `config/briefs/desarrollo-producto.v1.json` y su esquema | Se usa tal cual, como dato versionado |
 | `fixtures/` (brief congelado con su hash) | Caso de prueba de referencia |
 | Algoritmos escritos: `registrarRevision`, `enviarBrief`, hash canonico, `nombreEstandar` | Se implementan como estan descritos |
-| Plantillas del talonario y de la copia del brief | Se reutilizan como pages imprimibles |
+| Plantillas del talonario y de la copia del brief | Punto de partida: el talonario para el generador de PDF, la copia del brief para su correo y su pagina |
 | Maquetas (8 pantallas) | Referencia visual; se reconstruyen con los componentes de Conejo |
 | `pruebas_db.sql` (65 aserciones) | Se traduce a `db/pruebas/` |
 | Prisma, Zod, Auth.js, pg-boss, Playwright, SSE, Nginx, Docker de produccion | No entran |
@@ -211,19 +212,33 @@ negarselo al cliente hasta que la pieza llegue a la fase 5.
 
 ### 4.3 Esquema `finanzas`
 
-Lo descrito en `docs/integracionFinanzas.md`, con cuatro cambios por el alcance
-nuevo:
-
-| Cambio | Detalle |
+| Tabla | Que guarda |
 | --- | --- |
-| Vuelven los vinculos | `presupuestos.brief_id`, `presupuestos.proyecto_id`, `facturas.proyecto_id`, y la tabla `proforma_proyectos` |
-| La bitacora deja de ser propia | `finanzas.eventos` desaparece: todo escribe en `auditoria` |
-| Moneda | Presupuesto y proforma se arman y se muestran en dolares. La factura se emite en bolivares: guarda el monto de referencia en dolares, la tasa, su fuente y su fecha, y esos cuatro datos quedan congelados |
-| Medios de pago | En `finanzas.ajustes`: cada uno con nombre, monedas que acepta, si pide referencia, sus datos para pagar y si esta activo. Los edita un operador; el cliente solo ve los activos. Se desactivan, no se borran: un pago viejo puede citar uno retirado |
-| PDF de la factura | Lo genera el servidor con una libreria de PDF en JavaScript puro (propuesta: `pdf-lib`), colocando cada dato en sus coordenadas en milimetros. Se sirve por una ruta API protegida y se puede volver a generar identico, porque sale de datos congelados. La hoja de calibracion y el modo guia usan el mismo generador |
-| Tabla nueva `finanzas.tasas_cambio` | Fuente, fecha valor, valor, cuando se obtuvo y si fue automatica o a mano (seccion 6.1) |
-| Los ajustes siguen aqui | `finanzas.ajustes` (emisor, talonario, medios de pago) |
-| Los seis ajustes de su seccion 4.4 | Aceptados |
+| `secuencias` | Contadores consecutivos sin saltos |
+| `presupuestos` | Numero, empresa, brief y proyecto de origen (opcionales), estado, moneda, base imponible, exento, IVA, total, valido hasta, quien lo creo y quien lo aprobo |
+| `proformas` | Igual estructura de montos, presupuesto de origen, recurrente y proxima emision |
+| `proforma_proyectos` | A que proyectos corresponde una proforma |
+| `facturas` | Serie, numero, numero de control, empresa, proyecto, proforma, fechas de emision y de vencimiento, montos, moneda y tasa, retencion esperada, datos congelados del emisor y de la empresa, impresion y anulacion |
+| `documento_items` | Renglones de los tres documentos, con exactamente un padre |
+| `pagos` | Factura, monto y moneda pagados, tasa usada, monto aplicado, medio, referencia, comprobante, estado, quien reporto y quien confirmo |
+| `retenciones` | Factura, tipo, monto, comprobante, estado |
+| `tasas_cambio` | Fuente, fecha valor, valor, cuando se obtuvo y si fue automatica o a mano |
+| `ajustes` | Emisor, talonario y medios de pago |
+
+El detalle de reglas, permisos y operaciones esta en la seccion 7.
+
+Seis ajustes sobre el modelo del paquete, **aceptados**. Corrigen huecos que
+despues, con facturas inmutables emitidas, serian caros de arreglar:
+
+| # | Ajuste | Por que |
+| --- | --- | --- |
+| 1 | Fecha de vencimiento en la factura | Sin ella no se sabe cuando una factura esta atrasada |
+| 2 | Presupuestos y proformas guardan base imponible y monto exento | Sus renglones pueden ser exentos y solo guardaban el subtotal |
+| 3 | El pago guarda la tasa usada y su fuente | Un pago en otra moneda no dejaba rastro de la conversion |
+| 4 | Claves foraneas a `usuarios` en quien creo, aprobo, anulo o confirmo | Eran identificadores sueltos |
+| 5 | «Vencido» del presupuesto se deriva de la fecha, no se guarda | No hay tareas programadas que lo marquen |
+| 6 | Una factura anulada tiene saldo cero en la vista de cobro | Evita que la cobranza tenga que acordarse de filtrarlas |
+
 
 ---
 
@@ -263,7 +278,8 @@ privilegios, se extiende:
 Para produccion la base deja pasar segun el cargo, y el filtro fino (que pieza
 tiene asignada) lo aplica la capa de servidor.
 
-`conSesionFinanzas` se generaliza a **`conSesion`**, que declara usuario, rol,
+Todo acceso de los modulos nuevos pasa por **`conSesion`**, una funcion nueva de
+`src/lib/db.ts` sobre `transaccion()` que declara usuario, rol,
 cargo y empresa, y por ella pasan todos los modelos nuevos. Sin sesion
 declarada, cero filas.
 
@@ -507,21 +523,205 @@ Tampoco existe en Vercel:
 | --- | --- |
 | Tareas programadas (fases atrasadas, proforma recurrente, enlaces vencidos) | Estado derivado al leer, y contadores en la portada con un boton para actuar. La de la tasa si existe (seccion 6.1) |
 | Tiempo real | `revalidatePath` y recarga |
-| PDF en el servidor | Pages imprimibles desde el navegador |
+| PDF con un navegador en el servidor (Playwright, como pedia el paquete) | No cabe en Vercel. Se generan con una libreria de PDF (seccion 7.8) |
 
 ---
 
-## 7. Capitulos de detalle
+## 7. Finanzas
 
-| Capitulo | Donde |
+Cuentas por cobrar a clientes. No hay proveedores ni cuentas por pagar.
+
+### 7.1 Ciclo y estados
+
+```
+Presupuesto ──aprobado──▶ Proforma ──▶ Factura ──▶ Pagos y retenciones ──▶ Estado de cobro
+```
+
+| Documento | Estados | Notas |
+| --- | --- | --- |
+| Presupuesto | `borrador` → `enviado` → `aprobado` o `rechazado` | El cliente no ve borradores. «Vencido» no se guarda: se deriva de `valido_hasta` |
+| Proforma | `borrador` → `emitida` → `facturada` o `anulada` | Puede ser recurrente |
+| Factura | `emitida` o `anulada` | Nace emitida. «Pagada» no se guarda: se calcula |
+| Pago y retencion | `por_confirmar` → `confirmado` o `rechazado` | El cliente solo crea por confirmar |
+
+### 7.2 Quien hace que
+
+«Operador» es el rol `admin` o el cargo `administracion`. Los dos pueden lo mismo.
+
+| Operacion | Quien |
 | --- | --- |
-| Finanzas | `docs/integracionFinanzas.md`, con los cambios de la seccion 4.3 |
+| Crear, editar y enviar presupuestos | Operador |
+| Aprobar o rechazar un presupuesto | Cliente con el permiso de finanzas |
+| Registrar la aprobacion a nombre de un cliente sin cuenta | Operador; queda en la auditoria |
+| Generar la proforma desde el presupuesto aprobado; emitirla y anularla | Operador |
+| Emitir, anular y marcar como impresa una factura | Operador |
+| Reportar un pago o una retencion | Cliente con el permiso de finanzas |
+| Confirmar o rechazar pagos y retenciones | Operador |
+| Editar ajustes: emisor, talonario, medios de pago, tasa a mano | Operador |
+
+Los trabajadores de cualquier otro cargo no ven nada de finanzas.
+
+### 7.3 Lo que la base impone por si misma
+
+| Regla | Como |
+| --- | --- |
+| La app no puede borrar en `finanzas` | El rol `conejo_app` solo tiene `SELECT`, `INSERT` y `UPDATE` |
+| Una factura emitida no se edita ni se borra | Trigger. Solo cambian la anulacion, el PDF y la marca de impresa; una anulada no se reactiva |
+| Los renglones de una factura son inmutables | Trigger. Solo se insertan en la transaccion que crea la factura |
+| Numeracion sin saltos | `finanzas.siguiente_numero(clave)` bloquea la fila del contador; si la transaccion falla, el numero no se consume |
+| Los totales cuadran | `CHECK`: total = base imponible + exento + IVA |
+| Anular exige motivo, fecha y responsable | `CHECK` |
+| Una factura en bolivares lleva tasa y fuente | `CHECK` |
+| Un pago confirmado tiene monto aplicado; uno rechazado, motivo | `CHECK` |
+| «Quien lo hizo» apunta a un usuario real | Claves foraneas a `usuarios` |
+
+### 7.4 Seguridad por fila
+
+La app se conecta como `conejo_app`, sin `BYPASSRLS`, y cada operacion pasa por
+`conSesion`, que declara usuario, rol, cargo y empresa dentro de la
+transaccion. Sin sesion declarada no se ve ninguna fila.
+
+| Politica | Regla |
+| --- | --- |
+| Operador | Acceso total. Lo decide `finanzas.es_operador()`: rol `admin`, o rol `trabajador` con cargo `administracion` |
+| Cliente lee presupuestos y proformas | De su empresa, y no en borrador |
+| Cliente lee facturas | De su empresa |
+| Cliente lee renglones, pagos y retenciones | Si el documento padre le es visible |
+| Cliente reporta pagos y retenciones | Solo por confirmar, a su nombre, sobre una factura emitida que ve |
+| Cliente lee medios de pago | Solo los activos |
+
+Un cliente tiene acceso si su fila en `clientes` tiene `puede_ver_finanzas`, y
+su usuario y su empresa estan activos.
+
+**Aprobar un presupuesto** no es un `UPDATE` del cliente —podria cambiar
+montos—: es la funcion `finanzas.cliente_resuelve_presupuesto(id, aprobar)`,
+que solo toca estado, quien y cuando, y rechaza si el presupuesto ya vencio.
+
+Con RLS, un `UPDATE` sobre filas que no se ven no falla: afecta cero. Las
+actions comprueban siempre el numero de filas.
+
+### 7.5 Calculo
+
+| Concepto | Formula |
+| --- | --- |
+| Subtotal del renglon | cantidad × precio unitario, redondeado a 2 decimales |
+| Base imponible | Suma de los renglones gravados |
+| Monto exento | Suma de los renglones exentos |
+| IVA | Base imponible × porcentaje (16), redondeado |
+| Total | Base imponible + exento + IVA |
+| Retencion de IVA esperada | IVA × porcentaje de la empresa (75 o 100), si es agente de retencion |
+| Neto a cobrar | Total − retencion esperada |
+
+- **Lo calcula PostgreSQL**, con `NUMERIC` y `round(…, 2)`.
+- `pg` devuelve `NUMERIC` como texto: los importes son `string` en los tipos y
+  **nunca se convierten a `number`**.
+- La vista previa del formulario usa `src/lib/finanzas/calculo.ts`, con
+  aritmetica entera. Es orientativa; lo que vale es lo que calcula el servidor.
+- Redondeo: mitad hacia arriba, sobre cada renglon y sobre el IVA, nunca sobre
+  acumulados.
+
+### 7.6 Moneda y tasa
+
+Presupuesto y proforma se arman y se muestran en **dolares**. La factura se
+emite en **bolivares a la tasa del dia**: guarda el monto de referencia en
+dolares, la tasa, su fuente y su fecha, y esos datos quedan congelados. Una
+factura emitida nunca se recalcula.
+
+La tasa sale de `finanzas.tasas_cambio` (seccion 6.1); el operador puede
+registrarla o corregirla a mano.
+
+### 7.7 Emitir una factura
+
+En una sola transaccion:
+
+1. Tomar el numero con `finanzas.siguiente_numero`.
+2. Insertar la factura con los importes de la proforma, la tasa del dia, la
+   retencion esperada y los datos congelados del emisor y de la empresa.
+3. Insertar los renglones.
+4. Registrar el numero de control de la hoja.
+5. Escribir la linea de auditoria.
+
+La fecha de emision la pone la base en hora de Caracas. Corregir una factura es
+anularla y emitir otra.
+
+### 7.8 El PDF del talonario
+
+La factura se imprime sobre papel preimpreso: el PDF lleva solo el texto
+variable, cada dato en sus coordenadas en milimetros.
+
+| Pieza | Detalle |
+| --- | --- |
+| Generacion | En el servidor, con una libreria de PDF en JavaScript puro (propuesta: `pdf-lib`). Se instala al llegar a esta etapa |
+| Coordenadas | En `finanzas.ajustes`, editables sin desplegar: calibrar es imprimir, medir y ajustar |
+| Calibracion | Hoja con cuadricula en milimetros y modo guia que recuadra cada campo, con el mismo generador |
+| Entrega | Por una ruta API protegida. Se puede regenerar identico, porque sale de datos congelados |
+| Punto de partida | `appFacturas/templates/factura-talonario.html` y `config/emisor.json`, con coordenadas de ejemplo |
+
+Presupuestos y proformas se generan igual, con la marca.
+
+### 7.9 Pagos, retenciones y cobro
+
+- El cliente reporta: medio, referencia, fecha, monto, moneda y comprobante.
+- El operador confirma fijando el **monto aplicado** en la moneda de la factura,
+  con la tasa usada si pago en otra; o rechaza con motivo.
+- Cada pago pertenece a una sola factura.
+- **Medios de pago**: viven en `finanzas.ajustes`, cada uno con nombre, monedas
+  que acepta, si pide referencia, sus datos para pagar y si esta activo. Los
+  carga un operador; el cliente solo ve los activos. Se desactivan, no se
+  borran: un pago viejo puede citar uno retirado.
+- Una factura de un agente de retencion queda «abierta» hasta que se confirma
+  la retencion de IVA que cubre lo esperado.
+
+El estado de cobro lo calcula la vista `finanzas.v_estado_cobro_factura`:
+pagado confirmado, por confirmar, retencion confirmada, saldo, estado
+(`pendiente`, `parcial`, `pagada`, `anulada`) y retencion abierta. Un pago
+por confirmar no reduce el saldo, y una anulada tiene saldo cero.
+
+Cobranza: saldos por empresa y por antiguedad, en tramos de 0–30, 31–60, 61–90
+y mas de 90 dias.
+
+**Proforma recurrente.** Para contratos mensuales. No hay tareas programadas:
+la portada de finanzas lista las que ya toca emitir, con un boton que deja el
+borrador listo. Nunca se factura sola.
+
+### 7.10 Comprobantes en Google Drive
+
+| Punto | Detalle |
+| --- | --- |
+| Autenticacion | Cliente OAuth, no cuenta de servicio: una cuenta de servicio no tiene espacio propio |
+| Permiso | `drive.file`: la app solo ve lo que ella crea. Por eso **la carpeta la crea el script, no una persona** |
+| Carpeta | `ConejoApp/Comprobantes`, con una subcarpeta por empresa |
+| Nombres | `pago-<id>-<fecha>`, `retencion-<id>-<fecha>`. El nombre original se descarta y el tipo se decide por la firma de los bytes |
+| Variables | `DRIVE_CLIENT_ID`, `SECRET_DRIVE_KEY1`, `DRIVE_REFRESH_TOKEN`, `DRIVE_CARPETA_COMPROBANTES_ID` |
+| Estado | **Probado el 2026-10-13** con `npm run drive:probar`: autoriza, crea la carpeta, sube, lee y borra. Las variables faltan en Vercel |
+| Descarga | Por una ruta API: comprueba la guardia, consulta el pago dentro de `conSesion` y transmite el archivo. El id de Drive nunca llega al navegador |
+| Subida | Primero a Drive, despues la fila. Si la fila falla queda un archivo huerfano, que es preferible a una fila que apunta a nada |
+
+**Cuenta.** Hoy esta autorizada la personal del responsable. Al pasar a la de la
+empresa se repite `drive:probar` y se cambian las variables; **los archivos ya
+subidos no se mueven solos**, asi que el cambio va antes de recibir comprobantes
+reales. Mientras la pantalla de consentimiento de GCP este en «Testing», el
+acceso caduca a los 7 dias.
+
+### 7.11 Fuera del alcance
+
+Proveedores y cuentas por pagar, notas de credito y debito, descuentos, varias
+alicuotas de IVA en un documento, anticipos y saldos a favor, libro de ventas,
+facturacion electronica, pasarela de pago y contabilidad.
+
+### 7.12 Reglas de negocio de los otros bloques
+
+El detalle de fases, correcciones, briefs y pantallas esta en el paquete
+original, en la carpeta hermana `appFacturas`:
+
+| Tema | Donde |
+| --- | --- |
 | Bateria de fases, correccion, visibilidad | `appFacturas/docs/03-bateria-de-fases.md` |
 | Briefs | `appFacturas/docs/05-briefs.md` |
 | Pantallas | `appFacturas/docs/04-pantallas.md` y `design/` |
 
-Las reglas de negocio de esos documentos se mantienen. Lo que cambia es como se
-construyen, y eso lo dicen las secciones 2 a 6 de este plan.
+Esas reglas se mantienen. Como se construyen lo dice este plan, y donde difieran
+manda este plan.
 
 ---
 
