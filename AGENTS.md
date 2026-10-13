@@ -55,6 +55,7 @@ src/lib/          infraestructura: db, sesion, jwt, validaciones, navegacion,
 src/lib/hooks/    criterio del modulo de hooks como funciones puras
 src/proxy.ts      barrera de rutas (en Next 16 sustituye a middleware.ts)
 db/               schema.sql, seed, generador de SQL de produccion, pruebas
+db/neon/          SQL numerado para pegar en Neon, un archivo por cambio
 tests/            Playwright: unitarias e integracion
 ```
 
@@ -83,8 +84,14 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 
 - Toda page y toda action que lea o modifique datos **empieza por su guardia**
   (`src/lib/sesion.ts`). El proxy filtra por ruta pero no es la proteccion real.
-- El token sirve para enrutar; lo que decide que se muestra es el dato fresco
-  de la base.
+- El token sirve para enrutar; lo que decide que se muestra **y que se puede
+  hacer** es el dato fresco de la base. Todas las guardias (`requerirUsuario`,
+  `requerirRol`, `requerirAdmin`, `requerirCargo`) leen de ella.
+- Quien tiene un token valido pero ya no puede entrar sale por
+  `/login?motivo=sin-acceso`, nunca por `/login` a secas: el proxy lo
+  devolveria al panel y entraria en bucle.
+- La politica de contenido la pone `src/proxy.ts` con un nonce por peticion.
+  No se anaden scripts en linea ni origenes externos sin tocarla.
 - Los parametros de la URL nunca llegan crudos a un modelo: pasan por
   `leerEstadoListado`, que nunca lanza.
 - Un panel nuevo (`?panel=`) hay que anadirlo a la lista blanca de
@@ -117,7 +124,9 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Produccion corre en Vercel con la base en Neon. **El disco es de solo
   lectura**: el codigo de servidor no escribe archivos.
 - La maquina de desarrollo no alcanza Neon. Produccion se migra **pegando SQL**
-  en su editor; lo hace el responsable, no un asistente.
+  en su editor; lo hace el responsable, no un asistente. Cada cambio de esquema
+  entrega su archivo en `db/neon/`, idempotente, sin secretos y con su
+  consulta de comprobacion; `db/neon/README.md` lleva la lista.
 - **La base de produccion tiene datos reales.** El SQL que se genera para ella
   lleva esquema y catalogos imprescindibles; no inserta datos de ejemplo.
 

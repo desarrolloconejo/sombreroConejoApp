@@ -87,6 +87,15 @@ Lo que la auditoria encontro y **se resuelve en este plan**, no en ella:
 La cuenta de administrador del seed no existe en produccion (confirmado por
 el responsable el 2026-10-13).
 
+## Avance
+
+| Etapa | Rama | Que entrega | SQL para Neon | Estado |
+| --- | --- | --- | --- | --- |
+| 1 | `feat/etapa1-guardias-y-cabeceras` | Huecos 1, 8 y 10 cerrados; del 5, el acceso negado en el login y en cada peticion. Cargo `produccion` | `db/neon/01-cargo-produccion.sql` | Hecha |
+
+Del hueco 5 queda revocar las sesiones abiertas al desactivar la empresa, que
+llega con la tabla `sesiones`. Hoy esa persona sale en su siguiente peticion.
+
 ---
 
 ## 1. El flujo completo
