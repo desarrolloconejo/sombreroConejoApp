@@ -43,18 +43,6 @@ export async function crear(
   return trabajador;
 }
 
-/** Busca el vinculo de trabajador de un usuario. */
-export async function buscarPorUsuarioId(
-  usuarioId: number,
-  ejecutor?: Ejecutor,
-): Promise<Trabajador | null> {
-  return consultarUno<Trabajador>(
-    `SELECT ${COLUMNAS} FROM trabajadores WHERE usuario_id = $1`,
-    [usuarioId],
-    ejecutor,
-  );
-}
-
 /** Cambia el rol y el cargo de un trabajador. */
 export async function actualizar(
   usuarioId: number,

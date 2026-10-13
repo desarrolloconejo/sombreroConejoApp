@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import * as usuarios from "@/models/usuarios";
 import { gastarTiempoEquivalente, verificar } from "@/lib/password";
 import { destinoSeguro } from "@/lib/redireccion";
-import { borrarCookieSesion, crearCookieSesion, obtenerSesion } from "@/lib/sesion";
+import { borrarCookieSesion, crearCookieSesion } from "@/lib/sesion";
 import { validarCredenciales } from "@/lib/validaciones";
 import type { EstadoFormulario } from "@/types";
 
@@ -95,12 +95,4 @@ export async function iniciarSesion(
 export async function cerrarSesion(): Promise<void> {
   await borrarCookieSesion();
   redirect("/login");
-}
-
-/**
- * Devuelve la sesion actual para las pages que la necesiten como prop.
- * Es una lectura, no una barrera: no redirige.
- */
-export async function sesionActual() {
-  return obtenerSesion();
 }

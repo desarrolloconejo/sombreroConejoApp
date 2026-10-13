@@ -37,18 +37,6 @@ export async function crear(
   return cliente;
 }
 
-/** Busca el vinculo de cliente de un usuario. */
-export async function buscarPorUsuarioId(
-  usuarioId: number,
-  ejecutor?: Ejecutor,
-): Promise<Cliente | null> {
-  return consultarUno<Cliente>(
-    `SELECT ${COLUMNAS} FROM clientes WHERE usuario_id = $1`,
-    [usuarioId],
-    ejecutor,
-  );
-}
-
 /**
  * Cuantas personas de contacto ACTIVAS tiene cada empresa del lote.
  *
