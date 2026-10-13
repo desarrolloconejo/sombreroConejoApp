@@ -102,6 +102,7 @@ Lo que cada etapa exige en produccion se va anotando en
 | 1 | `feat/etapa1-rol-app` | Huecos 6, 7 y 11: la app se conecta como `conejo_app`, con los permisos justos; `conSesion`; el hash sale de la vista general; `sql:produccion` ya no lleva la semilla, y la imagen `prod` tampoco | `db/neon/05-rol-de-la-aplicacion.sql` **antes** de subir (lleva el hueco de la contrasena) y `06-vista-sin-hash.sql` **despues** | Hecha |
 | 1 | `feat/etapa1-menu-secciones` | Seccion 9.1: cada modulo declara su `seccion`; el sidebar y el menu movil pintan un rotulo por seccion y omiten las vacias | Ninguno | Hecha |
 | 2 | `feat/etapa2-correos` | Esquemas `portal` y `finanzas` con las funciones de sesion; adaptador de correo con modo simulado y real; `portal.correos_salida` con seguridad por fila; bandeja de salida para el admin; avisos de bienvenida y de contrasena restablecida | `db/neon/07-esquemas-y-correos.sql` | Hecha |
+| 2 | `feat/etapa2-avisos` | `portal.notificaciones` con seguridad por fila y la campana del encabezado, en escritorio y movil. Notifica el bloqueo de una cuenta y el correo fallido a los administradores, y la contrasena restablecida a su dueno | `db/neon/08-notificaciones.sql` | Hecha |
 
 **La etapa 1 esta completa.** Quedan fuera de ella, para la etapa en que
 existan sus modulos, los tres criterios nuevos de visibilidad de la seccion
@@ -125,6 +126,17 @@ Sobre el correo, decidido al construir la etapa 2:
 - La bandeja la lee el administrador, y cada quien los correos que el mismo
   provoco: sin eso no podria anotar el resultado de su propio envio.
 - El modo real (Gmail) esta escrito y sin probar: falta la cuenta.
+
+Sobre la campana:
+
+- La matriz de avisos del paquete (`appFacturas/docs/08`) es entera de modulos
+  que aun no existen. Lo construido es la pieza —tabla, politicas, campana—
+  y las tres notificaciones que hoy tienen sentido. Cada modulo anadira las
+  suyas al llegar.
+- En el codigo se llaman **notificaciones**, no avisos: `ProveedorAvisos` ya
+  usaba esa palabra para los mensajes flotantes.
+- No hay pagina de «todas las notificaciones»: la campana muestra las doce
+  ultimas. Se anade cuando haya volumen que lo pida.
 
 Sobre el rol de la aplicacion:
 
