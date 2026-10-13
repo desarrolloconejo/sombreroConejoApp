@@ -7,6 +7,9 @@ import { confirmarDosPasos, iniciarDosPasos } from "@/actions/dosPasos";
 import { Alerta, Boton, Campo } from "@/components/ui";
 import { ESTADO_INICIAL, type EstadoDosPasos } from "@/types";
 
+/** El margen en blanco que el estandar pide alrededor de un QR, en modulos. */
+const MARGEN_QR = 4;
+
 /**
  * La configuracion de la verificacion en dos pasos, en tres momentos:
  *
@@ -44,6 +47,7 @@ export function ConfigurarDosPasos({
   // respuesta mas reciente.
   const secreto = confirmacion.secreto ?? inicio.secreto;
   const enlace = confirmacion.enlace ?? inicio.enlace;
+  const qr = confirmacion.qr ?? inicio.qr;
   const respaldos = confirmacion.respaldos;
 
   async function copiar(texto: string) {
@@ -112,12 +116,37 @@ export function ConfigurarDosPasos({
             <b className="font-semibold">1. Abre tu app de codigos</b>
             <span className="block text-suave">
               Google Authenticator, Microsoft Authenticator o Authy. Elige «anadir
-              cuenta» y «introducir clave de configuracion».
+              cuenta» y «escanear un codigo QR».
             </span>
           </li>
 
           <li>
-            <b className="font-semibold">2. Escribe esta clave</b>
+            <b className="font-semibold">2. Escanea este codigo</b>
+
+            {qr && (
+              /*
+                Negro sobre blanco SIEMPRE, tambien con el tema oscuro: un
+                lector espera modulos oscuros sobre fondo claro, y muchos no
+                leen el codigo invertido. El margen blanco es parte del
+                codigo: sin el no se sabe donde empieza.
+              */
+              <span className="mt-2.5 block w-fit rounded-[13px] border border-borde bg-white p-1 text-black">
+                <svg
+                  role="img"
+                  aria-label="Codigo QR para registrar la cuenta en tu app de codigos"
+                  viewBox={`${-MARGEN_QR} ${-MARGEN_QR} ${qr.lado + MARGEN_QR * 2} ${qr.lado + MARGEN_QR * 2}`}
+                  shapeRendering="crispEdges"
+                  className="block size-[196px]"
+                >
+                  <path d={qr.trazo} fill="currentColor" />
+                </svg>
+              </span>
+            )}
+
+            <span className="mt-3 block text-suave">
+              Si no puedes escanearlo, elige «introducir clave de configuracion»
+              y escribe esta:
+            </span>
             <span className="mt-2 flex flex-wrap items-center gap-2.5">
               <code className="rounded-[10px] border border-borde bg-campo px-3 py-2 font-mono text-[13px] tracking-wide break-all">
                 {secreto}
