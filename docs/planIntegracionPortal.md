@@ -204,7 +204,7 @@ nuevo:
 | La bitacora deja de ser propia | `finanzas.eventos` desaparece: todo escribe en `auditoria` |
 | Tabla nueva `finanzas.tasas_cambio` | Fuente, fecha valor, valor, cuando se obtuvo y si fue automatica o a mano (seccion 6.1) |
 | Los ajustes siguen aqui | `finanzas.ajustes` (emisor, talonario, medios de pago) |
-| Los seis ajustes de su seccion 4.4 | Siguen pendientes de visto bueno (pregunta 1) |
+| Los seis ajustes de su seccion 4.4 | Aceptados |
 
 ---
 
