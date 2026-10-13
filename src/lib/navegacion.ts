@@ -7,6 +7,7 @@ import {
   History,
   House,
   Library,
+  ScrollText,
   ShieldCheck,
   User,
   Users,
@@ -226,6 +227,23 @@ const MODULOS: readonly Modulo[] = [
         icono: History,
         alias: ["fichas", "piezas", "archivo", "borradores"],
       },
+    ],
+  },
+
+  {
+    titulo: "Auditoria",
+    subtitulo: "Quien hizo que, y cuando",
+    href: "/dashboard/auditoria",
+    icono: ScrollText,
+    roles: ["admin"],
+    alias: [
+      "registro",
+      "bitacora",
+      "historial",
+      "actividad",
+      "accesos",
+      "cambios",
+      "log",
     ],
   },
 
