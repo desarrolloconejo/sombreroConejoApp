@@ -32,7 +32,8 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Modelo de trabajo | Proyecto → piezas → 5 fases fijas → **tareas** asignadas a personas (seccion 8.1) |
 | Catalogo de servicios | Lo que el cliente puede pedir es una lista cerrada; cada servicio trae su brief, sus piezas y sus tareas sugeridas (seccion 8.1) |
 | Herramientas | Seccion propia del menu. **Hooks es la primera** y se conecta al flujo a traves de las tareas (seccion 8.1) |
-| Menu | Agrupado por secciones (seccion 9) |
+| Menu | Agrupado por secciones (seccion 9). En movil, barra inferior con hoja en lugar de hamburguesa |
+| Planes hermanos | `docs/planAuditoriaRepositorio.md` (revision con Context7, conviene antes de la etapa 1) y `docs/planMejoraDiseno.md` (skills de diseno y navegacion movil) |
 | Tasas del BCV | Se guardan todas las que publica la pagina, no solo el dolar |
 | Asignacion de empresas | La hace el admin. El admin puede ademas actuar como ejecutivo |
 | Hooks | Lo ve solo `redes`, y el admin |
@@ -668,7 +669,8 @@ Tres decisiones de diseno del menu:
 | Sitio | Cambio |
 | --- | --- |
 | `src/lib/navegacion.ts` | Cada modulo declara su `seccion`. Criterios nuevos de visibilidad: solo clientes, un permiso del cliente, y «tiene tareas asignadas» |
-| `Sidebar` y cajon movil | Pintan un rotulo por seccion; hoy solo existe «General». Una seccion sin modulos visibles no se pinta |
+| `Sidebar` | Pinta un rotulo por seccion; hoy solo existe «General». Una seccion sin modulos visibles no se pinta |
+| Navegacion movil | **El cajon de hamburguesa se sustituye por una barra inferior con hoja de navegacion** (`docs/planMejoraDiseno.md`, fase 2). La hoja agrupa por las mismas secciones, y cada modulo declara su prioridad para la barra. Los modulos del portal se construyen ya sobre esa navegacion |
 | Buscador global | Sin cambios: sigue leyendo del mismo registro |
 | `src/proxy.ts` | Lista de rutas por tipo de usuario, la ruta publica del enlace y el paso de peticiones con cookie de renovacion |
 | `components/ui` | Componente nuevo: la bateria de cinco segmentos, con texto ademas de color y `aria-label` con el porcentaje |

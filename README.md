@@ -6,7 +6,8 @@ los procesos de la agencia, orientada a sus trabajadores y a sus clientes.
 Hoy cubre autenticacion, usuarios, empresas, perfil y el modulo de Hooks. Esta
 en marcha la integracion de un portal completo —briefs, proyectos, revision del
 cliente y finanzas—, cuyo plan vive en
-[docs/planIntegracionPortal.md](docs/planIntegracionPortal.md).
+[docs/planIntegracionPortal.md](docs/planIntegracionPortal.md). Hay otros dos
+planes pendientes: la revision del repositorio y la mejora del diseno.
 
 ## Stack
 
@@ -312,5 +313,6 @@ servidor propio. La base esta en **Neon**.
 | [AGENTS.md](AGENTS.md) | Contexto y reglas para asistentes de codigo |
 | [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md) | Plan de la integracion del portal |
 | [docs/integracionFinanzas.md](docs/integracionFinanzas.md) | Capitulo de finanzas |
-| [docs/contextoProyecto.md](docs/contextoProyecto.md) | Foto de la arquitectura |
+| [docs/planAuditoriaRepositorio.md](docs/planAuditoriaRepositorio.md) | Plan de revision y actualizacion del repositorio |
+| [docs/planMejoraDiseno.md](docs/planMejoraDiseno.md) | Plan de mejora del diseno |
 | [docs/creacionHooks.md](docs/creacionHooks.md) | Especificacion original de la herramienta de hooks |
