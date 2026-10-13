@@ -45,6 +45,13 @@ export type Usuario = {
   fotoUrl: string | null;
   tema: Tema;
   activo: boolean;
+
+  /**
+   * La contrasena la puso otra persona, en el alta o al restablecerla, y hay
+   * que elegir una propia antes de poder hacer nada.
+   */
+  debeCambiarClave: boolean;
+
   ultimoAcceso: Date | null;
   creadoEn: Date;
   actualizadoEn: Date;
@@ -88,6 +95,9 @@ export type UsuarioCompleto = Usuario & {
  */
 export type UsuarioConCredenciales = UsuarioCompleto & {
   passwordHash: string;
+
+  /** Si ahora mismo no se le admite ningun intento, por fallos repetidos. */
+  bloqueado: boolean;
 };
 
 /** Datos necesarios para crear un usuario. La contrasena llega ya hasheada. */
@@ -97,6 +107,9 @@ export type DatosNuevoUsuario = {
   email: string;
   passwordHash: string;
   telefono: string | null;
+
+  /** Cierto cuando la contrasena es provisional y la conoce quien da el alta. */
+  debeCambiarClave: boolean;
 };
 
 /** Campos que una persona puede cambiar de su propio perfil. */

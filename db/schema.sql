@@ -119,6 +119,36 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE UNIQUE INDEX IF NOT EXISTS usuarios_email_unico ON usuarios (lower(email));
 CREATE INDEX IF NOT EXISTS usuarios_activo_idx ON usuarios (activo);
 
+-- ---------------------------------------------------------------------------
+-- Acceso: bloqueo por intentos fallidos y cambio obligatorio de contrasena.
+--
+-- Van como ALTER y no dentro del CREATE TABLE para que lleguen tambien a una
+-- base que ya existe. Las tres traen un valor por defecto que no cambia nada
+-- para las cuentas actuales: nadie queda bloqueado ni obligado a cambiar su
+-- contrasena por el hecho de aplicar esto.
+--
+--   debe_cambiar_clave  la contrasena la puso otra persona (alta o
+--                       restablecimiento) y hay que elegir una propia antes
+--                       de poder hacer nada.
+--   intentos_fallidos   fallos seguidos desde el ultimo acierto.
+--   bloqueado_hasta     hasta cuando no se admite ningun intento.
+-- ---------------------------------------------------------------------------
+ALTER TABLE usuarios
+  ADD COLUMN IF NOT EXISTS debe_cambiar_clave BOOLEAN     NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS intentos_fallidos  SMALLINT    NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS bloqueado_hasta    TIMESTAMPTZ;
+
+DO $acceso$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'usuarios_intentos_no_negativos'
+  ) THEN
+    ALTER TABLE usuarios
+      ADD CONSTRAINT usuarios_intentos_no_negativos CHECK (intentos_fallidos >= 0);
+  END IF;
+END
+$acceso$;
+
 
 -- ---------------------------------------------------------------------------
 -- trabajadores: personal de la empresa. Aqui vive el rol.
@@ -665,6 +695,8 @@ SELECT
   u.ultimo_acceso,
   u.creado_en,
   u.actualizado_en,
+  u.debe_cambiar_clave,
+  u.bloqueado_hasta,
   CASE
     WHEN t.id IS NOT NULL THEN 'trabajador'
     WHEN c.id IS NOT NULL THEN 'cliente'
