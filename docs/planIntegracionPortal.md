@@ -29,7 +29,9 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Modal de sesion | Renovacion silenciosa mientras hay actividad; el modal solo aparece tras inactividad. Tope de 12 horas |
 | Video en revision | Enlaces externos |
 | Tarea de la tasa | Una vez al dia (plan gratuito de Vercel), mas refresco al usar |
-| Hooks y piezas | No se conectan por ahora |
+| Hooks | **Se conecta al flujo, como herramienta** (seccion 8.1). Sustituye a la decision anterior de aplazarlo |
+| Ajustes al modelo de finanzas | Aceptados los seis |
+| Verificacion en dos pasos | Si, disponible para todos (seccion 5.3) |
 | Neon | El rol de produccion, `neondb_owner`, tiene `BYPASSRLS` (comprobado el 2026-10-13): el rol `conejo_app` es obligatorio, no opcional |
 | Plataforma | Vercel es temporal: la app se mudara, previsiblemente a un VPS. El plan separa lo que se construye ya de lo que se enciende tras la mudanza (seccion 10) |
 | Aprovechar la integracion | Cerrar huecos de seguridad y mejorar flujos actuales (secciones 5 y 8) |
@@ -119,7 +121,7 @@ Tres bloques que hoy no existen en Conejo App, mas finanzas:
 | Permisos Aprobar y Finanzas | Dos columnas nuevas en `clientes`: `puede_aprobar`, `puede_ver_finanzas` | Las marca el admin en el modulo de Usuarios |
 | ADMIN | rol `admin` | |
 | EJECUTIVO | rol `trabajador`, cargo `cuentas` | Decidido. Ve solo sus empresas asignadas |
-| PRODUCCION | rol `trabajador`, cargo **`produccion`**, que es nuevo | Decidido. `diseno` y `redes` son cargos distintos: falta definir si tambien reciben piezas (pregunta 2) |
+| PRODUCCION | rol `trabajador`, cargo **`produccion`**, que es nuevo | Decidido. Quien hace cada tarea no depende del cargo sino de la asignacion (seccion 8.1) |
 | — | cargo `administracion` | Opera finanzas; no ve produccion salvo decision contraria |
 | Asignacion ejecutivo ↔ cliente | Tabla nueva `portal.asignaciones` | Decidido: se aplica desde el primer dia |
 | Prospecto | Tabla nueva `portal.prospectos` | Empresa que aun no es cliente |
@@ -318,11 +320,32 @@ bloqueos, altas y cambios de usuarios y empresas, contrasenas restablecidas—, 
 cada modulo nuevo anade lo suyo. `ediciones_ficha` se queda como esta: es el
 historial que se muestra dentro de una ficha de hook.
 
+### 5.3 Verificacion en dos pasos
+
+**No usa el cliente de Google ni ningun servicio.** Las apps de codigos (Google
+Authenticator, Microsoft Authenticator, Authy) implementan un estandar abierto,
+TOTP: el servidor y el telefono comparten un secreto y los dos calculan el
+mismo codigo de seis digitos a partir de la hora. No hay llamada a nadie.
+
+| Pieza | Como |
+| --- | --- |
+| Calculo y comprobacion | `node:crypto` (HMAC). Sin libreria |
+| Secreto | Columna en `usuarios`, **cifrada** con una clave que vive en una variable de entorno |
+| Activacion | En Mi perfil: se muestra el secreto, la persona lo registra en su app y confirma con un codigo |
+| Login | Segundo paso tras la contrasena. Los fallos cuentan para el bloqueo de intentos |
+| Codigos de respaldo | Diez, de un solo uso, guardados como hash |
+| Telefono perdido | Un admin desactiva los dos pasos de esa persona; queda en la auditoria |
+| Para quien | Obligatoria para `admin` y `administracion`; disponible para todos los demas, clientes incluidos |
+
+**El codigo QR es lo unico que no sale gratis.** Generar un QR no viene con
+Node. Sin libreria, la activacion se hace tecleando el secreto en la app, o
+con un enlace que la abre sola desde el telefono. Mostrar el QR pide una
+dependencia pequena o escribir el codificador; se decide al llegar a esa etapa.
+
 ### Lo que no se puede cerrar todavia
 
 | Tema | Por que | Cuando |
 | --- | --- | --- |
-| Verificacion en dos pasos | Se puede hacer sin libreria (TOTP con `node:crypto`), pero es una etapa propia | Antes de emitir facturas reales. **A decidir** (pregunta 7) |
 | Bloqueo por IP | Detras de Vercel la IP es la de su red | Tras la mudanza |
 | Copias de seguridad propias | El 5432 esta bloqueado desde desarrollo | Tras la mudanza |
 
@@ -454,7 +477,7 @@ construyen, y eso lo dicen las secciones 2 a 6 de este plan.
 
 | Mejora | Que cambia |
 | --- | --- |
-| **Hooks se conecta con las piezas** | **Aplazado.** Una pieza de tipo reel o video podria llevar su hook, ligando la ficha por `fichas_hook.pieza_id`. No se hace por ahora; anadir esa columna despues no rompe nada |
+| **Hooks pasa a ser una herramienta** | Deja de ser un modulo suelto y se convierte en la primera herramienta que la app ofrece para cumplir una tarea (seccion 8.1) |
 | **El inicio del cliente deja de estar vacio** | Hoy un cliente entra y solo ve su perfil. Pasa a ver sus proyectos, lo que espera su revision y su saldo |
 | **La campana de avisos funciona** | El boton del layout deja de estar deshabilitado |
 | **El cargo `cuentas` empieza a servir** | Es quien opera la bandeja de briefs y el tablero |
@@ -464,13 +487,57 @@ construyen, y eso lo dicen las secciones 2 a 6 de este plan.
 
 ---
 
+### 8.1 Tareas y herramientas (propuesta, pendiente de confirmar)
+
+El paquete define el trabajo como piezas con cinco fases fijas. Lo que pide el
+dia a dia es mas fino: un objetivo que se desglosa en tareas, que se asignan y
+se cumplen. Las dos cosas caben juntas si las tareas viven **dentro** de las
+fases:
+
+```
+Proyecto                       el objetivo: lo que pidio el cliente
+  └─ Pieza                     un entregable: lo que el cliente aprueba
+       └─ 5 fases              la bateria que ve el cliente; no cambia
+            └─ Tareas          el trabajo interno: quien hace que, y con que
+                 └─ Herramienta   opcional: lo que la app da para hacerla
+```
+
+| Regla | Por que |
+| --- | --- |
+| Las cinco fases se quedan fijas | Es lo que el estudio le promete al cliente y lo que hace calculable el avance. El cliente nunca ve tareas |
+| Las tareas cuelgan de las fases de trabajo (1 y 3) | Las fases 2, 4 y 5 son controles, no trabajo |
+| Una tarea se asigna a una persona, de cualquier cargo | Resuelve quien hace el trabajo: no depende del cargo, depende de la asignacion |
+| Una fase se puede completar cuando sus tareas estan listas | Quien la completa sigue siendo el ejecutivo |
+| Las tareas salen propuestas por el tipo de servicio, y el ejecutivo las ajusta | Ni todo fijo ni todo a mano |
+
+**Catalogo de servicios.** Lo que el cliente puede pedir no es libre: cada
+servicio que vende la agencia define su formato de brief, su plantilla de fases,
+los tipos de pieza habituales y las tareas sugeridas. Va en codigo, como el
+catalogo de hooks. Al aceptar un brief el proyecto nace ya armado con eso, y el
+ejecutivo quita, anade y asigna.
+
+**Herramientas.** Un registro en codigo, igual que el de modulos. Cada
+herramienta declara para que tipo de tarea sirve y cuando se considera hecha.
+Hooks es la primera: una tarea «escribir el hook» abre el canvas con la empresa
+ya puesta, y la tarea queda lista cuando la ficha aprueba la auditoria. En el
+menu, «Hooks» pasa a colgar de un grupo «Herramientas», y sigue pudiendose usar
+suelto.
+
+| Tabla | Cambio |
+| --- | --- |
+| `portal.tareas` (nueva) | Fase de la pieza, titulo, responsable, herramienta, estado, lista en |
+| `fichas_hook` | `tarea_id` opcional |
+
+**Falta del negocio:** la lista de servicios que vende la agencia y las tareas
+tipicas de cada uno.
+
 ## 9. Interfaz
 
 | Modulo | Ruta | Visible para | Contenido |
 | --- | --- | --- | --- |
 | Tablero | `/dashboard/tablero` | `cuentas`, admin | Proyectos de sus empresas asignadas, con su bateria y las cuatro alertas |
 | Proyectos | `/dashboard/proyectos` | `cuentas`, admin | Listado, matriz de piezas × fases, ficha de pieza |
-| Mi trabajo | `/dashboard/mi-trabajo` | `produccion` (y `diseno`, `redes` si se decide, pregunta 2) | Cola de piezas asignadas, «marcar como lista» |
+| Mi trabajo | `/dashboard/mi-trabajo` | Cualquier trabajador con tareas asignadas | Cola de piezas asignadas, «marcar como lista» |
 | Briefs (bandeja) | `/dashboard/briefs` | `cuentas`, admin | Recibidos, aclaraciones, las tres decisiones |
 | Finanzas | `/dashboard/finanzas` | `administracion`, admin | Presupuestos, proformas, facturas, pagos, cobranza, ajustes |
 | Bandeja de salida | `/dashboard/salida` | admin | Correos simulados |
@@ -549,12 +616,11 @@ variables. El codigo no cambia.
 
 | # | Pregunta | Mi propuesta |
 | --- | --- | --- |
-| 1 | Los seis ajustes al modelo de finanzas (`integracionFinanzas.md`, seccion 4.4) | Aceptarlos todos |
-| 2 | Quien hace el trabajo de las piezas: solo el cargo `produccion`, o tambien `redes` (redacta) y `diseno` (disena) | Que una pieza se pueda asignar a cualquiera de los tres |
-| 3 | Como se imprime la factura | Desde el navegador |
-| 4 | ¿Verificacion en dos pasos para quien emite facturas? | Si, en la etapa 8 |
-| 5 | ¿Se aceptan rutas API (`route.ts`)? Hacen falta dos: descargar archivos y la tarea de la tasa | Si |
-| 6 | ¿Que tasa del BCV se guarda: dolar, euro o las dos? | Las dos; el negocio decide cual se usa al facturar |
+| 1 | El modelo de tareas dentro de las fases y el catalogo de servicios (seccion 8.1) | Adoptarlo |
+| 2 | Como se imprime la factura | Desde el navegador |
+| 3 | ¿Se aceptan rutas API (`route.ts`)? Hacen falta dos: descargar archivos y la tarea de la tasa | Si |
+| 4 | ¿Que tasa del BCV se guarda: dolar, euro o las dos? | Las dos; el negocio decide cual se usa al facturar |
+| 5 | Codigo QR para activar los dos pasos: una dependencia pequena, o solo tecleando el secreto | Se decide al llegar a esa etapa |
 
 ### Del negocio
 
@@ -564,6 +630,7 @@ variables. El codigo no cambia.
 | Medios de pago reales | Pagos |
 | Validacion del contador (campos de la factura, IGTF, ISLR, numero de control) | Facturas |
 | Hoja escaneada del talonario | Impresion |
+| La lista de servicios que vende la agencia, y las tareas tipicas de cada uno | El catalogo de servicios (seccion 8.1) |
 | Texto definitivo de las preguntas del brief de Diagnostico | Ese formato; el de Desarrollo de Producto esta completo |
 | Cuando suma el 20 % de una fase, limite de rondas, plazo de revision del cliente | Nada: hay valores por defecto (al completarla, sin limite, sin plazo) |
 
