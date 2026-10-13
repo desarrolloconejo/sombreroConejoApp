@@ -1,42 +1,34 @@
 /**
- * Vuelca el esquema y los datos iniciales a un unico archivo SQL.
+ * Vuelca a un unico archivo SQL lo que una base NUEVA necesita para arrancar.
  *
  *   npm run sql:produccion
  *
- * POR QUE EXISTE ESTO
- * -------------------
- * En produccion la base vive en Neon, pero la maquina de desarrollo no puede
- * alcanzarla: la VPN que hace falta para trabajar bloquea el puerto 5432 de
- * salida, y el reenvio selectivo que lo resolveria es de pago. Probado: el
- * mismo host de Neon abre en 443 y no contesta en 5432.
+ * PARA QUE SIRVE
+ * --------------
+ * Para levantar una base vacia: el dia de la mudanza al VPS, o un entorno de
+ * pruebas. Lleva el esquema entero y las filas de las que depende la logica.
  *
- * El panel de Neon tiene un editor SQL que va por HTTPS, asi que si no se
- * puede llevar la base al script, se lleva el script a la base: este genera
- * `db/produccion.sql` para pegarlo ahi.
+ * NO es la forma de migrar la base de produccion que ya existe: para eso estan
+ * los archivos numerados de `db/neon/`, uno por cambio.
  *
- * Los hashes de contrasena se calculan AQUI, en local, con el mismo coste de
- * bcrypt que usa el seed. Nunca viaja una contrasena en claro.
+ * QUE LLEVA Y QUE NO
+ * ------------------
+ * Lleva el esquema, los roles y las aperturas de hooks, que son contenido de
+ * la casa. NO lleva nada de la semilla de desarrollo: ni la empresa de
+ * ejemplo, ni las cuentas de prueba, ni las reglas y la referencia de muestra.
+ * La base de produccion tiene datos reales, y unas cuentas con la contrasena
+ * escrita en el repositorio no pueden acabar ahi.
  *
- * Todo va con ON CONFLICT DO NOTHING, igual que el seed: el archivo se puede
- * pegar mas de una vez sin duplicar ni pisar nada.
+ * Por lo mismo no crea ningun usuario. El primer administrador de una base
+ * nueva se da de alta a mano, con una contrasena que no pase por aqui.
  *
- * El dia que se pueda conectar al 5432 —VPN de pago, o el salto a un VPS—
- * este archivo deja de hacer falta: bastara `npm run seed` con la cadena de
- * Neon en el entorno.
+ * Todo va con ON CONFLICT DO NOTHING: el archivo se puede pegar mas de una vez
+ * sin duplicar ni pisar nada.
  */
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import bcrypt from "bcryptjs";
 import { APERTURAS } from "./datos/aperturas.mts";
-import {
-  EMAIL_CREADORA,
-  EMPRESA_DEMO,
-  REFERENCIA,
-  REGLAS,
-  RONDAS_BCRYPT,
-  ROLES,
-  USUARIOS,
-} from "./datos/semilla.mts";
+import { ROLES } from "./datos/semilla.mts";
 
 /**
  * Escapa un literal de texto para SQL.
@@ -48,8 +40,8 @@ import {
  * por defecto desde hace anos y el que usa Neon.
  *
  * Los datos de este archivo los escribimos nosotros, no llegan de fuera, pero
- * la comilla de "Distribuidora Ejemplo, C.A." o de cualquier redaccion futura
- * romperia el archivo entero sin esto.
+ * la comilla de una apertura o de cualquier redaccion futura romperia el
+ * archivo entero sin esto.
  */
 function txt(valor: string | null): string {
   if (valor === null) return "NULL";
@@ -78,8 +70,11 @@ async function principal(): Promise<void> {
 -- Es idempotente. Se puede pegar cuantas veces haga falta: las tablas se
 -- crean con IF NOT EXISTS y las inserciones no duplican ni pisan nada.
 --
+-- No crea usuarios ni datos de ejemplo. El rol conejo_app nace sin
+-- contrasena: hay que ponersela aparte (ver db/neon/05-rol-de-la-aplicacion.sql).
+--
 -- Al terminar, comprobar:
---   SELECT count(*) FROM usuarios;        -- ${USUARIOS.length}
+--   SELECT count(*) FROM roles;           -- ${ROLES.length}
 --   SELECT count(*) FROM aperturas_hook;  -- ${APERTURAS.length}
 --
 `);
@@ -103,63 +98,6 @@ async function principal(): Promise<void> {
     );
   }
 
-  // -- Empresa de ejemplo ---------------------------------------------------
-  partes.push(encabezado("EMPRESA DE EJEMPLO"));
-  partes.push(
-    `INSERT INTO empresas (nombre, rif, telefono, direccion, sector)\n` +
-      `VALUES (${txt(EMPRESA_DEMO.nombre)}, ${txt(EMPRESA_DEMO.rif)}, ` +
-      `${txt(EMPRESA_DEMO.telefono)}, ${txt(EMPRESA_DEMO.direccion)}, ` +
-      `${txt(EMPRESA_DEMO.sector)})\n` +
-      `ON CONFLICT (rif) DO UPDATE SET sector = EXCLUDED.sector;\n`,
-  );
-
-  // -- Usuarios -------------------------------------------------------------
-  //
-  // Los identificadores no se conocen al generar el archivo, asi que las
-  // filas de trabajadores y clientes se enganchan con subconsultas por correo
-  // en lugar de con un numero. Asi el archivo funciona sobre una base vacia y
-  // sobre una que ya tenga usuarios.
-  partes.push(encabezado("USUARIOS"));
-
-  for (const usuario of USUARIOS) {
-    const hash = await bcrypt.hash(usuario.password, RONDAS_BCRYPT);
-
-    partes.push(
-      `INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono)\n` +
-        `VALUES (${txt(usuario.nombre)}, ${txt(usuario.apellido)}, ` +
-        `${txt(usuario.email)}, ${txt(hash)}, ${txt(usuario.telefono)})\n` +
-        `ON CONFLICT (lower(email)) DO NOTHING;\n`,
-    );
-
-    const buscaUsuario = `(SELECT id FROM usuarios WHERE lower(email) = lower(${txt(usuario.email)}))`;
-
-    if (usuario.perfil.tipo === "trabajador") {
-      // DO UPDATE, no DO NOTHING: si cambia el rol o el cargo de alguien,
-      // volver a pegar el archivo debe corregirlo.
-      partes.push(
-        `INSERT INTO trabajadores (usuario_id, rol_id, cargo_id, fecha_ingreso)\n` +
-          `VALUES (\n` +
-          `  ${buscaUsuario},\n` +
-          `  (SELECT id FROM roles  WHERE nombre = ${txt(usuario.perfil.rol)}),\n` +
-          `  (SELECT id FROM cargos WHERE slug   = ${txt(usuario.perfil.cargo)}),\n` +
-          `  CURRENT_DATE\n` +
-          `)\n` +
-          `ON CONFLICT (usuario_id) DO UPDATE\n` +
-          `  SET rol_id = EXCLUDED.rol_id, cargo_id = EXCLUDED.cargo_id;\n`,
-      );
-    } else {
-      partes.push(
-        `INSERT INTO clientes (usuario_id, empresa_id, cargo)\n` +
-          `VALUES (\n` +
-          `  ${buscaUsuario},\n` +
-          `  (SELECT id FROM empresas WHERE rif = ${txt(EMPRESA_DEMO.rif)}),\n` +
-          `  ${txt(usuario.perfil.cargo)}\n` +
-          `)\n` +
-          `ON CONFLICT (usuario_id) DO NOTHING;\n`,
-      );
-    }
-  }
-
   // -- Aperturas ------------------------------------------------------------
   partes.push(encabezado(`APERTURAS (${APERTURAS.length})`));
   for (const a of APERTURAS) {
@@ -173,44 +111,15 @@ async function principal(): Promise<void> {
     );
   }
 
-  // -- Reglas y referencia --------------------------------------------------
-  const creadora = `(SELECT id FROM usuarios WHERE lower(email) = lower(${txt(EMAIL_CREADORA)}))`;
-  const empresa = `(SELECT id FROM empresas WHERE rif = ${txt(EMPRESA_DEMO.rif)})`;
-
-  partes.push(encabezado("REGLAS DE EJEMPLO"));
-  for (const r of REGLAS) {
-    partes.push(
-      `INSERT INTO reglas_hook (etiqueta, empresa_id, sector, max_palabras_voz, ` +
-        `max_palabras_insert, exigir_prueba, preambulos, formulas_gastadas, ` +
-        `terminos_tension, creado_por)\n` +
-        `SELECT ${txt(r.etiqueta)}, ${r.empresaId === null ? "NULL" : empresa}, ` +
-        `${txt(r.sector)}, ${r.maxVoz}, ${r.maxInsert}, ${r.exigirPrueba}, ` +
-        `'', '', '', ${creadora}\n` +
-        `WHERE NOT EXISTS (SELECT 1 FROM reglas_hook WHERE etiqueta = ${txt(r.etiqueta)});\n`,
-    );
-  }
-
-  partes.push(encabezado("REFERENCIA DE EJEMPLO"));
-  partes.push(
-    `INSERT INTO referencias_hook (hablado, insert_titulo, plataforma, ` +
-      `territorio, url_fuente, lectura, etiquetas, creado_por)\n` +
-      `SELECT ${txt(REFERENCIA.hablado)}, ${txt(REFERENCIA.insertTitulo)}, ` +
-      `${txt(REFERENCIA.plataforma)}, ${txt(REFERENCIA.territorio)}, ` +
-      `${txt(REFERENCIA.urlFuente)}, ${txt(REFERENCIA.lectura)}, ` +
-      `${txt(REFERENCIA.etiquetas)}, ${creadora}\n` +
-      `WHERE NOT EXISTS (SELECT 1 FROM referencias_hook ` +
-      `WHERE hablado = ${txt(REFERENCIA.hablado)});\n`,
-  );
-
   const destino = join(import.meta.dirname, "produccion.sql");
   const contenido = partes.join("\n");
   await writeFile(destino, contenido, "utf8");
 
   const kb = (Buffer.byteLength(contenido, "utf8") / 1024).toFixed(1);
   console.log(`Escrito db/produccion.sql (${kb} kB)`);
-  console.log(`  ${ROLES.length} roles, ${USUARIOS.length} usuarios, ` +
-    `${APERTURAS.length} aperturas, ${REGLAS.length} reglas, 1 referencia`);
-  console.log("\nPegalo en el editor SQL del panel de Neon y ejecutalo.");
+  console.log(`  ${ROLES.length} roles y ${APERTURAS.length} aperturas. ` +
+    "Sin usuarios ni datos de ejemplo.");
+  console.log("\nEs para una base NUEVA. La que ya existe se migra con db/neon/.");
 }
 
 principal().catch((error: unknown) => {
