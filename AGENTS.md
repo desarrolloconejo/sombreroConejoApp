@@ -57,6 +57,8 @@ src/lib/          infraestructura: db, sesion, jwt, validaciones, navegacion,
 src/lib/hooks/    criterio del modulo de hooks como funciones puras
 src/lib/externos/ adaptadores de servicios externos, con modo simulado y real
 src/lib/correos/  lo que dice cada correo, como funciones puras
+src/lib/finanzas/ criterio de finanzas como funciones puras, y sus tareas
+src/app/api/cron/ tareas programadas: sin sesion, protegidas por CRON_SECRET
 src/proxy.ts      barrera de rutas (en Next 16 sustituye a middleware.ts)
 db/               schema.sql, seed, generador de SQL de produccion, pruebas
 db/neon/          SQL numerado para pegar en Neon, un archivo por cambio
@@ -145,6 +147,14 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   mensaje flotante que confirma una accion (`ProveedorAvisos`). No se mezclan
   los nombres. Las notificaciones se escriben dentro de `conSesion`, en la
   transaccion del cambio, y su tipo sale de `TipoNotificacion`.
+- Una tarea programada vive en `src/app/api/cron/`, comprueba `CRON_SECRET`
+  antes de nada y escribe con `conSistema`, nunca con una identidad
+  inventada. Si una tabla debe aceptarla, su politica nombra el rol
+  `sistema`.
+- El dinero y las tasas viajan como **texto decimal** y se guardan en
+  `NUMERIC`. No pasan por `number`.
+- No se desactiva la verificacion TLS para ningun servicio. Si a un servidor
+  le falta un certificado intermedio, se le entrega con la opcion `ca`.
 - Un servicio externo se llama solo a traves de su adaptador de
   `src/lib/externos/`, y nunca dentro de una transaccion de la base. Para el
   correo: `encolarCorreo` dentro de `conSesion`, `entregarCorreos` despues.

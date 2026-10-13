@@ -103,6 +103,11 @@ Lo que cada etapa exige en produccion se va anotando en
 | 1 | `feat/etapa1-menu-secciones` | Seccion 9.1: cada modulo declara su `seccion`; el sidebar y el menu movil pintan un rotulo por seccion y omiten las vacias | Ninguno | Hecha |
 | 2 | `feat/etapa2-correos` | Esquemas `portal` y `finanzas` con las funciones de sesion; adaptador de correo con modo simulado y real; `portal.correos_salida` con seguridad por fila; bandeja de salida para el admin; avisos de bienvenida y de contrasena restablecida | `db/neon/07-esquemas-y-correos.sql` | Hecha |
 | 2 | `feat/etapa2-avisos` | `portal.notificaciones` con seguridad por fila y la campana del encabezado, en escritorio y movil. Notifica el bloqueo de una cuenta y el correo fallido a los administradores, y la contrasena restablecida a su dueno | `db/neon/08-notificaciones.sql` | Hecha |
+| 2 | `feat/etapa2-tasa-bcv` | Seccion 6.1: `finanzas.tasas_cambio`, lector de la pagina del BCV con su certificado intermedio, validacion, tarea programada `/api/cron/tasa` y la identidad `sistema` | `db/neon/09-tasas-de-cambio.sql` | Hecha |
+
+**La etapa 2 esta completa**, salvo el adaptador de archivos, que por
+decision del responsable (2026-10-13) pasa a la etapa 4: hoy nada lo usa, y
+sus permisos dependen de las versiones de pieza y de los comprobantes.
 
 **La etapa 1 esta completa.** Quedan fuera de ella, para la etapa en que
 existan sus modulos, los tres criterios nuevos de visibilidad de la seccion
@@ -126,6 +131,18 @@ Sobre el correo, decidido al construir la etapa 2:
 - La bandeja la lee el administrador, y cada quien los correos que el mismo
   provoco: sin eso no podria anotar el resultado de su propio envio.
 - El modo real (Gmail) esta escrito y sin probar: falta la cuenta.
+
+Sobre la tasa, decidido al construir:
+
+- Probado contra la pagina real el 2026-10-13: cinco monedas, fecha valor
+  del dia, con la verificacion TLS encendida.
+- El salto maximo creible entre una tasa y la anterior es del 25 %.
+- De lo que pedia la seccion 6.1 quedan para finanzas (etapa 5) el «refresco
+  al usar» y la pantalla para registrar o corregir una tasa a mano. La base
+  ya admite el registro manual; corregir una tasa ya guardada no, porque la
+  tabla es un historico: se decidira alli como se representa.
+- La tarea corre a las 22:30 UTC (18:30 de Caracas), cuando el BCV ya ha
+  publicado la tasa del dia habil siguiente.
 
 Sobre la campana:
 
