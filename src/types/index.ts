@@ -39,6 +39,7 @@ export type {
   EstadoRenovacion,
   ErroresCampo,
   EstadoFormulario,
+  EstadoDosPasos,
 } from "./sesion";
 export { ESTADO_INICIAL } from "./sesion";
 

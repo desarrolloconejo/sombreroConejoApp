@@ -18,6 +18,10 @@ export type AccionAuditoria =
   | "usuario.clave_cambiada"
   | "usuario.clave_restablecida"
   | "usuario.perfil_editado"
+  | "usuario.dos_pasos_activados"
+  | "usuario.dos_pasos_desactivados"
+  | "usuario.dos_pasos_retirados"
+  | "usuario.dos_pasos_omitidos"
   | "empresa.creada"
   | "empresa.editada"
   | "empresa.activada"
@@ -41,6 +45,10 @@ export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
   "usuario.clave_cambiada": "Cambio su contrasena",
   "usuario.clave_restablecida": "Contrasena restablecida",
   "usuario.perfil_editado": "Edito su perfil",
+  "usuario.dos_pasos_activados": "Activo la verificacion en dos pasos",
+  "usuario.dos_pasos_desactivados": "Desactivo la verificacion en dos pasos",
+  "usuario.dos_pasos_retirados": "Un administrador le retiro los dos pasos",
+  "usuario.dos_pasos_omitidos": "Prefirio no usar la verificacion en dos pasos",
   "empresa.creada": "Empresa creada",
   "empresa.editada": "Empresa editada",
   "empresa.activada": "Empresa reactivada",

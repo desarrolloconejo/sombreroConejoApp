@@ -102,5 +102,22 @@ export type EstadoFormulario = {
   credencial?: { email: string; password: string };
 };
 
+/**
+ * Lo que devuelven las actions de la verificacion en dos pasos.
+ *
+ * Extiende el estado normal con lo que solo se muestra UNA vez: el secreto
+ * mientras se registra en la app, y los codigos de respaldo al activar.
+ */
+export type EstadoDosPasos = EstadoFormulario & {
+  /** El secreto, en grupos, para quien lo teclea a mano. */
+  secreto?: string;
+
+  /** El enlace que registra la cuenta al abrirlo desde el telefono. */
+  enlace?: string;
+
+  /** Los codigos de respaldo recien generados. No se vuelven a mostrar. */
+  respaldos?: string[];
+};
+
 /** Estado inicial de cualquier formulario, antes del primer envio. */
 export const ESTADO_INICIAL: EstadoFormulario = { ok: false };

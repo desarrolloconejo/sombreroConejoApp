@@ -90,6 +90,9 @@ const SESION_CERRADA = "/login?motivo=caducada";
 /** La unica pantalla que ve quien entra con una contrasena provisional. */
 const CAMBIO_DE_CLAVE = "/cambiar-clave";
 
+/** Donde se configuran los dos pasos, o se dice que no se quieren. */
+const DOS_PASOS = "/dos-pasos";
+
 /** Atributos comunes a las dos cookies de la sesion. */
 function opcionesCookie(maxAge: number) {
   return {
@@ -154,6 +157,7 @@ const personaYSesion = cache(async () => {
 
   return {
     usuario: encontrado.usuario,
+    dosPasosResueltos: encontrado.dosPasosResueltos,
     accesoCaducaEn: sesion.accesoCaducaEn,
     sesionCaducaEn: encontrado.sesionCaducaEn.getTime(),
   };
@@ -213,13 +217,15 @@ async function rutaActual(): Promise<string> {
  * - El token verifica pero la sesion se revoco, o la cuenta ya no puede
  *   entrar: al login con su motivo, que ademas borra las cookies.
  *
- * Y una cuarta para quien si puede entrar pero aun usa la contrasena que le
+ * Y dos paradas para quien si puede entrar pero tiene algo pendiente: la
+ * contrasena provisional y la pregunta de los dos pasos. Para la primera,
+ * quien aun usa la contrasena que le
  * dio otra persona: no pasa de la pantalla de cambiarla. `conClaveProvisional`
  * levanta esa barrera, y solo lo piden esa pantalla y la action que cambia la
  * contrasena; todo lo demas queda cerrado hasta que elija una propia.
  */
 export async function requerirUsuario(
-  opciones: { conClaveProvisional?: boolean } = {},
+  opciones: { conClaveProvisional?: boolean; sinResolverDosPasos?: boolean } = {},
 ): Promise<UsuarioCompleto> {
   const sesion = await obtenerSesion();
 
@@ -247,6 +253,20 @@ export async function requerirUsuario(
 
   if (usuario.debeCambiarClave && !opciones.conClaveProvisional) {
     redirect(CAMBIO_DE_CLAVE);
+  }
+
+  /*
+   * Los dos pasos se piden por defecto. Quien no los tiene activados ni ha
+   * dicho que no los quiere pasa primero por la pantalla donde se decide.
+   * `sinResolverDosPasos` levanta la barrera para esa pantalla y sus actions.
+   *
+   * Va despues de la contrasena provisional: primero una contrasena propia,
+   * despues el segundo paso.
+   */
+  if (!opciones.sinResolverDosPasos && !opciones.conClaveProvisional) {
+    const datos = await personaYSesion();
+
+    if (datos && !datos.dosPasosResueltos) redirect(DOS_PASOS);
   }
 
   return usuario;

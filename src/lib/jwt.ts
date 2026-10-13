@@ -187,3 +187,54 @@ export async function verificarSesion(token: string): Promise<Sesion | null> {
     return null;
   }
 }
+
+/**
+ * La audiencia del token de «falta el codigo». Es distinta de la de sesion a
+ * proposito: aunque los dos se firman con la misma clave, un token de este
+ * tipo presentado como sesion no verifica, y al reves tampoco.
+ */
+const AUDIENCIA_PASO_PENDIENTE = "conejo-app-paso2";
+
+/**
+ * Firma la constancia de que alguien acerto su contrasena y aun debe el
+ * codigo de su app. No da acceso a nada: solo deja terminar de entrar.
+ */
+export async function firmarPasoPendiente(
+  usuarioId: number,
+  volverA: string,
+  duracionSegundos: number,
+): Promise<string> {
+  return new SignJWT({ volverA })
+    .setProtectedHeader({ alg: ALGORITMO })
+    .setSubject(String(usuarioId))
+    .setIssuedAt()
+    .setIssuer(EMISOR)
+    .setAudience(AUDIENCIA_PASO_PENDIENTE)
+    .setExpirationTime(`${duracionSegundos}s`)
+    .sign(claveSecreta());
+}
+
+/** Verifica esa constancia. Devuelve null si no es valida o ya caduco. */
+export async function verificarPasoPendiente(
+  token: string,
+): Promise<{ usuarioId: number; volverA: string } | null> {
+  try {
+    const { payload } = await jwtVerify(token, claveSecreta(), {
+      algorithms: [ALGORITMO],
+      issuer: EMISOR,
+      audience: AUDIENCIA_PASO_PENDIENTE,
+      requiredClaims: ["exp", "sub"],
+    });
+
+    const usuarioId = Number(payload.sub);
+
+    if (!Number.isInteger(usuarioId) || usuarioId <= 0) return null;
+
+    return {
+      usuarioId,
+      volverA: typeof payload.volverA === "string" ? payload.volverA : "/dashboard",
+    };
+  } catch {
+    return null;
+  }
+}
