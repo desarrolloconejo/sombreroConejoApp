@@ -88,7 +88,8 @@ docker compose exec app-dev npm run seed            # esquema y datos locales
 docker compose exec app-dev npm run prueba:auditor  # casos del auditor de hooks
 docker compose exec app-dev npm run prueba:modelos  # modelos contra la base
 docker compose exec app-dev npm run prueba:sesiones # modelo de sesiones
-docker compose exec app-dev npm run sql:produccion  # SQL para pegar en Neon
+docker compose exec app-dev npm run prueba:permisos # lo que el rol de la app no puede
+docker compose exec app-dev npm run sql:produccion  # SQL para una base NUEVA
 ```
 
 En el host:
@@ -184,6 +185,30 @@ const usuario = await consultarUno<Usuario>(
   `identificadorSeguro`, que obliga a elegir de una lista cerrada.
 - `db/schema.sql` es idempotente y es la unica fuente del esquema. Un cambio
   sobre una tabla existente va en un bloque `DO` con `ADD COLUMN IF NOT EXISTS`.
+
+### Dos conexiones a la base
+
+| Variable | Rol | Quien la usa |
+| --- | --- | --- |
+| `DATABASE_URL` (en el `.env`) | El dueno de la base | El seed y las baterias `prueba:modelos` y `prueba:sesiones` |
+| La que arma docker compose | `conejo_app` | La aplicacion, y `prueba:permisos` |
+
+**La aplicacion no se conecta como duena de la base.** Usa el rol
+`conejo_app`, que no puede cambiar el esquema, no se salta la seguridad por
+fila y solo tiene los permisos que le da `db/schema.sql`: no borra personas,
+empresas ni sesiones, y sobre la auditoria solo inserta y lee.
+
+En desarrollo no hay que configurar nada: el seed crea el rol y le pone su
+contrasena local, y docker compose le pasa esa conexion a la aplicacion. Tras
+un `up` sobre una base vacia, la aplicacion no arranca hasta ejecutar el seed.
+
+Una tabla nueva nace con `SELECT`, `INSERT` y `UPDATE` para la aplicacion. Si
+tiene que poder borrar, se le concede de forma explicita en el bloque de
+permisos de `db/schema.sql`.
+
+Los modelos del portal no usan `transaccion` sino `conSesion`
+(`src/lib/db.ts`), que ademas declara a la base quien hace la peticion. Es lo
+que leen las politicas de seguridad por fila.
 
 ### Autenticacion y permisos
 
@@ -345,6 +370,7 @@ tipo y el `CHECK` de la tabla.
 | `prueba:auditor` | Contenedor | La tabla completa de casos del auditor |
 | `prueba:modelos` | Contenedor | Los modelos contra la base; limpia lo que crea |
 | `prueba:sesiones` | Contenedor | Rotacion, reutilizacion y revocacion de sesiones; bloqueo por intentos |
+| `prueba:permisos` | Contenedor | Lo que el rol `conejo_app` tiene prohibido, y `conSesion` |
 
 Las pruebas de integracion entran con las cuentas de prueba de la semilla, que
 leen de `db/datos/semilla.mts`. Necesitan la base sembrada.
