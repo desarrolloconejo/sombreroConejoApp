@@ -39,6 +39,8 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Briefs de prospectos | Los ve quien genero el enlace, y el admin |
 | Servicios del catalogo | Se arranca con los dos definidos: redes sociales y desarrollo de producto |
 | Rutas API | Aceptadas |
+| Cierre de sesiones al publicar | Aceptado: el dia que salgan las sesiones nuevas, quien este dentro vuelve a entrar una vez |
+| Impresion de la factura | Desde el navegador, con hoja de calibracion |
 | Quien aprobo o rechazo | Se muestra junto a cada cosa que tenga aprobacion, y en detalle en Auditoria (seccion 5.2) |
 | Ajustes al modelo de finanzas | Aceptados los seis |
 | Verificacion en dos pasos | Si, disponible para todos (seccion 5.3) |
@@ -719,17 +721,55 @@ Lo que hay que pedir:
 Con eso se vuelve a ejecutar `npm run drive:probar` y se cambian cuatro
 variables. El codigo no cambia.
 
-### Decisiones tuyas que siguen abiertas
+### Lo que falta por definir
 
-Ninguna bloquea la etapa 1.
+Nada de esto impide empezar la etapa 1. Donde hay una propuesta, se construye
+con ella salvo que digas otra cosa: son valores que se cambian en un solo sitio.
 
-| # | Pregunta | Mi propuesta | Hace falta para |
-| --- | --- | --- | --- |
-| 1 | Como se imprime la factura | Desde el navegador | Etapa 7 |
-| 2 | Codigo QR para activar los dos pasos: una dependencia pequena, o tecleando el secreto | Se decide al llegar | Etapa 8 |
+**Como se trabaja y se publica**
 
-Pendiente de tu visto bueno: que el dia que se publiquen las sesiones nuevas,
-quien este dentro tenga que volver a entrar una vez.
+| # | Que | Mi propuesta |
+| --- | --- | --- |
+| 1 | Rama de trabajo. Hoy todo esta en `main`, sin subir | Una rama `portal`; a `main` solo pasa una etapa terminada y probada |
+| 2 | Orden al publicar una etapa que cambia el esquema | Primero pegar el SQL en Neon, despues subir el codigo. Al reves, la app arranca contra tablas que no existen |
+| 3 | El rol `conejo_app` en Neon | Lo crea el SQL; su contrasena la pones tu en el editor de Neon y en Vercel. No pasa por mi ni por el repositorio |
+| 4 | Las tres cuentas de prueba en produccion | Dejan de sembrarse alli; las que ya esten, se desactivan |
+
+**Etapa 1 — seguridad**
+
+| # | Que | Mi propuesta |
+| --- | --- | --- |
+| 5 | Cuanto tiempo sin actividad antes del modal de sesion | 15 minutos |
+| 6 | Bloqueo por intentos fallidos | 5 fallos, 15 minutos |
+| 7 | Cuanto se conserva la auditoria | Siempre |
+
+**Etapa 2 — avisos**
+
+| # | Que | Mi propuesta |
+| --- | --- | --- |
+| 8 | Que avisa la campana, y a quien | La matriz del paquete (`appFacturas/docs/08`), tal cual |
+
+**Etapa 3 — proyectos**
+
+| # | Que | Mi propuesta |
+| --- | --- | --- |
+| 9 | Cuando suma el 20 % de una fase | Al completarla |
+| 10 | Limite de rondas de correccion por pieza | Sin limite; se muestra cuantas lleva |
+| 11 | Plazo para que el cliente revise | Sin plazo |
+| 12 | Tipos de pieza | Los del paquete: post, carrusel, reel, historia, video, logo, y otros |
+| 13 | ¿Quien hace una tarea ve los datos de la empresa? | Solo el nombre de la empresa y del proyecto, como contexto |
+
+**Etapa 4 — cliente**
+
+| # | Que | Mi propuesta |
+| --- | --- | --- |
+| 14 | El permiso «Aprobar» de un usuario cliente | Casilla por persona, apagada por defecto, que marca el admin |
+
+**Etapa 8**
+
+| # | Que | Mi propuesta |
+| --- | --- | --- |
+| 15 | Codigo QR para activar los dos pasos | Se decide al llegar |
 
 ### Del negocio
 
