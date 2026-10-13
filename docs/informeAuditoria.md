@@ -16,7 +16,7 @@ menores. A3, A8 y A10 se tratan en el plan del portal; A11 ya esta corregido.
 
 | # | Severidad | Hallazgo | Cubierto por el plan del portal |
 | --- | --- | --- | --- |
-| A1 | Critica | `next` 16.3.2 tiene avisos de seguridad criticos; se corrigen en 16.4.0 | No |
+| A1 | Critica | `next` 16.3.2 tiene avisos de seguridad criticos; se corrigen en 16.4.0. **Corregido** | No |
 | A2 | Alta | Redireccion abierta en el login por `volverA`. **Reproducida** | No |
 | A3 | Alta | Las cuentas del seed pueden estar en produccion con su clave del repositorio | **Si**: hueco 11 y secciones 10.1 y 11 |
 | A4 | Media | Los limites de error usan `reset`, que no recupera un fallo de servidor | No |
@@ -54,6 +54,15 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
 ## Hallazgos
 
 ### A1 — `next` 16.3.2 con avisos criticos
+
+**Corregido el 2026-10-13**, rama `chore/auditoria-next`. `next` y
+`eslint-config-next` estan en 16.4.0 y `npm audit fix` subio `sharp`,
+`source-map-js` y `js-yaml`. `npm audit --omit=dev` da cero avisos. Quedan
+cinco altos solo de desarrollo, en la cadena de `eslint-config-next`
+(`micromatch`, `braces`, `fast-glob`), sin version que los corrija todavia.
+Las notas de la 16.4 solo anaden opciones; nada cambia para el proyecto.
+Comprobado: lint, typecheck, auditor 19/19, modelos 53/53, unitarias 3/3,
+integracion 3/3 y build de produccion.
 
 - **Evidencia:** `npm audit` marca `next` en el rango 16.0.0–16.3.7 como
   critico, con nueve avisos; el arreglo es 16.4.0, que no es un cambio mayor.
@@ -97,6 +106,8 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
   seccion 5 («`sql:produccion` deja de incluirlas»), seccion 10.1 (que va y que
   no va a produccion) y valores por defecto de la seccion 11 («dejan de
   sembrarse; las que ya esten, las desactiva el admin»).
+- **Confirmado por el responsable (2026-10-13):** la cuenta de administrador
+  del seed no existe en produccion.
 - **Lo unico que ese plan no nombra:** la cuarta cuenta, la de administrador,
   no es «de prueba» y no se desactiva. Su contrasena de produccion tiene que
   ser distinta de la del repositorio; `debe_cambiar_clave` nace en falso para
@@ -283,7 +294,7 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
 
 | Paso | Contenido | Rama |
 | --- | --- | --- |
-| 1 | A1: `next` y `eslint-config-next` a 16.4.0, `npm audit fix` | `chore/auditoria-next` |
+| 1 | A1: `next` y `eslint-config-next` a 16.4.0, `npm audit fix`. **Hecho** | `chore/auditoria-next` |
 | 2 | A2 y A4: `destinoSeguro` con su prueba, `retry` en los limites de error | `fix/auditoria-login-y-errores` |
 | 3 | A5, A6, A7, A9, A12, A13 y A14 | `chore/auditoria-menores` |
 | 4 | Resto de la fase 3: `react`, `jose`, `pg`, `lucide-react`, tipos; evaluar `eslint` 10 y `typescript` 7 | `chore/auditoria-dependencias` |
