@@ -22,7 +22,8 @@ estricto, Tailwind 4, PostgreSQL 17 con SQL puro (`pg`), sesiones JWT (`jose`).
 Todo —codigo, comentarios, tablas, commits y documentos— va en **espanol, sin
 tildes en el codigo**.
 
-Hoy existen: login, inicio, Mi perfil, Usuarios, Empresas y el modulo de Hooks.
+Hoy existen: login, inicio, Mi perfil, Usuarios, Empresas, Auditoria y el
+modulo de Hooks.
 Esta en marcha la integracion de un portal completo (briefs, proyectos con
 bateria de fases y tareas, revision del cliente, finanzas). **Antes de
 construir nada de eso, lee `docs/planIntegracionPortal.md`**: es el plan
@@ -77,6 +78,13 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Conjuntos cerrados como `TEXT` + `CHECK`, con su espejo en `src/types`. Si se
   anade un valor hay que tocar los dos sitios.
 - Las personas y las empresas **no se borran, se desactivan**.
+- **Toda action que cambia algo lo anota en `auditoria`, en la misma
+  transaccion**: el cambio y `anotar(tx, …)` van dentro del mismo
+  `transaccion`. Por eso los modelos que escriben aceptan un `ejecutor`. La
+  accion sale de la lista cerrada `AccionAuditoria` (`src/types/auditoria.ts`)
+  y nunca lleva contrasenas ni tokens.
+- La tabla `auditoria` solo admite `INSERT`. No se escribe codigo que la
+  actualice o la limpie, tampoco en pruebas.
 - Toda consulta tiene un tope de 15 segundos (`query_timeout` en
   `src/lib/db.ts`). Lo que necesite mas no es una consulta de peticion.
 

@@ -3,7 +3,8 @@
 Plataforma interna de **El Conejo del Sombrero** para centralizar y automatizar
 los procesos de la agencia, orientada a sus trabajadores y a sus clientes.
 
-Hoy cubre autenticacion, usuarios, empresas, perfil y el modulo de Hooks. Esta
+Hoy cubre autenticacion, usuarios, empresas, perfil, auditoria y el modulo de
+Hooks. Esta
 en marcha la integracion de un portal completo —briefs, proyectos, revision del
 cliente y finanzas—, cuyo plan vive en
 [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md). La revision
@@ -250,6 +251,30 @@ linea y los origenes externos estan bloqueados salvo que se declaren ahi.
 Un destino de redireccion que llegue en la URL —hoy, `volverA` en el login—
 pasa siempre por `destinoSeguro` (`src/lib/redireccion.ts`), que solo deja
 volver a rutas del panel.
+
+### Auditoria
+
+La tabla `auditoria` guarda una linea por cada cosa que alguien hace: quien
+(con el rol y el cargo que tenia entonces), que, sobre que, desde donde y los
+valores de antes y de despues. Solo admite lineas nuevas: un trigger rechaza
+`UPDATE`, `DELETE` y `TRUNCATE`.
+
+**La linea se escribe en la misma transaccion que el cambio.** Una action que
+modifica algo hace las dos cosas dentro de `transaccion`:
+
+```ts
+await transaccion(async (tx) => {
+  await empresas.cambiarEstado(id, activar, tx);
+  await anotar(tx, admin, "empresa.desactivada", { entidadId: id, empresaId: id });
+});
+```
+
+Si el cambio se deshace, su linea tambien; si la linea no se puede escribir,
+el cambio no ocurre. Las acciones posibles son una lista cerrada en
+`src/types/auditoria.ts`; un modulo nuevo anade las suyas alli. Nunca se anotan
+contrasenas, tokens ni el correo de un intento de acceso fallido.
+
+Se consulta en `/dashboard/auditoria`, solo para administradores.
 
 ### Anadir un modulo
 
