@@ -64,6 +64,15 @@ export async function iniciarSesion(
     };
   }
 
+  // Un cliente entra en nombre de su empresa: si la agencia dejo de atenderla,
+  // sus personas pierden el acceso aunque su cuenta siga activa.
+  if (usuario.tipo === "cliente" && usuario.empresaActiva === false) {
+    return {
+      ok: false,
+      mensaje: "Tu empresa esta desactivada. Habla con la agencia",
+    };
+  }
+
   // Un usuario sin fila en trabajadores ni en clientes no tiene rol, y sin rol
   // no se puede decidir que puede ver. Es un dato incompleto, no un error de
   // quien intenta entrar.

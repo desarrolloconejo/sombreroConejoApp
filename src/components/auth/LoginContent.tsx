@@ -56,9 +56,23 @@ function retraso(segundos: string): CSSProperties {
   return { "--retraso": segundos } as CSSProperties;
 }
 
-export function LoginContent({ volverA }: { volverA: string }) {
+export function LoginContent({
+  volverA,
+  sinAcceso,
+}: {
+  volverA: string;
+  sinAcceso: boolean;
+}) {
   const [estado, enviar, enviando] = useActionState(iniciarSesion, ESTADO_INICIAL);
   const [verPassword, setVerPassword] = useState(false);
+
+  // El aviso de salida forzada cede el sitio al resultado del intento: en
+  // cuanto la persona envia el formulario, lo que importa es esa respuesta.
+  const mensaje =
+    estado.mensaje ??
+    (sinAcceso
+      ? "Tu cuenta ya no tiene acceso. Habla con un administrador"
+      : undefined);
 
   const errorEmail = estado.errores?.email;
   const errorPassword = estado.errores?.password;
@@ -93,9 +107,9 @@ export function LoginContent({ volverA }: { volverA: string }) {
               ruta interna antes de usarlo. */}
           <input type="hidden" name="volverA" value={volverA} />
 
-          {estado.mensaje && (
+          {mensaje && (
             <Alerta className="surge mb-[18px] lg:mb-[22px]" icono={<CircleAlert />}>
-              {estado.mensaje}
+              {mensaje}
             </Alerta>
           )}
 

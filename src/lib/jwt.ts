@@ -16,6 +16,15 @@ const AUDIENCIA = "conejo-app";
 const LONGITUD_MINIMA_SECRETO = 32;
 
 /**
+ * El secreto de ejemplo de `.env.example`.
+ *
+ * Mide mas de 32 caracteres, asi que pasaria la comprobacion de longitud, y
+ * esta publicado en el repositorio: un despliegue que olvidara cambiarlo
+ * firmaria con una clave que conoce cualquiera. En produccion se rechaza.
+ */
+const SECRETO_DE_EJEMPLO = "cambiar-este-secreto-antes-de-produccion-min-32-chars";
+
+/**
  * La clave se lee en cada llamada, no al cargar el modulo.
  *
  * Durante el build de Next los modulos se evaluan sin las variables de entorno
@@ -31,6 +40,12 @@ function claveSecreta(): Uint8Array {
   if (secreto.length < LONGITUD_MINIMA_SECRETO) {
     throw new Error(
       `JWT_SECRET debe tener al menos ${LONGITUD_MINIMA_SECRETO} caracteres`,
+    );
+  }
+
+  if (secreto === SECRETO_DE_EJEMPLO && process.env.NODE_ENV === "production") {
+    throw new Error(
+      "JWT_SECRET sigue siendo el de ejemplo de .env.example. Genera uno propio",
     );
   }
 
@@ -50,6 +65,7 @@ const CARGOS_VALIDOS: readonly SlugCargo[] = [
   "cuentas",
   "redes",
   "diseno",
+  "produccion",
   "tecnologia",
   "administracion",
 ];

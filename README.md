@@ -127,6 +127,7 @@ db/
   schema.sql    definicion completa e idempotente del esquema
   seed.mts      aplica el esquema y siembra la base local
   generarSql.mts  vuelca el SQL que se pega en produccion
+  neon/         SQL numerado para pegar en Neon, un archivo por cambio
   datos/        datos de la semilla
   pruebas/      baterias del auditor y de los modelos
 tests/
@@ -197,9 +198,18 @@ export default async function Pagina() {
 }
 ```
 
+Las guardias deciden con el usuario **leido de la base**, no con el token: si
+un administrador desactiva a alguien o le cambia el rol, deja de poder actuar
+en su siguiente peticion. Un cliente pierde ademas el acceso si su empresa se
+desactiva.
+
 Hay dos ejes independientes: el **rol** (admin, trabajador, cliente) decide lo
 que se puede hacer, y el **cargo** decide lo que se ve. Para un cliente, el
 equivalente al cargo es su empresa. El admin se salta el filtro de cargo.
+
+Las cabeceras de seguridad fijas estan en `next.config.ts`. La politica de
+contenido lleva un nonce por peticion y la pone `src/proxy.ts`: los scripts en
+linea y los origenes externos estan bloqueados salvo que se declaren ahi.
 
 Un destino de redireccion que llegue en la URL —hoy, `volverA` en el login—
 pasa siempre por `destinoSeguro` (`src/lib/redireccion.ts`), que solo deja

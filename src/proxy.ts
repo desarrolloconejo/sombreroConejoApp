@@ -6,15 +6,15 @@ import type { SlugCargo } from "@/types";
  * Barrera de rutas. En Next 16 este archivo sustituye a middleware.ts y se
  * ejecuta siempre en el runtime de Node, que no es configurable.
  *
- * Lo que hace: mirar la cookie, verificar la firma y decidir a donde va la
- * peticion. Nada mas. No consulta la base de datos, porque se ejecuta en cada
- * peticion que pase el matcher y porque la documentacion desaconseja
- * expresamente apoyarse aqui en estado compartido.
+ * Lo que hace: mirar la cookie, verificar la firma, decidir a donde va la
+ * peticion y ponerle la politica de contenido. Nada mas. No consulta la base
+ * de datos, porque se ejecuta en cada peticion que pase el matcher y porque la
+ * documentacion desaconseja expresamente apoyarse aqui en estado compartido.
  *
  * IMPORTANTE: esto NO es la unica proteccion. Las Server Actions viajan como
  * POST a la ruta donde se usan, asi que un cambio en el matcher puede dejarlas
  * descubiertas. La comprobacion que de verdad protege los datos vive en cada
- * page y cada action, con `requerirSesion` y `requerirRol`.
+ * page y cada action, con las guardias de `src/lib/sesion.ts`.
  */
 
 /** Rutas accesibles sin haber iniciado sesion. */
@@ -34,6 +34,19 @@ const RUTAS_SOLO_ADMIN = ["/dashboard/usuarios", "/dashboard/empresas"];
 const RUTAS_POR_CARGO: { prefijo: string; cargos: SlugCargo[] }[] = [
   { prefijo: "/dashboard/hooks", cargos: ["redes"] },
 ];
+
+/**
+ * Con este parametro el login se muestra aunque el token verifique.
+ *
+ * Lo ponen las guardias cuando el token es valido pero la cuenta ya no puede
+ * entrar (desactivada, o de una empresa desactivada). Sin el, el proxy
+ * devolveria a esa persona al panel y el panel la volveria a echar, sin fin.
+ */
+const PARAMETRO_SALIDA = "motivo";
+
+function nombreCookie(): string {
+  return process.env.COOKIE_SESION ?? "conejo_sesion";
+}
 
 function esRutaPublica(ruta: string): boolean {
   return RUTAS_PUBLICAS.some(
@@ -56,13 +69,69 @@ function cargosDeRuta(ruta: string): SlugCargo[] | null {
   return regla?.cargos ?? null;
 }
 
+/**
+ * La politica de contenido de una respuesta.
+ *
+ * Los scripts solo corren si llevan el `nonce` de esta peticion, que Next
+ * pone por su cuenta en los suyos al leerlo de la cabecera. Un script
+ * inyectado no lo conoce, y por eso no se ejecuta.
+ *
+ * Tres concesiones, cada una con su motivo:
+ *
+ * - `style-src 'unsafe-inline'`: los componentes pasan variables CSS por el
+ *   atributo `style` (el retraso de las animaciones de entrada), y un atributo
+ *   no puede llevar nonce.
+ * - `'unsafe-eval'` y `ws:` solo en desarrollo: React reconstruye con `eval`
+ *   las trazas del servidor, y la recarga en caliente va por websocket.
+ * - `upgrade-insecure-requests` solo en produccion: en desarrollo la app se
+ *   abre por http, tambien desde un telefono de la red.
+ */
+function politicaDeContenido(nonce: string): string {
+  const enDesarrollo = process.env.NODE_ENV !== "production";
+
+  const directivas = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${enDesarrollo ? " 'unsafe-eval'" : ""}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' blob: data:",
+    "font-src 'self'",
+    `connect-src 'self'${enDesarrollo ? " ws:" : ""}`,
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ];
+
+  if (!enDesarrollo) directivas.push("upgrade-insecure-requests");
+
+  return directivas.join("; ");
+}
+
+/**
+ * Deja pasar la peticion, con su politica de contenido.
+ *
+ * La politica va en la respuesta, que es lo que obedece el navegador, y
+ * tambien en la peticion: de ahi lee Next el nonce para ponerselo a sus
+ * scripts al renderizar.
+ */
+function continuar(request: NextRequest): NextResponse {
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const politica = politicaDeContenido(nonce);
+
+  const cabeceras = new Headers(request.headers);
+  cabeceras.set("x-nonce", nonce);
+  cabeceras.set("Content-Security-Policy", politica);
+
+  const respuesta = NextResponse.next({ request: { headers: cabeceras } });
+  respuesta.headers.set("Content-Security-Policy", politica);
+
+  return respuesta;
+}
+
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
 
-  const token = request.cookies.get(
-    process.env.COOKIE_SESION ?? "conejo_sesion",
-  )?.value;
-
+  const token = request.cookies.get(nombreCookie())?.value;
   const sesion = token ? await verificarSesion(token) : null;
 
   // La raiz nunca muestra contenido: reparte segun haya sesion o no.
@@ -70,6 +139,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(
       new URL(sesion ? "/dashboard" : "/login", request.url),
     );
+  }
+
+  // Salida forzada: la guardia ya decidio que esta cuenta no entra. Se borra
+  // la cookie y se muestra el login, que explica el motivo.
+  if (pathname === "/login" && searchParams.has(PARAMETRO_SALIDA)) {
+    const respuesta = continuar(request);
+    if (token) respuesta.cookies.delete(nombreCookie());
+    return respuesta;
   }
 
   // Con sesion iniciada, el login no tiene sentido.
@@ -101,15 +178,15 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  const respuesta = continuar(request);
+
   // Si una cookie no verifica, se limpia para que el navegador deje de
   // enviarla en cada peticion.
   if (token && !sesion) {
-    const respuesta = NextResponse.next();
-    respuesta.cookies.delete(process.env.COOKIE_SESION ?? "conejo_sesion");
-    return respuesta;
+    respuesta.cookies.delete(nombreCookie());
   }
 
-  return NextResponse.next();
+  return respuesta;
 }
 
 export const config = {
