@@ -20,11 +20,15 @@ import type { SlugCargo } from "@/types";
 /**
  * Rutas accesibles sin haber iniciado sesion.
  *
+ * `/verificar` es la pantalla del codigo de la verificacion en dos pasos.
+ * Quien llega a ella acerto su contrasena pero todavia no tiene sesion; la
+ * propia pantalla comprueba que venga de ahi y, si no, manda al login.
+ *
  * `/api/cron` son las tareas programadas: las llama la plataforma, no una
  * persona, asi que no traen cookie. No quedan abiertas: cada una exige su
  * secreto en la cabecera, y sin el responde 401.
  */
-const RUTAS_PUBLICAS = ["/login", "/api/cron"];
+const RUTAS_PUBLICAS = ["/login", "/verificar", "/api/cron"];
 
 /** Prefijos de ruta reservados al rol admin. */
 const RUTAS_SOLO_ADMIN = [

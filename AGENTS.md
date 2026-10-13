@@ -122,8 +122,17 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - La autoridad de una sesion vive en la tabla `sesiones`, no en el token. Lo
   que cambie que puede ver o hacer alguien **revoca sus sesiones**
   (`src/models/sesiones.ts`); no basta con cambiar el dato.
-- `renovarSesion` es la unica action sin guardia, y es a proposito. Ninguna
-  otra puede saltarsela.
+- `renovarSesion` y `verificarSegundoPaso` son las unicas actions sin guardia,
+  y es a proposito: atienden a quien aun no tiene sesion. Ninguna otra puede
+  saltarsela.
+- La verificacion en dos pasos **se pide por defecto**: las guardias mandan a
+  `/dos-pasos` a quien no la activo ni la omitio. Solo esa page y sus actions
+  piden `requerirUsuario({ sinResolverDosPasos: true })`.
+- El secreto de los dos pasos se guarda cifrado (`src/lib/cifrado.ts`) y los
+  codigos de respaldo como hash. Ninguno de los dos se anota, se registra ni
+  se devuelve fuera de la action que los genera.
+- Una action que devuelve algo que solo se muestra una vez (codigos de
+  respaldo) **no revalida** la pantalla: al repintarse se perderia.
 - Con una contrasena provisional (`debe_cambiar_clave`) las guardias no dejan
   pasar de `/cambiar-clave`. Solo esa page y `cambiarPassword` piden
   `requerirUsuario({ conClaveProvisional: true })`; no se anade a nada mas.

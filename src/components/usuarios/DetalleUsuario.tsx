@@ -2,6 +2,8 @@ import { Pencil } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { PanelCuerpo, PanelPie } from "@/components/listado";
+
+import { RetirarDosPasos } from "./RetirarDosPasos";
 import { Avatar, BotonEnlace, Estado, Etiqueta } from "@/components/ui";
 import type { NombreRol, UsuarioCompleto } from "@/types";
 
@@ -44,10 +46,14 @@ function Dato({ rotulo, children }: { rotulo: string; children: ReactNode }) {
 
 export function DetalleUsuario({
   usuario,
+  dosPasos,
   hrefEditar,
   hrefCerrar,
 }: {
   usuario: UsuarioCompleto;
+
+  /** Si esta persona tiene activada la verificacion en dos pasos. */
+  dosPasos: boolean;
   hrefEditar: string;
   hrefCerrar: string;
 }) {
@@ -123,6 +129,20 @@ export function DetalleUsuario({
             {FORMATO.format(new Date(usuario.creadoEn))}
           </Dato>
         </dl>
+        <div className="mt-5 flex flex-wrap items-center gap-3 rounded-[13px] border border-borde bg-campo px-4 py-3.5">
+          <p className="min-w-0 flex-1 text-[12.5px] leading-relaxed">
+            <b className="font-semibold">Verificacion en dos pasos:</b>{" "}
+            {dosPasos ? "activada" : "sin activar"}.
+            {dosPasos && (
+              <span className="block text-suave">
+                Si perdio el telefono y sus codigos de respaldo, retirasela para
+                que pueda entrar. Se le pedira configurarla de nuevo.
+              </span>
+            )}
+          </p>
+
+          {dosPasos && <RetirarDosPasos id={usuario.id} nombre={usuario.nombre} />}
+        </div>
       </PanelCuerpo>
 
       <PanelPie>

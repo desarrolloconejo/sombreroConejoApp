@@ -39,6 +39,13 @@ export type UsuarioSemilla = {
   email: string;
   password: string;
   telefono: string | null;
+
+  /**
+   * Si al entrar se le pide configurar la verificacion en dos pasos, que es
+   * lo que le pasa por defecto a cualquier cuenta real. En la semilla es al
+   * reves: solo se le pide a la que lo declara.
+   */
+  pideDosPasos?: boolean;
   perfil:
     // El cargo de un trabajador es un slug de la tabla cargos: de el
     // depende QUE MODULOS ve. El de un cliente es texto libre, describe
@@ -120,6 +127,21 @@ export const USUARIOS: UsuarioSemilla[] = [
     email: "bloqueo@conejo.test",
     password: "Trabajador123*",
     telefono: null,
+    perfil: { tipo: "trabajador", rol: "trabajador", cargo: "produccion" },
+  },
+  /*
+   * La cuenta con la que las pruebas recorren la verificacion en dos pasos.
+   * Es la unica de la semilla a la que se le PIDE configurarla al entrar: a
+   * las demas el seed les apunta que prefieren no usarla, para que entrar con
+   * ellas siga siendo correo y contrasena.
+   */
+  {
+    nombre: "Dos",
+    apellido: "Pasos",
+    email: "dospasos@conejo.test",
+    password: "Trabajador123*",
+    telefono: null,
+    pideDosPasos: true,
     perfil: { tipo: "trabajador", rol: "trabajador", cargo: "produccion" },
   },
 ];

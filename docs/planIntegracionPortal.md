@@ -104,6 +104,7 @@ Lo que cada etapa exige en produccion se va anotando en
 | 2 | `feat/etapa2-correos` | Esquemas `portal` y `finanzas` con las funciones de sesion; adaptador de correo con modo simulado y real; `portal.correos_salida` con seguridad por fila; bandeja de salida para el admin; avisos de bienvenida y de contrasena restablecida | `db/neon/07-esquemas-y-correos.sql` | Hecha |
 | 2 | `feat/etapa2-avisos` | `portal.notificaciones` con seguridad por fila y la campana del encabezado, en escritorio y movil. Notifica el bloqueo de una cuenta y el correo fallido a los administradores, y la contrasena restablecida a su dueno | `db/neon/08-notificaciones.sql` | Hecha |
 | 2 | `feat/etapa2-tasa-bcv` | Seccion 6.1: `finanzas.tasas_cambio`, lector de la pagina del BCV con su certificado intermedio, validacion, tarea programada `/api/cron/tasa` y la identidad `sistema` | `db/neon/09-tasas-de-cambio.sql` | Hecha |
+| 8 (adelantada) | `feat/dos-pasos` | Seccion 5.3: verificacion en dos pasos con app de codigos, codigos de respaldo, retirada por un administrador | `db/neon/10-dos-pasos.sql` | Hecha |
 
 **La etapa 2 esta completa**, salvo el adaptador de archivos, que por
 decision del responsable (2026-10-13) pasa a la etapa 4: hoy nada lo usa, y
@@ -131,6 +132,21 @@ Sobre el correo, decidido al construir la etapa 2:
 - La bandeja la lee el administrador, y cada quien los correos que el mismo
   provoco: sin eso no podria anotar el resultado de su propio envio.
 - El modo real (Gmail) esta escrito y sin probar: falta la cuenta.
+
+Sobre la verificacion en dos pasos, adelantada de la etapa 8 por decision del
+responsable (2026-10-13):
+
+- **Se pide por defecto a todas las cuentas y cualquiera puede decir que no.**
+  Sustituye a lo que decia la seccion 5.3 (obligatoria para `admin` y
+  `administracion`, opcional para el resto). No hay obligacion para nadie.
+- «Activada por defecto» no puede significar encendida sin la persona: hay
+  que registrar la app en su telefono. Significa que al entrar se le pide
+  configurarla, con una salida visible para quien no la quiera.
+- Sin codigo QR, como preveia la seccion 5.3: la clave se teclea o se abre un
+  enlace desde el telefono. Sigue pendiente decidir si se anade.
+- Desactivarla uno mismo pide la contrasena, no un codigo: quien la quita por
+  haber perdido el telefono no tendria codigo que dar.
+- De la etapa 8 queda la prueba con un cliente real.
 
 Sobre la tasa, decidido al construir:
 

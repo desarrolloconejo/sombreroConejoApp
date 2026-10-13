@@ -126,6 +126,17 @@ async function principal(): Promise<void> {
         throw new Error(`No se pudo obtener el usuario ${usuario.email}`);
       }
 
+      // Los dos pasos se piden por defecto a toda cuenta. A las de la
+      // semilla se les apunta que no los quieren, para que entrar con ellas
+      // siga siendo correo y contrasena; no se toca a quien ya los activo.
+      if (!usuario.pideDosPasos) {
+        await cliente.query(
+          `UPDATE usuarios SET dos_pasos_omitido = TRUE
+           WHERE id = $1 AND totp_activado_en IS NULL`,
+          [usuarioId],
+        );
+      }
+
       if (usuario.perfil.tipo === "trabajador") {
         // DO UPDATE, no DO NOTHING: si el seed cambia el rol o el cargo de
         // alguien, volver a ejecutarlo debe corregirlo.

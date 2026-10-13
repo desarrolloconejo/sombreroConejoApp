@@ -98,6 +98,9 @@ export type UsuarioConCredenciales = UsuarioCompleto & {
 
   /** Si ahora mismo no se le admite ningun intento, por fallos repetidos. */
   bloqueado: boolean;
+
+  /** Si tras la contrasena hay que pedirle el codigo de su app. */
+  dosPasos: boolean;
 };
 
 /** Datos necesarios para crear un usuario. La contrasena llega ya hasheada. */

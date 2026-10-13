@@ -6,6 +6,7 @@ import { anotar } from "@/lib/auditoria";
 import { conSesion, transaccion } from "@/lib/db";
 import { notificarAAdministradores } from "@/lib/notificaciones";
 import { gastarTiempoEquivalente, verificar } from "@/lib/password";
+import { abrirPasoPendiente } from "@/lib/dosPasos";
 import { destinoSeguro } from "@/lib/redireccion";
 import { abrirSesion, cerrarSesionActual } from "@/lib/sesion";
 import { validarCredenciales } from "@/lib/validaciones";
@@ -138,6 +139,17 @@ export async function iniciarSesion(
       ok: false,
       mensaje: "Tu cuenta no tiene un perfil asignado. Habla con un administrador",
     };
+  }
+
+  /*
+   * Con los dos pasos activados, acertar la contrasena NO abre la sesion:
+   * falta el codigo de su app. Se deja constancia de que paso el primer paso
+   * y se le manda a escribirlo. La sesion, y su linea en la auditoria, llegan
+   * cuando el codigo sea bueno.
+   */
+  if (usuario.dosPasos) {
+    await abrirPasoPendiente(usuario.id, destinoSeguro(datos.get("volverA")));
+    redirect("/verificar");
   }
 
   await abrirSesion(usuario);

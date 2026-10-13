@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 
 import { PerfilWrapper } from "@/components/perfil";
 import { obtenerSesion, requerirUsuario } from "@/lib/sesion";
+import * as dosPasosModelo from "@/models/dosPasos";
 import * as sesiones from "@/models/sesiones";
 
 export const metadata: Metadata = {
   title: "Mi perfil",
 };
+
+const FECHA = new Intl.DateTimeFormat("es-VE", { dateStyle: "long" });
 
 /**
  * La page es de servidor y hace solo lo que le toca: exigir la sesion, leer a
@@ -22,9 +25,10 @@ export default async function PaginaPerfil() {
 
   // Las dos lecturas no dependen una de otra. La sesion ya esta verificada en
   // esta peticion, asi que leerla de nuevo no cuesta nada.
-  const [abiertas, sesion] = await Promise.all([
+  const [abiertas, sesion, dosPasos] = await Promise.all([
     sesiones.listarAbiertas(usuario.id),
     obtenerSesion(),
+    dosPasosModelo.estado(usuario.id),
   ]);
 
   return (
@@ -32,6 +36,13 @@ export default async function PaginaPerfil() {
       usuario={usuario}
       sesiones={abiertas}
       sesionActualId={sesion?.sesionId ?? null}
+      dosPasos={{
+        activado: dosPasos.activado,
+        // La fecha se formatea aqui, en el servidor: el idioma del navegador
+        // no puede producir un texto distinto del que se pinto.
+        desde: dosPasos.activadoEn ? FECHA.format(dosPasos.activadoEn) : null,
+        respaldos: dosPasos.respaldos,
+      }}
     />
   );
 }

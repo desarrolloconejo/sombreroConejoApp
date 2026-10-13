@@ -21,6 +21,7 @@ import { BotonEnlace } from "@/components/ui";
 import { leerEstadoListado } from "@/lib/parametros";
 import { requerirAdmin } from "@/lib/sesion";
 import { conPanel } from "@/lib/urlListado";
+import * as dosPasosModelo from "@/models/dosPasos";
 import * as cargosModelo from "@/models/cargos";
 import * as empresasModelo from "@/models/empresas";
 import * as rolesModelo from "@/models/roles";
@@ -281,6 +282,9 @@ export default async function PaginaUsuarios(
               >
                 <DetalleUsuario
                   usuario={registro.usuario}
+                  dosPasos={
+                    (await dosPasosModelo.estado(registro.usuario.id)).activado
+                  }
                   hrefEditar={conPanel(RUTA, estado, "editar", registro.usuario.id)}
                   hrefCerrar={hrefCerrar}
                 />

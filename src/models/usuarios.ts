@@ -86,7 +86,9 @@ export async function buscarPorEmailConCredenciales(
             (SELECT a.password_hash FROM vw_usuarios_acceso a
               WHERE a.id = vw_usuarios_completos.id) AS "passwordHash",
             (SELECT a.bloqueado FROM vw_usuarios_acceso a
-              WHERE a.id = vw_usuarios_completos.id) AS bloqueado
+              WHERE a.id = vw_usuarios_completos.id) AS bloqueado,
+            (SELECT a.dos_pasos FROM vw_usuarios_acceso a
+              WHERE a.id = vw_usuarios_completos.id) AS "dosPasos"
      FROM vw_usuarios_completos
      WHERE lower(email) = lower($1)`,
     [email],
@@ -108,7 +110,8 @@ export async function buscarPorId(
 }
 
 /**
- * La persona y, de paso, cuando caduca su sesion. Si la sesion no existe, se
+ * La persona y, de paso, cuando caduca su sesion y si ya resolvio la pregunta
+ * de los dos pasos (los activo, o dijo que no los quiere). Si la sesion no existe, se
  * revoco o ya caduco, esa fecha llega nula.
  *
  * Es la consulta de las guardias, y va en una sola a proposito: comprobar la
@@ -118,9 +121,13 @@ export async function buscarPorId(
 export async function buscarPorIdConSesion(
   id: number,
   sesionId: number,
-): Promise<{ usuario: UsuarioCompleto; sesionCaducaEn: Date | null } | null> {
+): Promise<{
+  usuario: UsuarioCompleto;
+  sesionCaducaEn: Date | null;
+  dosPasosResueltos: boolean;
+} | null> {
   const fila = await consultarUno<
-    UsuarioCompleto & { sesionCaducaEn: Date | null }
+    UsuarioCompleto & { sesionCaducaEn: Date | null; dosPasosResueltos: boolean }
   >(
     `SELECT ${COLUMNAS_COMPLETO},
             (
@@ -129,7 +136,12 @@ export async function buscarPorIdConSesion(
                 AND s.usuario_id = vw_usuarios_completos.id
                 AND s.revocada_en IS NULL
                 AND s.caduca_en > now()
-            ) AS "sesionCaducaEn"
+            ) AS "sesionCaducaEn",
+            (
+              SELECT u.totp_activado_en IS NOT NULL OR u.dos_pasos_omitido
+              FROM usuarios u
+              WHERE u.id = vw_usuarios_completos.id
+            ) AS "dosPasosResueltos"
      FROM vw_usuarios_completos
      WHERE id = $1`,
     [id, sesionId],
@@ -137,8 +149,8 @@ export async function buscarPorIdConSesion(
 
   if (!fila) return null;
 
-  const { sesionCaducaEn, ...usuario } = fila;
-  return { usuario, sesionCaducaEn };
+  const { sesionCaducaEn, dosPasosResueltos, ...usuario } = fila;
+  return { usuario, sesionCaducaEn, dosPasosResueltos };
 }
 
 /** Indica si ya hay alguien registrado con ese correo. */

@@ -134,6 +134,20 @@ export default function CargandoPerfil() {
               </div>
             </Tarjeta>
 
+            {/* Verificacion en dos pasos */}
+            <Tarjeta>
+              <div className="flex items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="hueso h-3.5 w-[172px]" />
+                  <div className="hueso mt-[5px] h-3 w-full max-w-[420px]" />
+                </div>
+                <div className="hueso h-6 w-[86px] rounded-full" />
+              </div>
+              <div className="mt-5 border-t border-borde pt-5">
+                <div className="hueso h-11 w-[186px] rounded-xl" />
+              </div>
+            </Tarjeta>
+
             {/* Sesiones abiertas */}
             <Tarjeta>
               <div className="hueso h-3.5 w-[128px]" />

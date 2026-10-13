@@ -11,6 +11,7 @@
 export type TipoNotificacion =
   | "cuenta.bloqueada"
   | "cuenta.clave_restablecida"
+  | "cuenta.dos_pasos_retirados"
   | "correo.fallido"
   | "tasa.rechazada";
 
