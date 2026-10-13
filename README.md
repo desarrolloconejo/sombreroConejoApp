@@ -312,7 +312,5 @@ servidor propio. La base esta en **Neon**.
 | [CLAUDE.md](CLAUDE.md) | Contrato del proyecto |
 | [AGENTS.md](AGENTS.md) | Contexto y reglas para asistentes de codigo |
 | [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md) | Plan de la integracion del portal |
-| [docs/integracionFinanzas.md](docs/integracionFinanzas.md) | Capitulo de finanzas |
 | [docs/planAuditoriaRepositorio.md](docs/planAuditoriaRepositorio.md) | Plan de revision y actualizacion del repositorio |
 | [docs/planMejoraDiseno.md](docs/planMejoraDiseno.md) | Plan de mejora del diseno |
-| [docs/creacionHooks.md](docs/creacionHooks.md) | Especificacion original de la herramienta de hooks |
