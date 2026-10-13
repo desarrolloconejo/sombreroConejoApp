@@ -219,6 +219,37 @@
 }
 
 /* ===========================================================================
+   AUTOCOMPLETADO DEL NAVEGADOR
+
+   Cuando el navegador rellena un campo con un dato guardado (el correo, la
+   contrasena) le pinta su propio fondo azulado, por encima del nuestro, y no
+   deja cambiarlo con background-color. Lo que si respeta es una transicion:
+   se le da una tan larga que ese fondo no llega a verse nunca, y el campo
+   conserva el suyo, tambien al enfocarlo y en tema oscuro.
+
+   Va fuera de las capas y con !important a proposito: tiene que ganar a la
+   transicion que cada campo ya trae con `suave`.
+   =========================================================================== */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--texto);
+  caret-color: var(--texto);
+  transition:
+    background-color 600000s 0s,
+    color 600000s 0s !important;
+}
+
+/* Firefox no pinta un fondo: aplica un filtro amarillento sobre el campo. */
+input:autofill,
+textarea:autofill,
+select:autofill {
+  filter: none;
+}
+
+/* ===========================================================================
    HOVER SUAVE
 
    Una sola utilidad, `suave`, en lugar de repartir clases `transition-*` por

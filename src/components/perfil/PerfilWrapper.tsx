@@ -18,9 +18,10 @@ import { TarjetaSesiones } from "./TarjetaSesiones";
  * cliente reciben unicamente valores primitivos, para que por la frontera no
  * cruce nada que no se vaya a pintar.
  *
- * Las dos columnas se separan por ritmo de uso: a la izquierda lo que se
- * cambia de vez en cuando (la identidad, el tema) y a la derecha lo que se llena
- * campo a campo.
+ * Arriba van dos columnas: a la izquierda quien eres y el tema, a la derecha
+ * tus datos. Debajo, el resto de tarjetas ocupan el ancho completo: son
+ * bloques independientes —la contrasena, los dos pasos, las sesiones— y en
+ * una columna estrecha dejaban media pantalla vacia a su lado.
  */
 
 const MIGAS: Miga[] = [
@@ -74,18 +75,21 @@ export function PerfilWrapper({
             cargo={usuario.cargo}
           />
 
-          <FormularioPassword />
-
-          <TarjetaDosPasos
-            activado={dosPasos.activado}
-            desde={dosPasos.desde}
-            respaldos={dosPasos.respaldos}
-          />
-
-          <TarjetaSesiones sesiones={sesiones} actualId={sesionActualId} />
-
-          <TarjetaSesion ultimoAcceso={usuario.ultimoAcceso} />
         </div>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-5">
+        <FormularioPassword />
+
+        <TarjetaDosPasos
+          activado={dosPasos.activado}
+          desde={dosPasos.desde}
+          respaldos={dosPasos.respaldos}
+        />
+
+        <TarjetaSesiones sesiones={sesiones} actualId={sesionActualId} />
+
+        <TarjetaSesion ultimoAcceso={usuario.ultimoAcceso} />
       </div>
     </Wrapper>
   );
