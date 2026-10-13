@@ -124,7 +124,12 @@ export const config = {
      * src/actions/perfil.ts), pero la exclusion se queda: cuando la
      * funcionalidad vuelva hara falta otra vez, y quitarla ahora solo crearia
      * trabajo para entonces.
+     *
+     * La exclusion por extension vale SOLO para lo que cuelga de la raiz
+     * (icon.png, apple-icon.png) y para /images, que es donde vive lo de
+     * public/. Excluir cualquier ruta que termine en .png o .js dejaria fuera
+     * del proxy una ruta del panel que algun dia acabe asi.
      */
-    "/((?!_next/static|_next/image|favicon.ico|uploads|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|uploads/|images/|[^/]+\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
