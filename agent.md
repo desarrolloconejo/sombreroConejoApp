@@ -1808,11 +1808,18 @@ ejecuta TypeScript sin una bandera.
 | Comprobacion | Resultado |
 | --- | --- |
 | El script arranca y se detiene si faltan variables | OK |
-| Autorizacion, creacion de la carpeta y subida | **Sin probar**: falta el id del cliente OAuth |
+| Autorizacion en el navegador con el cliente OAuth | OK, guarda el refresh token |
+| Creacion de `ConejoApp/Comprobantes` | OK |
+| Subir, leer de vuelta y borrar un archivo | OK, el contenido coincide |
+| Segunda ejecucion, sin navegador, renovando con el refresh token | OK, reutiliza la carpeta |
 
 ### Lo que queda anotado
 
 - Mientras la pantalla de consentimiento de GCP este en «Testing», Google
   caduca los refresh tokens a los 7 dias. Hay que publicarla.
-- Conviene autorizar con una cuenta del estudio y no con una personal: los
-  comprobantes quedan en el Drive de quien autoriza.
+- De momento se autorizo con el Drive personal del responsable. Pasara a una
+  cuenta compartida del estudio, y el cambio hay que hacerlo antes de recibir
+  comprobantes reales: los archivos ya subidos no se mueven solos.
+- Las cuatro variables de Drive faltan en Vercel.
+- El plan de integracion se copio a `docs/integracionFinanzas.md`, que pasa a
+  ser la copia que se mantiene.
