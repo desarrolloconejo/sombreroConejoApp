@@ -26,6 +26,7 @@ export type SlugCargo =
   | "cuentas"
   | "redes"
   | "diseno"
+  | "produccion"
   | "tecnologia"
   | "administracion";
 

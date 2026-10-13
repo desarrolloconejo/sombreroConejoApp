@@ -60,6 +60,7 @@ INSERT INTO cargos (slug, nombre, descripcion) VALUES
   ('cuentas',        'Cuentas',        'Atencion y seguimiento de clientes'),
   ('redes',          'Redes',          'Gestion de redes sociales'),
   ('diseno',         'Diseno',         'Diseno grafico y audiovisual'),
+  ('produccion',     'Produccion',     'Produccion audiovisual y de piezas'),
   ('tecnologia',     'Tecnologia',     'Desarrollo y soporte tecnico'),
   ('administracion', 'Administracion', 'Administracion y facturacion')
 ON CONFLICT (slug) DO NOTHING;
