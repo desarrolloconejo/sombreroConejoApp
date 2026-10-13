@@ -8,6 +8,10 @@
  *
  * No usa el pool de src/lib/db.ts a proposito: es un script suelto que abre su
  * conexion, hace su trabajo y la cierra.
+ *
+ * Se conecta como DUENO de la base (DATABASE_URL_ADMIN), no como la
+ * aplicacion: crear tablas y dar permisos es justo lo que el rol de la
+ * aplicacion no puede hacer.
  */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -25,10 +29,15 @@ import {
 } from "./datos/semilla.mts";
 
 async function principal(): Promise<void> {
-  const cadenaConexion = process.env.DATABASE_URL;
+  // Con una sola cadena en el entorno (un .env antiguo, o fuera de Docker) se
+  // usa esa, que es la del dueno.
+  const cadenaConexion =
+    process.env.DATABASE_URL_ADMIN || process.env.DATABASE_URL;
 
   if (!cadenaConexion) {
-    throw new Error("Falta la variable de entorno DATABASE_URL");
+    throw new Error(
+      "Falta DATABASE_URL_ADMIN (o DATABASE_URL) con la conexion del dueno de la base",
+    );
   }
 
   const cliente = new Client({ connectionString: cadenaConexion });
@@ -39,6 +48,20 @@ async function principal(): Promise<void> {
     const esquema = await readFile(join(import.meta.dirname, "schema.sql"), "utf8");
     await cliente.query(esquema);
     console.log("Esquema aplicado");
+
+    // -- Contrasena del rol de la aplicacion --------------------------------
+    //
+    // El esquema crea el rol sin contrasena, porque va al repositorio. Aqui se
+    // le pone la de desarrollo. Un ALTER ROLE no admite parametros, asi que el
+    // texto lo arma el propio servidor con format(%L), que es quien sabe
+    // escapar un literal.
+    const claveApp = process.env.CONEJO_APP_PASSWORD || "conejo_app_local";
+    const { rows: sentencia } = await cliente.query<{ sql: string }>(
+      "SELECT format('ALTER ROLE conejo_app LOGIN PASSWORD %L', $1::text) AS sql",
+      [claveApp],
+    );
+    await cliente.query(sentencia[0].sql);
+    console.log("Rol conejo_app listo");
 
     // -- Roles --------------------------------------------------------------
     for (const rol of ROLES) {
