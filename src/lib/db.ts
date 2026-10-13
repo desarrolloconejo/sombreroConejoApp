@@ -332,6 +332,49 @@ export async function transaccion<T>(
   }
 }
 
+/** Quien hace la peticion, tal como se le declara a la base. */
+export type ActorDeBase = {
+  id: number;
+  rol: string;
+  cargoSlug: string | null;
+  empresaId: number | null;
+};
+
+/**
+ * Una transaccion que le dice a la base quien esta al otro lado.
+ *
+ * Declara usuario, rol, cargo y empresa como ajustes de la transaccion. Las
+ * politicas de seguridad por fila los leen para decidir que filas existen
+ * para esa persona, y por eso todos los modelos del portal pasan por aqui:
+ * sin sesion declarada, una tabla con politicas devuelve cero filas.
+ *
+ * Los ajustes son locales a la transaccion (el tercer argumento de
+ * set_config): al terminar desaparecen, y la conexion vuelve al pool sin
+ * rastro de quien la uso. Con un SET de sesion, la siguiente peticion que
+ * tomara esa conexion heredaria la identidad de la anterior.
+ */
+export async function conSesion<T>(
+  actor: ActorDeBase,
+  operacion: (cliente: PoolClient) => Promise<T>,
+): Promise<T> {
+  return transaccion(async (cliente) => {
+    await cliente.query(
+      `SELECT set_config('app.usuario_id', $1, true),
+              set_config('app.rol',        $2, true),
+              set_config('app.cargo',      $3, true),
+              set_config('app.empresa_id', $4, true)`,
+      [
+        String(actor.id),
+        actor.rol,
+        actor.cargoSlug ?? "",
+        actor.empresaId === null ? "" : String(actor.empresaId),
+      ],
+    );
+
+    return operacion(cliente);
+  });
+}
+
 /**
  * Devuelve un identificador SQL solo si esta en la lista blanca.
  *
