@@ -58,7 +58,9 @@ tests/            Playwright: unitarias e integracion
 ```
 
 Reglas de dependencia: los componentes nunca importan de `models/`; `models/`
-nunca importa de `next/`; las actions no consultan la base por su cuenta.
+nunca importa de `next/`; las actions no consultan la base por su cuenta. La
+primera la impone el lint: `src/components/**` no puede importar `models/` ni
+`lib/db`, `lib/jwt`, `lib/sesion` o `lib/password`.
 
 ## Reglas que no se negocian
 
