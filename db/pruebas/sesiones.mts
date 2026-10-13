@@ -221,6 +221,61 @@ async function principal(): Promise<void> {
     `cerradas: ${porEmpresa}`,
   );
 
+  // ----------------------------------------------------------------- bloqueo
+  // Se usa la cuenta del cliente y se deja como estaba al terminar.
+  const correoCliente = (
+    await consultarUno<{ email: string }>("SELECT email FROM usuarios WHERE id = $1", [
+      cliente.id,
+    ])
+  )?.email;
+
+  if (!correoCliente) throw new Error("No se encontro el correo del cliente");
+
+  await usuarios.registrarAcceso(cliente.id);
+
+  const fallos: boolean[] = [];
+  for (let intento = 0; intento < 4; intento++) {
+    fallos.push(await usuarios.registrarFallo(cliente.id, 5, 15));
+  }
+  const aunLibre = await usuarios.buscarPorEmailConCredenciales(correoCliente);
+  comprobar(
+    "Cuatro fallos no bloquean",
+    fallos.every((bloqueada) => !bloqueada) && aunLibre?.bloqueado === false,
+    "4 de 5",
+  );
+
+  const quinto = await usuarios.registrarFallo(cliente.id, 5, 15);
+  const yaBloqueada = await usuarios.buscarPorEmailConCredenciales(correoCliente);
+  comprobar(
+    "El quinto bloquea la cuenta",
+    quinto === true && yaBloqueada?.bloqueado === true,
+    "bloqueada 15 minutos",
+  );
+
+  await ejecutar(
+    "UPDATE usuarios SET bloqueado_hasta = now() - interval '1 second' WHERE id = $1",
+    [cliente.id],
+  );
+  const vencido = await usuarios.buscarPorEmailConCredenciales(correoCliente);
+  comprobar(
+    "Pasado el plazo, la cuenta vuelve a admitir intentos",
+    vencido?.bloqueado === false,
+    "el bloqueo ya vencio",
+  );
+
+  await usuarios.registrarFallo(cliente.id, 5, 15);
+  await usuarios.registrarAcceso(cliente.id);
+  const [contador] = await consultar<{ intentos: number; bloqueado: boolean }>(
+    `SELECT intentos_fallidos AS intentos, bloqueado_hasta IS NOT NULL AS bloqueado
+     FROM usuarios WHERE id = $1`,
+    [cliente.id],
+  );
+  comprobar(
+    "Entrar bien pone el contador a cero",
+    contador?.intentos === 0 && contador.bloqueado === false,
+    JSON.stringify(contador),
+  );
+
   console.log(`\n${pasan}/${pasan + fallan.length} comprobaciones correctas`);
   if (fallan.length > 0) {
     console.error(`\nFallan: ${fallan.join(", ")}`);

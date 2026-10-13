@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { hashear, verificar } from "@/lib/password";
 import { obtenerSesion, requerirUsuario } from "@/lib/sesion";
@@ -50,12 +51,17 @@ export async function actualizarPerfil(
   return { ok: true, mensaje: "Tus datos quedaron guardados" };
 }
 
-/** Cambia la contrasena previa confirmacion de la actual. */
+/**
+ * Cambia la contrasena previa confirmacion de la actual.
+ *
+ * Es la unica action que admite a quien entra con una contrasena
+ * provisional: cambiarla es justo lo que tiene que hacer.
+ */
 export async function cambiarPassword(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
 ): Promise<EstadoFormulario> {
-  const usuario = await requerirUsuario();
+  const usuario = await requerirUsuario({ conClaveProvisional: true });
 
   const { valores, errores, valido } = validarCambioPassword(datos);
 
@@ -83,6 +89,8 @@ export async function cambiarPassword(
   const guardada = await usuarios.actualizarPasswordHash(
     usuario.id,
     await hashear(valores.nueva),
+    // La eligio la propia persona: deja de ser provisional.
+    false,
   );
 
   if (!guardada) {
@@ -97,6 +105,12 @@ export async function cambiarPassword(
     "clave_cambiada",
     sesion?.sesionId ?? null,
   );
+
+  // Quien venia obligado a cambiarla ya puede pasar. Va fuera de cualquier
+  // try: redirect lanza una excepcion interna de Next.
+  if (usuario.debeCambiarClave) {
+    redirect("/dashboard");
+  }
 
   return {
     ok: true,

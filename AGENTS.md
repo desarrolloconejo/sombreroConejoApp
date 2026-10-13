@@ -95,6 +95,11 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   (`src/models/sesiones.ts`); no basta con cambiar el dato.
 - `renovarSesion` es la unica action sin guardia, y es a proposito. Ninguna
   otra puede saltarsela.
+- Con una contrasena provisional (`debe_cambiar_clave`) las guardias no dejan
+  pasar de `/cambiar-clave`. Solo esa page y `cambiarPassword` piden
+  `requerirUsuario({ conClaveProvisional: true })`; no se anade a nada mas.
+- El login responde igual a correo inexistente, contrasena equivocada y cuenta
+  bloqueada. No se anaden mensajes que distingan los tres casos.
 - La politica de contenido la pone `src/proxy.ts` con un nonce por peticion.
   No se anaden scripts en linea ni origenes externos sin tocarla.
 - Los parametros de la URL nunca llegan crudos a un modelo: pasan por

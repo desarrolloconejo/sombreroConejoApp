@@ -41,6 +41,7 @@ const COLUMNAS_USUARIO = `
   foto_url       AS "fotoUrl",
   tema,
   activo,
+  debe_cambiar_clave AS "debeCambiarClave",
   ultimo_acceso  AS "ultimoAcceso",
   creado_en      AS "creadoEn",
   actualizado_en AS "actualizadoEn"
@@ -80,7 +81,9 @@ export async function buscarPorEmailConCredenciales(
   email: string,
 ): Promise<UsuarioConCredenciales | null> {
   return consultarUno<UsuarioConCredenciales>(
-    `SELECT ${COLUMNAS_COMPLETO}, password_hash AS "passwordHash"
+    `SELECT ${COLUMNAS_COMPLETO},
+            password_hash AS "passwordHash",
+            (bloqueado_hasta IS NOT NULL AND bloqueado_hasta > now()) AS bloqueado
      FROM vw_usuarios_completos
      WHERE lower(email) = lower($1)`,
     [email],
@@ -159,8 +162,9 @@ export async function crear(
   ejecutor?: Ejecutor,
 ): Promise<Usuario> {
   const usuario = await consultarUno<Usuario>(
-    `INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO usuarios
+       (nombre, apellido, email, password_hash, telefono, debe_cambiar_clave)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING ${COLUMNAS_USUARIO}`,
     [
       datos.nombre,
@@ -168,6 +172,7 @@ export async function crear(
       datos.email,
       datos.passwordHash,
       datos.telefono,
+      datos.debeCambiarClave,
     ],
     ejecutor,
   );
@@ -239,14 +244,28 @@ export async function existeEmailDeOtro(
   return fila?.existe ?? false;
 }
 
-/** Reemplaza el hash de la contrasena. Recibe el hash, nunca la contrasena. */
+/**
+ * Reemplaza el hash de la contrasena. Recibe el hash, nunca la contrasena.
+ *
+ * `provisional` dice quien la eligio. Si la puso un administrador, la persona
+ * tendra que cambiarla al entrar; si la eligio ella misma, ya no.
+ *
+ * De paso levanta el bloqueo: una contrasena nueva es justo la salida para
+ * quien se quedo fuera por fallar la anterior.
+ */
 export async function actualizarPasswordHash(
   id: number,
   passwordHash: string,
+  provisional: boolean,
 ): Promise<boolean> {
   const afectadas = await ejecutar(
-    "UPDATE usuarios SET password_hash = $2 WHERE id = $1",
-    [id, passwordHash],
+    `UPDATE usuarios
+     SET password_hash = $2,
+         debe_cambiar_clave = $3,
+         intentos_fallidos = 0,
+         bloqueado_hasta = NULL
+     WHERE id = $1`,
+    [id, passwordHash, provisional],
   );
 
   return afectadas === 1;
@@ -290,9 +309,49 @@ export async function actualizarTema(id: number, tema: Tema): Promise<boolean> {
   return afectadas === 1;
 }
 
-/** Deja constancia de la ultima entrada. Se llama al iniciar sesion. */
+/**
+ * Deja constancia de la ultima entrada y pone a cero los fallos. Se llama al
+ * iniciar sesion.
+ */
 export async function registrarAcceso(id: number): Promise<void> {
-  await ejecutar("UPDATE usuarios SET ultimo_acceso = now() WHERE id = $1", [id]);
+  await ejecutar(
+    `UPDATE usuarios
+     SET ultimo_acceso = now(), intentos_fallidos = 0, bloqueado_hasta = NULL
+     WHERE id = $1`,
+    [id],
+  );
+}
+
+/**
+ * Apunta un intento fallido y, si es el que colma el vaso, bloquea la cuenta.
+ *
+ * Va en una sola sentencia para que dos intentos simultaneos no lean el mismo
+ * contador y se cuenten como uno. Al bloquear, el contador vuelve a cero: el
+ * bloqueo es la consecuencia, y al terminar se empieza de nuevo.
+ *
+ * Devuelve si la cuenta quedo bloqueada con este intento.
+ */
+export async function registrarFallo(
+  id: number,
+  limite: number,
+  minutosDeBloqueo: number,
+): Promise<boolean> {
+  const fila = await consultarUno<{ bloqueada: boolean }>(
+    `UPDATE usuarios
+     SET bloqueado_hasta = CASE
+           WHEN intentos_fallidos + 1 >= $2 THEN now() + make_interval(mins => $3)
+           ELSE bloqueado_hasta
+         END,
+         intentos_fallidos = CASE
+           WHEN intentos_fallidos + 1 >= $2 THEN 0
+           ELSE intentos_fallidos + 1
+         END
+     WHERE id = $1
+     RETURNING (bloqueado_hasta IS NOT NULL AND bloqueado_hasta > now()) AS bloqueada`,
+    [id, limite, minutosDeBloqueo],
+  );
+
+  return fila?.bloqueada ?? false;
 }
 
 /** Activa o desactiva a una persona sin borrar su historial. */
