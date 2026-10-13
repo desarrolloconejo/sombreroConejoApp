@@ -1,7 +1,7 @@
 # Plan de integracion del portal completo en Conejo App
 
-Fecha: 2026-10-13, con una segunda revision el mismo dia (sesiones, auditoria,
-cargos, tasa del BCV y correo por Gmail). Sustituye como plan maestro a `docs/integracionFinanzas.md`,
+Fecha: 2026-10-13. Revisado tres veces ese dia; la ultima fija el modelo de
+tareas, las herramientas y el menu. Sustituye como plan maestro a `docs/integracionFinanzas.md`,
 que pasa a ser el capitulo de finanzas (seccion 7).
 
 **Fuentes.** El paquete de especificacion `appFacturas` (documentos 01 a 10,
@@ -19,7 +19,7 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Quien opera finanzas | Rol `admin` y cargo `administracion` |
 | Comprobantes | Google Drive, `ConejoApp/Comprobantes`. Probado el 2026-10-13 |
 | Servicios externos | Detras de un adaptador con modo simulado (JSON) y modo real (seccion 6) |
-| Tasa de cambio | Se lee de la pagina del BCV cada hora (seccion 6.1) |
+| Tasa de cambio | Se lee de la pagina del BCV, sin navegador (seccion 6.1) |
 | Correo | Gmail, con el mismo cliente OAuth que Drive (seccion 6.2) |
 | Sesiones | Token de acceso de 30 minutos y token de renovacion guardado en la base (seccion 5.1) |
 | Auditoria | Tabla `auditoria` que registra quien hace que, en toda la app (seccion 5.2) |
@@ -29,7 +29,10 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Modal de sesion | Renovacion silenciosa mientras hay actividad; el modal solo aparece tras inactividad. Tope de 12 horas |
 | Video en revision | Enlaces externos |
 | Tarea de la tasa | Una vez al dia (plan gratuito de Vercel), mas refresco al usar |
-| Hooks | **Se conecta al flujo, como herramienta** (seccion 8.1). Sustituye a la decision anterior de aplazarlo |
+| Modelo de trabajo | Proyecto → piezas → 5 fases fijas → **tareas** asignadas a personas (seccion 8.1) |
+| Catalogo de servicios | Lo que el cliente puede pedir es una lista cerrada; cada servicio trae su brief, sus piezas y sus tareas sugeridas (seccion 8.1) |
+| Herramientas | Seccion propia del menu. **Hooks es la primera** y se conecta al flujo a traves de las tareas (seccion 8.1) |
+| Menu | Agrupado por secciones (seccion 9) |
 | Ajustes al modelo de finanzas | Aceptados los seis |
 | Verificacion en dos pasos | Si, disponible para todos (seccion 5.3) |
 | Neon | El rol de produccion, `neondb_owner`, tiene `BYPASSRLS` (comprobado el 2026-10-13): el rol `conejo_app` es obligatorio, no opcional |
@@ -49,8 +52,9 @@ estan comprobados contra el codigo, con el archivo donde se ven.
  aprueba presupuesto ◀──────────────────── lo envia            │
         │                                                      ▼
         └───────────────────────────────────────────▶  nace el PROYECTO
-                      fija fechas, asigna                      │ piezas × 5 fases
-                      completa fases  ◀── «lista» ──────────── trabaja fases 1 a 3
+                      ajusta piezas y tareas,                  │ piezas × 5 fases
+                      fija fechas, asigna                      │ tareas por fase
+                      completa fases  ◀── «lista» ──────────── cumple sus tareas
                       fase 4: envia al cliente
  fase 5: aprueba
  o pide correccion ─▶ la pieza vuelve a la fase que toque
@@ -62,7 +66,7 @@ Tres bloques que hoy no existen en Conejo App, mas finanzas:
 
 | Bloque | Que cubre |
 | --- | --- |
-| **Proyectos y bateria** | Proyectos por empresa, piezas, 5 fases por pieza, avance calculado, tablero interno con alertas, cola «Mi trabajo» |
+| **Proyectos y bateria** | Proyectos por empresa, piezas, 5 fases por pieza, tareas asignadas, avance calculado, tablero interno con alertas, «Mi trabajo» |
 | **Revision del cliente** | Vista del cliente con sus proyectos, archivos y versiones, aprobar o pedir correccion en la fase 5, historial |
 | **Briefs** | Formularios por pasos, envio con codigo y copia congelada, bandeja del ejecutivo, enlace privado para prospectos |
 | **Finanzas** | Presupuesto, proforma, factura en talonario, pagos, retenciones, cobranza |
@@ -121,7 +125,7 @@ Tres bloques que hoy no existen en Conejo App, mas finanzas:
 | Permisos Aprobar y Finanzas | Dos columnas nuevas en `clientes`: `puede_aprobar`, `puede_ver_finanzas` | Las marca el admin en el modulo de Usuarios |
 | ADMIN | rol `admin` | |
 | EJECUTIVO | rol `trabajador`, cargo `cuentas` | Decidido. Ve solo sus empresas asignadas |
-| PRODUCCION | rol `trabajador`, cargo **`produccion`**, que es nuevo | Decidido. Quien hace cada tarea no depende del cargo sino de la asignacion (seccion 8.1) |
+| PRODUCCION | Cualquier trabajador con tareas asignadas. El cargo **`produccion`** es nuevo | Decidido. Quien hace cada tarea no depende del cargo sino de la asignacion (seccion 8.1) |
 | — | cargo `administracion` | Opera finanzas; no ve produccion salvo decision contraria |
 | Asignacion ejecutivo ↔ cliente | Tabla nueva `portal.asignaciones` | Decidido: se aplica desde el primer dia |
 | Prospecto | Tabla nueva `portal.prospectos` | Empresa que aun no es cliente |
@@ -148,6 +152,7 @@ Todo en `db/schema.sql`, idempotente. Tres zonas:
 | `empresas` | `razon_social`, `domicilio_fiscal`, `correo_facturacion`, `es_agente_retencion`, `retencion_iva_pct`, `carpeta_drive_id` |
 | `clientes` | `puede_aprobar`, `puede_ver_finanzas` |
 | `usuarios` | `debe_cambiar_clave`, `intentos_fallidos`, `bloqueado_hasta` (seccion 5) |
+| `fichas_hook` | `tarea_id` opcional (seccion 8.1) |
 | `cargos` | Fila nueva `produccion`. Tambien en `SlugCargo` y en la lista de `src/lib/jwt.ts` |
 | (nuevas en `public`) | `sesiones` (seccion 5.1) y `auditoria` (seccion 5.2): sirven a toda la app, no solo al portal |
 
@@ -161,6 +166,7 @@ Todo en `db/schema.sql`, idempotente. Tres zonas:
 | `pieza_contenido` | El `copy` de la pieza, **en tabla aparte** (ver abajo) |
 | `pieza_fases` | Cinco filas por pieza: estado, fecha estimada, responsable, completada en, marcada lista en |
 | `versiones` | Archivos o enlaces externos de una pieza: numero, ronda, fase, autor, enviada al cliente en |
+| `tareas` | Trabajo interno dentro de una fase: titulo, responsable, herramienta, estado, lista en |
 | `revisiones` | Decision del cliente en la fase 5: aprobada o correccion, tipo, comentario, fases reabiertas |
 | `comentarios_pieza` | Comentarios internos; nunca salen al cliente |
 | `recursos_marca` | Boveda de marca por empresa |
@@ -175,7 +181,9 @@ Todo en `db/schema.sql`, idempotente. Tres zonas:
 Vistas: `portal.v_progreso_pieza` y `portal.v_progreso_proyecto`. **El avance
 no se guarda**: no existen columnas de porcentaje ni de fase actual.
 
-Las plantillas de fase no son tabla: van en `src/lib/portal/catalogo.ts`. Los
+Las plantillas de fase y el catalogo de servicios no son tabla: van en
+`src/lib/portal/catalogo.ts`. El registro de herramientas, en
+`src/lib/herramientas.ts`. Los
 formatos de brief tampoco: son JSON versionados dentro del repositorio, y cada
 version enviada guarda el texto exacto de sus preguntas.
 
@@ -487,7 +495,7 @@ construyen, y eso lo dicen las secciones 2 a 6 de este plan.
 
 ---
 
-### 8.1 Tareas y herramientas (propuesta, pendiente de confirmar)
+### 8.1 Tareas, catalogo de servicios y herramientas
 
 El paquete define el trabajo como piezas con cinco fases fijas. Lo que pide el
 dia a dia es mas fino: un objetivo que se desglosa en tareas, que se asignan y
@@ -528,31 +536,99 @@ suelto.
 | `portal.tareas` (nueva) | Fase de la pieza, titulo, responsable, herramienta, estado, lista en |
 | `fichas_hook` | `tarea_id` opcional |
 
+**«Marcar como lista» pasa de la fase a la tarea.** En el paquete produccion
+marcaba lista la fase entera; aqui cada persona marca la suya, y la fase queda
+lista para que el ejecutivo la complete cuando lo estan todas. Una fase de
+trabajo sin tareas se completa como en el paquete.
+
+**El cliente no ve tareas.** Ni su titulo, ni quien las hace: solo la bateria.
+La politica RLS de `portal.tareas` no deja pasar a ningun cliente.
+
 **Falta del negocio:** la lista de servicios que vende la agencia y las tareas
 tipicas de cada uno.
 
 ## 9. Interfaz
 
-| Modulo | Ruta | Visible para | Contenido |
-| --- | --- | --- | --- |
-| Tablero | `/dashboard/tablero` | `cuentas`, admin | Proyectos de sus empresas asignadas, con su bateria y las cuatro alertas |
-| Proyectos | `/dashboard/proyectos` | `cuentas`, admin | Listado, matriz de piezas × fases, ficha de pieza |
-| Mi trabajo | `/dashboard/mi-trabajo` | Cualquier trabajador con tareas asignadas | Cola de piezas asignadas, «marcar como lista» |
-| Briefs (bandeja) | `/dashboard/briefs` | `cuentas`, admin | Recibidos, aclaraciones, las tres decisiones |
-| Finanzas | `/dashboard/finanzas` | `administracion`, admin | Presupuestos, proformas, facturas, pagos, cobranza, ajustes |
-| Bandeja de salida | `/dashboard/salida` | admin | Correos simulados |
-| Auditoria | `/dashboard/auditoria` | admin | Quien hizo que |
-| Mis proyectos | `/dashboard/mis-proyectos` | cliente | Sus proyectos, revision en fase 5, historial |
-| Mis briefs | `/dashboard/mis-briefs` | cliente | Sus briefs, nuevo brief |
-| Administracion | `/dashboard/administracion` | cliente con Finanzas | Documentos, estado de cuenta, reportar pago |
-| Brief por enlace | `/brief/[token]` | sin sesion | La unica ruta publica nueva |
+### 9.1 El menu, por secciones
 
-Cambios en el armazon: el registro de modulos gana criterios para «solo
-clientes» y para un permiso concreto; el proxy gana una lista de rutas por tipo
-de usuario y la ruta publica del enlace.
+```
+GENERAL
+  Inicio
 
-La bateria es un componente nuevo de `components/ui`: cinco segmentos, con
-texto ademas de color y `aria-label` con el porcentaje.
+TRABAJO
+  Tablero                    proyectos con su bateria y alertas
+  Proyectos                  piezas, fases y tareas
+  Briefs                     bandeja de lo que piden los clientes
+  Mi trabajo                 las tareas que tengo asignadas
+
+HERRAMIENTAS
+  Hooks ▾
+    Manual · Documentacion · Hooks · Auditor · Metricas · Historial
+
+FINANZAS
+  Finanzas ▾
+    Presupuestos · Proformas · Facturas · Pagos · Cobranza · Ajustes
+
+SISTEMA
+  Usuarios
+  Empresas
+  Auditoria
+  Bandeja de salida          correos simulados
+
+MI ESPACIO                   solo clientes
+  Mis proyectos              avance, y aprobar o pedir correccion
+  Mis briefs                 pedir un trabajo nuevo
+  Facturacion                presupuestos, facturas y reportar pagos
+
+  Mi perfil                  siempre el ultimo
+```
+
+| Seccion | Admin | Cuentas | Administracion | Produccion, diseno, redes | Cliente |
+| --- | --- | --- | --- | --- | --- |
+| Inicio y Mi perfil | Si | Si | Si | Si | Si |
+| Tablero, Proyectos, Briefs | Si | Solo sus empresas | No | No | No |
+| Mi trabajo | Si | Si | No | Si | No |
+| Hooks | Si | No | No | Solo redes | No |
+| Finanzas | Si | No | Si | No | No |
+| Sistema | Si | No | No | No | No |
+| Mi espacio | No | No | No | No | Si. Facturacion, solo con el permiso de finanzas |
+
+Tres decisiones de diseno del menu:
+
+- **«Herramientas» es un rotulo de seccion, no un desplegable.** Como
+  desplegable, Hooks quedaria a tres niveles (Herramientas → Hooks → Auditor) y
+  la navegacion solo soporta uno. Cada herramienta nueva se suma al lado.
+- **La vista de finanzas del cliente se llama «Facturacion».** El paquete la
+  llama «Administracion», nombre que aqui ya usa un cargo.
+- **Hooks lo sigue viendo solo `redes`**, y el admin. Quien reciba una tarea de
+  hook sin ser de redes llega a la herramienta desde la tarea.
+
+### 9.2 Rutas
+
+| Modulo | Ruta | Contenido |
+| --- | --- | --- |
+| Tablero | `/dashboard/tablero` | Proyectos con su bateria y las cuatro alertas |
+| Proyectos | `/dashboard/proyectos` | Listado, matriz de piezas × fases, ficha de pieza con sus tareas |
+| Briefs | `/dashboard/briefs` | Recibidos, aclaraciones, las tres decisiones |
+| Mi trabajo | `/dashboard/mi-trabajo` | Mis tareas por fecha, «marcar como lista», abrir la herramienta |
+| Hooks | `/dashboard/hooks/**` | Sin cambios de ruta |
+| Finanzas | `/dashboard/finanzas/**` | Presupuestos, proformas, facturas, pagos, cobranza, ajustes |
+| Auditoria | `/dashboard/auditoria` | Quien hizo que |
+| Bandeja de salida | `/dashboard/salida` | Correos simulados |
+| Mis proyectos | `/dashboard/mis-proyectos` | Sus proyectos, revision en fase 5, historial |
+| Mis briefs | `/dashboard/mis-briefs` | Sus briefs, nuevo brief |
+| Facturacion | `/dashboard/facturacion` | Documentos, estado de cuenta, reportar pago |
+| Brief por enlace | `/brief/[token]` | La unica ruta publica nueva |
+
+### 9.3 Cambios en el armazon
+
+| Sitio | Cambio |
+| --- | --- |
+| `src/lib/navegacion.ts` | Cada modulo declara su `seccion`. Criterios nuevos de visibilidad: solo clientes, un permiso del cliente, y «tiene tareas asignadas» |
+| `Sidebar` y cajon movil | Pintan un rotulo por seccion; hoy solo existe «General». Una seccion sin modulos visibles no se pinta |
+| Buscador global | Sin cambios: sigue leyendo del mismo registro |
+| `src/proxy.ts` | Lista de rutas por tipo de usuario, la ruta publica del enlace y el paso de peticiones con cookie de renovacion |
+| `components/ui` | Componente nuevo: la bateria de cinco segmentos, con texto ademas de color y `aria-label` con el porcentaje |
 
 ---
 
@@ -560,16 +636,15 @@ texto ademas de color y `aria-label` con el porcentaje.
 
 | Etapa | Entrega | Depende de |
 | --- | --- | --- |
-| **0. Preparacion** | Respuestas de la seccion 11. La consulta de Neon ya esta hecha | Tu |
-| **1. Cimientos de seguridad** | Rol `conejo_app`, `conSesion`, guardias con datos frescos, sesiones con renovacion y modal, bloqueo de intentos, cambio obligatorio de clave, empresa activa, cabeceras, auditoria, cargo `produccion`. **La app actual queda mas segura aunque no se construya nada mas** | Etapa 0 |
-| **2. Externos y avisos** | Adaptadores, JSON, bandeja de salida, campana, lectura de la tasa del BCV | Cuenta de la empresa, solo para el correo real |
-| **3. Proyectos y bateria** | Proyectos, piezas, fases, avance, tablero, Mi trabajo | Pregunta 2 |
-| **4. Vista del cliente y revision** | Mis proyectos, versiones, aprobar o corregir, historial — |
-| **5. Presupuestos y proformas** | Editor, aprobacion del cliente, proforma ligada a proyectos | Pregunta 1 |
+| **1. Cimientos de seguridad** | Rol `conejo_app`, `conSesion`, guardias con datos frescos, sesiones con renovacion, bloqueo de intentos, cambio obligatorio de clave, empresa activa, cabeceras, auditoria, cargo `produccion`, menu por secciones. **La app actual queda mas segura aunque no se construya nada mas** | Nada |
+| **2. Externos y avisos** | Adaptadores, JSON, bandeja de salida, campana, lectura de la tasa del BCV | Nada. El correo real espera a la cuenta de la empresa |
+| **3. Proyectos, bateria y tareas** | Proyectos, piezas, fases, tareas, catalogo con los dos servicios ya definidos, tablero, Mi trabajo, Hooks como herramienta | Nada |
+| **4. Vista del cliente y revision** | Mis proyectos, versiones, aprobar o corregir, historial | Etapa 3 |
+| **5. Presupuestos y proformas** | Editor, aprobacion del cliente, proforma ligada a proyectos | Etapa 1 |
 | **6. Briefs** | Formato de producto, envio, bandeja, enlace de prospecto, brief → presupuesto → proyecto | Etapas 2, 3 y 5 |
 | **7. Facturas, pagos y cobranza** | Emision, talonario, comprobantes, estado de cuenta | **Negocio**: moneda y tasa, medios de pago, contador, hoja del talonario |
-| **8. Endurecimiento y piloto** | Dos pasos si se decide, prueba con un cliente real | — |
-| **9. Mudanza fuera de Vercel** | Correo real, tareas programadas, tiempo real, video por el servidor, copias de seguridad, foto de perfil | Tu decision de a donde |
+| **8. Endurecimiento y piloto** | Verificacion en dos pasos, prueba con un cliente real | — |
+| **9. Mudanza al VPS** | Correo real, tareas programadas cada hora, tiempo real, video por el servidor, copias de seguridad, foto de perfil | Fecha de la mudanza |
 
 Las etapas 1 a 6 se pueden construir sin esperar al negocio. Cada una termina
 en algo utilizable y se registra en `agent.md`.
@@ -614,13 +689,21 @@ variables. El codigo no cambia.
 
 ### Decisiones tuyas que siguen abiertas
 
-| # | Pregunta | Mi propuesta |
-| --- | --- | --- |
-| 1 | El modelo de tareas dentro de las fases y el catalogo de servicios (seccion 8.1) | Adoptarlo |
-| 2 | Como se imprime la factura | Desde el navegador |
-| 3 | ¿Se aceptan rutas API (`route.ts`)? Hacen falta dos: descargar archivos y la tarea de la tasa | Si |
-| 4 | ¿Que tasa del BCV se guarda: dolar, euro o las dos? | Las dos; el negocio decide cual se usa al facturar |
-| 5 | Codigo QR para activar los dos pasos: una dependencia pequena, o solo tecleando el secreto | Se decide al llegar a esa etapa |
+Ninguna bloquea la etapa 1.
+
+| # | Pregunta | Mi propuesta | Hace falta para |
+| --- | --- | --- | --- |
+| 1 | ¿Quien puede ver Hooks: solo `redes`, o todo el que trabaja piezas? | Solo `redes` | Etapa 3 |
+| 2 | ¿El ejecutivo ve tambien los briefs de prospectos que aun no son empresa? ¿Quien se los asigna? | Los ve quien genero el enlace, y el admin | Etapa 6 |
+| 3 | ¿Quien asigna las empresas a cada ejecutivo? | El admin, desde la ficha de la empresa | Etapa 3 |
+| 4 | ¿El admin puede hacer de ejecutivo (completar fases, enviar al cliente)? | Si | Etapa 3 |
+| 5 | ¿Que tasa del BCV se guarda: dolar, euro o las dos? | Las dos | Etapa 2 |
+| 6 | Como se imprime la factura | Desde el navegador | Etapa 7 |
+| 7 | Codigo QR para activar los dos pasos: una dependencia pequena, o tecleando el secreto | Se decide al llegar | Etapa 8 |
+
+Dos cosas que doy por aceptadas salvo que digas lo contrario: las rutas API (para
+descargar archivos y para la tarea de la tasa) y que todos tengan que volver a
+iniciar sesion una vez, cuando entren las sesiones nuevas.
 
 ### Del negocio
 

@@ -1870,3 +1870,22 @@ Se cerraron decisiones que cambian la etapa 1:
 - **Correo.** Por la API de Gmail con el mismo cliente OAuth.
 - **Neon.** `neondb_owner` tiene `BYPASSRLS`: el rol sin privilegios es
   obligatorio.
+
+### Tercera revision del plan
+
+Se fija el modelo de trabajo, que es lo que mas cambia respecto al paquete:
+
+- **Tareas dentro de las fases.** Las cinco fases se quedan fijas, porque son
+  lo que ve el cliente y lo que hace calculable el avance; el trabajo interno
+  se desglosa en tareas que cuelgan de ellas y se asignan a personas. Quien
+  hace cada cosa deja de depender del cargo.
+- **Catalogo de servicios.** Lo que el cliente puede pedir es una lista
+  cerrada, y cada servicio trae su brief, sus piezas y sus tareas sugeridas.
+- **Herramientas.** Hooks deja de ser un modulo suelto: es la primera
+  herramienta, y se conecta al flujo a traves de las tareas.
+- **Menu por secciones**: General, Trabajo, Herramientas, Finanzas, Sistema y
+  Mi espacio.
+
+Quedan aceptados los seis ajustes al modelo de finanzas y la verificacion en
+dos pasos, que no usa ningun servicio de Google: es un estandar abierto que se
+calcula con `node:crypto`.
