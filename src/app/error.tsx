@@ -10,7 +10,9 @@ import { Boton, BotonEnlace } from "@/components/ui";
  *
  * Una barrera de error TIENE que ser de cliente: React la monta en el
  * navegador para poder reemplazar el arbol que fallo sin recargar la pagina, y
- * `reset` vuelve a intentar el renderizado desde ahi.
+ * `retry` vuelve a pedir los datos al servidor y a renderizar desde ahi. No se
+ * usa `reset`, que solo repinta: casi todo lo que falla aqui es de servidor, y
+ * repintar sin volver a pedir devuelve el mismo error.
  *
  * El mensaje real del error no se pinta nunca. Puede llevar dentro una
  * consulta, una ruta del servidor o el detalle de por que fallo la base, y eso
@@ -20,10 +22,10 @@ import { Boton, BotonEnlace } from "@/components/ui";
  */
 export default function ErrorAplicacion({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
     console.error("Fallo no controlado en la aplicacion:", error);
@@ -54,7 +56,7 @@ export default function ErrorAplicacion({
         </p>
 
         <div className="mt-7 flex flex-wrap justify-center gap-2.5">
-          <Boton type="button" onClick={reset}>
+          <Boton type="button" onClick={() => retry()}>
             <RotateCw aria-hidden="true" />
             Reintentar
           </Boton>

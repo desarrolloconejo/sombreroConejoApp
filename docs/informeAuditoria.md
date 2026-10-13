@@ -17,9 +17,9 @@ menores. A3, A8 y A10 se tratan en el plan del portal; A11 ya esta corregido.
 | # | Severidad | Hallazgo | Cubierto por el plan del portal |
 | --- | --- | --- | --- |
 | A1 | Critica | `next` 16.3.2 tiene avisos de seguridad criticos; se corrigen en 16.4.0. **Corregido** | No |
-| A2 | Alta | Redireccion abierta en el login por `volverA`. **Reproducida** | No |
+| A2 | Alta | Redireccion abierta en el login por `volverA`. Reproducida y **corregida** | No |
 | A3 | Alta | Las cuentas del seed pueden estar en produccion con su clave del repositorio | **Si**: hueco 11 y secciones 10.1 y 11 |
-| A4 | Media | Los limites de error usan `reset`, que no recupera un fallo de servidor | No |
+| A4 | Media | Los limites de error usan `reset`, que no recupera un fallo de servidor. **Corregido** | No |
 | A5 | Media | `.mcp.json` ejecuta Context7 con `npx -y` sin fijar version | No |
 | A6 | Baja | `pg` sin tiempos limite de consulta; cliente roto vuelve al pool | No |
 | A7 | Baja | El limite de 72 de la contrasena se mide en caracteres, no en bytes | No |
@@ -79,6 +79,13 @@ integracion 3/3 y build de produccion.
 
 ### A2 — Redireccion abierta en el login
 
+**Corregido el 2026-10-13**, rama `fix/auditoria-login-y-errores`.
+`destinoSeguro` pasa a `src/lib/redireccion.ts`: interpreta el valor con `URL`,
+exige el mismo origen y que la ruta sea del panel, y devuelve la ruta ya
+interpretada. Dieciocho pruebas unitarias en `tests/unitarias/redireccion.spec.ts`.
+Repetida la prueba en local: el mismo enlace termina ahora en `/dashboard`.
+Lo de abajo describe el estado anterior.
+
 - **Evidencia:** `destinoSeguro` (`src/actions/auth.ts:34-43`) acepta cualquier
   valor que empiece por una sola barra. `/<tabulador>/sitio.com` pasa el filtro,
   y el navegador descarta tabuladores y saltos de linea al interpretar una URL,
@@ -114,6 +121,10 @@ integracion 3/3 y build de produccion.
   las cuentas existentes, asi que nada obligara a cambiarla.
 
 ### A4 — Los limites de error usan `reset`
+
+**Corregido el 2026-10-13**, en la misma rama: los tres limites usan `retry`.
+Comprobado con `typecheck` y build; no se provoco un fallo real de la base
+para verlo recuperarse.
 
 - **Evidencia:** `src/app/error.tsx:57`, `src/app/dashboard/error.tsx:57` y
   `src/app/global-error.tsx:100` llaman a `reset`.
@@ -295,7 +306,7 @@ integracion 3/3 y build de produccion.
 | Paso | Contenido | Rama |
 | --- | --- | --- |
 | 1 | A1: `next` y `eslint-config-next` a 16.4.0, `npm audit fix`. **Hecho** | `chore/auditoria-next` |
-| 2 | A2 y A4: `destinoSeguro` con su prueba, `retry` en los limites de error | `fix/auditoria-login-y-errores` |
+| 2 | A2 y A4: `destinoSeguro` con su prueba, `retry` en los limites de error. **Hecho** | `fix/auditoria-login-y-errores` |
 | 3 | A5, A6, A7, A9, A12, A13 y A14 | `chore/auditoria-menores` |
 | 4 | Resto de la fase 3: `react`, `jose`, `pg`, `lucide-react`, tipos; evaluar `eslint` 10 y `typescript` 7 | `chore/auditoria-dependencias` |
 
