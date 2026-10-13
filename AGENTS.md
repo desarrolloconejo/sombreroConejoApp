@@ -22,8 +22,8 @@ estricto, Tailwind 4, PostgreSQL 17 con SQL puro (`pg`), sesiones JWT (`jose`).
 Todo —codigo, comentarios, tablas, commits y documentos— va en **espanol, sin
 tildes en el codigo**.
 
-Hoy existen: login, inicio, Mi perfil, Usuarios, Empresas, Auditoria y el
-modulo de Hooks.
+Hoy existen: login, inicio, Mi perfil, Usuarios, Empresas, Auditoria, Bandeja
+de salida y el modulo de Hooks.
 Esta en marcha la integracion de un portal completo (briefs, proyectos con
 bateria de fases y tareas, revision del cliente, finanzas). **Antes de
 construir nada de eso, lee `docs/planIntegracionPortal.md`**: es el plan
@@ -55,6 +55,8 @@ src/types/        tipos, reexportados desde index.ts
 src/lib/          infraestructura: db, sesion, jwt, validaciones, navegacion,
                   redireccion
 src/lib/hooks/    criterio del modulo de hooks como funciones puras
+src/lib/externos/ adaptadores de servicios externos, con modo simulado y real
+src/lib/correos/  lo que dice cada correo, como funciones puras
 src/proxy.ts      barrera de rutas (en Next 16 sustituye a middleware.ts)
 db/               schema.sql, seed, generador de SQL de produccion, pruebas
 db/neon/          SQL numerado para pegar en Neon, un archivo por cambio
@@ -86,6 +88,13 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Los modelos de los modulos del portal reciben su conexion de `conSesion`
   (`src/lib/db.ts`), no de `transaccion`: declara a la base quien pregunta.
   Una vista sobre tablas con seguridad por fila lleva `security_invoker`.
+- Las tablas de `portal` y `finanzas` llevan seguridad por fila. En sus
+  modelos el `ejecutor` es **obligatorio**, y quien los llama lo saca de
+  `conSesion`. Cada tabla nueva trae sus politicas y su comprobacion en
+  `prueba:permisos`.
+- Con seguridad por fila, un `INSERT … RETURNING` exige ademas permiso de
+  lectura sobre la fila escrita. Si quien escribe puede no poder leerla, el
+  identificador se reserva antes con `nextval`.
 - El hash de la contrasena solo esta en `vw_usuarios_acceso`. No se anade a
   ninguna otra vista ni consulta.
 - **Toda action que cambia algo lo anota en `auditoria`, en la misma
@@ -129,6 +138,11 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - El `matcher` de `src/proxy.ts` solo excluye por extension lo que cuelga de
   la raiz y `/images`. Una ruta publica nueva se declara en el proxy, no se
   cuela por el `matcher`.
+- **Ningun correo lleva contrasenas, tokens ni codigos.** La bandeja de salida
+  guarda el texto completo de cada uno.
+- Un servicio externo se llama solo a traves de su adaptador de
+  `src/lib/externos/`, y nunca dentro de una transaccion de la base. Para el
+  correo: `encolarCorreo` dentro de `conSesion`, `entregarCorreos` despues.
 - Ningun secreto entra al repositorio. `.env` esta ignorado; en `.env.example`
   y en los documentos van los **nombres** de las variables, no sus valores.
 

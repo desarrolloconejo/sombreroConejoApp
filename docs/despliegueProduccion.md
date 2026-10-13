@@ -1,7 +1,7 @@
 # Guia de despliegue a produccion
 
 Estado: **en preparacion**. No se publica nada hasta que la integracion del
-portal este completa y probada en local. Ultima etapa anotada: **1**.
+portal este completa y probada en local. Ultima etapa anotada: **2** (en curso).
 
 Este documento se va llenando etapa a etapa. Cada rama que cambie algo de
 produccion —esquema, variables de entorno, un paso manual— lo anota aqui antes
@@ -85,6 +85,14 @@ Sus tres comprobaciones:
 heredo privilegios que no debe tener, y la seguridad por fila seria decorativa.
 No se cambia Vercel ni se sube hasta resolverlo.
 
+### Etapa 2 — Externos y avisos
+
+Necesitan el rol `conejo_app`: van despues del 5.
+
+| # | Archivo | Que hace | Resultado esperado |
+| --- | --- | --- | --- |
+| 7 | `db/neon/07-esquemas-y-correos.sql` | Crea los esquemas `portal` y `finanzas`, las funciones de sesion y `portal.correos_salida` con sus politicas | `esquemas = 2`; `seguridad_por_fila = true` y `politicas = 3` |
+
 ---
 
 ## 3. Variables de entorno en Vercel
@@ -99,6 +107,13 @@ En Settings → Environment Variables, entorno de produccion.
 | `JWT_EXPIRACION` | **Borrar** | Ya no se usa |
 | `JWT_SECRET` | Comprobar | Que **no** sea el de ejemplo de `.env.example`: la version nueva lo rechaza en produccion y no arrancaria |
 | `SESION_ACCESO_SEGUNDOS`, `SESION_HORAS`, `SESION_INACTIVIDAD_MINUTOS` | No definir | Tienen valor por defecto (30 minutos, 12 horas, 15 minutos). Solo existen para pruebas |
+
+### Etapa 2
+
+| Variable | Accion | Valor |
+| --- | --- | --- |
+| `APP_URL_PUBLICA` | **Anadir** | La direccion publica de la aplicacion, sin barra final (`https://app.…`). Es el enlace que llevan los correos. Sin ella los correos salen sin enlace |
+| `CORREO_MODO` | No definir | Sin definir vale `simulado`: no se envia nada y los mensajes quedan en la bandeja de salida. Se pone en `real` el dia que exista la cuenta de Google de la empresa |
 
 La cadena del dueno (`neondb_owner`) se guarda aparte: hace falta para la
 vuelta atras de la seccion 7 y deja de estar en Vercel.
@@ -137,6 +152,14 @@ En la aplicacion publicada, con la cuenta de administrador.
       al recorrer Inicio, Hooks, Usuarios y Empresas.
 - [ ] Crear un usuario de prueba, entrar con su contrasena provisional en una
       ventana privada y comprobar que obliga a cambiarla. Despues, desactivarlo.
+
+### Etapa 2
+
+- [ ] Bandeja de salida (en Sistema) abre, y muestra el aviso de que el correo
+      esta en modo simulado.
+- [ ] El usuario de prueba creado arriba dejo su correo de bienvenida en la
+      bandeja. Abrirlo, comprobar que **no** lleva la contrasena y que el
+      enlace apunta a la direccion publica, y anotarlo como entregado.
 
 ---
 
@@ -189,6 +212,14 @@ anterior lo ignora.
 - El menu cambia de orden: Hooks sube a «Herramientas»; Usuarios, Empresas y
   Auditoria quedan en «Sistema».
 
+### Etapa 2
+
+- Al dar de alta a alguien o restablecerle la contrasena se escribe un correo
+  de aviso. **Con el correo en modo simulado no le llega a nadie**: aparece en
+  la bandeja de salida para entregarlo a mano. La contrasena provisional se
+  sigue entregando en mano; el correo nunca la lleva.
+- El administrador tiene una entrada nueva en Sistema: «Bandeja de salida».
+
 ---
 
 ## 9. Pendientes y cosas sin probar
@@ -207,6 +238,13 @@ resolver antes.
 | Aviso de inactividad | Probado con plazos de 40 segundos, no con los 30 minutos reales |
 | Cuentas de prueba en produccion | Si existen, las desactiva el administrador desde Usuarios |
 
+### Etapa 2
+
+| Tema | Estado |
+| --- | --- |
+| Correo en modo real (Gmail) | **Escrito y sin probar.** No hay cuenta de Google de la empresa. Antes de poner `CORREO_MODO=real` hay que repetir `npm run drive:probar` pidiendo tambien el permiso `gmail.send`, y probar un envio |
+| Correos que quedan «pendientes» | En modo real, si la funcion se corta entre confirmar el cambio y enviar, el correo queda como pendiente. No hay tarea que lo recoja: se reintenta a mano desde la bandeja |
+
 ---
 
 ## Registro por etapa
@@ -214,7 +252,7 @@ resolver antes.
 | Etapa | SQL antes | Variables | SQL despues | Anotada |
 | --- | --- | --- | --- | --- |
 | 1. Cimientos de seguridad | 01 a 05 | `DATABASE_URL`, `JWT_EXPIRACION` | 06 | Si |
-| 2. Externos y avisos | — | — | — | Pendiente |
+| 2. Externos y avisos | 07 | `APP_URL_PUBLICA` | — | En curso: falta avisos, tasa y archivos |
 | 3. Proyectos, bateria y tareas | — | — | — | Pendiente |
 | 4. Vista del cliente y revision | — | — | — | Pendiente |
 | 5. Presupuestos y proformas | — | — | — | Pendiente |
