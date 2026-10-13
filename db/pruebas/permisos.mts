@@ -199,6 +199,120 @@ async function principal(): Promise<void> {
     fugas.length === 0 ? "sin rastro en el pool" : `quedo: ${fugas.join(",")}`,
   );
 
+  // ------------------------------------------- seguridad por fila: la bandeja
+  //
+  // Todo dentro de UNA transaccion que se deshace: se cambia de identidad con
+  // set_config, que es justo lo que hace `conSesion`, y al final no queda nada.
+  const [admin] = await consultar<{ id: number }>(
+    "SELECT id FROM vw_usuarios_completos WHERE rol = 'admin' ORDER BY id LIMIT 1",
+  );
+  const [otro] = await consultar<{ id: number }>(
+    "SELECT id FROM vw_usuarios_completos WHERE rol <> 'admin' ORDER BY id LIMIT 1",
+  );
+
+  if (!admin || !otro) throw new Error("Falta el seed: ejecuta npm run seed");
+
+  const bandeja: Record<string, unknown> = {};
+
+  try {
+    await transaccion(async (cliente) => {
+      const como = (id: number | null, rol: string) =>
+        cliente.query(
+          "SELECT set_config('app.usuario_id', $1, true), set_config('app.rol', $2, true)",
+          [id === null ? "" : String(id), rol],
+        );
+      const insertar = (creadoPor: number) =>
+        cliente.query(
+          `INSERT INTO portal.correos_salida
+             (para, tipo, asunto, cuerpo, modo, estado, creado_por)
+           VALUES ('prueba@permisos.test', 'bienvenida', 'Prueba', 'Cuerpo',
+                   'simulado', 'simulado', $1)`,
+          [creadoPor],
+        );
+      const cuantos = async () =>
+        Number(
+          (
+            await cliente.query<{ n: string }>(
+              "SELECT count(*)::text AS n FROM portal.correos_salida WHERE para = 'prueba@permisos.test'",
+            )
+          ).rows[0].n,
+        );
+      /** Un intento que puede fallar sin tumbar la transaccion entera. */
+      const intentarDentro = async (accion: () => Promise<unknown>) => {
+        await cliente.query("SAVEPOINT intento");
+        try {
+          await accion();
+          await cliente.query("RELEASE SAVEPOINT intento");
+          return null;
+        } catch (error) {
+          await cliente.query("ROLLBACK TO SAVEPOINT intento");
+          return (error as { code?: string }).code ?? "desconocido";
+        }
+      };
+
+      await como(null, "");
+      bandeja.sinSesionInserta = await intentarDentro(() => insertar(admin.id));
+
+      await como(otro.id, "trabajador");
+      bandeja.suplantaInserta = await intentarDentro(() => insertar(admin.id));
+      bandeja.propioInserta = await intentarDentro(() => insertar(otro.id));
+
+      await como(admin.id, "admin");
+      await insertar(admin.id);
+      bandeja.adminVe = await cuantos();
+
+      await como(otro.id, "trabajador");
+      bandeja.otroVe = await cuantos();
+      bandeja.otroActualiza = (
+        await cliente.query(
+          "UPDATE portal.correos_salida SET asunto = 'Tocado' WHERE para = 'prueba@permisos.test'",
+        )
+      ).rowCount;
+
+      await como(null, "");
+      bandeja.sinSesionVe = await cuantos();
+
+      bandeja.borra = await intentarDentro(() =>
+        cliente.query("DELETE FROM portal.correos_salida WHERE false"),
+      );
+
+      throw new Deshacer();
+    });
+  } catch (error) {
+    if (!(error instanceof Deshacer)) throw error;
+  }
+
+  comprobar(
+    "Sin sesion declarada no se puede escribir en la bandeja",
+    bandeja.sinSesionInserta === DENEGADO,
+    String(bandeja.sinSesionInserta),
+  );
+  comprobar(
+    "Nadie deja un correo a nombre de otro",
+    bandeja.suplantaInserta === DENEGADO && bandeja.propioInserta === null,
+    `a nombre ajeno: ${bandeja.suplantaInserta}; al propio: aceptado`,
+  );
+  comprobar(
+    "El administrador ve toda la bandeja",
+    bandeja.adminVe === 2,
+    `${bandeja.adminVe} de 2`,
+  );
+  comprobar(
+    "Quien no es administrador solo alcanza lo que el mismo provoco",
+    bandeja.otroVe === 1 && bandeja.otroActualiza === 1,
+    `ve ${bandeja.otroVe}, actualiza ${bandeja.otroActualiza}`,
+  );
+  comprobar(
+    "Sin sesion declarada la bandeja esta vacia",
+    bandeja.sinSesionVe === 0,
+    `${bandeja.sinSesionVe} filas`,
+  );
+  comprobar(
+    "La aplicacion no puede borrar correos",
+    bandeja.borra === DENEGADO,
+    String(bandeja.borra),
+  );
+
   console.log(`\n${pasan}/${pasan + fallan.length} comprobaciones correctas`);
   if (fallan.length > 0) {
     console.error(`\nFallan: ${fallan.join(", ")}`);
