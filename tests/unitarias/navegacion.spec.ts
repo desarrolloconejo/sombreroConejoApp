@@ -26,7 +26,10 @@ test("el administrador ve todas las secciones que tienen algo, en su orden", () 
   expect(menuDe(ADMIN)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
     { seccion: "Herramientas", modulos: ["Hooks"] },
-    { seccion: "Sistema", modulos: ["Usuarios", "Empresas", "Auditoria"] },
+    {
+      seccion: "Sistema",
+      modulos: ["Usuarios", "Empresas", "Auditoria", "Bandeja de salida"],
+    },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
 });

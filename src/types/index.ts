@@ -82,6 +82,16 @@ export type {
   FiltrosAuditoria,
 } from "./auditoria";
 
+export { NOMBRES_DE_CORREO, NOMBRES_DE_ESTADO_CORREO } from "./correo";
+export type {
+  ModoExterno,
+  TipoCorreo,
+  EstadoCorreo,
+  NuevoCorreo,
+  CorreoSalida,
+  FiltrosCorreos,
+} from "./correo";
+
 export type {
   Columna,
   OpcionFiltro,

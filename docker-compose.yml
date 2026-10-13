@@ -82,6 +82,8 @@ services:
       SESION_ACCESO_SEGUNDOS: ${SESION_ACCESO_SEGUNDOS:-}
       SESION_HORAS: ${SESION_HORAS:-}
       SESION_INACTIVIDAD_MINUTOS: ${SESION_INACTIVIDAD_MINUTOS:-}
+      CORREO_MODO: ${CORREO_MODO:-}
+      APP_URL_PUBLICA: ${APP_URL_PUBLICA:-}
       COOKIE_SESION: ${COOKIE_SESION}
       # El bind mount desde Windows no propaga eventos de archivo al
       # contenedor Linux: hay que vigilar por sondeo.
@@ -114,6 +116,8 @@ services:
       SESION_ACCESO_SEGUNDOS: ${SESION_ACCESO_SEGUNDOS:-}
       SESION_HORAS: ${SESION_HORAS:-}
       SESION_INACTIVIDAD_MINUTOS: ${SESION_INACTIVIDAD_MINUTOS:-}
+      CORREO_MODO: ${CORREO_MODO:-}
+      APP_URL_PUBLICA: ${APP_URL_PUBLICA:-}
       COOKIE_SESION: ${COOKIE_SESION}
     ports:
       - "${APP_PORT:-3000}:3000"

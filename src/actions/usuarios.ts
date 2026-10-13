@@ -4,7 +4,12 @@ import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 import { anotar, soloCambios } from "@/lib/auditoria";
-import { CODIGO_ERROR, esErrorPostgres, transaccion } from "@/lib/db";
+import {
+  correoDeBienvenida,
+  correoDeClaveRestablecida,
+} from "@/lib/correos/plantillas";
+import { CODIGO_ERROR, conSesion, esErrorPostgres, transaccion } from "@/lib/db";
+import { encolarCorreo, entregarCorreos } from "@/lib/externos/correo";
 import { hashear } from "@/lib/password";
 import { requerirAdmin } from "@/lib/sesion";
 import {
@@ -226,10 +231,14 @@ export async function crearUsuario(
   const provisional = generarPasswordProvisional();
   const passwordHash = await hashear(provisional);
 
+  let correoId: number | null = null;
+
   try {
     // Las dos inserciones van juntas o no va ninguna: un usuario sin fila en
     // trabajadores ni en clientes no tiene rol, y sin rol no podria entrar.
-    await transaccion(async (cliente) => {
+    // Va con `conSesion` y no con `transaccion` porque escribe en la bandeja
+    // de salida, que tiene seguridad por fila.
+    correoId = await conSesion(admin, async (cliente) => {
       const creado = await usuarios.crear(
         {
           nombre: persona.nombre,
@@ -273,6 +282,19 @@ export async function crearUsuario(
         empresaId: completo?.empresaId ?? null,
         despues: completo ? paraAuditoria(completo) : { email: creado.email },
       });
+
+      // El aviso de que la cuenta existe. La contrasena NO va en el: se
+      // entrega en mano, como hasta ahora.
+      return encolarCorreo(
+        cliente,
+        admin,
+        correoDeBienvenida({
+          id: creado.id,
+          nombre: creado.nombre,
+          email: creado.email,
+          empresaId: completo?.empresaId ?? null,
+        }),
+      );
     });
   } catch (error) {
     if (esErrorPostgres(error, CODIGO_ERROR.VIOLACION_UNICIDAD)) {
@@ -325,6 +347,10 @@ export async function crearUsuario(
 
     throw error;
   }
+
+  // Con la cuenta ya creada y confirmada. Si el correo no sale, la cuenta
+  // existe igual y el mensaje queda en la bandeja para reintentarlo.
+  await entregarCorreos(admin, [correoId]);
 
   revalidatePath(RUTA_LISTADO);
 
@@ -387,7 +413,7 @@ export async function restablecerPassword(
   const provisional = generarPasswordProvisional();
   const hashProvisional = await hashear(provisional);
 
-  const guardada = await transaccion(async (tx) => {
+  const correoId = await conSesion(admin, async (tx) => {
     const hecho = await usuarios.actualizarPasswordHash(
       usuario.id,
       hashProvisional,
@@ -396,7 +422,7 @@ export async function restablecerPassword(
       tx,
     );
 
-    if (!hecho) return false;
+    if (!hecho) return null;
 
     // Quien estuviera dentro con la contrasena anterior, fuera.
     const cerradas = await sesiones.revocarDeUsuario(
@@ -412,12 +438,15 @@ export async function restablecerPassword(
       despues: { sesionesCerradas: cerradas },
     });
 
-    return true;
+    // Que la persona se entere por un canal que no controla quien lo hizo.
+    return encolarCorreo(tx, admin, correoDeClaveRestablecida(usuario));
   });
 
-  if (!guardada) {
+  if (correoId === null) {
     return { ok: false, mensaje: "No se pudo restablecer la contrasena" };
   }
+
+  await entregarCorreos(admin, [correoId]);
 
   return {
     ok: true,

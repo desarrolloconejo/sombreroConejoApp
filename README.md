@@ -3,8 +3,8 @@
 Plataforma interna de **El Conejo del Sombrero** para centralizar y automatizar
 los procesos de la agencia, orientada a sus trabajadores y a sus clientes.
 
-Hoy cubre autenticacion, usuarios, empresas, perfil, auditoria y el modulo de
-Hooks. Esta
+Hoy cubre autenticacion, usuarios, empresas, perfil, auditoria, la bandeja de
+salida de correos y el modulo de Hooks. Esta
 en marcha la integracion de un portal completo —briefs, proyectos, revision del
 cliente y finanzas—, cuyo plan vive en
 [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md). La revision
@@ -53,8 +53,9 @@ docker compose exec app-dev npm run seed
 ```
 
 El seed crea las tablas y deja la base lista para entrar: roles, cargos, una
-empresa de ejemplo y cuatro cuentas (un administrador y tres de prueba, una por
-perfil). Es idempotente. Las cuentas que crea y sus claves estan en
+empresa de ejemplo y cinco cuentas: un administrador, tres de prueba (una por
+perfil) y `pruebas@conejo.test`, que es sobre la que las pruebas automaticas
+hacen lo que no se puede deshacer; con esa no se inicia sesion. Es idempotente. Las cuentas que crea y sus claves estan en
 `db/datos/semilla.mts`.
 
 | Servicio | Donde |
@@ -277,6 +278,54 @@ Un destino de redireccion que llegue en la URL —hoy, `volverA` en el login—
 pasa siempre por `destinoSeguro` (`src/lib/redireccion.ts`), que solo deja
 volver a rutas del panel.
 
+### Servicios externos y correo
+
+Todo servicio externo se llama a traves de un adaptador de `src/lib/externos/`,
+que trabaja en modo `simulado` o `real` segun una variable de entorno. La
+aplicacion no sabe cual esta activo.
+
+| Servicio | Variable | Por defecto |
+| --- | --- | --- |
+| Correo | `CORREO_MODO` | `simulado`: no hay cuenta de la empresa todavia |
+
+**Enviar un correo son dos pasos.** `encolarCorreo` escribe el mensaje en
+`portal.correos_salida` dentro de la transaccion del cambio que lo provoca, y
+`entregarCorreos` lo manda despues de confirmarla:
+
+```ts
+const correoId = await conSesion(admin, async (tx) => {
+  await usuarios.actualizarPasswordHash(id, hash, true, tx);
+  return encolarCorreo(tx, admin, correoDeClaveRestablecida(usuario));
+});
+
+await entregarCorreos(admin, [correoId]); // nunca lanza
+```
+
+Asi no existe un correo que anuncie algo que no ocurrio, ni se espera a un
+servicio ajeno con una conexion a la base tomada. En modo simulado el segundo
+paso no hace nada: el mensaje queda en **Bandeja de salida**
+(`/dashboard/salida`, solo administradores), donde se lee, se copia y se anota
+como entregado a mano.
+
+**Ningun correo lleva contrasenas, tokens ni codigos.** La bandeja guarda el
+texto completo de todo lo que se envia. Los textos estan en
+`src/lib/correos/plantillas.ts`.
+
+### Seguridad por fila
+
+Las tablas de los esquemas `portal` y `finanzas` llevan seguridad por fila. Sus
+modelos reciben siempre el ejecutor de `conSesion` —es obligatorio, no tiene
+valor por defecto—, porque sin la sesion declarada la base no devuelve ni
+acepta ninguna fila:
+
+```ts
+const pagina = await conSesion(admin, (tx) => correos.listar(filtros, tx));
+```
+
+Las politicas leen quien pregunta con `app_usuario_id()`, `app_rol()`,
+`app_cargo()` y `app_empresa_id()`. `prueba:permisos` las comprueba con la
+conexion de la aplicacion.
+
 ### Auditoria
 
 La tabla `auditoria` guarda una linea por cada cosa que alguien hace: quien
@@ -376,7 +425,7 @@ tipo y el `CHECK` de la tabla.
 | `prueba:auditor` | Contenedor | La tabla completa de casos del auditor |
 | `prueba:modelos` | Contenedor | Los modelos contra la base; limpia lo que crea |
 | `prueba:sesiones` | Contenedor | Rotacion, reutilizacion y revocacion de sesiones; bloqueo por intentos |
-| `prueba:permisos` | Contenedor | Lo que el rol `conejo_app` tiene prohibido, y `conSesion` |
+| `prueba:permisos` | Contenedor | Lo que el rol `conejo_app` tiene prohibido, `conSesion` y las politicas de seguridad por fila |
 
 Las pruebas de integracion entran con las cuentas de prueba de la semilla, que
 leen de `db/datos/semilla.mts`. Necesitan la base sembrada.

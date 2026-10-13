@@ -25,6 +25,7 @@ const RUTAS_SOLO_ADMIN = [
   "/dashboard/usuarios",
   "/dashboard/empresas",
   "/dashboard/auditoria",
+  "/dashboard/salida",
 ];
 
 /**

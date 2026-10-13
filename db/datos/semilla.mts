@@ -38,7 +38,7 @@ export type UsuarioSemilla = {
   apellido: string;
   email: string;
   password: string;
-  telefono: string;
+  telefono: string | null;
   perfil:
     // El cargo de un trabajador es un slug de la tabla cargos: de el
     // depende QUE MODULOS ve. El de un cliente es texto libre, describe
@@ -92,6 +92,21 @@ export const USUARIOS: UsuarioSemilla[] = [
     password: "Cliente123*",
     telefono: "+58 412 555 0103",
     perfil: { tipo: "cliente", cargo: "Gerente de mercadeo" },
+  },
+  /*
+   * La cuenta sobre la que las pruebas hacen lo que no se puede deshacer:
+   * restablecerle la contrasena, por ejemplo. Nadie inicia sesion con ella, y
+   * por eso da igual que su contrasena deje de ser la de aqui.
+   *
+   * De paso es la unica persona de produccion de la semilla.
+   */
+  {
+    nombre: "Pruebas",
+    apellido: "Automaticas",
+    email: "pruebas@conejo.test",
+    password: "Trabajador123*",
+    telefono: null,
+    perfil: { tipo: "trabajador", rol: "trabajador", cargo: "produccion" },
   },
 ];
 

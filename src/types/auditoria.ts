@@ -21,7 +21,9 @@ export type AccionAuditoria =
   | "empresa.creada"
   | "empresa.editada"
   | "empresa.activada"
-  | "empresa.desactivada";
+  | "empresa.desactivada"
+  | "correo.entregado_a_mano"
+  | "correo.reintentado";
 
 /** Como se lee cada accion en pantalla. */
 export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
@@ -41,6 +43,8 @@ export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
   "empresa.editada": "Empresa editada",
   "empresa.activada": "Empresa reactivada",
   "empresa.desactivada": "Empresa desactivada",
+  "correo.entregado_a_mano": "Correo entregado a mano",
+  "correo.reintentado": "Reintento de envio de un correo",
 };
 
 /**
@@ -51,6 +55,7 @@ export const MODULOS_DE_AUDITORIA = {
   sesion: "Acceso",
   usuario: "Usuarios",
   empresa: "Empresas",
+  correo: "Correos",
 } as const;
 
 export type ModuloAuditoria = keyof typeof MODULOS_DE_AUDITORIA;
