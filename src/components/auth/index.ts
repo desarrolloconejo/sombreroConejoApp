@@ -2,3 +2,4 @@
 export { LoginWrapper } from "./LoginWrapper";
 export { LoginContent } from "./LoginContent";
 export { PanelMarca } from "./PanelMarca";
+export { RenovarSesion } from "./RenovarSesion";

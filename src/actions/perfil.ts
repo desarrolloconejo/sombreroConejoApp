@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 
 import { hashear, verificar } from "@/lib/password";
-import { requerirUsuario } from "@/lib/sesion";
+import { obtenerSesion, requerirUsuario } from "@/lib/sesion";
 import { validarCambioPassword, validarPerfil } from "@/lib/validaciones";
+import * as sesiones from "@/models/sesiones";
 import * as usuarios from "@/models/usuarios";
 import type { EstadoFormulario } from "@/types";
 
@@ -88,7 +89,22 @@ export async function cambiarPassword(
     return { ok: false, mensaje: "No se pudo cambiar la contrasena" };
   }
 
-  return { ok: true, mensaje: "Tu contrasena quedo actualizada" };
+  // Quien tuviera la contrasena anterior deja de estar dentro. Se conserva
+  // solo la sesion desde la que se acaba de cambiar.
+  const sesion = await obtenerSesion();
+  const cerradas = await sesiones.revocarDeUsuario(
+    usuario.id,
+    "clave_cambiada",
+    sesion?.sesionId ?? null,
+  );
+
+  return {
+    ok: true,
+    mensaje:
+      cerradas > 0
+        ? "Tu contrasena quedo actualizada y se cerraron tus otras sesiones"
+        : "Tu contrasena quedo actualizada",
+  };
 }
 
 /* ===========================================================================

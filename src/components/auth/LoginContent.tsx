@@ -56,23 +56,27 @@ function retraso(segundos: string): CSSProperties {
   return { "--retraso": segundos } as CSSProperties;
 }
 
+/** Por que alguien llego al login sin haberlo pedido. */
+export type MotivoSalida = "sin-acceso" | "caducada";
+
+const AVISOS: Record<MotivoSalida, string> = {
+  "sin-acceso": "Tu cuenta ya no tiene acceso. Habla con un administrador",
+  caducada: "Tu sesion termino. Vuelve a entrar para continuar",
+};
+
 export function LoginContent({
   volverA,
-  sinAcceso,
+  motivo,
 }: {
   volverA: string;
-  sinAcceso: boolean;
+  motivo: MotivoSalida | null;
 }) {
   const [estado, enviar, enviando] = useActionState(iniciarSesion, ESTADO_INICIAL);
   const [verPassword, setVerPassword] = useState(false);
 
   // El aviso de salida forzada cede el sitio al resultado del intento: en
   // cuanto la persona envia el formulario, lo que importa es esa respuesta.
-  const mensaje =
-    estado.mensaje ??
-    (sinAcceso
-      ? "Tu cuenta ya no tiene acceso. Habla con un administrador"
-      : undefined);
+  const mensaje = estado.mensaje ?? (motivo ? AVISOS[motivo] : undefined);
 
   const errorEmail = estado.errores?.email;
   const errorPassword = estado.errores?.password;

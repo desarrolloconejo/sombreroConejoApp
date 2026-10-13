@@ -86,6 +86,7 @@ docker compose exec app-dev npm run typecheck
 docker compose exec app-dev npm run seed            # esquema y datos locales
 docker compose exec app-dev npm run prueba:auditor  # casos del auditor de hooks
 docker compose exec app-dev npm run prueba:modelos  # modelos contra la base
+docker compose exec app-dev npm run prueba:sesiones # modelo de sesiones
 docker compose exec app-dev npm run sql:produccion  # SQL para pegar en Neon
 ```
 
@@ -207,6 +208,29 @@ Hay dos ejes independientes: el **rol** (admin, trabajador, cliente) decide lo
 que se puede hacer, y el **cargo** decide lo que se ve. Para un cliente, el
 equivalente al cargo es su empresa. El admin se salta el filtro de cargo.
 
+#### Sesiones
+
+Una sesion son dos cookies `HttpOnly` y una fila de la tabla `sesiones`:
+
+| Pieza | Que es | Cuanto dura |
+| --- | --- | --- |
+| Token de acceso | Un JWT. Con el enruta el proxy | 30 minutos |
+| Token de renovacion | Un valor al azar; en la base solo esta su hash | Lo que la sesion |
+| Fila de `sesiones` | Donde vive la autoridad | 12 horas, tope absoluto |
+
+Las guardias comprueban la fila en cada peticion, asi que **revocarla cierra
+la sesion al momento**, no cuando caduque el acceso. La revocan: cerrar sesion,
+cambiar o restablecer la contrasena, desactivar a la persona o a su empresa,
+cambiarle rol, cargo o empresa, y presentar un token de renovacion ya usado.
+
+Mientras hay actividad, `GuardianSesion` (en el layout del panel) renueva el
+acceso sin avisar dos minutos antes de que caduque. Tras 15 minutos sin
+actividad pregunta antes de hacerlo. Una page que llega con el acceso vencido
+pasa por `/renovar` y vuelve a la misma URL.
+
+Los tres plazos se pueden acortar para probar: `SESION_ACCESO_SEGUNDOS`,
+`SESION_HORAS` y `SESION_INACTIVIDAD_MINUTOS` (ver `.env.example`).
+
 Las cabeceras de seguridad fijas estan en `next.config.ts`. La politica de
 contenido lleva un nonce por peticion y la pone `src/proxy.ts`: los scripts en
 linea y los origenes externos estan bloqueados salvo que se declaren ahi.
@@ -283,6 +307,7 @@ tipo y el `CHECK` de la tabla.
 | `test:integracion` | Host, con la app levantada | Recorridos reales en un navegador |
 | `prueba:auditor` | Contenedor | La tabla completa de casos del auditor |
 | `prueba:modelos` | Contenedor | Los modelos contra la base; limpia lo que crea |
+| `prueba:sesiones` | Contenedor | Rotacion, reutilizacion y revocacion de sesiones |
 
 Las pruebas de integracion entran con las cuentas de prueba de la semilla, que
 leen de `db/datos/semilla.mts`. Necesitan la base sembrada.

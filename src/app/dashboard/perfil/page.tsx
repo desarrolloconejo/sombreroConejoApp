@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 import { PerfilWrapper } from "@/components/perfil";
-import { requerirUsuario } from "@/lib/sesion";
+import { obtenerSesion, requerirUsuario } from "@/lib/sesion";
+import * as sesiones from "@/models/sesiones";
 
 export const metadata: Metadata = {
   title: "Mi perfil",
@@ -19,5 +20,18 @@ export const metadata: Metadata = {
 export default async function PaginaPerfil() {
   const usuario = await requerirUsuario();
 
-  return <PerfilWrapper usuario={usuario} />;
+  // Las dos lecturas no dependen una de otra. La sesion ya esta verificada en
+  // esta peticion, asi que leerla de nuevo no cuesta nada.
+  const [abiertas, sesion] = await Promise.all([
+    sesiones.listarAbiertas(usuario.id),
+    obtenerSesion(),
+  ]);
+
+  return (
+    <PerfilWrapper
+      usuario={usuario}
+      sesiones={abiertas}
+      sesionActualId={sesion?.sesionId ?? null}
+    />
+  );
 }

@@ -35,7 +35,9 @@ test("un trabajador de redes entra, ve Hooks y no entra a Usuarios", async ({ pa
   await page.getByPlaceholder("Tu contrasena").fill(redes.password);
   await page.getByPlaceholder("Tu contrasena").press("Enter");
 
-  await expect(page).toHaveURL(/\/dashboard$/);
+  // Con margen: en desarrollo el primer inicio de sesion tras arrancar el
+  // servidor compila la action, y eso solo ya pasa de los cinco segundos.
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 30_000 });
   await expect(page.getByRole("link", { name: "Hooks" }).first()).toBeVisible();
 
   // Su sesion es valida; lo que le falta es el rol. Vuelve al panel, no al login.

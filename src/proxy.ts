@@ -6,8 +6,8 @@ import type { SlugCargo } from "@/types";
  * Barrera de rutas. En Next 16 este archivo sustituye a middleware.ts y se
  * ejecuta siempre en el runtime de Node, que no es configurable.
  *
- * Lo que hace: mirar la cookie, verificar la firma, decidir a donde va la
- * peticion y ponerle la politica de contenido. Nada mas. No consulta la base
+ * Lo que hace: mirar las cookies, verificar la firma del acceso, decidir a
+ * donde va la peticion y ponerle la politica de contenido. Nada mas. No consulta la base
  * de datos, porque se ejecuta en cada peticion que pase el matcher y porque la
  * documentacion desaconseja expresamente apoyarse aqui en estado compartido.
  *
@@ -38,14 +38,25 @@ const RUTAS_POR_CARGO: { prefijo: string; cargos: SlugCargo[] }[] = [
 /**
  * Con este parametro el login se muestra aunque el token verifique.
  *
- * Lo ponen las guardias cuando el token es valido pero la cuenta ya no puede
- * entrar (desactivada, o de una empresa desactivada). Sin el, el proxy
+ * Lo ponen las guardias cuando el token es valido pero la sesion ya no (la
+ * cuenta se desactivo, la sesion se revoco o caduco). Sin el, el proxy
  * devolveria a esa persona al panel y el panel la volveria a echar, sin fin.
  */
 const PARAMETRO_SALIDA = "motivo";
 
+/**
+ * La parada de renovacion. Va aparte de las publicas porque no lo es: solo
+ * pasa quien trae token de renovacion.
+ */
+const RUTA_RENOVAR = "/renovar";
+
 function nombreCookie(): string {
   return process.env.COOKIE_SESION ?? "conejo_sesion";
+}
+
+/** El mismo nombre que arma `nombreCookieRenovacion` en src/lib/sesion.ts. */
+function nombreCookieRenovacion(): string {
+  return `${nombreCookie()}_renovacion`;
 }
 
 function esRutaPublica(ruta: string): boolean {
@@ -120,6 +131,11 @@ function continuar(request: NextRequest): NextResponse {
 
   const cabeceras = new Headers(request.headers);
   cabeceras.set("x-nonce", nonce);
+
+  // La ruta completa, para que una guardia pueda devolver aqui a quien tuvo
+  // que pasar por la renovacion. Se pisa siempre: lo que mandara el navegador
+  // en esta cabecera no cuenta.
+  cabeceras.set("x-ruta", `${request.nextUrl.pathname}${request.nextUrl.search}`);
   cabeceras.set("Content-Security-Policy", politica);
 
   const respuesta = NextResponse.next({ request: { headers: cabeceras } });
@@ -134,10 +150,21 @@ export async function proxy(request: NextRequest) {
   const token = request.cookies.get(nombreCookie())?.value;
   const sesion = token ? await verificarSesion(token) : null;
 
+  /*
+   * El acceso dura media hora y la sesion hasta doce. Entre una cosa y otra
+   * llegan peticiones con el acceso vencido y el token de renovacion puesto:
+   * no se pueden mandar al login, porque una de ellas es justo la que renueva.
+   *
+   * El proxy no puede comprobar ese token (no consulta la base), asi que lo
+   * unico que hace es dejar pasar. Quien decide es la guardia de la page o de
+   * la action, que si lo comprueba.
+   */
+  const puedeRenovar = request.cookies.has(nombreCookieRenovacion());
+
   // La raiz nunca muestra contenido: reparte segun haya sesion o no.
   if (pathname === "/") {
     return NextResponse.redirect(
-      new URL(sesion ? "/dashboard" : "/login", request.url),
+      new URL(sesion || puedeRenovar ? "/dashboard" : "/login", request.url),
     );
   }
 
@@ -146,7 +173,21 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/login" && searchParams.has(PARAMETRO_SALIDA)) {
     const respuesta = continuar(request);
     if (token) respuesta.cookies.delete(nombreCookie());
+    if (puedeRenovar) respuesta.cookies.delete(nombreCookieRenovacion());
     return respuesta;
+  }
+
+  // Con el acceso vencido y renovacion puesta, pasa: decide la guardia.
+  if (!sesion && puedeRenovar && !esRutaPublica(pathname)) {
+    return continuar(request);
+  }
+
+  // A renovar solo llega quien acaba de pasar por la linea de arriba. Con el
+  // acceso en regla no hay nada que renovar.
+  if (pathname === RUTA_RENOVAR) {
+    return NextResponse.redirect(
+      new URL(sesion ? "/dashboard" : "/login", request.url),
+    );
   }
 
   // Con sesion iniciada, el login no tiene sentido.

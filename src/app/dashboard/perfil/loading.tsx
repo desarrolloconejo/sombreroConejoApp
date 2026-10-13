@@ -134,6 +134,21 @@ export default function CargandoPerfil() {
               </div>
             </Tarjeta>
 
+            {/* Sesiones abiertas */}
+            <Tarjeta>
+              <div className="hueso h-3.5 w-[128px]" />
+              <div className="hueso mt-[5px] h-3 w-full max-w-[420px]" />
+
+              <div className="mt-4 flex items-center gap-3 border-t border-borde py-3">
+                <div className="hueso size-[18px] shrink-0 rounded" />
+                <div className="min-w-0 flex-1">
+                  <div className="hueso h-3.5 w-[150px]" />
+                  <div className="hueso mt-1.5 h-3 w-[190px]" />
+                </div>
+                <div className="hueso h-6 w-[86px] rounded-full" />
+              </div>
+            </Tarjeta>
+
             {/* Cerrar sesion */}
             <Tarjeta>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">

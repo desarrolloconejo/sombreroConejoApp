@@ -1,4 +1,4 @@
-import { LoginContent } from "./LoginContent";
+import { LoginContent, type MotivoSalida } from "./LoginContent";
 import { PanelMarca } from "./PanelMarca";
 
 /**
@@ -14,15 +14,15 @@ import { PanelMarca } from "./PanelMarca";
  */
 export function LoginWrapper({
   volverA,
-  sinAcceso,
+  motivo,
 }: {
   volverA: string;
-  sinAcceso: boolean;
+  motivo: MotivoSalida | null;
 }) {
   return (
     <main className="relative flex min-h-dvh flex-1 flex-col bg-white lg:flex-row dark-tema:bg-fondo">
       <PanelMarca />
-      <LoginContent volverA={volverA} sinAcceso={sinAcceso} />
+      <LoginContent volverA={volverA} motivo={motivo} />
     </main>
   );
 }

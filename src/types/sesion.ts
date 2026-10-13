@@ -9,6 +9,18 @@ import type { NombreRol, SlugCargo, TipoUsuario } from "./usuario";
  */
 export type Sesion = {
   usuarioId: number;
+
+  /**
+   * La fila de la tabla sesiones a la que pertenece este token.
+   *
+   * Es lo que permite cerrar una sesion desde el servidor: las guardias
+   * comprueban en cada peticion que esa fila siga viva.
+   */
+  sesionId: number;
+
+  /** Cuando caduca este token de acceso, en milisegundos desde la epoca. */
+  accesoCaducaEn: number;
+
   email: string;
   nombre: string;
   tipo: TipoUsuario;
@@ -28,6 +40,41 @@ export type Sesion = {
   cargo: SlugCargo | null;
   empresaId: number | null;
 };
+
+/**
+ * Por que se cerro una sesion desde el servidor.
+ *
+ * Es el espejo del CHECK `sesiones_motivo_valido` de db/schema.sql: si se
+ * anade un motivo hay que tocar los dos sitios.
+ */
+export type MotivoRevocacion =
+  | "salida"
+  | "cerrada_por_usuario"
+  | "clave_cambiada"
+  | "clave_restablecida"
+  | "usuario_desactivado"
+  | "empresa_desactivada"
+  | "vinculo_cambiado"
+  | "token_reutilizado";
+
+/** Una sesion viva, tal como se lista en Mi perfil. */
+export type SesionAbierta = {
+  id: number;
+  navegador: string | null;
+  creadaEn: Date;
+  ultimoUso: Date;
+  caducaEn: Date;
+};
+
+/**
+ * Lo que devuelve la renovacion de la sesion al navegador.
+ *
+ * Solo las dos horas que necesita el reloj del cliente: ni el token ni nada
+ * de la persona cruza por aqui.
+ */
+export type EstadoRenovacion =
+  | { ok: true; accesoCaducaEn: number; sesionCaducaEn: number }
+  | { ok: false };
 
 /** Errores de validacion, indexados por el nombre del campo del formulario. */
 export type ErroresCampo = Record<string, string>;

@@ -32,7 +32,14 @@ export type {
 } from "./organizacion";
 
 export { ESTADO_AUDITORIA } from "./hooks";
-export type { Sesion, ErroresCampo, EstadoFormulario } from "./sesion";
+export type {
+  Sesion,
+  MotivoRevocacion,
+  SesionAbierta,
+  EstadoRenovacion,
+  ErroresCampo,
+  EstadoFormulario,
+} from "./sesion";
 export { ESTADO_INICIAL } from "./sesion";
 
 export type {

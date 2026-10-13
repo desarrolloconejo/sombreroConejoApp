@@ -1,12 +1,13 @@
 import { Wrapper } from "@/components/layout/Wrapper";
 import type { Miga } from "@/components/layout/Breadcrumb";
-import type { UsuarioCompleto } from "@/types";
+import type { SesionAbierta, UsuarioCompleto } from "@/types";
 
 import { FormularioDatos } from "./FormularioDatos";
 import { FormularioPassword } from "./FormularioPassword";
 import { SelectorTema } from "./SelectorTema";
 import { TarjetaFoto } from "./TarjetaFoto";
 import { TarjetaSesion } from "./TarjetaSesion";
+import { TarjetaSesiones } from "./TarjetaSesiones";
 
 /**
  * El envoltorio del modulo Mi perfil.
@@ -26,7 +27,15 @@ const MIGAS: Miga[] = [
   { texto: "Mi perfil" },
 ];
 
-export function PerfilWrapper({ usuario }: { usuario: UsuarioCompleto }) {
+export function PerfilWrapper({
+  usuario,
+  sesiones,
+  sesionActualId,
+}: {
+  usuario: UsuarioCompleto;
+  sesiones: SesionAbierta[];
+  sesionActualId: number | null;
+}) {
   return (
     <Wrapper
       migas={MIGAS}
@@ -61,6 +70,8 @@ export function PerfilWrapper({ usuario }: { usuario: UsuarioCompleto }) {
           />
 
           <FormularioPassword />
+
+          <TarjetaSesiones sesiones={sesiones} actualId={sesionActualId} />
 
           <TarjetaSesion ultimoAcceso={usuario.ultimoAcceso} />
         </div>

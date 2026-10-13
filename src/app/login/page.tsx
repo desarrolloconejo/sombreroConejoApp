@@ -18,9 +18,12 @@ export default async function PaginaLogin(props: PageProps<"/login">) {
   const volverA =
     typeof parametros.volverA === "string" ? parametros.volverA : "/dashboard";
 
-  // Lo ponen las guardias cuando echan a alguien con el token aun valido. Solo
-  // se reconoce un valor fijo: el texto que se pinta nunca sale de la URL.
-  const sinAcceso = parametros.motivo === "sin-acceso";
+  // Lo ponen las guardias y el guardian de sesion cuando sacan a alguien. Solo
+  // se reconocen valores fijos: el texto que se pinta nunca sale de la URL.
+  const motivo =
+    parametros.motivo === "sin-acceso" || parametros.motivo === "caducada"
+      ? parametros.motivo
+      : null;
 
-  return <LoginWrapper volverA={volverA} sinAcceso={sinAcceso} />;
+  return <LoginWrapper volverA={volverA} motivo={motivo} />;
 }
