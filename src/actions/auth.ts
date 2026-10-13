@@ -16,13 +16,18 @@ import type { EstadoFormulario } from "@/types";
  */
 
 /**
- * Un solo mensaje para "ese correo no existe" y para "la contrasena no es
- * correcta".
+ * Un solo mensaje para "ese correo no existe", para "la contrasena no es
+ * correcta" y para "la cuenta esta bloqueada".
  *
  * Distinguirlos seria mas comodo, pero convertiria el formulario en una via
  * para averiguar que correos estan registrados.
  */
-const CREDENCIALES_INVALIDAS = "El correo o la contrasena no son correctos";
+const CREDENCIALES_INVALIDAS =
+  "El correo o la contrasena no son correctos. Tras cinco intentos fallidos la cuenta se bloquea 15 minutos";
+
+/** Fallos seguidos que bloquean una cuenta, y durante cuanto. */
+const INTENTOS_PERMITIDOS = 5;
+const MINUTOS_DE_BLOQUEO = 15;
 
 /**
  * Inicia sesion. La consume un formulario a traves de useActionState.
@@ -49,9 +54,28 @@ export async function iniciarSesion(
     return { ok: false, mensaje: CREDENCIALES_INVALIDAS };
   }
 
+  /*
+   * Con la cuenta bloqueada no se comprueba nada, ni siquiera la contrasena
+   * correcta: el bloqueo existe para que probar no sirva.
+   *
+   * La respuesta es la misma que con una contrasena equivocada, y tarda lo
+   * mismo. Un mensaje propio («tu cuenta esta bloqueada») diria que ese
+   * correo existe a cualquiera que lo intente cinco veces.
+   */
+  if (usuario.bloqueado) {
+    await gastarTiempoEquivalente(valores.password);
+    return { ok: false, mensaje: CREDENCIALES_INVALIDAS };
+  }
+
   const coincide = await verificar(valores.password, usuario.passwordHash);
 
   if (!coincide) {
+    await usuarios.registrarFallo(
+      usuario.id,
+      INTENTOS_PERMITIDOS,
+      MINUTOS_DE_BLOQUEO,
+    );
+
     return { ok: false, mensaje: CREDENCIALES_INVALIDAS };
   }
 
