@@ -33,6 +33,13 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Catalogo de servicios | Lo que el cliente puede pedir es una lista cerrada; cada servicio trae su brief, sus piezas y sus tareas sugeridas (seccion 8.1) |
 | Herramientas | Seccion propia del menu. **Hooks es la primera** y se conecta al flujo a traves de las tareas (seccion 8.1) |
 | Menu | Agrupado por secciones (seccion 9) |
+| Tasas del BCV | Se guardan todas las que publica la pagina, no solo el dolar |
+| Asignacion de empresas | La hace el admin. El admin puede ademas actuar como ejecutivo |
+| Hooks | Lo ve solo `redes`, y el admin |
+| Briefs de prospectos | Los ve quien genero el enlace, y el admin |
+| Servicios del catalogo | Se arranca con los dos definidos: redes sociales y desarrollo de producto |
+| Rutas API | Aceptadas |
+| Quien aprobo o rechazo | Se muestra junto a cada cosa que tenga aprobacion, y en detalle en Auditoria (seccion 5.2) |
 | Ajustes al modelo de finanzas | Aceptados los seis |
 | Verificacion en dos pasos | Si, disponible para todos (seccion 5.3) |
 | Neon | El rol de produccion, `neondb_owner`, tiene `BYPASSRLS` (comprobado el 2026-10-13): el rol `conejo_app` es obligatorio, no opcional |
@@ -320,8 +327,33 @@ Tabla `auditoria`, en `public` porque registra toda la app y no solo el portal.
   su linea tambien; si la linea no se puede escribir, el cambio no ocurre.
 - La escriben las **actions**, que son las que conocen la sesion, igual que hoy
   con `ediciones_ficha`.
-- Pantalla de consulta para el admin, con el listado estandar: filtros por
-  persona, accion, entidad y fecha.
+**Se consulta en tres sitios**, de lo mas general a lo mas concreto:
+
+| Donde | Que muestra |
+| --- | --- |
+| Modulo **Auditoria**, en Sistema, solo admin | Todo lo ocurrido en la app, con el listado estandar: buscador y filtros por persona, accion, modulo, empresa y fecha. Cada linea tiene un boton de detalle que abre un panel con quien, cuando, desde donde, y el **antes y el despues** campo por campo |
+| Pestana «Historial» de cada cosa | Las lineas de esa empresa, proyecto, pieza, brief o documento. Es el mismo dato filtrado, como hoy el panel de cambios de una ficha de hook |
+| Junto a cada aprobacion o rechazo | **Quien lo hizo y cuando**, a la vista y sin abrir nada: «Aprobado por Maria Perez · 12 oct, 14:30» |
+
+Lo tercero no sale de la auditoria sino de la propia fila: cada tabla con una
+decision guarda quien la tomo y cuando. La auditoria cuenta la historia; estas
+columnas responden la pregunta del momento sin tener que buscarla.
+
+| Decision | Donde queda quien la tomo |
+| --- | --- |
+| Presupuesto aprobado o rechazado por el cliente | `presupuestos.aprobado_por`, `aprobado_en` |
+| Pieza aprobada o devuelta a correccion | `revisiones.usuario_id`, con la ronda y el comentario |
+| Fase completada | `pieza_fases.completada_por`, `completada_en` |
+| Tarea marcada como lista | `tareas.lista_por`, `lista_en` |
+| Brief aceptado, descartado o pasado a presupuesto | `briefs.resuelto_por`, `resuelto_en`, con el motivo si se descarto |
+| Pago o retencion confirmados o rechazados | `confirmado_por`, `confirmado_en`, y el motivo del rechazo |
+| Factura emitida o anulada | `creado_por`; `anulada_por`, `anulada_en` y el motivo |
+
+Todas esas columnas son claves foraneas a `usuarios`: un «aprobado por» no
+puede apuntar a nadie que no exista.
+
+**Lo que ve el cliente** de todo esto es una lista blanca: quien de su empresa
+aprobo que, y cuando. Nunca quien del equipo hizo cada tarea.
 
 Se registra desde la etapa 1 lo que ya existe —inicios de sesion y fallos,
 bloqueos, altas y cambios de usuarios y empresas, contrasenas restablecidas—, y
@@ -404,7 +436,7 @@ expresion regular bastan:
 | Dato | Donde esta en la pagina |
 | --- | --- |
 | Dolar | Dentro de `<div id="dolar">`, como `876,79760000` |
-| Euro | Dentro de `<div id="euro">` |
+| Euro y las demas monedas que publica | Cada una en su `<div>` con su identificador. **Se guardan todas** |
 | Fecha valor | Atributo `content="2026-10-13T00:00:00-04:00"` del primer `date-display-single` |
 
 Playwright ademas no cabria: es una dependencia nueva y su Chromium no entra en
@@ -693,17 +725,11 @@ Ninguna bloquea la etapa 1.
 
 | # | Pregunta | Mi propuesta | Hace falta para |
 | --- | --- | --- | --- |
-| 1 | ¿Quien puede ver Hooks: solo `redes`, o todo el que trabaja piezas? | Solo `redes` | Etapa 3 |
-| 2 | ¿El ejecutivo ve tambien los briefs de prospectos que aun no son empresa? ¿Quien se los asigna? | Los ve quien genero el enlace, y el admin | Etapa 6 |
-| 3 | ¿Quien asigna las empresas a cada ejecutivo? | El admin, desde la ficha de la empresa | Etapa 3 |
-| 4 | ¿El admin puede hacer de ejecutivo (completar fases, enviar al cliente)? | Si | Etapa 3 |
-| 5 | ¿Que tasa del BCV se guarda: dolar, euro o las dos? | Las dos | Etapa 2 |
-| 6 | Como se imprime la factura | Desde el navegador | Etapa 7 |
-| 7 | Codigo QR para activar los dos pasos: una dependencia pequena, o tecleando el secreto | Se decide al llegar | Etapa 8 |
+| 1 | Como se imprime la factura | Desde el navegador | Etapa 7 |
+| 2 | Codigo QR para activar los dos pasos: una dependencia pequena, o tecleando el secreto | Se decide al llegar | Etapa 8 |
 
-Dos cosas que doy por aceptadas salvo que digas lo contrario: las rutas API (para
-descargar archivos y para la tarea de la tasa) y que todos tengan que volver a
-iniciar sesion una vez, cuando entren las sesiones nuevas.
+Pendiente de tu visto bueno: que el dia que se publiquen las sesiones nuevas,
+quien este dentro tenga que volver a entrar una vez.
 
 ### Del negocio
 
