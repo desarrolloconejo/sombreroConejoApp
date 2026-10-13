@@ -1,6 +1,12 @@
 # Plan de auditoria y actualizacion del repositorio
 
-Fecha: 2026-10-13. Estado: **pendiente de ejecutar**.
+Fecha: 2026-10-13. Estado: **analisis hecho** (`docs/informeAuditoria.md`);
+arreglos y actualizaciones pendientes de aprobar.
+
+Decidido el 2026-10-13: la duracion de la sesion y las cuentas del seed en
+produccion **no se arreglan aqui**; las trata `docs/planIntegracionPortal.md`
+(secciones 5, 5.1, 10.1 y 11). Los puertos del compose ya estan limitados a la
+propia maquina.
 
 Revisar que cada libreria y cada API de plataforma se usa como dice su
 documentacion vigente, que nada sensible queda expuesto, y dejar las

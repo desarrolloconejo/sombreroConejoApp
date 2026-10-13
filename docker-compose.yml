@@ -26,7 +26,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-conejo_local}
       POSTGRES_DB: ${POSTGRES_DB:-conejo_app}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # Solo en la propia maquina: sin el 127.0.0.1 la base quedaria al alcance
+      # de cualquier equipo de la misma red, con la clave de desarrollo.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - datos_db:/var/lib/postgresql/data
     healthcheck:
@@ -51,7 +53,8 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
     ports:
-      - "${PGADMIN_PORT:-5050}:80"
+      # Igual que la base: pgAdmin corre sin contrasena maestra.
+      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
     volumes:
       - datos_pgadmin:/var/lib/pgadmin
       - ./docker/pgadmin-servers.json:/pgadmin4/servers.json:ro

@@ -36,6 +36,7 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 | `README.md` | Puesta en marcha, comandos, convenciones, despliegue |
 | `docs/planIntegracionPortal.md` | Plan maestro de la integracion. Manda sobre los demas |
 | `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7 |
+| `docs/informeAuditoria.md` | Hallazgos de esa revision, con evidencia y orden de arreglo |
 | `docs/planMejoraDiseno.md` | Plan de mejora del diseno y navegacion movil nueva |
 
 El paquete de especificacion original del portal vive fuera, en la carpeta
