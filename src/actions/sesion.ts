@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { anotar } from "@/lib/auditoria";
+import { transaccion } from "@/lib/db";
 import {
   obtenerSesion,
   renovarSesionActual,
@@ -44,11 +46,25 @@ export async function cerrarOtrasSesiones(): Promise<EstadoFormulario> {
   const usuario = await requerirUsuario();
   const sesion = await obtenerSesion();
 
-  const cerradas = await sesiones.revocarDeUsuario(
-    usuario.id,
-    "cerrada_por_usuario",
-    sesion?.sesionId ?? null,
-  );
+  const cerradas = await transaccion(async (tx) => {
+    const cuantas = await sesiones.revocarDeUsuario(
+      usuario.id,
+      "cerrada_por_usuario",
+      sesion?.sesionId ?? null,
+      tx,
+    );
+
+    if (cuantas > 0) {
+      await anotar(tx, usuario, "sesion.otras_cerradas", {
+        entidad: "usuario",
+        entidadId: usuario.id,
+        empresaId: usuario.empresaId,
+        despues: { sesiones: cuantas },
+      });
+    }
+
+    return cuantas;
+  });
 
   revalidatePath("/dashboard/perfil");
 

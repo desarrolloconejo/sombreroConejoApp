@@ -94,6 +94,12 @@ el responsable el 2026-10-13).
 | 1 | `feat/etapa1-guardias-y-cabeceras` | Huecos 1, 8 y 10 cerrados; del 5, el acceso negado en el login y en cada peticion. Cargo `produccion` | `db/neon/01-cargo-produccion.sql` | Hecha |
 | 1 | `feat/etapa1-sesiones` | Seccion 5.1 entera: acceso de 30 minutos, renovacion con rotacion, tabla `sesiones`, revocaciones, aviso por inactividad, «Sesiones abiertas» en Mi perfil. Cierra el hueco 2 y lo que faltaba del 5 | `db/neon/02-sesiones.sql`, **antes** de subir | Hecha |
 | 1 | `feat/etapa1-login-seguro` | Huecos 3 y 4: bloqueo de 15 minutos tras cinco fallos, y cambio obligatorio de la contrasena provisional en `/cambiar-clave` | `db/neon/03-acceso.sql`, **antes** de subir | Hecha |
+| 1 | `feat/etapa1-auditoria` | Seccion 5.2 y hueco 9: tabla `auditoria` inmutable, anotada en la misma transaccion desde acceso, usuarios, empresas y perfil, y el modulo Auditoria para el admin | `db/neon/04-auditoria.sql`, **antes** de subir | Hecha |
+
+De la seccion 5.2 quedan para cuando existan sus entidades la pestana
+«Historial» de cada cosa y lo que ve el cliente; hoy la auditoria solo la
+consulta el admin. El filtro del modulo es por modulo y por periodo, mas el
+buscador; filtrar por persona o por empresa se hace buscando su nombre.
 
 Diferencias con lo escrito en la seccion 5.1, decididas al construir:
 

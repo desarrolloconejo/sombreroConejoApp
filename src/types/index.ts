@@ -71,6 +71,17 @@ export type {
   DatosNuevaReferencia,
 } from "./hooks";
 
+export { NOMBRES_DE_ACCION, MODULOS_DE_AUDITORIA } from "./auditoria";
+export type {
+  AccionAuditoria,
+  ModuloAuditoria,
+  ValoresAuditoria,
+  NuevaLineaAuditoria,
+  LineaAuditoria,
+  PeriodoAuditoria,
+  FiltrosAuditoria,
+} from "./auditoria";
+
 export type {
   Columna,
   OpcionFiltro,

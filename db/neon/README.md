@@ -27,3 +27,4 @@ entero sobre una base con datos.
 | `01-cargo-produccion.sql` | Anade el cargo `produccion` | Pendiente |
 | `02-sesiones.sql` | Crea la tabla `sesiones`. **Antes** de subir la aplicacion | Pendiente |
 | `03-acceso.sql` | Tres columnas en `usuarios` y la vista que las expone. **Antes** de subir la aplicacion | Pendiente |
+| `04-auditoria.sql` | Crea la tabla `auditoria`, que solo admite lineas nuevas. **Antes** de subir la aplicacion | Pendiente |

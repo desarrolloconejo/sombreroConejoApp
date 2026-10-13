@@ -2,12 +2,30 @@
 
 import { revalidatePath } from "next/cache";
 
-import { CODIGO_ERROR, esErrorPostgres } from "@/lib/db";
+import { anotar, soloCambios } from "@/lib/auditoria";
+import { CODIGO_ERROR, esErrorPostgres, transaccion } from "@/lib/db";
 import { requerirAdmin } from "@/lib/sesion";
 import { comoIdentificador, validarEmpresa } from "@/lib/validaciones";
 import * as empresas from "@/models/empresas";
 import * as sesiones from "@/models/sesiones";
-import type { EstadoFormulario } from "@/types";
+import type { Empresa, EstadoFormulario, ValoresAuditoria } from "@/types";
+
+/** Lo que de una empresa se anota cuando cambia. */
+function paraAuditoria(empresa: Empresa): ValoresAuditoria {
+  return {
+    nombre: empresa.nombre,
+    rif: empresa.rif,
+    sector: empresa.sector,
+    telefono: empresa.telefono,
+    direccion: empresa.direccion,
+    sitioWeb: empresa.sitioWeb,
+    instagram: empresa.instagram,
+    tiktok: empresa.tiktok,
+    facebook: empresa.facebook,
+    youtube: empresa.youtube,
+    linkedin: empresa.linkedin,
+  };
+}
 
 /**
  * Gestion de las empresas cliente de la agencia.
@@ -52,14 +70,22 @@ export async function crearEmpresa(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
 ): Promise<EstadoFormulario> {
-  await requerirAdmin();
+  const admin = await requerirAdmin();
 
   const { valores, errores, valido } = validarEmpresa(datos);
 
   if (!valido) return { ok: false, errores };
 
   try {
-    await empresas.crear(valores);
+    await transaccion(async (tx) => {
+      const creada = await empresas.crear(valores, tx);
+
+      await anotar(tx, admin, "empresa.creada", {
+        entidadId: creada.id,
+        empresaId: creada.id,
+        despues: { nombre: creada.nombre, rif: creada.rif },
+      });
+    });
   } catch (error) {
     /*
      * El RIF es UNIQUE en la base.
@@ -88,7 +114,7 @@ export async function editarEmpresa(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
 ): Promise<EstadoFormulario> {
-  await requerirAdmin();
+  const admin = await requerirAdmin();
 
   const id = comoIdentificador(datos.get("id"));
 
@@ -101,7 +127,24 @@ export async function editarEmpresa(
   if (!valido) return { ok: false, errores };
 
   try {
-    const actualizada = await empresas.actualizar(id, valores);
+    const actualizada = await transaccion(async (tx) => {
+      const anterior = await empresas.buscarPorId(id, tx);
+      const nueva = await empresas.actualizar(id, valores, tx);
+
+      if (!anterior || !nueva) return null;
+
+      const cambios = soloCambios(paraAuditoria(anterior), paraAuditoria(nueva));
+
+      if (cambios) {
+        await anotar(tx, admin, "empresa.editada", {
+          entidadId: id,
+          empresaId: id,
+          ...cambios,
+        });
+      }
+
+      return nueva;
+    });
 
     if (!actualizada) return { ok: false, mensaje: "Esa empresa ya no existe" };
   } catch (error) {
@@ -129,7 +172,7 @@ export async function cambiarEstadoEmpresa(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
 ): Promise<EstadoFormulario> {
-  await requerirAdmin();
+  const admin = await requerirAdmin();
 
   const id = comoIdentificador(datos.get("id"));
 
@@ -143,15 +186,28 @@ export async function cambiarEstadoEmpresa(
 
   const activar = !empresa.activo;
 
-  const cambiada = await empresas.cambiarEstado(id, activar);
+  const cambiada = await transaccion(async (tx) => {
+    if (!(await empresas.cambiarEstado(id, activar, tx))) return false;
+
+    // Sus personas de contacto entran en nombre de la empresa: si se deja de
+    // atender, las sesiones que tengan abiertas se cierran.
+    const cerradas = activar
+      ? 0
+      : await sesiones.revocarDeEmpresa(id, "empresa_desactivada", tx);
+
+    await anotar(tx, admin, activar ? "empresa.activada" : "empresa.desactivada", {
+      entidadId: id,
+      empresaId: id,
+      antes: { activo: !activar },
+      despues: activar
+        ? { activo: true }
+        : { activo: false, sesionesCerradas: cerradas },
+    });
+
+    return true;
+  });
 
   if (!cambiada) return { ok: false, mensaje: "No se pudo cambiar el estado" };
-
-  // Sus personas de contacto entran en nombre de la empresa: si se deja de
-  // atender, las sesiones que tengan abiertas se cierran.
-  if (!activar) {
-    await sesiones.revocarDeEmpresa(id, "empresa_desactivada");
-  }
 
   revalidar();
 

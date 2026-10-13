@@ -1,4 +1,10 @@
-import { consultar, consultarUno, ejecutar, transaccion } from "@/lib/db";
+import {
+  consultar,
+  consultarUno,
+  ejecutar,
+  transaccion,
+  type Ejecutor,
+} from "@/lib/db";
 import type { MotivoRevocacion, SesionAbierta } from "@/types";
 
 /**
@@ -136,26 +142,39 @@ export async function rotar(
 export async function revocar(
   id: number,
   motivo: MotivoRevocacion,
+  ejecutor?: Ejecutor,
 ): Promise<void> {
   await ejecutar(
     `UPDATE sesiones
      SET revocada_en = now(), motivo_revocacion = $2
      WHERE id = $1 AND revocada_en IS NULL`,
     [id, motivo],
+    ejecutor,
   );
 }
 
-/** Revoca la sesion a la que pertenece un token de renovacion. */
+/**
+ * Revoca la sesion a la que pertenece un token de renovacion.
+ *
+ * Devuelve de quien era, o null si el token no correspondia a ninguna sesion
+ * viva: es lo que permite anotar el cierre a nombre de alguien aunque su
+ * token de acceso ya hubiera caducado.
+ */
 export async function revocarPorToken(
   tokenHash: string,
   motivo: MotivoRevocacion,
-): Promise<void> {
-  await ejecutar(
+  ejecutor?: Ejecutor,
+): Promise<number | null> {
+  const fila = await consultarUno<{ usuarioId: number }>(
     `UPDATE sesiones
      SET revocada_en = now(), motivo_revocacion = $2
-     WHERE token_hash = $1 AND revocada_en IS NULL`,
+     WHERE token_hash = $1 AND revocada_en IS NULL
+     RETURNING usuario_id AS "usuarioId"`,
     [tokenHash, motivo],
+    ejecutor,
   );
+
+  return fila?.usuarioId ?? null;
 }
 
 /**
@@ -168,6 +187,7 @@ export async function revocarDeUsuario(
   usuarioId: number,
   motivo: MotivoRevocacion,
   salvo: number | null = null,
+  ejecutor?: Ejecutor,
 ): Promise<number> {
   return ejecutar(
     `UPDATE sesiones
@@ -176,6 +196,7 @@ export async function revocarDeUsuario(
        AND revocada_en IS NULL
        AND ($3::bigint IS NULL OR id <> $3)`,
     [usuarioId, motivo, salvo],
+    ejecutor,
   );
 }
 
@@ -183,6 +204,7 @@ export async function revocarDeUsuario(
 export async function revocarDeEmpresa(
   empresaId: number,
   motivo: MotivoRevocacion,
+  ejecutor?: Ejecutor,
 ): Promise<number> {
   return ejecutar(
     `UPDATE sesiones s
@@ -192,6 +214,7 @@ export async function revocarDeEmpresa(
        AND c.empresa_id = $1
        AND s.revocada_en IS NULL`,
     [empresaId, motivo],
+    ejecutor,
   );
 }
 

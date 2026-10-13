@@ -3,6 +3,7 @@
 import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
+import { anotar, soloCambios } from "@/lib/auditoria";
 import { CODIGO_ERROR, esErrorPostgres, transaccion } from "@/lib/db";
 import { hashear } from "@/lib/password";
 import { requerirAdmin } from "@/lib/sesion";
@@ -17,7 +18,25 @@ import * as clientes from "@/models/clientes";
 import * as sesiones from "@/models/sesiones";
 import * as trabajadores from "@/models/trabajadores";
 import * as usuarios from "@/models/usuarios";
-import type { ErroresCampo, EstadoFormulario } from "@/types";
+import type {
+  ErroresCampo,
+  EstadoFormulario,
+  UsuarioCompleto,
+  ValoresAuditoria,
+} from "@/types";
+
+/** Lo que de una cuenta se anota cuando cambia. Nunca la contrasena. */
+function paraAuditoria(usuario: UsuarioCompleto): ValoresAuditoria {
+  return {
+    nombre: usuario.nombre,
+    apellido: usuario.apellido,
+    email: usuario.email,
+    telefono: usuario.telefono,
+    rol: usuario.rol,
+    cargo: usuario.cargo,
+    empresa: usuario.empresaNombre,
+  };
+}
 
 /**
  * Alta de usuarios. Solo un administrador puede crear cuentas.
@@ -192,7 +211,7 @@ export async function crearUsuario(
   // Primero la barrera. El proxy ya filtra la ruta, pero una Server Action es
   // un POST a la page donde se usa: si el matcher cambiara, esta llamada es lo
   // unico que seguiria impidiendo que cualquiera cree cuentas.
-  await requerirAdmin();
+  const admin = await requerirAdmin();
 
   const { persona, vinculo, errores } = validarUsuario(datos);
 
@@ -244,6 +263,16 @@ export async function crearUsuario(
           cliente,
         );
       }
+
+      // Se lee ya resuelta para anotar el rol, el cargo y la empresa con su
+      // nombre, que es lo que alguien entendera al leer la linea.
+      const completo = await usuarios.buscarPorId(creado.id, cliente);
+
+      await anotar(cliente, admin, "usuario.creado", {
+        entidadId: creado.id,
+        empresaId: completo?.empresaId ?? null,
+        despues: completo ? paraAuditoria(completo) : { email: creado.email },
+      });
     });
   } catch (error) {
     if (esErrorPostgres(error, CODIGO_ERROR.VIOLACION_UNICIDAD)) {
@@ -356,19 +385,39 @@ export async function restablecerPassword(
   }
 
   const provisional = generarPasswordProvisional();
-  const guardada = await usuarios.actualizarPasswordHash(
-    usuario.id,
-    await hashear(provisional),
-    // La conoce el administrador: al entrar tendra que elegir otra.
-    true,
-  );
+  const hashProvisional = await hashear(provisional);
+
+  const guardada = await transaccion(async (tx) => {
+    const hecho = await usuarios.actualizarPasswordHash(
+      usuario.id,
+      hashProvisional,
+      // La conoce el administrador: al entrar tendra que elegir otra.
+      true,
+      tx,
+    );
+
+    if (!hecho) return false;
+
+    // Quien estuviera dentro con la contrasena anterior, fuera.
+    const cerradas = await sesiones.revocarDeUsuario(
+      usuario.id,
+      "clave_restablecida",
+      null,
+      tx,
+    );
+
+    await anotar(tx, admin, "usuario.clave_restablecida", {
+      entidadId: usuario.id,
+      empresaId: usuario.empresaId,
+      despues: { sesionesCerradas: cerradas },
+    });
+
+    return true;
+  });
 
   if (!guardada) {
     return { ok: false, mensaje: "No se pudo restablecer la contrasena" };
   }
-
-  // Quien estuviera dentro con la contrasena anterior, fuera.
-  await sesiones.revocarDeUsuario(usuario.id, "clave_restablecida");
 
   return {
     ok: true,
@@ -391,7 +440,7 @@ export async function editarUsuario(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
 ): Promise<EstadoFormulario> {
-  await requerirAdmin();
+  const admin = await requerirAdmin();
 
   const id = comoIdentificador(datos.get("id"));
 
@@ -450,6 +499,39 @@ export async function editarUsuario(
           cliente,
         );
       }
+
+      const actualizado = await usuarios.buscarPorId(id, cliente);
+      if (!actualizado) return;
+
+      /*
+       * Si cambio lo que decide que ve o que puede hacer, sus sesiones
+       * abiertas se cierran: el token que tienen dice lo de antes, y volver a
+       * entrar es lo que les da uno con lo de ahora.
+       */
+      const cambioDeVinculo =
+        actualizado.rol !== existente.rol ||
+        actualizado.cargoSlug !== existente.cargoSlug ||
+        actualizado.empresaId !== existente.empresaId;
+
+      const cerradas = cambioDeVinculo
+        ? await sesiones.revocarDeUsuario(id, "vinculo_cambiado", null, cliente)
+        : 0;
+
+      const cambios = soloCambios(
+        paraAuditoria(existente),
+        paraAuditoria(actualizado),
+      );
+
+      if (cambios) {
+        await anotar(cliente, admin, "usuario.editado", {
+          entidadId: id,
+          empresaId: actualizado.empresaId,
+          antes: cambios.antes,
+          despues: cambioDeVinculo
+            ? { ...cambios.despues, sesionesCerradas: cerradas }
+            : cambios.despues,
+        });
+      }
     });
   } catch (error) {
     if (esErrorPostgres(error, CODIGO_ERROR.VIOLACION_UNICIDAD)) {
@@ -464,20 +546,6 @@ export async function editarUsuario(
     }
 
     throw error;
-  }
-
-  // Si cambio lo que decide que ve o que puede hacer, sus sesiones abiertas
-  // se cierran: el token que tienen dice lo de antes, y volver a entrar es lo
-  // que les da uno con lo de ahora.
-  const actualizado = await usuarios.buscarPorId(id);
-
-  if (
-    actualizado &&
-    (actualizado.rol !== existente.rol ||
-      actualizado.cargoSlug !== existente.cargoSlug ||
-      actualizado.empresaId !== existente.empresaId)
-  ) {
-    await sesiones.revocarDeUsuario(id, "vinculo_cambiado");
   }
 
   revalidatePath(RUTA_LISTADO);
@@ -538,14 +606,27 @@ export async function cambiarEstadoUsuario(
     }
   }
 
-  const cambiado = await usuarios.cambiarEstado(id, activar);
+  const cambiado = await transaccion(async (tx) => {
+    if (!(await usuarios.cambiarEstado(id, activar, tx))) return false;
+
+    const cerradas = activar
+      ? 0
+      : await sesiones.revocarDeUsuario(id, "usuario_desactivado", null, tx);
+
+    await anotar(tx, admin, activar ? "usuario.activado" : "usuario.desactivado", {
+      entidadId: id,
+      empresaId: usuario.empresaId,
+      antes: { activo: !activar },
+      despues: activar
+        ? { activo: true }
+        : { activo: false, sesionesCerradas: cerradas },
+    });
+
+    return true;
+  });
 
   if (!cambiado) {
     return { ok: false, mensaje: "No se pudo cambiar el estado de la cuenta" };
-  }
-
-  if (!activar) {
-    await sesiones.revocarDeUsuario(id, "usuario_desactivado");
   }
 
   revalidatePath(RUTA_LISTADO);
