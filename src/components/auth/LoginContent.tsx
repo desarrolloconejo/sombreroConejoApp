@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import type { CSSProperties } from "react";
 import {
   ArrowRight,
   CircleAlert,
@@ -13,6 +12,7 @@ import {
 import { iniciarSesion } from "@/actions/auth";
 import { Alerta, Boton } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
+import { CAJA, CAJA_ERROR, ENTRADA, ERROR, ETIQUETA, ICONO, retraso } from "./estilosAcceso";
 
 /**
  * El formulario de acceso.
@@ -21,40 +21,6 @@ import { ESTADO_INICIAL } from "@/types";
  * errores que devuelve la action sin recargar, y el conmutador de mostrar la
  * contrasena. El resto del login son componentes de servidor.
  */
-
-/**
- * La caja del campo. El borde y el foco viven en el contenedor y no en el
- * input porque dentro tambien hay un icono y, en la contrasena, un boton.
- * De ahi `focus-within` en lugar de `focus`.
- *
- * Al enfocar, el campo se ELEVA: fondo blanco, borde navy y una sombra
- * suave. Un halo de color alrededor se lee como un error, y ademas pisa la
- * senal que si tiene que significar eso.
- */
-const CAJA =
-  "flex min-h-[50px] items-center gap-2.5 rounded-[11px] border-[1.5px] bg-campo px-3.5 " +
-
-  "focus-within:border-acento focus-within:bg-superficie focus-within:shadow-[var(--foco)] " +
-  "" +
-  "lg:gap-[11px] lg:px-[15px]";
-
-const CAJA_ERROR = "border-blackberry dark-tema:border-[#e9a9cd]";
-
-const ENTRADA =
-  "w-full min-w-0 border-none bg-transparent text-[13.5px] text-texto " +
-  // El foco lo pinta la caja de fuera con focus-within. Si el input pintara
-  // ademas el suyo, se verian dos anillos superpuestos.
-  "outline-none focus:outline-none focus-visible:outline-none " +
-  "placeholder:text-suave lg:text-sm";
-
-const ICONO = "size-4 shrink-0 text-suave lg:size-[17px]";
-
-const ERROR =
-  "mt-1.5 text-[11.5px] font-medium leading-relaxed text-blackberry dark-tema:text-[#e9a9cd]";
-
-function retraso(segundos: string): CSSProperties {
-  return { "--retraso": segundos } as CSSProperties;
-}
 
 /** Por que alguien llego al login sin haberlo pedido. */
 export type MotivoSalida = "sin-acceso" | "caducada";
@@ -120,7 +86,7 @@ export function LoginContent({
           <div style={retraso("0.13s")} className="surge mb-[15px] lg:mb-[18px]">
             <label
               htmlFor="email"
-              className="mb-[7px] block text-xs font-semibold lg:mb-2 lg:text-[12.5px]"
+              className={ETIQUETA}
             >
               Correo
             </label>
@@ -151,7 +117,7 @@ export function LoginContent({
           <div style={retraso("0.17s")} className="surge">
             <label
               htmlFor="password"
-              className="mb-[7px] block text-xs font-semibold lg:mb-2 lg:text-[12.5px]"
+              className={ETIQUETA}
             >
               Contrasena
             </label>
