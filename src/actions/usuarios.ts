@@ -218,6 +218,8 @@ export async function crearUsuario(
           email: persona.correo,
           passwordHash,
           telefono: persona.telefono,
+          // La conoce quien da el alta: al entrar tendra que elegir otra.
+          debeCambiarClave: true,
         },
         cliente,
       );
@@ -357,6 +359,8 @@ export async function restablecerPassword(
   const guardada = await usuarios.actualizarPasswordHash(
     usuario.id,
     await hashear(provisional),
+    // La conoce el administrador: al entrar tendra que elegir otra.
+    true,
   );
 
   if (!guardada) {

@@ -85,6 +85,9 @@ const SALIDA_FORZADA = "/login?motivo=sin-acceso";
 /** Lo mismo, cuando lo que ya no vale es la sesion y no la cuenta. */
 const SESION_CERRADA = "/login?motivo=caducada";
 
+/** La unica pantalla que ve quien entra con una contrasena provisional. */
+const CAMBIO_DE_CLAVE = "/cambiar-clave";
+
 /** Atributos comunes a las dos cookies de la sesion. */
 function opcionesCookie(maxAge: number) {
   return {
@@ -207,8 +210,15 @@ async function rutaActual(): Promise<string> {
  * - No hay nada: al login.
  * - El token verifica pero la sesion se revoco, o la cuenta ya no puede
  *   entrar: al login con su motivo, que ademas borra las cookies.
+ *
+ * Y una cuarta para quien si puede entrar pero aun usa la contrasena que le
+ * dio otra persona: no pasa de la pantalla de cambiarla. `conClaveProvisional`
+ * levanta esa barrera, y solo lo piden esa pantalla y la action que cambia la
+ * contrasena; todo lo demas queda cerrado hasta que elija una propia.
  */
-export async function requerirUsuario(): Promise<UsuarioCompleto> {
+export async function requerirUsuario(
+  opciones: { conClaveProvisional?: boolean } = {},
+): Promise<UsuarioCompleto> {
   const sesion = await obtenerSesion();
 
   if (!sesion) {
@@ -231,6 +241,10 @@ export async function requerirUsuario(): Promise<UsuarioCompleto> {
 
   if (!conservaElAcceso(usuario)) {
     redirect(SALIDA_FORZADA);
+  }
+
+  if (usuario.debeCambiarClave && !opciones.conClaveProvisional) {
+    redirect(CAMBIO_DE_CLAVE);
   }
 
   return usuario;
