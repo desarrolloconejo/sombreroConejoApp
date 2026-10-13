@@ -1,3 +1,4 @@
+import { TarjetaDosPasos } from "@/components/dosPasos";
 import { Wrapper } from "@/components/layout/Wrapper";
 import type { Miga } from "@/components/layout/Breadcrumb";
 import type { SesionAbierta, UsuarioCompleto } from "@/types";
@@ -31,10 +32,14 @@ export function PerfilWrapper({
   usuario,
   sesiones,
   sesionActualId,
+  dosPasos,
 }: {
   usuario: UsuarioCompleto;
   sesiones: SesionAbierta[];
   sesionActualId: number | null;
+
+  /** El estado de la verificacion en dos pasos, con la fecha ya formateada. */
+  dosPasos: { activado: boolean; desde: string | null; respaldos: number };
 }) {
   return (
     <Wrapper
@@ -70,6 +75,12 @@ export function PerfilWrapper({
           />
 
           <FormularioPassword />
+
+          <TarjetaDosPasos
+            activado={dosPasos.activado}
+            desde={dosPasos.desde}
+            respaldos={dosPasos.respaldos}
+          />
 
           <TarjetaSesiones sesiones={sesiones} actualId={sesionActualId} />
 
