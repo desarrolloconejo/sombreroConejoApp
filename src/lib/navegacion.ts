@@ -8,6 +8,7 @@ import {
   House,
   Library,
   ScrollText,
+  Send,
   ShieldCheck,
   User,
   Users,
@@ -279,6 +280,16 @@ const MODULOS: readonly Modulo[] = [
       "cambios",
       "log",
     ],
+  },
+
+  {
+    titulo: "Bandeja de salida",
+    seccion: "sistema",
+    subtitulo: "Los correos que envia la aplicacion",
+    href: "/dashboard/salida",
+    icono: Send,
+    roles: ["admin"],
+    alias: ["correos", "correo", "email", "mensajes", "enviados", "salida", "avisos"],
   },
 
   // Va siempre el ultimo: no es un modulo de trabajo, es la cuenta de quien
