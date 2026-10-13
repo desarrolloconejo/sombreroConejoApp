@@ -316,7 +316,7 @@ resolver antes.
 | Tema | Estado |
 | --- | --- |
 | Probada con una app real en un telefono | **Sin probar.** Las pruebas calculan los codigos con el mismo estandar y dan los valores de referencia del RFC 6238, pero nadie ha escaneado ni tecleado la clave en Google Authenticator todavia |
-| Codigo QR | No hay. La clave se teclea, o se abre un enlace desde el telefono. Mostrar un QR pide anadir una dependencia: esta por decidir |
+| Codigo QR | Se muestra al configurar (dependencia nueva: `qrcode-generator`, que Vercel instala sola desde `package-lock.json`; no pide SQL ni variables). **Sin escanear con un telefono real**: las pruebas fijan su estructura, no que una app lo lea. Si no se leyera, la clave para teclear y el enlace siguen debajo |
 | Obligatoria para administradores | **No lo es.** El plan la queria obligatoria para `admin` y `administracion`; por decision del responsable (2026-10-13) se pide por defecto a todos y cualquiera puede decir que no. Un administrador sin dos pasos sigue siendo posible |
 | Quien eligio «ahora no» | No se le vuelve a preguntar. No hay forma de volver a pedirselo a todos salvo pegando SQL |
 

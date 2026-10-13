@@ -23,6 +23,7 @@ mejora del diseno.
 | Base de datos | PostgreSQL 17, con SQL puro sobre `pg` |
 | Sesiones | JWT con `jose` sobre cookies `HttpOnly` |
 | Contrasenas | `bcryptjs` |
+| Codigo QR | `qrcode-generator`, solo en el servidor |
 | Pruebas | Playwright, mas dos baterias propias en `db/pruebas` |
 | Desarrollo | Docker Compose (app, base y pgAdmin) |
 | Produccion | Vercel, con la base en Neon |
@@ -267,6 +268,13 @@ el estandar TOTP: no se llama a Google ni a ningun servicio, y no usa libreria
 - **Se pide por defecto a todas las cuentas.** Quien no la tiene activada ni
   ha dicho que no la quiere pasa por `/dos-pasos` al entrar; ahi la configura
   o elige «Ahora no». En los dos casos no se le vuelve a preguntar.
+- **Nadie pasa de `/dos-pasos` sin resolverlo.** Mientras no la configure ni
+  diga que no, cualquier pantalla del panel lo devuelve ahi: lo hacen las
+  guardias, no solo el login.
+- **Se registra escaneando un codigo QR.** Lo dibuja el servidor
+  (`src/lib/qr.ts`, con `qrcode-generator`) y al navegador solo llega el
+  trazo de un SVG. Siempre negro sobre blanco, tambien en tema oscuro. Debajo
+  quedan la clave para teclearla y el enlace para abrirla desde el telefono.
 - **Acertar la contrasena no abre la sesion** si estan activados: se deja una
   cookie de cinco minutos que solo sirve para llegar a `/verificar`.
 - **Un codigo vale una vez**, y los fallos cuentan para el bloqueo de la cuenta.

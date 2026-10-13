@@ -206,8 +206,10 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 
 ## Dependencias
 
-No se anaden librerias sin aprobacion expresa. Las de ejecucion son siete:
-`next`, `react`, `react-dom`, `pg`, `jose`, `bcryptjs`, `lucide-react`. Esta
+No se anaden librerias sin aprobacion expresa. Las de ejecucion son ocho:
+`next`, `react`, `react-dom`, `pg`, `jose`, `bcryptjs`, `lucide-react` y
+`qrcode-generator` (solo para el QR de los dos pasos, en `src/lib/qr.ts`; se
+usa en el servidor y no entra en el bundle de cliente). Esta
 aprobada una mas para generar el PDF de la factura, pendiente de instalar
 cuando llegue esa etapa. De desarrollo: `@playwright/test`.
 
