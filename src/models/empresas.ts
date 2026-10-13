@@ -256,10 +256,15 @@ export async function actualizar(
   );
 }
 
-export async function cambiarEstado(id: number, activo: boolean): Promise<boolean> {
+export async function cambiarEstado(
+  id: number,
+  activo: boolean,
+  ejecutor?: Ejecutor,
+): Promise<boolean> {
   const afectadas = await ejecutar(
     "UPDATE empresas SET activo = $2 WHERE id = $1",
     [id, activo],
+    ejecutor,
   );
 
   return afectadas === 1;

@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { anotar, soloCambios } from "@/lib/auditoria";
+import { transaccion } from "@/lib/db";
 import { hashear, verificar } from "@/lib/password";
 import { obtenerSesion, requerirUsuario } from "@/lib/sesion";
 import { validarCambioPassword, validarPerfil } from "@/lib/validaciones";
@@ -38,7 +40,31 @@ export async function actualizarPerfil(
     return { ok: false, errores };
   }
 
-  const actualizado = await usuarios.actualizarPerfil(usuario.id, valores);
+  const actualizado = await transaccion(async (tx) => {
+    const fila = await usuarios.actualizarPerfil(usuario.id, valores, tx);
+
+    const cambios = fila
+      ? soloCambios(
+          {
+            nombre: usuario.nombre,
+            apellido: usuario.apellido,
+            telefono: usuario.telefono,
+          },
+          { nombre: fila.nombre, apellido: fila.apellido, telefono: fila.telefono },
+        )
+      : null;
+
+    // Guardar el formulario sin tocar nada no es una edicion.
+    if (cambios) {
+      await anotar(tx, usuario, "usuario.perfil_editado", {
+        entidadId: usuario.id,
+        empresaId: usuario.empresaId,
+        ...cambios,
+      });
+    }
+
+    return fila;
+  });
 
   if (!actualizado) {
     return { ok: false, mensaje: "No se pudieron guardar los cambios" };
@@ -86,25 +112,42 @@ export async function cambiarPassword(
     };
   }
 
-  const guardada = await usuarios.actualizarPasswordHash(
-    usuario.id,
-    await hashear(valores.nueva),
-    // La eligio la propia persona: deja de ser provisional.
-    false,
-  );
+  const nuevoHash = await hashear(valores.nueva);
+  const sesion = await obtenerSesion();
 
-  if (!guardada) {
+  // El cambio, el cierre de las demas sesiones y su linea van juntos: no
+  // puede quedar una contrasena nueva con las sesiones viejas abiertas.
+  const cerradas = await transaccion(async (tx) => {
+    const guardada = await usuarios.actualizarPasswordHash(
+      usuario.id,
+      nuevoHash,
+      // La eligio la propia persona: deja de ser provisional.
+      false,
+      tx,
+    );
+
+    if (!guardada) return null;
+
+    // Quien tuviera la contrasena anterior deja de estar dentro. Se conserva
+    // solo la sesion desde la que se acaba de cambiar.
+    const cuantas = await sesiones.revocarDeUsuario(
+      usuario.id,
+      "clave_cambiada",
+      sesion?.sesionId ?? null,
+      tx,
+    );
+
+    await anotar(tx, usuario, "usuario.clave_cambiada", {
+      entidadId: usuario.id,
+      empresaId: usuario.empresaId,
+    });
+
+    return cuantas;
+  });
+
+  if (cerradas === null) {
     return { ok: false, mensaje: "No se pudo cambiar la contrasena" };
   }
-
-  // Quien tuviera la contrasena anterior deja de estar dentro. Se conserva
-  // solo la sesion desde la que se acaba de cambiar.
-  const sesion = await obtenerSesion();
-  const cerradas = await sesiones.revocarDeUsuario(
-    usuario.id,
-    "clave_cambiada",
-    sesion?.sesionId ?? null,
-  );
 
   // Quien venia obligado a cambiarla ya puede pasar. Va fuera de cualquier
   // try: redirect lanza una excepcion interna de Next.

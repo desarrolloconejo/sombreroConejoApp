@@ -91,12 +91,16 @@ export async function buscarPorEmailConCredenciales(
 }
 
 /** Busca a una persona por su identificador, ya resuelto su tipo y su rol. */
-export async function buscarPorId(id: number): Promise<UsuarioCompleto | null> {
+export async function buscarPorId(
+  id: number,
+  ejecutor?: Ejecutor,
+): Promise<UsuarioCompleto | null> {
   return consultarUno<UsuarioCompleto>(
     `SELECT ${COLUMNAS_COMPLETO}
      FROM vw_usuarios_completos
      WHERE id = $1`,
     [id],
+    ejecutor,
   );
 }
 
@@ -188,6 +192,7 @@ export async function crear(
 export async function actualizarPerfil(
   id: number,
   datos: DatosPerfil,
+  ejecutor?: Ejecutor,
 ): Promise<Usuario | null> {
   return consultarUno<Usuario>(
     `UPDATE usuarios
@@ -195,6 +200,7 @@ export async function actualizarPerfil(
      WHERE id = $1
      RETURNING ${COLUMNAS_USUARIO}`,
     [id, datos.nombre, datos.apellido, datos.telefono],
+    ejecutor,
   );
 }
 
@@ -257,6 +263,7 @@ export async function actualizarPasswordHash(
   id: number,
   passwordHash: string,
   provisional: boolean,
+  ejecutor?: Ejecutor,
 ): Promise<boolean> {
   const afectadas = await ejecutar(
     `UPDATE usuarios
@@ -266,6 +273,7 @@ export async function actualizarPasswordHash(
          bloqueado_hasta = NULL
      WHERE id = $1`,
     [id, passwordHash, provisional],
+    ejecutor,
   );
 
   return afectadas === 1;
@@ -313,12 +321,16 @@ export async function actualizarTema(id: number, tema: Tema): Promise<boolean> {
  * Deja constancia de la ultima entrada y pone a cero los fallos. Se llama al
  * iniciar sesion.
  */
-export async function registrarAcceso(id: number): Promise<void> {
+export async function registrarAcceso(
+  id: number,
+  ejecutor?: Ejecutor,
+): Promise<void> {
   await ejecutar(
     `UPDATE usuarios
      SET ultimo_acceso = now(), intentos_fallidos = 0, bloqueado_hasta = NULL
      WHERE id = $1`,
     [id],
+    ejecutor,
   );
 }
 
@@ -335,6 +347,7 @@ export async function registrarFallo(
   id: number,
   limite: number,
   minutosDeBloqueo: number,
+  ejecutor?: Ejecutor,
 ): Promise<boolean> {
   const fila = await consultarUno<{ bloqueada: boolean }>(
     `UPDATE usuarios
@@ -349,6 +362,7 @@ export async function registrarFallo(
      WHERE id = $1
      RETURNING (bloqueado_hasta IS NOT NULL AND bloqueado_hasta > now()) AS bloqueada`,
     [id, limite, minutosDeBloqueo],
+    ejecutor,
   );
 
   return fila?.bloqueada ?? false;
@@ -358,10 +372,12 @@ export async function registrarFallo(
 export async function cambiarEstado(
   id: number,
   activo: boolean,
+  ejecutor?: Ejecutor,
 ): Promise<boolean> {
   const afectadas = await ejecutar(
     "UPDATE usuarios SET activo = $2 WHERE id = $1",
     [id, activo],
+    ejecutor,
   );
 
   return afectadas === 1;

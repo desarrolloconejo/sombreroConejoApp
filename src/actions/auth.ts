@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 import * as usuarios from "@/models/usuarios";
+import { anotar } from "@/lib/auditoria";
+import { transaccion } from "@/lib/db";
 import { gastarTiempoEquivalente, verificar } from "@/lib/password";
 import { destinoSeguro } from "@/lib/redireccion";
 import { abrirSesion, cerrarSesionActual } from "@/lib/sesion";
@@ -51,6 +53,11 @@ export async function iniciarSesion(
     // Se gasta el mismo tiempo que costaria comprobar una contrasena real,
     // para que la duracion de la respuesta no delate si el correo existe.
     await gastarTiempoEquivalente(valores.password);
+
+    // Sin actor y sin el correo que se escribio: en ese campo acaba a veces
+    // una contrasena tecleada donde no era.
+    await transaccion((tx) => anotar(tx, null, "sesion.fallo"));
+
     return { ok: false, mensaje: CREDENCIALES_INVALIDAS };
   }
 
@@ -70,11 +77,20 @@ export async function iniciarSesion(
   const coincide = await verificar(valores.password, usuario.passwordHash);
 
   if (!coincide) {
-    await usuarios.registrarFallo(
-      usuario.id,
-      INTENTOS_PERMITIDOS,
-      MINUTOS_DE_BLOQUEO,
-    );
+    await transaccion(async (tx) => {
+      const bloqueada = await usuarios.registrarFallo(
+        usuario.id,
+        INTENTOS_PERMITIDOS,
+        MINUTOS_DE_BLOQUEO,
+        tx,
+      );
+
+      await anotar(tx, usuario, bloqueada ? "sesion.bloqueo" : "sesion.fallo", {
+        entidad: "usuario",
+        entidadId: usuario.id,
+        empresaId: usuario.empresaId,
+      });
+    });
 
     return { ok: false, mensaje: CREDENCIALES_INVALIDAS };
   }
@@ -109,7 +125,14 @@ export async function iniciarSesion(
 
   await abrirSesion(usuario);
 
-  await usuarios.registrarAcceso(usuario.id);
+  await transaccion(async (tx) => {
+    await usuarios.registrarAcceso(usuario.id, tx);
+    await anotar(tx, usuario, "sesion.inicio", {
+      entidad: "usuario",
+      entidadId: usuario.id,
+      empresaId: usuario.empresaId,
+    });
+  });
 
   // redirect lanza una excepcion interna de Next, asi que tiene que quedar
   // fuera de cualquier try que la pudiera atrapar.

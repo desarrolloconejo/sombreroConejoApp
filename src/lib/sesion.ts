@@ -1,6 +1,8 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import { anotar } from "./auditoria";
+import { transaccion } from "./db";
 import { firmarSesion, verificarSesion } from "./jwt";
 import { describirNavegador, generarToken, hashDeToken } from "./tokens";
 import * as sesiones from "@/models/sesiones";
@@ -403,7 +405,26 @@ export async function cerrarSesionActual(): Promise<void> {
   const token = (await cookies()).get(nombreCookieRenovacion())?.value;
 
   if (token) {
-    await sesiones.revocarPorToken(hashDeToken(token), "salida");
+    await transaccion(async (tx) => {
+      const usuarioId = await sesiones.revocarPorToken(
+        hashDeToken(token),
+        "salida",
+        tx,
+      );
+
+      // Sin sesion viva no hay nada que anotar: ya estaba cerrada.
+      if (usuarioId === null) return;
+
+      const usuario = await usuarios.buscarPorId(usuarioId, tx);
+
+      if (usuario) {
+        await anotar(tx, usuario, "sesion.cierre", {
+          entidad: "usuario",
+          entidadId: usuario.id,
+          empresaId: usuario.empresaId,
+        });
+      }
+    });
   }
 
   await borrarCookiesDeSesion();
