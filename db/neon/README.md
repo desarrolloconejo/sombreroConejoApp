@@ -25,3 +25,4 @@ entero sobre una base con datos.
 | Archivo | Que hace | Pegado en produccion |
 | --- | --- | --- |
 | `01-cargo-produccion.sql` | Anade el cargo `produccion` | Pendiente |
+| `02-sesiones.sql` | Crea la tabla `sesiones`. **Antes** de subir la aplicacion | Pendiente |

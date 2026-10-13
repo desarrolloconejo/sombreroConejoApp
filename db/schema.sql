@@ -222,6 +222,68 @@ $redes$;
 CREATE INDEX IF NOT EXISTS empresas_activo_idx ON empresas (activo);
 CREATE INDEX IF NOT EXISTS empresas_nombre_idx ON empresas (lower(nombre));
 
+-- ---------------------------------------------------------------------------
+-- sesiones: una fila por inicio de sesion.
+--
+-- El token de acceso (el JWT de la cookie) dura media hora y lleva el id de
+-- su fila. Las guardias comprueban en cada peticion que la fila siga viva, y
+-- eso es lo que permite cerrar una sesion desde el servidor: cambiar la
+-- contrasena, desactivar una cuenta o detectar un token copiado la revocan, y
+-- deja de valer en la siguiente peticion, no cuando caduque el JWT.
+--
+-- El motivo de revocacion es un conjunto cerrado. Su espejo esta en
+-- `MotivoRevocacion` (src/types/sesion.ts): si se anade uno hay que tocar los
+-- dos sitios.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sesiones (
+  id                  BIGSERIAL   PRIMARY KEY,
+  usuario_id          INTEGER     NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+
+  -- Del token de renovacion solo se guarda el hash: quien lea la tabla no
+  -- puede hacerse pasar por nadie.
+  token_hash          TEXT        NOT NULL,
+
+  -- El token anterior a la ultima rotacion. Si alguien lo presenta pasado el
+  -- margen, es que lo copiaron: se revoca la sesion entera.
+  token_anterior_hash TEXT,
+  rotada_en           TIMESTAMPTZ,
+
+  navegador           TEXT,
+  creada_en           TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ultimo_uso          TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  -- Tope absoluto: aunque se renueve, la sesion termina aqui.
+  caduca_en           TIMESTAMPTZ NOT NULL,
+
+  revocada_en         TIMESTAMPTZ,
+  motivo_revocacion   TEXT,
+
+  CONSTRAINT sesiones_token_formato
+    CHECK (token_hash ~ '^[0-9a-f]{64}$'),
+  CONSTRAINT sesiones_token_anterior_formato
+    CHECK (token_anterior_hash IS NULL OR token_anterior_hash ~ '^[0-9a-f]{64}$'),
+  CONSTRAINT sesiones_motivo_valido
+    CHECK (motivo_revocacion IS NULL OR motivo_revocacion IN (
+      'salida', 'cerrada_por_usuario', 'clave_cambiada', 'clave_restablecida',
+      'usuario_desactivado', 'empresa_desactivada', 'vinculo_cambiado',
+      'token_reutilizado'
+    )),
+  CONSTRAINT sesiones_revocacion_completa
+    CHECK ((revocada_en IS NULL) = (motivo_revocacion IS NULL))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS sesiones_token_unico
+  ON sesiones (token_hash);
+
+CREATE INDEX IF NOT EXISTS sesiones_token_anterior_idx
+  ON sesiones (token_anterior_hash)
+  WHERE token_anterior_hash IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS sesiones_usuario_vivas_idx
+  ON sesiones (usuario_id)
+  WHERE revocada_en IS NULL;
+
+
 -- ===========================================================================
 -- MODULO DE HOOKS
 --
