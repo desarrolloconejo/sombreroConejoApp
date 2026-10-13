@@ -141,6 +141,9 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Un limite de error (`error.tsx`) reintenta con `retry`, no con `reset`:
   `reset` repinta sin volver a pedir los datos al servidor.
 - Los listados usan el componente `Listado`, con el estado en la URL.
+- Un modulo nuevo declara su `seccion` en `src/lib/navegacion.ts`. El menu se
+  agrupa con `porSecciones`; ni el sidebar ni el menu movil llevan rotulos
+  escritos a mano.
 - React 19 vacia los campos no controlados al terminar una action: los
   formularios largos controlan sus valores con `useCampos`.
 - Los archivos `'use server'` solo exportan funciones asincronas; tipos y
