@@ -1,7 +1,8 @@
 # Plan de auditoria y actualizacion del repositorio
 
-Fecha: 2026-10-13. Estado: **analisis hecho** (`docs/informeAuditoria.md`);
-arreglos y actualizaciones pendientes de aprobar.
+Fecha: 2026-10-13. Estado: **ejecutado**. El resultado, hallazgo a hallazgo,
+esta en `docs/informeAuditoria.md`. Quedan abiertos solo `eslint` 10 y
+`typescript` 7, que dependen de terceros.
 
 Decidido el 2026-10-13: la duracion de la sesion y las cuentas del seed en
 produccion **no se arreglan aqui**; las trata `docs/planIntegracionPortal.md`
