@@ -109,9 +109,23 @@ test("configurarla, entrar con el codigo, entrar con un respaldo y desactivarla"
 
   if (page.url().endsWith("/dashboard")) {
     await page.goto("/dashboard/perfil");
+  } else {
+    /*
+     * Pendiente de configurar, y sin haber dicho que no: no pasa de aqui.
+     * Pedir cualquier pantalla del panel lo devuelve a esta.
+     */
+    for (const ruta of ["/dashboard", "/dashboard/perfil", "/dashboard/hooks"]) {
+      await page.goto(ruta);
+      await expect(page, ruta).toHaveURL(/\/dos-pasos$/);
+    }
   }
 
   await page.getByRole("button", { name: "Configurar ahora" }).click();
+
+  // El codigo QR, para escanearlo desde el telefono.
+  await expect(
+    page.getByRole("img", { name: /^Codigo QR para registrar la cuenta/ }),
+  ).toBeVisible({ timeout: 30_000 });
 
   // La clave que se registraria en la app.
   const clave = page.locator("code").first();
@@ -184,6 +198,51 @@ test("configurarla, entrar con el codigo, entrar con un respaldo y desactivarla"
   await expect(tarjeta.getByText("Sin activar")).toBeVisible({ timeout: 30_000 });
 
   // Y vuelve a entrar solo con la contrasena.
+  await page.context().clearCookies();
+  await escribirCredenciales(page);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 30_000 });
+});
+
+test("sin configurarla y sin haber dicho que no, no se pasa de su pantalla", async ({ page, browser }) => {
+  test.setTimeout(240_000);
+
+  // Un administrador se la retira: es lo que deja la cuenta «pendiente», igual
+  // que una cuenta nueva. Si no la tenia activada, se activa primero.
+  await retirarSiLosTiene(browser);
+  await escribirCredenciales(page);
+  await expect(page).toHaveURL(/\/(dos-pasos|dashboard)$/, { timeout: 90_000 });
+
+  if (page.url().endsWith("/dashboard")) {
+    // Ya habia dicho que no: se activa desde Mi perfil y se le retira, que es
+    // la forma de volver a dejarla pendiente desde la propia aplicacion.
+    await page.goto("/dashboard/perfil");
+    await page.getByRole("button", { name: "Configurar ahora" }).click();
+    const clave = page.locator("code").first();
+    await expect(clave).toBeVisible({ timeout: 30_000 });
+    const secreto = ((await clave.textContent()) ?? "").replace(/\s/g, "");
+    await page.getByLabel("Codigo de seis digitos").fill(codigoNuevo(secreto, null).valor);
+    await page.getByRole("button", { name: "Activar" }).click();
+    await expect(page.getByRole("list", { name: "Codigos de respaldo" })).toBeVisible({
+      timeout: 30_000,
+    });
+    await retirarSiLosTiene(browser);
+  }
+
+  // Pendiente: tras la contrasena cae en la pantalla de configuracion...
+  await page.context().clearCookies();
+  await escribirCredenciales(page);
+  await expect(page).toHaveURL(/\/dos-pasos$/, { timeout: 30_000 });
+
+  // ...y no sale de ella pida lo que pida.
+  for (const ruta of ["/dashboard", "/dashboard/perfil", "/dashboard/hooks"]) {
+    await page.goto(ruta);
+    await expect(page, ruta).toHaveURL(/\/dos-pasos$/);
+  }
+
+  // Hasta que declara que no la quiere. Entonces si, y no se le vuelve a pedir.
+  await page.getByRole("button", { name: "Ahora no, entrar sin ella" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 30_000 });
+
   await page.context().clearCookies();
   await escribirCredenciales(page);
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 30_000 });
