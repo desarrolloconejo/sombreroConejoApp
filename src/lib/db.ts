@@ -376,6 +376,31 @@ export async function conSesion<T>(
 }
 
 /**
+ * Una transaccion a nombre de la propia aplicacion, sin ninguna persona.
+ *
+ * Es para lo que nadie pide: una tarea programada. Declara el rol `sistema`
+ * y ningun usuario, y las politicas de seguridad por fila deciden que puede
+ * hacer esa identidad, tabla por tabla. Lo que no la nombre no la deja pasar.
+ *
+ * No es un atajo para saltarse `conSesion`. Con una persona detras, siempre
+ * `conSesion`: lo que se escribe aqui queda sin autor.
+ */
+export async function conSistema<T>(
+  operacion: (cliente: PoolClient) => Promise<T>,
+): Promise<T> {
+  return transaccion(async (cliente) => {
+    await cliente.query(
+      `SELECT set_config('app.usuario_id', '', true),
+              set_config('app.rol',        'sistema', true),
+              set_config('app.cargo',      '', true),
+              set_config('app.empresa_id', '', true)`,
+    );
+
+    return operacion(cliente);
+  });
+}
+
+/**
  * Devuelve un identificador SQL solo si esta en la lista blanca.
  *
  * Los nombres de columna y las direcciones de ordenamiento no se pueden pasar
