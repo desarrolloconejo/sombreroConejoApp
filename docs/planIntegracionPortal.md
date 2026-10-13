@@ -142,8 +142,13 @@ responsable (2026-10-13):
 - «Activada por defecto» no puede significar encendida sin la persona: hay
   que registrar la app en su telefono. Significa que al entrar se le pide
   configurarla, con una salida visible para quien no la quiera.
-- Sin codigo QR, como preveia la seccion 5.3: la clave se teclea o se abre un
-  enlace desde el telefono. Sigue pendiente decidir si se anade.
+- Con codigo QR. La seccion 5.3 lo dejaba por decidir porque pide una
+  dependencia; el responsable la aprobo (2026-10-13) y se anadio
+  `qrcode-generator`, sin dependencias propias. Lo dibuja el servidor; la
+  clave para teclear y el enlace siguen debajo como alternativa.
+- Quien tiene la verificacion pendiente no pasa de `/dos-pasos`: o la
+  configura, o declara que no la quiere. Lo imponen las guardias en cada
+  pantalla, y hay una prueba que lo fija.
 - Desactivarla uno mismo pide la contrasena, no un codigo: quien la quita por
   haber perdido el telefono no tendria codigo que dar.
 - De la etapa 8 queda la prueba con un cliente real.
@@ -548,6 +553,9 @@ mismo codigo de seis digitos a partir de la hora. No hay llamada a nadie.
 Node. Sin libreria, la activacion se hace tecleando el secreto en la app, o
 con un enlace que la abre sola desde el telefono. Mostrar el QR pide una
 dependencia pequena o escribir el codificador; se decide al llegar a esa etapa.
+
+> **Decidido (2026-10-13):** se muestra el QR, con `qrcode-generator`. Ver el
+> avance de la verificacion en dos pasos.
 
 ### Lo que no se puede cerrar todavia
 
@@ -1144,7 +1152,7 @@ sitio.
 | 3 | Tipos de pieza | Post, carrusel, reel, historia, video, logo y otros |
 | 3 | Lo que ve quien hace una tarea | Solo el nombre de la empresa y del proyecto |
 | 4 | Permiso «Aprobar» de un usuario cliente | Casilla por persona, apagada por defecto |
-| 8 | Codigo QR de los dos pasos | Se decide al llegar |
+| 8 | Codigo QR de los dos pasos | **Decidido:** se muestra, con `qrcode-generator` |
 
 ### Del negocio
 

@@ -115,6 +115,9 @@ export type EstadoDosPasos = EstadoFormulario & {
   /** El enlace que registra la cuenta al abrirlo desde el telefono. */
   enlace?: string;
 
+  /** Ese mismo enlace como codigo QR, para escanearlo desde otra pantalla. */
+  qr?: { lado: number; trazo: string };
+
   /** Los codigos de respaldo recien generados. No se vuelven a mostrar. */
   respaldos?: string[];
 };

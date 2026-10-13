@@ -9,6 +9,7 @@ import { conSesion, transaccion } from "@/lib/db";
 import { cerrarPasoPendiente, pasoPendiente } from "@/lib/dosPasos";
 import { notificarA, notificarAAdministradores } from "@/lib/notificaciones";
 import { verificar } from "@/lib/password";
+import { dibujarQr } from "@/lib/qr";
 import { destinoSeguro } from "@/lib/redireccion";
 import {
   abrirSesion,
@@ -157,6 +158,17 @@ export async function verificarSegundoPaso(
 }
 
 /**
+ * Lo que la pantalla necesita para registrar la cuenta en la app: el codigo
+ * QR para escanearlo, la clave para teclearla y el enlace para abrirlo desde
+ * el propio telefono. Las tres cosas dicen lo mismo.
+ */
+function paraRegistrar(secreto: string, correo: string) {
+  const enlace = enlaceDeRegistro(secreto, correo, EMISOR);
+
+  return { secreto: enGrupos(secreto), enlace, qr: dibujarQr(enlace) };
+}
+
+/**
  * Empieza la activacion: genera el secreto y lo devuelve para registrarlo en
  * la app. Todavia no activa nada; eso lo hace `confirmarDosPasos`.
  *
@@ -172,11 +184,7 @@ export async function iniciarDosPasos(): Promise<EstadoDosPasos> {
     return { ok: false, mensaje: "Ya tienes activada la verificacion en dos pasos" };
   }
 
-  return {
-    ok: true,
-    secreto: enGrupos(secreto),
-    enlace: enlaceDeRegistro(secreto, usuario.email, EMISOR),
-  };
+  return { ok: true, ...paraRegistrar(secreto, usuario.email) };
 }
 
 /**
@@ -212,8 +220,7 @@ export async function confirmarDosPasos(
   if (paso === null) {
     return {
       ok: false,
-      secreto: enGrupos(secreto),
-      enlace: enlaceDeRegistro(secreto, usuario.email, EMISOR),
+      ...paraRegistrar(secreto, usuario.email),
       errores: {
         codigo: "Ese codigo no coincide. Comprueba que la hora del telefono es la correcta",
       },
