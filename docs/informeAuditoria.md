@@ -141,6 +141,8 @@ para verlo recuperarse.
 
 ### A5 — Context7 sin version fijada
 
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. Fijado en la 4.4.1.
+
 - **Evidencia:** `.mcp.json:5` ejecuta `npx -y @upstash/context7-mcp`.
 - **Riesgo:** cada sesion del asistente descarga y ejecuta la ultima version
   publicada, sin confirmacion, con los permisos de quien abre el proyecto. Si
@@ -149,6 +151,10 @@ para verlo recuperarse.
   mano. Las skills ya estan fijadas por hash en `skills-lock.json`.
 
 ### A6 — `pg`: tiempos limite y liberacion del cliente
+
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. `query_timeout` de 15 segundos y
+`release(true)` cuando el `ROLLBACK` falla. `statement_timeout` queda sin
+poner: hay que probarlo contra Neon y esta maquina no llega.
 
 - **Evidencia:** `src/lib/db.ts:62-77` no define `statement_timeout`,
   `query_timeout` ni `idle_in_transaction_session_timeout`. En
@@ -167,6 +173,9 @@ para verlo recuperarse.
   transacciones siguen el patron documentado.
 
 ### A7 — Limite de la contrasena en caracteres
+
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. `validarPassword` usa `bcrypt.truncates`, con
+tres pruebas unitarias en `tests/unitarias/password.spec.ts`.
 
 - **Evidencia:** `src/lib/validaciones.ts:93` compara `valor.length` con 72.
 - **Documentacion (Context7, bcrypt.js):** el limite es de 72 **bytes** en
@@ -193,6 +202,10 @@ para verlo recuperarse.
   `Uint8Array`, validacion campo a campo del contenido.
 
 ### A9 — Codigo sin uso
+
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. Quitadas las seis funciones sin llamadas, salvo
+`moduloActivo`, que se conserva para la cabecera movil del plan de diseno. El
+build registra ahora 22 Server Actions y `sesionActual` ya no esta entre ellas.
 
 | Que | Donde | Nota |
 | --- | --- | --- |
@@ -230,6 +243,10 @@ para verlo recuperarse.
 
 ### A12 — `matcher` del proxy
 
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. La exclusion por extension vale solo para la raiz
+y para `/images`. Comprobado en local: el logotipo y los iconos responden 200
+sin sesion, y `/dashboard/usuarios.js` redirige al login.
+
 - **Evidencia:** `src/proxy.ts:128` excluye cualquier ruta que termine en
   `.svg`, `.png`, `.css`, `.js` y otras. `/dashboard/usuarios.js` no pasa por el
   proxy (responde 404 directo, sin redirigir al login).
@@ -246,6 +263,10 @@ para verlo recuperarse.
 
 ### A13 — Frontera servidor/cliente
 
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. Regla `no-restricted-imports` para
+`src/components/**` en `eslint.config.mjs`; comprobado que falla con un import
+prohibido.
+
 - **Evidencia:** ningun componente de cliente importa `lib/db`, `lib/jwt`,
   `lib/sesion`, `lib/password` ni `models/`, y el bundle de produccion no
   contiene nada de eso (ver la comprobacion 1). Pero nada lo impide.
@@ -259,6 +280,9 @@ para verlo recuperarse.
   es una dependencia.
 
 ### A14 — `next build` en el contenedor de desarrollo
+
+**Sin cambios: ya estaba documentado** en la seccion de despliegue del
+`README.md`, con el comando exacto y el aviso sobre `NODE_ENV`.
 
 - **Evidencia:** `docker compose run app-dev npm run build` falla al
   prerrenderizar `/_global-error`, porque la etapa `dev` fija
@@ -307,7 +331,7 @@ para verlo recuperarse.
 | --- | --- | --- |
 | 1 | A1: `next` y `eslint-config-next` a 16.4.0, `npm audit fix`. **Hecho** | `chore/auditoria-next` |
 | 2 | A2 y A4: `destinoSeguro` con su prueba, `retry` en los limites de error. **Hecho** | `fix/auditoria-login-y-errores` |
-| 3 | A5, A6, A7, A9, A12, A13 y A14 | `chore/auditoria-menores` |
+| 3 | A5, A6, A7, A9, A12, A13 y A14. **Hecho** | `chore/auditoria-menores` |
 | 4 | Resto de la fase 3: `react`, `jose`, `pg`, `lucide-react`, tipos; evaluar `eslint` 10 y `typescript` 7 | `chore/auditoria-dependencias` |
 
 Fuera de esta auditoria, por decision del responsable (2026-10-13):
