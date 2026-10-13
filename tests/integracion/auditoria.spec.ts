@@ -48,11 +48,15 @@ test("iniciar sesion deja una linea, y el administrador la puede abrir", async (
   const admin = administrador();
   await entrar(page, admin.email, admin.password);
 
-  await page.goto("/dashboard/auditoria?modulo=sesion");
+  // Se busca por su correo: las pruebas corren en paralelo, y la linea mas
+  // reciente a secas puede ser el inicio de sesion de otra.
+  await page.goto(
+    `/dashboard/auditoria?modulo=sesion&busqueda=${encodeURIComponent(admin.email)}`,
+  );
 
   await expect(visible(page.getByText("Inicio de sesion"))).toBeVisible();
 
-  // La primera linea es la mas reciente: el inicio de sesion de esta prueba.
+  // La primera linea es la mas reciente de las suyas.
   await visible(
     page.getByRole("link", { name: /^Ver el detalle: Inicio de sesion/ }),
   ).click();
