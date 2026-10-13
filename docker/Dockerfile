@@ -53,7 +53,9 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY package.json next.config.ts ./
-COPY db ./db
+# Solo el esquema. La semilla lleva cuentas de prueba con su contrasena y las
+# baterias no pintan nada en una imagen de produccion.
+COPY db/schema.sql ./db/schema.sql
 
 # La app escribe las fotos de perfil dentro de public/uploads
 RUN mkdir -p public/uploads/avatares && chown -R node:node /app/public

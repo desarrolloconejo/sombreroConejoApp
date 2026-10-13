@@ -22,8 +22,9 @@ import type {
  *
  * Este modulo es una de las pocas piezas que escriben SQL. Dos reglas:
  *
- * 1. Nunca `SELECT *`. Las columnas se listan siempre de forma explicita, para
- *    que `password_hash` no se cuele por accidente en una respuesta.
+ * 1. Nunca `SELECT *`. Las columnas se listan siempre de forma explicita. El
+ *    hash de la contrasena ni siquiera esta en vw_usuarios_completos: vive en
+ *    vw_usuarios_acceso, que solo consulta `buscarPorEmailConCredenciales`.
  * 2. Los valores viajan siempre como parametros ($1, $2, ...). Lo unico que se
  *    interpola en el texto son las constantes de este archivo y los
  *    identificadores validados con `identificadorSeguro`.
@@ -82,8 +83,10 @@ export async function buscarPorEmailConCredenciales(
 ): Promise<UsuarioConCredenciales | null> {
   return consultarUno<UsuarioConCredenciales>(
     `SELECT ${COLUMNAS_COMPLETO},
-            password_hash AS "passwordHash",
-            (bloqueado_hasta IS NOT NULL AND bloqueado_hasta > now()) AS bloqueado
+            (SELECT a.password_hash FROM vw_usuarios_acceso a
+              WHERE a.id = vw_usuarios_completos.id) AS "passwordHash",
+            (SELECT a.bloqueado FROM vw_usuarios_acceso a
+              WHERE a.id = vw_usuarios_completos.id) AS bloqueado
      FROM vw_usuarios_completos
      WHERE lower(email) = lower($1)`,
     [email],

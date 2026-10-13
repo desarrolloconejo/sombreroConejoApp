@@ -77,7 +77,16 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   herramienta de migraciones.
 - Conjuntos cerrados como `TEXT` + `CHECK`, con su espejo en `src/types`. Si se
   anade un valor hay que tocar los dos sitios.
-- Las personas y las empresas **no se borran, se desactivan**.
+- Las personas y las empresas **no se borran, se desactivan**. La base lo
+  impone: el rol de la aplicacion no tiene `DELETE` sobre esas tablas.
+- La aplicacion se conecta como `conejo_app`, no como duena. Una tabla nueva
+  nace con `SELECT`, `INSERT` y `UPDATE`; el `DELETE` se concede a mano en el
+  bloque de permisos de `db/schema.sql`, y `prueba:permisos` lo vigila.
+- Los modelos de los modulos del portal reciben su conexion de `conSesion`
+  (`src/lib/db.ts`), no de `transaccion`: declara a la base quien pregunta.
+  Una vista sobre tablas con seguridad por fila lleva `security_invoker`.
+- El hash de la contrasena solo esta en `vw_usuarios_acceso`. No se anade a
+  ninguna otra vista ni consulta.
 - **Toda action que cambia algo lo anota en `auditoria`, en la misma
   transaccion**: el cambio y `anotar(tx, …)` van dentro del mismo
   `transaccion`. Por eso los modelos que escriben aceptan un `ejecutor`. La
@@ -144,7 +153,12 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - La maquina de desarrollo no alcanza Neon. Produccion se migra **pegando SQL**
   en su editor; lo hace el responsable, no un asistente. Cada cambio de esquema
   entrega su archivo en `db/neon/`, idempotente, sin secretos y con su
-  consulta de comprobacion; `db/neon/README.md` lleva la lista.
+  consulta de comprobacion; `db/neon/README.md` lleva la lista. Lo que se
+  pega antes de subir **solo anade**: nada que rompa la version publicada.
+  Lo que le quita algo va en un archivo aparte, para despues de publicar.
+- Los roles de PostgreSQL son del servidor entero, no de una base. Ensayar un
+  archivo de `db/neon/` que toque `conejo_app` cambia su contrasena en local:
+  despues hay que volver a ejecutar el seed.
 - **La base de produccion tiene datos reales.** El SQL que se genera para ella
   lleva esquema y catalogos imprescindibles; no inserta datos de ejemplo.
 
@@ -179,6 +193,7 @@ docker compose exec app-dev npm run typecheck
 docker compose exec app-dev npm run prueba:auditor  # casos del auditor
 docker compose exec app-dev npm run prueba:modelos  # modelos contra la base
 docker compose exec app-dev npm run prueba:sesiones # modelo de sesiones
+docker compose exec app-dev npm run prueba:permisos # lo que el rol de la app no puede
 npm run test:unitarias                              # Playwright, sin navegador
 npm run test:integracion                            # Playwright, app levantada
 ```

@@ -72,7 +72,12 @@ services:
     command: npm run ${DEV_SCRIPT:-dev:webpack}
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      # La aplicacion se conecta como conejo_app, que no es duena de nada. El
+      # seed y las baterias de pruebas usan la del dueno, que es la que ya
+      # estaba en el .env como DATABASE_URL.
+      DATABASE_URL: ${DATABASE_URL_APP:-postgresql://conejo_app:conejo_app_local@db:5432/${POSTGRES_DB:-conejo_app}}
+      DATABASE_URL_ADMIN: ${DATABASE_URL}
+      CONEJO_APP_PASSWORD: ${CONEJO_APP_PASSWORD:-conejo_app_local}
       JWT_SECRET: ${JWT_SECRET}
       SESION_ACCESO_SEGUNDOS: ${SESION_ACCESO_SEGUNDOS:-}
       SESION_HORAS: ${SESION_HORAS:-}

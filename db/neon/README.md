@@ -7,7 +7,10 @@ numerado en el orden en que hay que pegarlo.
 ## Reglas
 
 - **Primero se pega, despues se sube `main`.** Al reves, la aplicacion nueva
-  arranca contra un esquema viejo.
+  arranca contra un esquema viejo. La excepcion va marcada en la tabla: lo
+  que le QUITA algo a la version publicada se pega despues de sustituirla.
+- **Ningun archivo que se pega antes de subir rompe la version publicada.**
+  Solo anaden. Entre pegar y subir, la aplicacion sigue funcionando.
 - **Son idempotentes.** Pegar uno dos veces no rompe nada.
 - **No llevan secretos.** Donde hace falta una contrasena hay un hueco
   (`PEGA_AQUI_…`) que se sustituye en el editor de Neon, nunca en el archivo.
@@ -28,3 +31,5 @@ entero sobre una base con datos.
 | `02-sesiones.sql` | Crea la tabla `sesiones`. **Antes** de subir la aplicacion | Pendiente |
 | `03-acceso.sql` | Tres columnas en `usuarios` y la vista que las expone. **Antes** de subir la aplicacion | Pendiente |
 | `04-auditoria.sql` | Crea la tabla `auditoria`, que solo admite lineas nuevas. **Antes** de subir la aplicacion | Pendiente |
+| `05-rol-de-la-aplicacion.sql` | Crea el rol `conejo_app` con sus permisos y la vista `vw_usuarios_acceso`. **Lleva un hueco para la contrasena.** Antes de cambiar `DATABASE_URL` en Vercel y de subir | Pendiente |
+| `06-vista-sin-hash.sql` | Quita el hash de `vw_usuarios_completos`. **Despues** de publicar: la version anterior lo necesita para iniciar sesion | Pendiente |
