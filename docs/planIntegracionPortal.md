@@ -14,7 +14,7 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Tema | Decision |
 | --- | --- |
 | Alcance | **Todo el flujo**: brief → presupuesto → proyecto y piezas con bateria de 5 fases → revision del cliente → proforma → factura → pagos y retenciones |
-| Dependencias | Solo las imprescindibles. Sigue sin entrar ninguna libreria nueva |
+| Dependencias | Solo las imprescindibles. Aprobadas dos: una libreria para el PDF de la factura (ejecucion) y Playwright (desarrollo) |
 | Seguridad por fila | Opcion A: la app se conecta con el rol sin privilegios `conejo_app` |
 | Quien opera finanzas | Rol `admin` y cargo `administracion` |
 | Comprobantes | Google Drive, `ConejoApp/Comprobantes`. Probado el 2026-10-13 |
@@ -40,7 +40,13 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Servicios del catalogo | Se arranca con los dos definidos: redes sociales y desarrollo de producto |
 | Rutas API | Aceptadas |
 | Cierre de sesiones al publicar | Aceptado: el dia que salgan las sesiones nuevas, quien este dentro vuelve a entrar una vez |
-| Impresion de la factura | Desde el navegador, con hoja de calibracion |
+| Impresion de la factura | **PDF generado con libreria**, para que salga siempre igual. Sustituye a la impresion desde el navegador (seccion 4.3) |
+| Moneda de facturacion | Los montos se arman en **dolares** y la factura se emite en **bolivares a la tasa del dia** |
+| Medios de pago | Los carga un operador de finanzas desde la app, en Ajustes |
+| Ramas | Una rama por funcionalidad, que se une a `main` cuando esta terminada |
+| Produccion | Tiene datos reales: el SQL que se le pega no inserta datos que no sean imprescindibles (seccion 10.1) |
+| Pruebas | Playwright, unitarias y de integracion (seccion 10.2) |
+| Bitacora `agent.md` | Eliminada. El contexto para modelos va en `AGENTS.md`; las decisiones, en este plan |
 | Quien aprobo o rechazo | Se muestra junto a cada cosa que tenga aprobacion, y en detalle en Auditoria (seccion 5.2) |
 | Ajustes al modelo de finanzas | Aceptados los seis |
 | Verificacion en dos pasos | Si, disponible para todos (seccion 5.3) |
@@ -211,6 +217,9 @@ nuevo:
 | --- | --- |
 | Vuelven los vinculos | `presupuestos.brief_id`, `presupuestos.proyecto_id`, `facturas.proyecto_id`, y la tabla `proforma_proyectos` |
 | La bitacora deja de ser propia | `finanzas.eventos` desaparece: todo escribe en `auditoria` |
+| Moneda | Presupuesto y proforma se arman y se muestran en dolares. La factura se emite en bolivares: guarda el monto de referencia en dolares, la tasa, su fuente y su fecha, y esos cuatro datos quedan congelados |
+| Medios de pago | En `finanzas.ajustes`: cada uno con nombre, monedas que acepta, si pide referencia, sus datos para pagar y si esta activo. Los edita un operador; el cliente solo ve los activos. Se desactivan, no se borran: un pago viejo puede citar uno retirado |
+| PDF de la factura | Lo genera el servidor con una libreria de PDF en JavaScript puro (propuesta: `pdf-lib`), colocando cada dato en sus coordenadas en milimetros. Se sirve por una ruta API protegida y se puede volver a generar identico, porque sale de datos congelados. La hoja de calibracion y el modo guia usan el mismo generador |
 | Tabla nueva `finanzas.tasas_cambio` | Fuente, fecha valor, valor, cuando se obtuvo y si fue automatica o a mano (seccion 6.1) |
 | Los ajustes siguen aqui | `finanzas.ajustes` (emisor, talonario, medios de pago) |
 | Los seis ajustes de su seccion 4.4 | Aceptados |
@@ -681,7 +690,61 @@ Tres decisiones de diseno del menu:
 | **9. Mudanza al VPS** | Correo real, tareas programadas cada hora, tiempo real, video por el servidor, copias de seguridad, foto de perfil | Fecha de la mudanza |
 
 Las etapas 1 a 6 se pueden construir sin esperar al negocio. Cada una termina
-en algo utilizable y se registra en `agent.md`.
+en algo utilizable.
+
+### 10.1 Ramas y publicacion
+
+| Regla | Detalle |
+| --- | --- |
+| Una rama por funcionalidad | `feat/…`, `fix/…`, `chore/…`. Una etapa grande se parte en varias |
+| A `main` solo lo terminado | Con `lint`, `typecheck` y las pruebas que toquen en verde |
+| Subir `main` publica | Por eso el orden: **primero se pega el SQL en Neon, despues se sube** |
+| El pegado en Neon | Lo hace el responsable. Cada etapa que toque el esquema entrega su SQL y dice que comprobar despues |
+
+**La base de produccion tiene datos reales de usuarios.** Hoy
+`npm run sql:produccion` vuelca el esquema **y** la semilla entera: empresa de
+ejemplo, cuatro cuentas, reglas y referencia de muestra. Eso cambia en la etapa
+1: el SQL de produccion pasa a llevar solo lo que la aplicacion necesita para
+funcionar.
+
+| Va a produccion | No va |
+| --- | --- |
+| Esquema: tablas, columnas, indices, vistas, funciones, triggers, politicas | Empresa de ejemplo |
+| Filas de las que depende la logica: roles y cargos | Cuentas de prueba |
+| Las 42 aperturas de hooks, que son contenido de la casa y se insertan sin pisar las existentes | Reglas y referencia de muestra |
+
+Las columnas nuevas sobre tablas con datos entran siempre con un valor por
+defecto que no cambia el comportamiento de lo que ya existe. El caso que
+importa: `debe_cambiar_clave` nace en falso para los usuarios actuales, o se
+les obligaria a todos a cambiar la contrasena el dia de la publicacion.
+
+La semilla completa sigue existiendo para desarrollo (`npm run seed`).
+
+### 10.2 Pruebas
+
+| Bateria | Herramienta | Que cubre |
+| --- | --- | --- |
+| `tests/unitarias` | Playwright, sin navegador | Funciones puras: calculo de finanzas, avance y correccion de fases, hash del brief, auditor, lectura de la pagina del BCV sobre HTML guardado |
+| `tests/integracion` | Playwright, con navegador | Recorridos reales por rol: accesos, sesion y renovacion, cada flujo de punta a punta |
+| `db/pruebas` | Scripts propios | Modelos y RLS contra la base |
+
+Playwright corre en el host: la imagen de desarrollo es Alpine y sus
+navegadores no funcionan ahi. Cada etapa anade sus pruebas; una funcionalidad
+sin su recorrido de integracion no se une a `main`.
+
+### 10.3 Herramientas del asistente
+
+Instaladas el 2026-10-13, antes de empezar la ejecucion:
+
+| Herramienta | Donde | Para que |
+| --- | --- | --- |
+| Context7 | `.mcp.json` | Documentacion actual de librerias |
+| `impeccable` | `.claude/skills` | Criterio y comandos de diseno de interfaz |
+| `design-taste-frontend` | `.claude/skills` | Criterio visual. Esta pensada para paginas de presentacion, no para paneles: aplica al login y a lo que ve el cliente mas que al tablero |
+| Skills de Emil Kowalski | `.claude/skills` | Animacion, rendimiento del movimiento y sensacion nativa en movil. Se instalaron las nueve de web; quedaron fuera las de Swift, Expo y eleccion de librerias |
+
+Las skills aconsejan y el contrato manda: nada de librerias de componentes,
+`dark:` ni colores literales.
 
 ---
 
@@ -721,55 +784,26 @@ Lo que hay que pedir:
 Con eso se vuelve a ejecutar `npm run drive:probar` y se cambian cuatro
 variables. El codigo no cambia.
 
-### Lo que falta por definir
+### Valores por defecto
 
-Nada de esto impide empezar la etapa 1. Donde hay una propuesta, se construye
-con ella salvo que digas otra cosa: son valores que se cambian en un solo sitio.
+Se construye con ellos salvo que digas otra cosa. Cada uno se cambia en un solo
+sitio.
 
-**Como se trabaja y se publica**
-
-| # | Que | Mi propuesta |
+| Etapa | Que | Valor |
 | --- | --- | --- |
-| 1 | Rama de trabajo. Hoy todo esta en `main`, sin subir | Una rama `portal`; a `main` solo pasa una etapa terminada y probada |
-| 2 | Orden al publicar una etapa que cambia el esquema | Primero pegar el SQL en Neon, despues subir el codigo. Al reves, la app arranca contra tablas que no existen |
-| 3 | El rol `conejo_app` en Neon | Lo crea el SQL; su contrasena la pones tu en el editor de Neon y en Vercel. No pasa por mi ni por el repositorio |
-| 4 | Las tres cuentas de prueba en produccion | Dejan de sembrarse alli; las que ya esten, se desactivan |
-
-**Etapa 1 — seguridad**
-
-| # | Que | Mi propuesta |
-| --- | --- | --- |
-| 5 | Cuanto tiempo sin actividad antes del modal de sesion | 15 minutos |
-| 6 | Bloqueo por intentos fallidos | 5 fallos, 15 minutos |
-| 7 | Cuanto se conserva la auditoria | Siempre |
-
-**Etapa 2 — avisos**
-
-| # | Que | Mi propuesta |
-| --- | --- | --- |
-| 8 | Que avisa la campana, y a quien | La matriz del paquete (`appFacturas/docs/08`), tal cual |
-
-**Etapa 3 — proyectos**
-
-| # | Que | Mi propuesta |
-| --- | --- | --- |
-| 9 | Cuando suma el 20 % de una fase | Al completarla |
-| 10 | Limite de rondas de correccion por pieza | Sin limite; se muestra cuantas lleva |
-| 11 | Plazo para que el cliente revise | Sin plazo |
-| 12 | Tipos de pieza | Los del paquete: post, carrusel, reel, historia, video, logo, y otros |
-| 13 | ¿Quien hace una tarea ve los datos de la empresa? | Solo el nombre de la empresa y del proyecto, como contexto |
-
-**Etapa 4 — cliente**
-
-| # | Que | Mi propuesta |
-| --- | --- | --- |
-| 14 | El permiso «Aprobar» de un usuario cliente | Casilla por persona, apagada por defecto, que marca el admin |
-
-**Etapa 8**
-
-| # | Que | Mi propuesta |
-| --- | --- | --- |
-| 15 | Codigo QR para activar los dos pasos | Se decide al llegar |
+| 1 | Tiempo sin actividad antes del modal de sesion | 15 minutos |
+| 1 | Bloqueo por intentos fallidos | 5 fallos, 15 minutos |
+| 1 | Conservacion de la auditoria | Siempre |
+| 1 | Cuentas de prueba en produccion | Dejan de sembrarse; las que ya esten, las desactiva el admin |
+| 1 | Contrasena del rol `conejo_app` | La pone el responsable en Neon y en Vercel. No pasa por el repositorio |
+| 2 | Que avisa la campana, y a quien | La matriz del paquete (`appFacturas/docs/08`) |
+| 3 | Cuando suma el 20 % de una fase | Al completarla |
+| 3 | Limite de rondas de correccion | Sin limite; se muestra cuantas lleva |
+| 3 | Plazo para que el cliente revise | Sin plazo |
+| 3 | Tipos de pieza | Post, carrusel, reel, historia, video, logo y otros |
+| 3 | Lo que ve quien hace una tarea | Solo el nombre de la empresa y del proyecto |
+| 4 | Permiso «Aprobar» de un usuario cliente | Casilla por persona, apagada por defecto |
+| 8 | Codigo QR de los dos pasos | Se decide al llegar |
 
 ### Del negocio
 
@@ -792,7 +826,74 @@ con ella salvo que digas otra cosa: son valores que se cambian en un solo sitio.
 
 ---
 
-## 12. Riesgos
+## 12. Pendientes de logica y de negocio
+
+Lo que no esta decidido y no se puede decidir programando. Ordenado por la
+etapa a la que le hace falta. Donde hay propuesta, se sigue hasta que el negocio
+diga otra cosa; lo marcado como **bloquea** detiene esa parte.
+
+### Proyectos y tareas (etapa 3)
+
+| # | Pregunta | Propuesta |
+| --- | --- | --- |
+| P1 | ¿Un proyecto puede empezar sin presupuesto aprobado? | Si. El ejecutivo puede crearlo a mano; el vinculo con un presupuesto es opcional |
+| P2 | Redes sociales mensual: ¿un proyecto por mes y por empresa? ¿Lo crea el ejecutivo o nace solo? | Uno por mes, lo crea el ejecutivo desde la plantilla. No hay tareas programadas |
+| P3 | Tareas tipicas de cada servicio | Las propongo yo para los dos servicios definidos y las corrige el negocio |
+| P4 | ¿Que pasa con las tareas de alguien que se desactiva? | No se puede desactivar con tareas abiertas sin reasignarlas antes |
+| P5 | ¿Y con las empresas de un ejecutivo que se va? | Igual: se reasignan antes |
+| P6 | ¿Una empresa puede tener mas de un ejecutivo? | Si |
+| P7 | Rutas de correccion: redaccion vuelve a la fase 1, diseno a la 3, proyectos especiales siempre a la 3 | Las del paquete |
+| P8 | ¿Cuando se da por cerrado un proyecto? | Cuando todas sus piezas estan aprobadas; el ejecutivo lo cierra |
+| P9 | ¿Se puede quitar una pieza ya empezada? | Se cancela con motivo, no se borra; deja de contar para el avance |
+
+### Vista del cliente (etapa 4)
+
+| # | Pregunta | Propuesta |
+| --- | --- | --- |
+| C1 | ¿Quien de la empresa puede aprobar piezas si nadie tiene la casilla? | Nadie: el ejecutivo ve el aviso de que falta marcarla |
+| C2 | ¿El cliente puede descargar el archivo antes de aprobar? | No. Lo ve; lo descarga al aprobar |
+| C3 | ¿El cliente ve las fechas estimadas de cada fase? | Si |
+
+### Finanzas (etapas 5 y 7)
+
+| # | Pregunta | Propuesta | |
+| --- | --- | --- | --- |
+| F1 | «La tasa del dia»: ¿la del dolar BCV del dia de emision? | Si | Confirmar |
+| F2 | Si ese dia el BCV no publico (fin de semana, feriado) | La ultima publicada | |
+| F3 | Un pago en dolares contra una factura en bolivares: ¿a que tasa se aplica? | A la del dia del pago; el operador la confirma al aplicar | Confirmar con el contador |
+| F4 | ¿Los precios de los renglones llevan IVA incluido? | No: el IVA se suma aparte | |
+| F5 | ¿Cuantos dias de credito tiene una factura? | Un valor por defecto en Ajustes, que se puede cambiar por empresa | **Falta el numero** |
+| F6 | ¿Cuanto dura valido un presupuesto? | 15 dias, editable al crearlo | |
+| F7 | ¿Desde que numero de factura y de control se empieza? | — | **Bloquea la primera factura** |
+| F8 | Una factura con mas renglones de los que caben en la hoja | No se permite: se emite en dos facturas | Confirmar con el contador |
+| F9 | Corregir una factura es anularla y emitir otra; no hay notas de credito | Asi | Confirmar con el contador |
+| F10 | Medios de pago reales y sus datos | Los carga el operador | **Bloquea pagos** |
+| F11 | Campos obligatorios de la factura, vigencia del talonario, numero de control | — | **Bloquea facturas. Contador** |
+| F12 | IGTF en pagos en divisas y retenciones de ISLR | No se implementan hasta que el contador responda | **Contador** |
+| F13 | Hoja del talonario, sin llenar | — | **Bloquea la impresion** |
+| F14 | ¿Quien puede aprobar un presupuesto en nombre de un cliente sin cuenta? | Un operador, y queda en la auditoria | |
+
+### Briefs (etapa 6)
+
+| # | Pregunta | Propuesta |
+| --- | --- | --- |
+| B1 | Al aceptar el brief de un prospecto, ¿que datos minimos hacen falta para crear la empresa? | Nombre y RIF; el resto se completa despues |
+| B2 | ¿Quien puede llenar briefs de una empresa? | Cualquier usuario de esa empresa |
+| B3 | ¿Hasta cuando se puede enviar una version 2? | Hasta que el brief queda validado |
+| B4 | Texto definitivo de las preguntas del brief de Diagnostico | **Falta.** Ese formato no se publica hasta tenerlo |
+| B5 | Servicios que vende la agencia, mas alla de los dos definidos | **Falta la lista** |
+
+### Transversales
+
+| # | Pregunta | Propuesta |
+| --- | --- | --- |
+| T1 | ¿Dos pasos obligatoria para todos los trabajadores, o solo para admin y administracion? | Solo esos dos; disponible para el resto |
+| T2 | Cuenta de Google de la empresa | Pendiente de tarjeta. Hasta entonces, correo simulado |
+| T3 | Fecha de la mudanza al VPS | Sin fecha |
+
+---
+
+## 13. Riesgos
 
 | Riesgo | Efecto | Mitigacion |
 | --- | --- | --- |

@@ -14,7 +14,7 @@ trabajarla sobre modulos, es decir idenfitificar y definir funcioanlidades y
 plasmarlas en modulos segun corresponda. al momento de trabajar iras haciendo
 commits de todos los cambios que hagas, el commit debe ser descriptivo y debe
 solamente describir los cambios realizados en ese commit, nada mas, solo usa el
-idioma español. iras documentando todo lo hecho en agent.md y en el README.md
+idioma español. iras documentando lo hecho en AGENTS.md (contexto para modelos) y en el README.md
 ira la informacion relevante para el desarrollador
 
 # Tecnologias

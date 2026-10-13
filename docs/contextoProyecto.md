@@ -755,8 +755,8 @@ El camino establecido en el proyecto:
 8. Paneles nuevos: su nombre se anade a `PANELES` en `src/lib/parametros.ts`.
 9. **Pruebas**: comprobaciones en `db/pruebas/modelos.mts`; `typecheck` y
    `lint` limpios.
-10. **Documentacion**: la etapa se registra en `agent.md` (bitacora, con
-    decisiones y verificacion) y lo relevante para el desarrollador en
+10. **Documentacion**: lo que cambie se refleja en `AGENTS.md` (contexto para
+    modelos) y lo relevante para el desarrollador en
     `README.md`. Commits en español, descriptivos, uno por cambio.
 11. **Produccion**: regenerar el SQL y pegarlo en Neon si cambio el esquema.
 
@@ -769,6 +769,6 @@ El camino establecido en el proyecto:
 | `CLAUDE.md` | Contrato del proyecto: objetivo, stack, principios, MVC, base de datos, Docker, despliegue, autenticacion, interfaz, colores, tipografia, estructura y el alcance de las fases 1 y 2 |
 | `AGENTS.md` | Aviso de que Next 16 tiene cambios incompatibles y hay que leer su documentacion local |
 | `README.md` | Guia del desarrollador: puesta en marcha, ambientes, comandos, acceso a datos, autenticacion, compilacion, como anadir un modulo con listado, modulo de hooks, despliegue y tema |
-| `agent.md` | Bitacora de las etapas 0 a 24 con decisiones, problemas resueltos y verificaciones |
+| `AGENTS.md` | Contexto y reglas para asistentes. La bitacora `agent.md` se elimino el 2026-10-13; su contenido sigue en el historial de git |
 | `docs/creacionHooks.md` | Especificacion funcional de la herramienta antigua de hooks |
 | `diseno/*.dc.html` | Maquetas aprobadas de la interfaz |

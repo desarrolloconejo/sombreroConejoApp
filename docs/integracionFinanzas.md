@@ -2,10 +2,12 @@
 
 Documento de integracion. Fecha: 2026-10-09. Ultima revision: 2026-10-13. Desde esa revision vive en `docs/integracionFinanzas.md` de Conejo App; la copia de `appFacturas` se mantiene igual a esta.
 
-> **Desde el 2026-10-13 este documento es el capitulo de finanzas de un plan mayor**, `docs/planIntegracionPortal.md`, porque el alcance paso de «solo finanzas» al flujo completo (briefs, proyectos, piezas y fases). Donde los dos difieran, manda el plan. Cuatro cosas de este documento cambian por eso:
+> **Desde el 2026-10-13 este documento es el capitulo de finanzas de un plan mayor**, `docs/planIntegracionPortal.md`, porque el alcance paso de «solo finanzas» al flujo completo (briefs, proyectos, piezas y fases). Donde los dos difieran, manda el plan. Estas cosas de este documento cambian por eso y por decisiones posteriores:
 >
 > - **Vuelven los vinculos con proyectos y briefs**: `presupuestos.brief_id`, `presupuestos.proyecto_id`, `facturas.proyecto_id` y la tabla `proforma_proyectos`. Lo que aqui dice «se eliminan» ya no aplica.
 > - **La bitacora es general**: `finanzas.eventos` no se crea; todo escribe en `portal.eventos`.
+> - **La factura se genera como PDF con una libreria**, no imprimiendo desde el navegador: de la seccion 9.1 vale la opcion B.
+> - **Moneda:** los montos se arman en dolares y la factura se emite en bolivares a la tasa del dia.
 > - **`conSesionFinanzas` pasa a llamarse `conSesion`** y la usan todos los modulos nuevos, declarando tambien la empresa.
 > - **El correo y la tasa de cambio dejan de estar fuera**: entran como servicios simulados con JSON mientras la app viva en Vercel.
 
@@ -609,7 +611,7 @@ Mas `typecheck` y `lint` limpios, como en cualquier modulo.
 
 ## 12. Plan por fases
 
-Cada fase termina en algo utilizable y se registra en `agent.md`.
+Cada fase termina en algo utilizable.
 
 | Fase | Entrega | Bloqueada por |
 |---|---|---|
@@ -666,7 +668,7 @@ Cada fase termina en algo utilizable y se registra en `agent.md`.
 | 1 | RLS: opcion A o B (seccion 5.2) | **Cerrada el 2026-10-13: opcion A** |
 | 2 | Los seis ajustes al modelo (seccion 4.4) | **Abierta.** Recomiendo aceptarlos todos |
 | 3 | Quien opera finanzas | **Cerrada el 2026-10-13: rol `admin` y cargo `administracion`** |
-| 4 | Factura impresa (seccion 9.1) | **Abierta.** Recomiendo imprimir desde el navegador |
+| 4 | Factura impresa (seccion 9.1) | **Cerrada el 2026-10-13: PDF generado con libreria** (opcion B), para que salga siempre igual |
 | 5 | Comprobantes (seccion 9.2) | **Cerrada el 2026-10-13: Google Drive, carpeta `ConejoApp/Comprobantes`** |
 | 6 | ¿Se aceptan rutas API (`route.ts`)? | **Consecuencia de la 5, a confirmar.** Con los comprobantes en Drive hace falta una, para la descarga |
 
