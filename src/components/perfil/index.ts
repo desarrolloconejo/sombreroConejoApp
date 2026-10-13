@@ -5,3 +5,4 @@ export { FormularioDatos } from "./FormularioDatos";
 export { FormularioPassword } from "./FormularioPassword";
 export { SelectorTema } from "./SelectorTema";
 export { TarjetaSesion } from "./TarjetaSesion";
+export { TarjetaSesiones } from "./TarjetaSesiones";
