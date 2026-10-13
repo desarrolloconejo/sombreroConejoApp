@@ -50,6 +50,9 @@ declare global {
  */
 const EN_PRODUCCION = process.env.NODE_ENV === "production";
 
+/** Ninguna consulta de la aplicacion deberia acercarse a esto. */
+const TIEMPO_MAXIMO_CONSULTA = 15_000;
+
 function crearPool(): Pool {
   const cadenaConexion = process.env.DATABASE_URL;
 
@@ -65,6 +68,11 @@ function crearPool(): Pool {
     idleTimeoutMillis: EN_PRODUCCION ? 10_000 : 30_000,
     maxLifetimeSeconds: EN_PRODUCCION ? 60 : 0,
     connectionTimeoutMillis: 10_000,
+
+    // Tope por consulta, contado en este lado. Sin el, una consulta colgada
+    // retiene su conexion hasta que la plataforma mata la funcion, y en
+    // produccion solo hay tres.
+    query_timeout: TIEMPO_MAXIMO_CONSULTA,
 
     // Detecta el socket muerto antes de mandarle una consulta, en vez de
     // descubrirlo por el error que devuelve.
@@ -294,6 +302,10 @@ export async function transaccion<T>(
 ): Promise<T> {
   const cliente = await obtenerPool().connect();
 
+  // Si ni siquiera se pudo deshacer, la conexion no es de fiar: se destruye
+  // en lugar de devolverla al pool, donde la heredaria la siguiente consulta.
+  let conexionRota = false;
+
   try {
     await cliente.query("BEGIN");
     const resultado = await operacion(cliente);
@@ -307,6 +319,7 @@ export async function transaccion<T>(
     try {
       await cliente.query("ROLLBACK");
     } catch (fallo) {
+      conexionRota = true;
       console.error(
         "[db] no se pudo deshacer la transaccion:",
         fallo instanceof Error ? fallo.message : fallo,
@@ -315,7 +328,7 @@ export async function transaccion<T>(
 
     throw error;
   } finally {
-    cliente.release();
+    cliente.release(conexionRota);
   }
 }
 
