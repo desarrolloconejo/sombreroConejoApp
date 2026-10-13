@@ -19,6 +19,7 @@
 -- ni renombrar columnas. Soltarla primero deja via libre a las migraciones.
 -- ---------------------------------------------------------------------------
 DROP VIEW IF EXISTS vw_usuarios_completos;
+DROP VIEW IF EXISTS vw_usuarios_acceso;
 
 
 -- ---------------------------------------------------------------------------
@@ -747,14 +748,20 @@ CREATE OR REPLACE TRIGGER resultados_hook_actualizado_en
 --   cargo_slug  es lo que decide. Solo lo tienen los trabajadores, y es contra
 --               esto contra lo que se filtra el contenido. Nunca contra el
 --               texto mostrado.
+--
+-- No trae el hash de la contrasena: para eso esta vw_usuarios_acceso.
+--
+-- security_invoker hace que la vista se consulte con los permisos de quien
+-- pregunta y no con los de su duena. Hoy no cambia nada; el dia que una tabla
+-- tenga seguridad por fila, es lo que impide que la vista se la salte.
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE VIEW vw_usuarios_completos AS
+CREATE OR REPLACE VIEW vw_usuarios_completos
+WITH (security_invoker = true) AS
 SELECT
   u.id,
   u.nombre,
   u.apellido,
   u.email,
-  u.password_hash,
   u.telefono,
   u.foto_url,
   u.tema,
@@ -763,7 +770,6 @@ SELECT
   u.creado_en,
   u.actualizado_en,
   u.debe_cambiar_clave,
-  u.bloqueado_hasta,
   CASE
     WHEN t.id IS NOT NULL THEN 'trabajador'
     WHEN c.id IS NOT NULL THEN 'cliente'
@@ -785,3 +791,70 @@ LEFT JOIN roles        r ON r.id         = t.rol_id
 LEFT JOIN cargos       g ON g.id         = t.cargo_id
 LEFT JOIN clientes     c ON c.usuario_id = u.id
 LEFT JOIN empresas     e ON e.id         = c.empresa_id;
+
+
+-- ---------------------------------------------------------------------------
+-- Lo unico que necesita el inicio de sesion, y nada mas.
+--
+-- El hash de la contrasena vive aqui y NO en vw_usuarios_completos, que es la
+-- que consultan las pages y los listados: asi ningun modelo lo puede traer por
+-- descuido al anadir una columna a una consulta.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE VIEW vw_usuarios_acceso
+WITH (security_invoker = true) AS
+SELECT
+  u.id,
+  u.password_hash,
+  (u.bloqueado_hasta IS NOT NULL AND u.bloqueado_hasta > now()) AS bloqueado
+FROM usuarios u;
+
+
+-- ===========================================================================
+-- ROL DE LA APLICACION
+--
+-- La aplicacion NO se conecta como duena de la base. Se conecta como
+-- `conejo_app`, que no puede cambiar el esquema, no se salta la seguridad por
+-- fila y solo tiene los permisos de abajo.
+--
+-- Aqui el rol nace sin contrasena y sin poder iniciar sesion: este archivo va
+-- al repositorio y no puede llevar un secreto. La contrasena se pone aparte:
+-- en desarrollo la pone el seed; en produccion, el responsable
+-- (db/neon/05-rol-de-la-aplicacion.sql).
+-- ===========================================================================
+DO $rol$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'conejo_app') THEN
+    CREATE ROLE conejo_app NOLOGIN NOBYPASSRLS;
+  END IF;
+END
+$rol$;
+
+-- ---------------------------------------------------------------------------
+-- Lo que puede hacer el rol de la aplicacion.
+--
+-- La regla es dar lo justo: leer y escribir donde la aplicacion escribe, y
+-- nada de lo que no hace nunca. Asi un fallo en el codigo —o una inyeccion—
+-- no puede borrar una cuenta ni reescribir la auditoria aunque lo intente.
+--
+--   catalogos (roles, cargos)        solo lectura
+--   personas, empresas y sesiones    sin DELETE: se desactivan o se revocan
+--   auditoria                        solo INSERT y SELECT
+--   hooks                            DELETE solo donde existe el borrado
+--
+-- Una tabla nueva nace con SELECT, INSERT y UPDATE para la aplicacion. Si
+-- necesita DELETE, se le concede aqui de forma explicita.
+-- ---------------------------------------------------------------------------
+GRANT USAGE ON SCHEMA public TO conejo_app;
+
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM conejo_app;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO conejo_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO conejo_app;
+
+REVOKE INSERT, UPDATE ON roles, cargos FROM conejo_app;
+REVOKE UPDATE ON auditoria FROM conejo_app;
+GRANT DELETE ON fichas_hook, reglas_hook, referencias_hook TO conejo_app;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE ON TABLES TO conejo_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT USAGE, SELECT ON SEQUENCES TO conejo_app;
