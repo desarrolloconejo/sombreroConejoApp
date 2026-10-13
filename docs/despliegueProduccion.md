@@ -1,7 +1,8 @@
 # Guia de despliegue a produccion
 
 Estado: **en preparacion**. No se publica nada hasta que la integracion del
-portal este completa y probada en local. Ultima etapa anotada: **2**.
+portal este completa y probada en local. Ultima etapa anotada: **2**, mas la
+verificacion en dos pasos, que se adelanto desde la etapa 8.
 
 Este documento se va llenando etapa a etapa. Cada rama que cambie algo de
 produccion —esquema, variables de entorno, un paso manual— lo anota aqui antes
@@ -44,6 +45,10 @@ esa version va en la seccion 6, para despues de sustituirla.
   node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
   ```
 
+- [ ] La clave `TOTP_CLAVE` esta generada (mismo comando) y guardada en el
+      gestor de contrasenas, **aparte de la del rol**. Si se pierde, nadie con
+      los dos pasos activados podra entrar hasta que un administrador se los
+      retire.
 - [ ] Hay una copia de seguridad reciente de la base de Neon (su panel permite
       crear una rama o un punto de restauracion antes de migrar).
 - [ ] Se aviso a quien usa la aplicacion: tendra que volver a entrar una vez.
@@ -95,6 +100,14 @@ Necesitan el rol `conejo_app`: van despues del 5.
 | 8 | `db/neon/08-notificaciones.sql` | Crea `portal.notificaciones`, lo que se lee en la campana, con sus politicas | `seguridad_por_fila = true` y `politicas = 3` |
 | 9 | `db/neon/09-tasas-de-cambio.sql` | Crea `finanzas.tasas_cambio` y deja que la tarea programada escriba y notifique | `seguridad_por_fila = true` y `politicas = 2`; `permisos = INSERT, SELECT` |
 
+### Verificacion en dos pasos (adelantada de la etapa 8)
+
+Necesita el rol y la vista del 5.
+
+| # | Archivo | Que hace | Resultado esperado |
+| --- | --- | --- | --- |
+| 10 | `db/neon/10-dos-pasos.sql` | Cuatro columnas en `usuarios`, la tabla `codigos_respaldo` y tres columnas mas en `vw_usuarios_acceso` | `con_dos_pasos = 0` y `los_omitieron = 0`; `permisos = DELETE, INSERT, SELECT, UPDATE` |
+
 ---
 
 ## 3. Variables de entorno en Vercel
@@ -118,6 +131,12 @@ En Settings → Environment Variables, entorno de produccion.
 | `CRON_SECRET` | **Anadir** | Un secreto de 32 caracteres o mas, marcado como Sensitive. Protege las tareas programadas; Vercel lo envia solo en cada llamada. Sin el, la tarea de la tasa responde 503 y no corre. Se genera igual que la contrasena del rol |
 | `TASA_MODO` | No definir | Sin definir vale `real`: lee la pagina del BCV |
 | `CORREO_MODO` | No definir | Sin definir vale `simulado`: no se envia nada y los mensajes quedan en la bandeja de salida. Se pone en `real` el dia que exista la cuenta de Google de la empresa |
+
+### Verificacion en dos pasos
+
+| Variable | Accion | Valor |
+| --- | --- | --- |
+| `TOTP_CLAVE` | **Anadir** | 32 bytes en base64url, marcada como Sensitive. Cifra el secreto de los dos pasos de cada persona. Sin ella nadie puede configurarlos ni entrar con ellos. **No se cambia nunca una vez en uso**: cambiarla deja fuera a quien los tenga activados |
 
 La cadena del dueno (`neondb_owner`) se guarda aparte: hace falta para la
 vuelta atras de la seccion 7 y deja de estar en Vercel.
@@ -171,6 +190,18 @@ En la aplicacion publicada, con la cuenta de administrador.
 - [ ] El usuario de prueba creado arriba dejo su correo de bienvenida en la
       bandeja. Abrirlo, comprobar que **no** lleva la contrasena y que el
       enlace apunta a la direccion publica, y anotarlo como entregado.
+
+### Verificacion en dos pasos
+
+- [ ] Al entrar por primera vez con la version nueva aparece la pantalla
+      «Protege tu cuenta con un segundo paso». Es lo esperado: les pasara a
+      todos.
+- [ ] Configurarla con Google Authenticator en un telefono de verdad: anadir
+      cuenta, escribir la clave, activar con el codigo. **Guardar los diez
+      codigos de respaldo.**
+- [ ] Cerrar sesion y volver a entrar: tras la contrasena pide el codigo.
+- [ ] Con el usuario de prueba, pulsar «Ahora no, entrar sin ella» y comprobar
+      que no se le vuelve a preguntar.
 
 ---
 
@@ -238,6 +269,19 @@ anterior lo ignora.
   cuando le restablecen la contrasena. Se actualiza al cargar una pagina, no
   en tiempo real.
 
+### Verificacion en dos pasos
+
+- **A todos se les pedira configurarla la primera vez que entren.** Usa una
+  app de codigos en el telefono: Google Authenticator, Microsoft Authenticator
+  o Authy. Lleva un minuto.
+- Quien no la quiera pulsa «Ahora no, entrar sin ella» y no se le vuelve a
+  preguntar. Puede activarla despues desde Mi perfil.
+- Al activarla recibe **diez codigos de respaldo**, que solo se muestran una
+  vez. Sirven para entrar sin el telefono.
+- Quien pierda el telefono y los codigos se lo dice a un administrador, que se
+  la retira desde la ficha de esa persona en Usuarios.
+- Conviene avisar antes de publicar, para que tengan la app instalada.
+
 ---
 
 ## 9. Pendientes y cosas sin probar
@@ -267,6 +311,15 @@ resolver antes.
 | Registrar una tasa a mano | La base ya lo admite, para `admin` y `administracion`. La pantalla llega con finanzas (etapa 5) |
 | Correos que quedan «pendientes» | En modo real, si la funcion se corta entre confirmar el cambio y enviar, el correo queda como pendiente. No hay tarea que lo recoja: se reintenta a mano desde la bandeja |
 
+### Verificacion en dos pasos
+
+| Tema | Estado |
+| --- | --- |
+| Probada con una app real en un telefono | **Sin probar.** Las pruebas calculan los codigos con el mismo estandar y dan los valores de referencia del RFC 6238, pero nadie ha escaneado ni tecleado la clave en Google Authenticator todavia |
+| Codigo QR | No hay. La clave se teclea, o se abre un enlace desde el telefono. Mostrar un QR pide anadir una dependencia: esta por decidir |
+| Obligatoria para administradores | **No lo es.** El plan la queria obligatoria para `admin` y `administracion`; por decision del responsable (2026-10-13) se pide por defecto a todos y cualquiera puede decir que no. Un administrador sin dos pasos sigue siendo posible |
+| Quien eligio «ahora no» | No se le vuelve a preguntar. No hay forma de volver a pedirselo a todos salvo pegando SQL |
+
 ---
 
 ## Registro por etapa
@@ -275,6 +328,7 @@ resolver antes.
 | --- | --- | --- | --- | --- |
 | 1. Cimientos de seguridad | 01 a 05 | `DATABASE_URL`, `JWT_EXPIRACION` | 06 | Si |
 | 2. Externos y avisos | 07, 08, 09 | `APP_URL_PUBLICA`, `CRON_SECRET` | — | Si. El adaptador de archivos pasa a la etapa 4 |
+| Dos pasos (de la etapa 8) | 10 | `TOTP_CLAVE` | — | Si |
 | 3. Proyectos, bateria y tareas | — | — | — | Pendiente |
 | 4. Vista del cliente y revision | — | — | — | Pendiente |
 | 5. Presupuestos y proformas | — | — | — | Pendiente |

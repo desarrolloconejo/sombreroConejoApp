@@ -53,9 +53,9 @@ docker compose exec app-dev npm run seed
 ```
 
 El seed crea las tablas y deja la base lista para entrar: roles, cargos, una
-empresa de ejemplo y seis cuentas: un administrador, tres de prueba (una por
-perfil) y dos reservadas a las pruebas automaticas, `pruebas@conejo.test` y
-`bloqueo@conejo.test`. Sobre esas dos las pruebas hacen lo que no se puede
+empresa de ejemplo y siete cuentas: un administrador, tres de prueba (una por
+perfil) y tres reservadas a las pruebas automaticas, `pruebas@conejo.test`,
+`bloqueo@conejo.test` y `dospasos@conejo.test`. Sobre esas tres las pruebas hacen lo que no se puede
 deshacer —restablecer la contrasena, bloquear la cuenta—; no se inicia sesion
 con ellas. Es idempotente. Las cuentas que crea y sus claves estan en
 `db/datos/semilla.mts`.
@@ -256,6 +256,30 @@ Mientras hay actividad, `GuardianSesion` (en el layout del panel) renueva el
 acceso sin avisar dos minutos antes de que caduque. Tras 15 minutos sin
 actividad pregunta antes de hacerlo. Una page que llega con el acceso vencido
 pasa por `/renovar` y vuelve a la misma URL.
+
+#### Verificacion en dos pasos
+
+Tras la contrasena, quien la tenga activada escribe un codigo de seis digitos
+de su app de codigos (Google Authenticator, Microsoft Authenticator, Authy). Es
+el estandar TOTP: no se llama a Google ni a ningun servicio, y no usa libreria
+(`src/lib/totp.ts`, con los valores de referencia del RFC 6238 en sus pruebas).
+
+- **Se pide por defecto a todas las cuentas.** Quien no la tiene activada ni
+  ha dicho que no la quiere pasa por `/dos-pasos` al entrar; ahi la configura
+  o elige «Ahora no». En los dos casos no se le vuelve a preguntar.
+- **Acertar la contrasena no abre la sesion** si estan activados: se deja una
+  cookie de cinco minutos que solo sirve para llegar a `/verificar`.
+- **Un codigo vale una vez**, y los fallos cuentan para el bloqueo de la cuenta.
+- **Diez codigos de respaldo**, que se muestran solo al activar; en la base
+  queda su hash.
+- **El secreto va cifrado** con `TOTP_CLAVE`, que no esta en la base. Cambiar
+  esa clave deja fuera a quien tenga los dos pasos activados.
+- **Sin telefono ni respaldos**, un administrador se los retira desde la ficha
+  de la persona en Usuarios.
+
+En desarrollo, las cuentas de la semilla nacen con «prefiero no usarla» para
+que entrar siga siendo correo y contrasena. La excepcion es
+`dospasos@conejo.test`, que es con la que se prueba.
 
 #### Bloqueo y contrasena provisional
 
