@@ -67,10 +67,16 @@ la navegacion detras de un toque en la esquina mas lejana del pulgar.
 
 ### A que se llega
 
-La referencia es la app de un banco: barra fija abajo con accesos directos y un
-boton central con la marca, que abre una hoja con la lista completa agrupada
-por secciones. **Se toma la estructura, no el estilo**: colores, tipografia,
-radios e iconos son los de Conejo App.
+La referencia es la app de un banco: barra fija abajo con accesos directos y una
+lista completa agrupada por secciones. **Se toma la estructura, no el estilo**,
+y con dos correcciones decididas:
+
+- **Sin boton central.** La barra no lleva la marca en medio.
+- **La barra no es el menu.** Una barra inferior sirve para cuatro o cinco
+  destinos y se rompe en cuanto el menu crece, y este va a crecer: con el portal
+  un administrador tendra mas de veinte entradas. Por eso la barra lleva solo
+  atajos, y **el menu completo vive en una hoja** que se abre desde su ultimo
+  hueco.
 
 ```
 ┌─────────────────────────────┐
@@ -80,14 +86,15 @@ radios e iconos son los de Conejo App.
 │         contenido           │
 │                             │
 ├─────────────────────────────┤
-│  ⌂      ▦     (🐇)    ✓    ☺ │  barra inferior
-│ Inicio  …    Menu     …  Perfil
+│  ⌂       ▦       ✓      ☰   │  barra inferior
+│ Inicio   …       …     Menu │
 └─────────────────────────────┘
 
-Al tocar el boton central sube la hoja:
+Al tocar «Menu» sube la hoja, a casi toda la pantalla:
 
 ┌─────────────────────────────┐
 │ Menu                     ✕  │
+│ 🔍 Buscar                   │
 │ TRABAJO                     │
 │  ▦  Tablero                 │
 │  ▤  Proyectos               │
@@ -95,7 +102,10 @@ Al tocar el boton central sube la hoja:
 │ HERRAMIENTAS                │
 │  ⚡ Hooks                 ›  │
 │ FINANZAS                    │
-│  …                          │
+│  …                       ↕  │  se desplaza
+├─────────────────────────────┤
+│ ☺ Carla Mendez   Mi perfil  │  pie fijo
+│ ⎋ Cerrar sesion             │
 └─────────────────────────────┘
 ```
 
@@ -103,32 +113,38 @@ Al tocar el boton central sube la hoja:
 
 | Pieza | Como |
 | --- | --- |
-| **Barra inferior** | Fija, cinco huecos. El central es la marca y abre la hoja. Los otros cuatro son accesos directos |
-| **Que va en los cuatro huecos** | Inicio y Mi perfil siempre. Los dos del medio salen del registro de modulos segun quien entra (ver abajo) |
-| **Hoja de navegacion** | Sube desde abajo. Lista **todos** los modulos visibles para esa persona, agrupados por las secciones del menu. Es el sustituto del cajon |
-| **Submodulos** | Un modulo con hijos (Hooks, Finanzas) se despliega dentro de la hoja, como hoy en el cajon |
+| **Barra inferior** | Fija, **cuatro huecos como maximo**. El ultimo es siempre «Menu»; el primero, Inicio. Los del medio son atajos |
+| **Atajos** | Uno o dos, segun quien entra. Salen del registro de modulos, no de una tabla escrita en el componente |
+| **Hoja de navegacion** | El menu entero: todos los modulos visibles para esa persona, agrupados por las secciones del menu. Sustituye al cajon |
+| **Pensada para menus largos** | Ocupa casi toda la pantalla, su lista se desplaza con la cabecera y el pie fijos, y trae un buscador arriba que filtra mientras se escribe |
+| **Submodulos** | Un modulo con hijos (Hooks, Finanzas) se despliega dentro de la hoja, como hoy en el cajon. Llega abierto el de la pantalla en la que se esta |
+| **Donde estoy** | La hoja abre con el modulo actual marcado y a la vista, sin tener que buscarlo |
 | **Cabecera movil** | Se queda con el titulo de la pantalla, el buscador y la campana. Pierde la hamburguesa |
-| **Cerrar sesion** | Al pie de la hoja, junto a la ficha de quien entra, donde hoy esta en el cajon |
+| **Mi perfil y cerrar sesion** | En el pie fijo de la hoja, junto a la ficha de quien entra |
 | **Escritorio** | Sin cambios: el sidebar sigue igual desde `lg` |
 
-### Los dos huecos que dependen del rol
+### Los atajos, segun quien entra
 
-| Quien entra | Hueco 2 | Hueco 4 |
-| --- | --- | --- |
-| Admin | Tablero | Usuarios |
-| Cuentas | Tablero | Briefs |
-| Administracion | Finanzas | Cobranza |
-| Produccion, diseno | Mi trabajo | — |
-| Redes | Mi trabajo | Hooks |
-| Cliente | Mis proyectos | Facturacion, o Mis briefs si no tiene el permiso |
+| Quien entra | Atajos |
+| --- | --- |
+| Admin | Tablero |
+| Cuentas | Tablero, Briefs |
+| Administracion | Finanzas |
+| Produccion, diseno | Mi trabajo |
+| Redes | Mi trabajo, Hooks |
+| Cliente | Mis proyectos, Mis briefs |
 
-Mientras los modulos del portal no existan, los huecos se rellenan con lo que
-haya: hoy, Hooks para redes y Usuarios y Empresas para el admin. Un hueco sin
-modulo se omite y la barra se reparte entre los que quedan.
+Mientras los modulos del portal no existan, se usa lo que hay: hoy, Hooks para
+redes y Usuarios para el admin. Si a alguien no le corresponde ningun atajo, la
+barra queda en Inicio y Menu.
 
-No se escribe una tabla por rol en el componente: cada modulo declara en
-`src/lib/navegacion.ts` su prioridad para la barra, y la barra toma los dos
-primeros visibles. Asi un modulo nuevo entra en la barra sin tocarla.
+Cada modulo declara en `src/lib/navegacion.ts` su prioridad para la barra, y la
+barra toma los primeros visibles. Asi un modulo nuevo puede entrar sin tocar el
+componente, y **el menu puede crecer lo que haga falta sin que la barra cambie**.
+
+**Si al probarla la barra no convence**, la salida ya esta contemplada: se quita
+y queda solo el boton «Menu» en la cabecera abriendo la misma hoja. La hoja es
+la pieza que importa; la barra son atajos encima de ella.
 
 ### Detalles que deciden si se siente bien
 
@@ -140,11 +156,11 @@ primeros visibles. Asi un modulo nuevo entra en la barra sin tocarla.
 | Objetivos tactiles | Minimo 48 px, como hoy en el cajon | `mobile-native` |
 | Activo | Se resuelve una vez sobre la lista entera, igual que ahora: gana el prefijo mas largo | — |
 | La hoja | Animada con `transform`, nunca con `height`. Cierra con la X, con Escape, tocando fuera y al navegar | `animate`, `animation-performance` |
-| Foco | Al abrir entra a la hoja y queda atrapado; al cerrar vuelve al boton central. Cerrada, queda `inert` | — |
+| Foco | Al abrir entra a la hoja y queda atrapado; al cerrar vuelve al boton «Menu». Cerrada, queda `inert` | — |
 | Scroll | Con la hoja abierta el fondo no se desplaza | `mobile-native` |
 | Movimiento reducido | Con `prefers-reduced-motion` la hoja aparece sin deslizarse | `animate` |
 | Impresion | La barra no sale en las pages imprimibles | — |
-| Etiquetas | Cada hueco lleva icono **y** texto; el central, `aria-label` | `impeccable harden` |
+| Etiquetas | Cada hueco lleva icono **y** texto, nunca el icono solo | `impeccable harden` |
 
 ### Archivos
 
@@ -165,11 +181,12 @@ primeros visibles. Asi un modulo nuevo entra en la barra sin tocarla.
 | Prueba | Tipo |
 | --- | --- |
 | La barra existe por debajo de `lg` y no por encima | Integracion |
-| Cada rol ve sus huecos, y nunca un modulo que no puede abrir | Integracion |
+| Cada rol ve sus atajos, y nunca un modulo que no puede abrir | Integracion |
+| Con el menu mas largo posible (admin), todo modulo se alcanza: desplazando y buscando | Integracion |
 | La hoja abre, lista las secciones correctas y cierra con Escape devolviendo el foco | Integracion |
 | Con la hoja cerrada ningun enlace suyo acepta el foco | Integracion |
 | A 360 px no hay scroll horizontal ni contenido bajo la barra | Integracion |
-| Seleccion de huecos a partir del registro | Unitaria |
+| Seleccion de atajos a partir del registro | Unitaria |
 
 Y una pasada en un telefono de verdad, que es lo unico que revela una barra
 tapada por la del navegador.
@@ -193,19 +210,25 @@ Sale de la lista aprobada en la fase 1. El orden previsto:
 Cada bloque es una rama. Los modulos del portal nacen ya con este nivel: no se
 construyen para rediseñarlos despues.
 
-## Decisiones abiertas
+## Decisiones
+
+| Tema | Decision |
+| --- | --- |
+| Boton central con la marca | **No.** La barra no lleva boton central |
+| Maquetas de `diseno/` | **Se retiran cuando este plan termine**, y no antes: hasta entonces son la referencia aprobada |
+
+Siguen abiertas:
 
 | # | Pregunta | Propuesta |
 | --- | --- | --- |
-| 1 | ¿El boton central es la marca del conejo, o un icono de menu? | La marca, como en la referencia |
-| 2 | ¿La barra se esconde al bajar por la pagina y vuelve al subir? | No: fija siempre. Menos sorpresa |
-| 3 | ¿El buscador global se queda en la cabecera movil, o pasa a la hoja? | En la cabecera |
-| 4 | ¿Se activa el detector automatico de `impeccable` al editar? | No por ahora: primero ver que avisa |
-| 5 | ¿Las maquetas de `diseno/` siguen siendo la referencia aprobada, o las sustituye el resultado de este plan? | Las sustituye, y entonces se retiran |
+| 1 | ¿La barra se esconde al bajar por la pagina y vuelve al subir? | No: fija siempre. Menos sorpresa |
+| 2 | ¿El buscador global se queda en la cabecera movil, ademas del de la hoja? | Si |
+| 3 | ¿Se activa el detector automatico de `impeccable` al editar? | No por ahora: primero ver que avisa |
 
 ## Criterios de terminado
 
 - La navegacion movil nueva esta en `main`, con sus pruebas, y el cajon ya no existe.
+- La carpeta `diseno/` se ha retirado.
 - Cada hallazgo aprobado de la fase 1 esta resuelto o aplazado con motivo.
 - Todas las pantallas pasan a 360, 768 y 1440 px, en claro y en oscuro.
 - Ningun color literal, ninguna libreria nueva.
