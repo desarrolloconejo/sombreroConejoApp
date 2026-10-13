@@ -1,5 +1,5 @@
 import { consultar, consultarUno, type Ejecutor } from "@/lib/db";
-import type { NombreRol, Rol } from "@/types";
+import type { Rol } from "@/types";
 
 /** Consultas sobre la tabla roles. */
 
@@ -19,18 +19,6 @@ export async function listar(): Promise<Rol[]> {
 export async function listarAsignables(): Promise<Rol[]> {
   return consultar<Rol>(
     `SELECT ${COLUMNAS} FROM roles WHERE nombre <> 'cliente' ORDER BY id`,
-  );
-}
-
-/** Busca un rol por su nombre. */
-export async function buscarPorNombre(
-  nombre: NombreRol,
-  ejecutor?: Ejecutor,
-): Promise<Rol | null> {
-  return consultarUno<Rol>(
-    `SELECT ${COLUMNAS} FROM roles WHERE nombre = $1`,
-    [nombre],
-    ejecutor,
   );
 }
 

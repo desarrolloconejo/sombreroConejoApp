@@ -21,10 +21,10 @@ import { Boton, BotonEnlace } from "@/components/ui";
  */
 export default function ErrorPanel({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
     console.error("Fallo no controlado en el panel:", error);
@@ -54,7 +54,7 @@ export default function ErrorPanel({
         </p>
 
         <div className="mt-7 flex flex-wrap justify-center gap-2.5">
-          <Boton type="button" onClick={reset}>
+          <Boton type="button" onClick={() => retry()}>
             <RotateCw aria-hidden="true" />
             Reintentar
           </Boton>

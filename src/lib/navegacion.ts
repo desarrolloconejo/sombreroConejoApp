@@ -385,17 +385,6 @@ export function filtrarPorTermino<T extends Buscable>(
   return puntuados.sort((a, b) => a.peso - b.peso).map(({ modulo }) => modulo);
 }
 
-/**
- * Busca entre los modulos accesibles para esta persona.
- * Un termino vacio devuelve todos, que es lo que se muestra al abrir.
- */
-export function buscarModulos(
-  termino: string,
-  quien: ActorNavegacion,
-): Modulo[] {
-  return filtrarPorTermino(aplanar(modulosDe(quien)), termino);
-}
-
 /** La ruta sin barra final, para que "/dashboard/" y "/dashboard" sean iguales. */
 function limpiarRuta(ruta: string): string {
   return ruta.length > 1 ? ruta.replace(/\/+$/, "") : ruta;

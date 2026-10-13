@@ -32,10 +32,10 @@ const GOLD = "#fae890";
 
 export default function ErrorGlobal({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
     console.error("Fallo irrecuperable en la aplicacion:", error);
@@ -97,7 +97,7 @@ export default function ErrorGlobal({
 
           <button
             type="button"
-            onClick={reset}
+            onClick={() => retry()}
             style={{
               marginTop: "28px",
               padding: "12px 22px",

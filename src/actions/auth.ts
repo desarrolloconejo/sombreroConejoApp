@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import * as usuarios from "@/models/usuarios";
 import { gastarTiempoEquivalente, verificar } from "@/lib/password";
-import { borrarCookieSesion, crearCookieSesion, obtenerSesion } from "@/lib/sesion";
+import { destinoSeguro } from "@/lib/redireccion";
+import { borrarCookieSesion, crearCookieSesion } from "@/lib/sesion";
 import { validarCredenciales } from "@/lib/validaciones";
 import type { EstadoFormulario } from "@/types";
 
@@ -22,25 +23,6 @@ import type { EstadoFormulario } from "@/types";
  * para averiguar que correos estan registrados.
  */
 const CREDENCIALES_INVALIDAS = "El correo o la contrasena no son correctos";
-
-/**
- * Comprueba que el destino de la redireccion sea una ruta interna.
- *
- * El parametro `volverA` llega en la URL, asi que lo controla quien envia el
- * enlace. Sin esta comprobacion se podria construir un enlace al login propio
- * que, tras entrar, deje al usuario en un sitio ajeno: el clasico redirect
- * abierto, muy usado para phishing.
- */
-function destinoSeguro(valor: unknown): string {
-  if (typeof valor !== "string") return "/dashboard";
-
-  // Debe empezar por una sola barra. "//otro-sitio.com" es una URL con
-  // protocolo relativo y saldria del dominio.
-  if (!valor.startsWith("/") || valor.startsWith("//")) return "/dashboard";
-  if (valor.includes("\\")) return "/dashboard";
-
-  return valor;
-}
 
 /**
  * Inicia sesion. La consume un formulario a traves de useActionState.
@@ -113,12 +95,4 @@ export async function iniciarSesion(
 export async function cerrarSesion(): Promise<void> {
   await borrarCookieSesion();
   redirect("/login");
-}
-
-/**
- * Devuelve la sesion actual para las pages que la necesiten como prop.
- * Es una lectura, no una barrera: no redirige.
- */
-export async function sesionActual() {
-  return obtenerSesion();
 }

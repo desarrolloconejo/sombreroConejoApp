@@ -16,10 +16,10 @@ menores. A3, A8 y A10 se tratan en el plan del portal; A11 ya esta corregido.
 
 | # | Severidad | Hallazgo | Cubierto por el plan del portal |
 | --- | --- | --- | --- |
-| A1 | Critica | `next` 16.3.2 tiene avisos de seguridad criticos; se corrigen en 16.4.0 | No |
-| A2 | Alta | Redireccion abierta en el login por `volverA`. **Reproducida** | No |
+| A1 | Critica | `next` 16.3.2 tiene avisos de seguridad criticos; se corrigen en 16.4.0. **Corregido** | No |
+| A2 | Alta | Redireccion abierta en el login por `volverA`. Reproducida y **corregida** | No |
 | A3 | Alta | Las cuentas del seed pueden estar en produccion con su clave del repositorio | **Si**: hueco 11 y secciones 10.1 y 11 |
-| A4 | Media | Los limites de error usan `reset`, que no recupera un fallo de servidor | No |
+| A4 | Media | Los limites de error usan `reset`, que no recupera un fallo de servidor. **Corregido** | No |
 | A5 | Media | `.mcp.json` ejecuta Context7 con `npx -y` sin fijar version | No |
 | A6 | Baja | `pg` sin tiempos limite de consulta; cliente roto vuelve al pool | No |
 | A7 | Baja | El limite de 72 de la contrasena se mide en caracteres, no en bytes | No |
@@ -55,6 +55,15 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
 
 ### A1 — `next` 16.3.2 con avisos criticos
 
+**Corregido el 2026-10-13**, rama `chore/auditoria-next`. `next` y
+`eslint-config-next` estan en 16.4.0 y `npm audit fix` subio `sharp`,
+`source-map-js` y `js-yaml`. `npm audit --omit=dev` da cero avisos. Quedan
+cinco altos solo de desarrollo, en la cadena de `eslint-config-next`
+(`micromatch`, `braces`, `fast-glob`), sin version que los corrija todavia.
+Las notas de la 16.4 solo anaden opciones; nada cambia para el proyecto.
+Comprobado: lint, typecheck, auditor 19/19, modelos 53/53, unitarias 3/3,
+integracion 3/3 y build de produccion.
+
 - **Evidencia:** `npm audit` marca `next` en el rango 16.0.0–16.3.7 como
   critico, con nueve avisos; el arreglo es 16.4.0, que no es un cambio mayor.
   `package.json:26`.
@@ -69,6 +78,13 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
   llegan a traves de `next`.
 
 ### A2 — Redireccion abierta en el login
+
+**Corregido el 2026-10-13**, rama `fix/auditoria-login-y-errores`.
+`destinoSeguro` pasa a `src/lib/redireccion.ts`: interpreta el valor con `URL`,
+exige el mismo origen y que la ruta sea del panel, y devuelve la ruta ya
+interpretada. Dieciocho pruebas unitarias en `tests/unitarias/redireccion.spec.ts`.
+Repetida la prueba en local: el mismo enlace termina ahora en `/dashboard`.
+Lo de abajo describe el estado anterior.
 
 - **Evidencia:** `destinoSeguro` (`src/actions/auth.ts:34-43`) acepta cualquier
   valor que empiece por una sola barra. `/<tabulador>/sitio.com` pasa el filtro,
@@ -97,12 +113,18 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
   seccion 5 («`sql:produccion` deja de incluirlas»), seccion 10.1 (que va y que
   no va a produccion) y valores por defecto de la seccion 11 («dejan de
   sembrarse; las que ya esten, las desactiva el admin»).
+- **Confirmado por el responsable (2026-10-13):** la cuenta de administrador
+  del seed no existe en produccion.
 - **Lo unico que ese plan no nombra:** la cuarta cuenta, la de administrador,
   no es «de prueba» y no se desactiva. Su contrasena de produccion tiene que
   ser distinta de la del repositorio; `debe_cambiar_clave` nace en falso para
   las cuentas existentes, asi que nada obligara a cambiarla.
 
 ### A4 — Los limites de error usan `reset`
+
+**Corregido el 2026-10-13**, en la misma rama: los tres limites usan `retry`.
+Comprobado con `typecheck` y build; no se provoco un fallo real de la base
+para verlo recuperarse.
 
 - **Evidencia:** `src/app/error.tsx:57`, `src/app/dashboard/error.tsx:57` y
   `src/app/global-error.tsx:100` llaman a `reset`.
@@ -119,6 +141,8 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
 
 ### A5 — Context7 sin version fijada
 
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. Fijado en la 4.4.1.
+
 - **Evidencia:** `.mcp.json:5` ejecuta `npx -y @upstash/context7-mcp`.
 - **Riesgo:** cada sesion del asistente descarga y ejecuta la ultima version
   publicada, sin confirmacion, con los permisos de quien abre el proyecto. Si
@@ -127,6 +151,10 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
   mano. Las skills ya estan fijadas por hash en `skills-lock.json`.
 
 ### A6 — `pg`: tiempos limite y liberacion del cliente
+
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. `query_timeout` de 15 segundos y
+`release(true)` cuando el `ROLLBACK` falla. `statement_timeout` queda sin
+poner: hay que probarlo contra Neon y esta maquina no llega.
 
 - **Evidencia:** `src/lib/db.ts:62-77` no define `statement_timeout`,
   `query_timeout` ni `idle_in_transaction_session_timeout`. En
@@ -145,6 +173,9 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
   transacciones siguen el patron documentado.
 
 ### A7 — Limite de la contrasena en caracteres
+
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. `validarPassword` usa `bcrypt.truncates`, con
+tres pruebas unitarias en `tests/unitarias/password.spec.ts`.
 
 - **Evidencia:** `src/lib/validaciones.ts:93` compara `valor.length` con 72.
 - **Documentacion (Context7, bcrypt.js):** el limite es de 72 **bytes** en
@@ -171,6 +202,10 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
   `Uint8Array`, validacion campo a campo del contenido.
 
 ### A9 — Codigo sin uso
+
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. Quitadas las seis funciones sin llamadas, salvo
+`moduloActivo`, que se conserva para la cabecera movil del plan de diseno. El
+build registra ahora 22 Server Actions y `sesionActual` ya no esta entre ellas.
 
 | Que | Donde | Nota |
 | --- | --- | --- |
@@ -208,6 +243,10 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
 
 ### A12 — `matcher` del proxy
 
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. La exclusion por extension vale solo para la raiz
+y para `/images`. Comprobado en local: el logotipo y los iconos responden 200
+sin sesion, y `/dashboard/usuarios.js` redirige al login.
+
 - **Evidencia:** `src/proxy.ts:128` excluye cualquier ruta que termine en
   `.svg`, `.png`, `.css`, `.js` y otras. `/dashboard/usuarios.js` no pasa por el
   proxy (responde 404 directo, sin redirigir al login).
@@ -224,6 +263,10 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
 
 ### A13 — Frontera servidor/cliente
 
+**Corregido el 2026-10-13**, rama `chore/auditoria-menores`. Regla `no-restricted-imports` para
+`src/components/**` en `eslint.config.mjs`; comprobado que falla con un import
+prohibido.
+
 - **Evidencia:** ningun componente de cliente importa `lib/db`, `lib/jwt`,
   `lib/sesion`, `lib/password` ni `models/`, y el bundle de produccion no
   contiene nada de eso (ver la comprobacion 1). Pero nada lo impide.
@@ -237,6 +280,9 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
   es una dependencia.
 
 ### A14 — `next build` en el contenedor de desarrollo
+
+**Sin cambios: ya estaba documentado** en la seccion de despliegue del
+`README.md`, con el comando exacto y el aviso sobre `NODE_ENV`.
 
 - **Evidencia:** `docker compose run app-dev npm run build` falla al
   prerrenderizar `/_global-error`, porque la etapa `dev` fija
@@ -283,9 +329,9 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
 
 | Paso | Contenido | Rama |
 | --- | --- | --- |
-| 1 | A1: `next` y `eslint-config-next` a 16.4.0, `npm audit fix` | `chore/auditoria-next` |
-| 2 | A2 y A4: `destinoSeguro` con su prueba, `retry` en los limites de error | `fix/auditoria-login-y-errores` |
-| 3 | A5, A6, A7, A9, A12, A13 y A14 | `chore/auditoria-menores` |
+| 1 | A1: `next` y `eslint-config-next` a 16.4.0, `npm audit fix`. **Hecho** | `chore/auditoria-next` |
+| 2 | A2 y A4: `destinoSeguro` con su prueba, `retry` en los limites de error. **Hecho** | `fix/auditoria-login-y-errores` |
+| 3 | A5, A6, A7, A9, A12, A13 y A14. **Hecho** | `chore/auditoria-menores` |
 | 4 | Resto de la fase 3: `react`, `jose`, `pg`, `lucide-react`, tipos; evaluar `eslint` 10 y `typescript` 7 | `chore/auditoria-dependencias` |
 
 Fuera de esta auditoria, por decision del responsable (2026-10-13):
