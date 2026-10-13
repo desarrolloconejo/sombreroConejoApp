@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Bell, LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { cerrarSesion } from "@/actions/auth";
 import { iniciales } from "@/components/ui";
 import {
@@ -13,6 +13,8 @@ import {
   type ModuloVista,
   type UsuarioNav,
 } from "@/lib/navegacion";
+import type { ResumenDeNotificaciones } from "@/types";
+import { Campana } from "./Campana";
 import { ItemNavegacion, type MedidasItem } from "./ItemNavegacion";
 import { Marca } from "./Marca";
 
@@ -40,9 +42,11 @@ const MEDIDAS: MedidasItem = {
 export function HeaderMovil({
   modulos,
   usuario,
+  notificaciones,
 }: {
   modulos: ModuloVista[];
   usuario: UsuarioNav;
+  notificaciones: ResumenDeNotificaciones;
 }) {
   const [abierto, setAbierto] = useState(false);
   const ruta = usePathname();
@@ -168,24 +172,7 @@ export function HeaderMovil({
           cajon, y en 360 px el sitio rinde mas dejandolo libre.
         */}
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          {/*
-            Notificaciones. Va deshabilitado a proposito hasta que exista el
-            modulo: se muestra apagado y no responde al cursor, en lugar de
-            ofrecer algo que no lleva a ningun sitio.
-          */}
-          <button
-            type="button"
-            disabled
-            aria-label="Notificaciones (proximamente)"
-            title="Notificaciones (proximamente)"
-            className={[
-              "grid size-11 shrink-0 place-items-center rounded-xl",
-              "bg-nav-realce text-nav-suave opacity-45",
-              "disabled:pointer-events-none disabled:cursor-not-allowed",
-            ].join(" ")}
-          >
-            <Bell aria-hidden="true" className="size-[19px]" />
-          </button>
+          <Campana resumen={notificaciones} variante="movil" />
 
           <span
             role="img"

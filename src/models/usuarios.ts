@@ -484,6 +484,25 @@ export async function listar(
   };
 }
 
+/**
+ * Los administradores activos, para notificarles.
+ *
+ * `salvo` deja fuera a uno: quien provoca algo no necesita que se lo cuenten.
+ */
+export async function idsDeAdministradores(
+  salvo: number | null,
+  ejecutor?: Ejecutor,
+): Promise<number[]> {
+  const filas = await consultar<{ id: number }>(
+    `SELECT id FROM vw_usuarios_completos
+     WHERE rol = 'admin' AND activo AND ($1::int IS NULL OR id <> $1)`,
+    [salvo],
+    ejecutor,
+  );
+
+  return filas.map((fila) => fila.id);
+}
+
 /** Cuenta cuantas personas tienen un rol dado. Sirve para no quedarse sin admin. */
 export async function contarPorRol(rol: string): Promise<number> {
   const fila = await consultarUno<{ total: string }>(
