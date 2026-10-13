@@ -6,6 +6,7 @@ import { CODIGO_ERROR, esErrorPostgres } from "@/lib/db";
 import { requerirAdmin } from "@/lib/sesion";
 import { comoIdentificador, validarEmpresa } from "@/lib/validaciones";
 import * as empresas from "@/models/empresas";
+import * as sesiones from "@/models/sesiones";
 import type { EstadoFormulario } from "@/types";
 
 /**
@@ -145,6 +146,12 @@ export async function cambiarEstadoEmpresa(
   const cambiada = await empresas.cambiarEstado(id, activar);
 
   if (!cambiada) return { ok: false, mensaje: "No se pudo cambiar el estado" };
+
+  // Sus personas de contacto entran en nombre de la empresa: si se deja de
+  // atender, las sesiones que tengan abiertas se cierran.
+  if (!activar) {
+    await sesiones.revocarDeEmpresa(id, "empresa_desactivada");
+  }
 
   revalidar();
 

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import * as usuarios from "@/models/usuarios";
 import { gastarTiempoEquivalente, verificar } from "@/lib/password";
 import { destinoSeguro } from "@/lib/redireccion";
-import { borrarCookieSesion, crearCookieSesion } from "@/lib/sesion";
+import { abrirSesion, cerrarSesionActual } from "@/lib/sesion";
 import { validarCredenciales } from "@/lib/validaciones";
 import type { EstadoFormulario } from "@/types";
 
@@ -83,15 +83,7 @@ export async function iniciarSesion(
     };
   }
 
-  await crearCookieSesion({
-    usuarioId: usuario.id,
-    email: usuario.email,
-    nombre: usuario.nombre,
-    tipo: usuario.tipo,
-    rol: usuario.rol,
-    cargo: usuario.cargoSlug,
-    empresaId: usuario.empresaId,
-  });
+  await abrirSesion(usuario);
 
   await usuarios.registrarAcceso(usuario.id);
 
@@ -102,6 +94,6 @@ export async function iniciarSesion(
 
 /** Cierra la sesion y devuelve al login. */
 export async function cerrarSesion(): Promise<void> {
-  await borrarCookieSesion();
+  await cerrarSesionActual();
   redirect("/login");
 }

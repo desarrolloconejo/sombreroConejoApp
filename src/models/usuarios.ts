@@ -97,6 +97,40 @@ export async function buscarPorId(id: number): Promise<UsuarioCompleto | null> {
   );
 }
 
+/**
+ * La persona y, de paso, cuando caduca su sesion. Si la sesion no existe, se
+ * revoco o ya caduco, esa fecha llega nula.
+ *
+ * Es la consulta de las guardias, y va en una sola a proposito: comprobar la
+ * sesion en cada peticion es lo que permite cerrarla desde el servidor, y
+ * hacerlo aqui no cuesta un viaje mas a la base.
+ */
+export async function buscarPorIdConSesion(
+  id: number,
+  sesionId: number,
+): Promise<{ usuario: UsuarioCompleto; sesionCaducaEn: Date | null } | null> {
+  const fila = await consultarUno<
+    UsuarioCompleto & { sesionCaducaEn: Date | null }
+  >(
+    `SELECT ${COLUMNAS_COMPLETO},
+            (
+              SELECT s.caduca_en FROM sesiones s
+              WHERE s.id = $2
+                AND s.usuario_id = vw_usuarios_completos.id
+                AND s.revocada_en IS NULL
+                AND s.caduca_en > now()
+            ) AS "sesionCaducaEn"
+     FROM vw_usuarios_completos
+     WHERE id = $1`,
+    [id, sesionId],
+  );
+
+  if (!fila) return null;
+
+  const { sesionCaducaEn, ...usuario } = fila;
+  return { usuario, sesionCaducaEn };
+}
+
 /** Indica si ya hay alguien registrado con ese correo. */
 export async function existeEmail(
   email: string,

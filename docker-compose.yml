@@ -74,7 +74,9 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRACION: ${JWT_EXPIRACION}
+      SESION_ACCESO_SEGUNDOS: ${SESION_ACCESO_SEGUNDOS:-}
+      SESION_HORAS: ${SESION_HORAS:-}
+      SESION_INACTIVIDAD_MINUTOS: ${SESION_INACTIVIDAD_MINUTOS:-}
       COOKIE_SESION: ${COOKIE_SESION}
       # El bind mount desde Windows no propaga eventos de archivo al
       # contenedor Linux: hay que vigilar por sondeo.
@@ -104,7 +106,9 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRACION: ${JWT_EXPIRACION}
+      SESION_ACCESO_SEGUNDOS: ${SESION_ACCESO_SEGUNDOS:-}
+      SESION_HORAS: ${SESION_HORAS:-}
+      SESION_INACTIVIDAD_MINUTOS: ${SESION_INACTIVIDAD_MINUTOS:-}
       COOKIE_SESION: ${COOKIE_SESION}
     ports:
       - "${APP_PORT:-3000}:3000"

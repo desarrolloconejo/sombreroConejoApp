@@ -14,6 +14,7 @@ import {
   limpiarTexto,
 } from "@/lib/validaciones";
 import * as clientes from "@/models/clientes";
+import * as sesiones from "@/models/sesiones";
 import * as trabajadores from "@/models/trabajadores";
 import * as usuarios from "@/models/usuarios";
 import type { ErroresCampo, EstadoFormulario } from "@/types";
@@ -362,6 +363,9 @@ export async function restablecerPassword(
     return { ok: false, mensaje: "No se pudo restablecer la contrasena" };
   }
 
+  // Quien estuviera dentro con la contrasena anterior, fuera.
+  await sesiones.revocarDeUsuario(usuario.id, "clave_restablecida");
+
   return {
     ok: true,
     credencial: { email: usuario.email, password: provisional },
@@ -458,6 +462,20 @@ export async function editarUsuario(
     throw error;
   }
 
+  // Si cambio lo que decide que ve o que puede hacer, sus sesiones abiertas
+  // se cierran: el token que tienen dice lo de antes, y volver a entrar es lo
+  // que les da uno con lo de ahora.
+  const actualizado = await usuarios.buscarPorId(id);
+
+  if (
+    actualizado &&
+    (actualizado.rol !== existente.rol ||
+      actualizado.cargoSlug !== existente.cargoSlug ||
+      actualizado.empresaId !== existente.empresaId)
+  ) {
+    await sesiones.revocarDeUsuario(id, "vinculo_cambiado");
+  }
+
   revalidatePath(RUTA_LISTADO);
 
   return { ok: true, mensaje: "Los cambios quedaron guardados" };
@@ -520,6 +538,10 @@ export async function cambiarEstadoUsuario(
 
   if (!cambiado) {
     return { ok: false, mensaje: "No se pudo cambiar el estado de la cuenta" };
+  }
+
+  if (!activar) {
+    await sesiones.revocarDeUsuario(id, "usuario_desactivado");
   }
 
   revalidatePath(RUTA_LISTADO);

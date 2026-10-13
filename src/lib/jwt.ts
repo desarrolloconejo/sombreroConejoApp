@@ -52,9 +52,19 @@ function claveSecreta(): Uint8Array {
   return new TextEncoder().encode(secreto);
 }
 
-/** Cuanto dura la sesion. Formato admitido por jose: "8h", "30m", "7d". */
-function duracion(): string {
-  return process.env.JWT_EXPIRACION ?? "8h";
+/**
+ * Cuanto dura el token de acceso, en segundos. Media hora.
+ *
+ * Es corto a proposito, y no es lo que mide la sesion: la sesion vive en la
+ * tabla sesiones y se renueva sola mientras hay actividad. Este plazo es solo
+ * el tiempo maximo que el proxy sigue enrutando con un rol que ya cambio.
+ *
+ * La variable existe para poder probar la renovacion sin esperar media hora.
+ */
+export function duracionAcceso(): number {
+  const valor = Number(process.env.SESION_ACCESO_SEGUNDOS);
+
+  return Number.isInteger(valor) && valor >= 30 ? valor : 30 * 60;
 }
 
 const TIPOS_VALIDOS: readonly TipoUsuario[] = ["trabajador", "cliente"];
@@ -85,6 +95,11 @@ function comoSesion(contenido: unknown, sub: string | undefined): Sesion | null 
   const usuarioId = Number(sub);
 
   if (!Number.isInteger(usuarioId) || usuarioId <= 0) return null;
+
+  // Un token sin sesion es de antes de que existiera la tabla sesiones. Su
+  // firma sigue siendo buena, pero ya no hay contra que comprobarlo.
+  if (!Number.isInteger(datos.sid) || (datos.sid as number) <= 0) return null;
+  if (typeof datos.exp !== "number") return null;
   if (typeof datos.email !== "string" || datos.email.length === 0) return null;
   if (typeof datos.nombre !== "string") return null;
   if (!TIPOS_VALIDOS.includes(datos.tipo as TipoUsuario)) return null;
@@ -111,6 +126,8 @@ function comoSesion(contenido: unknown, sub: string | undefined): Sesion | null 
 
   return {
     usuarioId,
+    sesionId: datos.sid as number,
+    accesoCaducaEn: datos.exp * 1000,
     email: datos.email,
     nombre: datos.nombre,
     tipo: datos.tipo as TipoUsuario,
@@ -120,9 +137,16 @@ function comoSesion(contenido: unknown, sub: string | undefined): Sesion | null 
   };
 }
 
-/** Emite un token firmado para una sesion. */
-export async function firmarSesion(sesion: Sesion): Promise<string> {
+/**
+ * Emite un token firmado para una sesion.
+ *
+ * No recibe `accesoCaducaEn`: la caducidad la decide este modulo al firmar.
+ */
+export async function firmarSesion(
+  sesion: Omit<Sesion, "accesoCaducaEn">,
+): Promise<string> {
   return new SignJWT({
+    sid: sesion.sesionId,
     email: sesion.email,
     nombre: sesion.nombre,
     tipo: sesion.tipo,
@@ -135,7 +159,7 @@ export async function firmarSesion(sesion: Sesion): Promise<string> {
     .setIssuedAt()
     .setIssuer(EMISOR)
     .setAudience(AUDIENCIA)
-    .setExpirationTime(duracion())
+    .setExpirationTime(`${duracionAcceso()}s`)
     .sign(claveSecreta());
 }
 
@@ -152,6 +176,8 @@ export async function verificarSesion(token: string): Promise<Sesion | null> {
       algorithms: [ALGORITMO],
       issuer: EMISOR,
       audience: AUDIENCIA,
+      // Sin esto un token sin caducidad se daria por bueno para siempre.
+      requiredClaims: ["exp", "sub"],
     });
 
     return comoSesion(payload, payload.sub);
