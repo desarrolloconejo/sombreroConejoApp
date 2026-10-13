@@ -313,6 +313,101 @@ async function principal(): Promise<void> {
     String(bandeja.borra),
   );
 
+  // -------------------------------------- seguridad por fila: notificaciones
+  const campana: Record<string, unknown> = {};
+
+  try {
+    await transaccion(async (cliente) => {
+      const como = (id: number | null, rol: string) =>
+        cliente.query(
+          "SELECT set_config('app.usuario_id', $1, true), set_config('app.rol', $2, true)",
+          [id === null ? "" : String(id), rol],
+        );
+      const notificar = (destinatario: number, href: string | null = "/dashboard") =>
+        cliente.query(
+          `INSERT INTO portal.notificaciones (usuario_id, tipo, titulo, href)
+           VALUES ($1, 'prueba.permisos', 'Prueba de permisos', $2)`,
+          [destinatario, href],
+        );
+      const cuantas = async () =>
+        Number(
+          (
+            await cliente.query<{ n: string }>(
+              "SELECT count(*)::text AS n FROM portal.notificaciones WHERE tipo = 'prueba.permisos'",
+            )
+          ).rows[0].n,
+        );
+      const intentarDentro = async (accion: () => Promise<unknown>) => {
+        await cliente.query("SAVEPOINT intento");
+        try {
+          await accion();
+          await cliente.query("RELEASE SAVEPOINT intento");
+          return null;
+        } catch (error) {
+          await cliente.query("ROLLBACK TO SAVEPOINT intento");
+          return (error as { code?: string }).code ?? "desconocido";
+        }
+      };
+
+      await como(null, "");
+      campana.sinSesionNotifica = await intentarDentro(() => notificar(admin.id));
+
+      // Uno le notifica al otro, y dos veces a si mismo.
+      await como(otro.id, "trabajador");
+      await notificar(admin.id);
+      await notificar(otro.id);
+      await notificar(otro.id);
+      campana.otroVe = await cuantas();
+      campana.hrefExterno = await intentarDentro(() =>
+        notificar(otro.id, "https://sitio.com/dashboard"),
+      );
+      campana.hrefFueraDelPanel = await intentarDentro(() => notificar(otro.id, "/login"));
+
+      // Ni siquiera un administrador lee las de otra persona.
+      await como(admin.id, "admin");
+      campana.adminVe = await cuantas();
+      campana.adminMarca = (
+        await cliente.query(
+          "UPDATE portal.notificaciones SET leida_en = now() WHERE tipo = 'prueba.permisos'",
+        )
+      ).rowCount;
+
+      await como(otro.id, "trabajador");
+      campana.otroSinLeer = Number(
+        (
+          await cliente.query<{ n: string }>(
+            "SELECT count(*)::text AS n FROM portal.notificaciones WHERE tipo = 'prueba.permisos' AND leida_en IS NULL",
+          )
+        ).rows[0].n,
+      );
+
+      throw new Deshacer();
+    });
+  } catch (error) {
+    if (!(error instanceof Deshacer)) throw error;
+  }
+
+  comprobar(
+    "Sin sesion declarada no se puede notificar",
+    campana.sinSesionNotifica === DENEGADO,
+    String(campana.sinSesionNotifica),
+  );
+  comprobar(
+    "Cada quien ve solo sus notificaciones",
+    campana.otroVe === 2 && campana.adminVe === 1,
+    `el trabajador ve ${campana.otroVe} de 3; el administrador, ${campana.adminVe}`,
+  );
+  comprobar(
+    "Marcar como leidas no alcanza a las de otra persona",
+    campana.adminMarca === 1 && campana.otroSinLeer === 2,
+    `el administrador marco ${campana.adminMarca}; al otro le siguen ${campana.otroSinLeer} sin leer`,
+  );
+  comprobar(
+    "Una notificacion no puede llevar fuera del panel",
+    campana.hrefExterno === "23514" && campana.hrefFueraDelPanel === "23514",
+    "enlace externo y ruta ajena al panel, rechazados",
+  );
+
   console.log(`\n${pasan}/${pasan + fallan.length} comprobaciones correctas`);
   if (fallan.length > 0) {
     console.error(`\nFallan: ${fallan.join(", ")}`);

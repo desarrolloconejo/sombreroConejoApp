@@ -10,6 +10,7 @@ import {
 } from "@/lib/correos/plantillas";
 import { CODIGO_ERROR, conSesion, esErrorPostgres, transaccion } from "@/lib/db";
 import { encolarCorreo, entregarCorreos } from "@/lib/externos/correo";
+import { notificarA } from "@/lib/notificaciones";
 import { hashear } from "@/lib/password";
 import { requerirAdmin } from "@/lib/sesion";
 import {
@@ -438,7 +439,16 @@ export async function restablecerPassword(
       despues: { sesionesCerradas: cerradas },
     });
 
-    // Que la persona se entere por un canal que no controla quien lo hizo.
+    // Que la persona se entere por un canal que no controla quien lo hizo:
+    // el correo, y la campana la proxima vez que entre.
+    await notificarA(tx, [usuario.id], {
+      tipo: "cuenta.clave_restablecida",
+      titulo: "Un administrador restablecio tu contrasena",
+      cuerpo: "Si no lo esperabas, avisa a la agencia.",
+      href: "/dashboard/perfil",
+      empresaId: usuario.empresaId,
+    });
+
     return encolarCorreo(tx, admin, correoDeClaveRestablecida(usuario));
   });
 

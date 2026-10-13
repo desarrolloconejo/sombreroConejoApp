@@ -1,11 +1,11 @@
-import { Bell } from "lucide-react";
 import { BuscadorGlobal } from "@/components/layout/BuscadorGlobal";
+import { Campana } from "@/components/layout/Campana";
 import { GuardianSesion } from "@/components/layout/GuardianSesion";
 import { HeaderMovil } from "@/components/layout/HeaderMovil";
 import { ProveedorAvisos } from "@/components/layout/ProveedorAvisos";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { BotonIcono } from "@/components/ui";
 import { modulosDe, vistaDeModulos } from "@/lib/navegacion";
+import { resumenDeNotificaciones } from "@/lib/notificaciones";
 import {
   inactividadPermitida,
   relojDeSesion,
@@ -22,6 +22,7 @@ import {
  *
  * Los modulos se resuelven aqui, una sola vez, y bajan como props al sidebar,
  * al cajon movil y al buscador. Ninguno de los tres decide que puede ver quien.
+ * Lo mismo las notificaciones de la campana.
  */
 export default async function LayoutDashboard({
   children,
@@ -32,6 +33,10 @@ export default async function LayoutDashboard({
   // Las dos horas con las que arranca el reloj del navegador. No cuesta otra
   // consulta: salen de la misma que ya trajo al usuario.
   const reloj = await relojDeSesion();
+
+  // Lo que pinta la campana. Se pide aqui y baja como props: ni la campana
+  // del escritorio ni la del movil consultan nada por su cuenta.
+  const notificaciones = await resumenDeNotificaciones(usuario);
 
   const ficha = {
     nombre: usuario.nombre,
@@ -57,21 +62,19 @@ export default async function LayoutDashboard({
 
       <div className="flex flex-1 flex-col lg:flex-row">
         <Sidebar modulos={modulos} usuario={ficha} />
-        <HeaderMovil modulos={modulos} usuario={ficha} />
+        <HeaderMovil
+          modulos={modulos}
+          usuario={ficha}
+          notificaciones={notificaciones}
+        />
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 hidden h-[68px] shrink-0 items-center gap-4 border-b border-borde bg-superficie px-[34px] lg:flex">
             <BuscadorGlobal modulos={modulos} />
 
-            {/* Sin modulo de notificaciones todavia no hay nada que abrir ni
-                nada que contar: el aviso llegara con los datos que lo respalden */}
-            <BotonIcono
-              etiqueta="Notificaciones (proximamente)"
-              disabled
-              className="ml-auto disabled:opacity-50"
-            >
-              <Bell aria-hidden="true" />
-            </BotonIcono>
+            <div className="ml-auto">
+              <Campana resumen={notificaciones} variante="escritorio" />
+            </div>
           </header>
 
           <main className="mx-auto w-full max-w-[1240px] flex-1 px-4 pt-5 pb-4 lg:px-[34px] lg:py-7">

@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import * as usuarios from "@/models/usuarios";
 import { anotar } from "@/lib/auditoria";
-import { transaccion } from "@/lib/db";
+import { conSesion, transaccion } from "@/lib/db";
+import { notificarAAdministradores } from "@/lib/notificaciones";
 import { gastarTiempoEquivalente, verificar } from "@/lib/password";
 import { destinoSeguro } from "@/lib/redireccion";
 import { abrirSesion, cerrarSesionActual } from "@/lib/sesion";
@@ -77,7 +78,10 @@ export async function iniciarSesion(
   const coincide = await verificar(valores.password, usuario.passwordHash);
 
   if (!coincide) {
-    await transaccion(async (tx) => {
+    // Con `conSesion` a nombre de la propia cuenta: si este fallo la bloquea
+    // hay que notificarlo, y la tabla de notificaciones exige una sesion
+    // declarada. Nadie ha entrado; solo se dice de que cuenta se trata.
+    await conSesion(usuario, async (tx) => {
       const bloqueada = await usuarios.registrarFallo(
         usuario.id,
         INTENTOS_PERMITIDOS,
@@ -90,6 +94,19 @@ export async function iniciarSesion(
         entidadId: usuario.id,
         empresaId: usuario.empresaId,
       });
+
+      // Un bloqueo es alguien que olvido su contrasena o alguien probando
+      // las de otro. En los dos casos un administrador querra saberlo.
+      if (bloqueada) {
+        await notificarAAdministradores(tx, {
+          tipo: "cuenta.bloqueada",
+          titulo: `La cuenta de ${usuario.nombre} ${usuario.apellido} se bloqueo`,
+          cuerpo:
+            "Cinco contrasenas equivocadas seguidas. Se desbloquea sola en 15 minutos, o al restablecerle la contrasena.",
+          href: `/dashboard/usuarios?busqueda=${encodeURIComponent(usuario.email)}`,
+          empresaId: usuario.empresaId,
+        });
+      }
     });
 
     return { ok: false, mensaje: CREDENCIALES_INVALIDAS };

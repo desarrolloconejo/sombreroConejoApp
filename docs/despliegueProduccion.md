@@ -92,6 +92,7 @@ Necesitan el rol `conejo_app`: van despues del 5.
 | # | Archivo | Que hace | Resultado esperado |
 | --- | --- | --- | --- |
 | 7 | `db/neon/07-esquemas-y-correos.sql` | Crea los esquemas `portal` y `finanzas`, las funciones de sesion y `portal.correos_salida` con sus politicas | `esquemas = 2`; `seguridad_por_fila = true` y `politicas = 3` |
+| 8 | `db/neon/08-notificaciones.sql` | Crea `portal.notificaciones`, lo que se lee en la campana, con sus politicas | `seguridad_por_fila = true` y `politicas = 3` |
 
 ---
 
@@ -157,6 +158,8 @@ En la aplicacion publicada, con la cuenta de administrador.
 
 - [ ] Bandeja de salida (en Sistema) abre, y muestra el aviso de que el correo
       esta en modo simulado.
+- [ ] La campana del encabezado se abre y dice que no hay notificaciones (o
+      las lista), en escritorio y en el telefono.
 - [ ] El usuario de prueba creado arriba dejo su correo de bienvenida en la
       bandeja. Abrirlo, comprobar que **no** lleva la contrasena y que el
       enlace apunta a la direccion publica, y anotarlo como entregado.
@@ -219,6 +222,10 @@ anterior lo ignora.
   la bandeja de salida para entregarlo a mano. La contrasena provisional se
   sigue entregando en mano; el correo nunca la lleva.
 - El administrador tiene una entrada nueva en Sistema: «Bandeja de salida».
+- **La campana funciona.** Avisa a los administradores cuando una cuenta se
+  bloquea por intentos y cuando un correo no se pudo enviar, y a cada persona
+  cuando le restablecen la contrasena. Se actualiza al cargar una pagina, no
+  en tiempo real.
 
 ---
 
@@ -252,7 +259,7 @@ resolver antes.
 | Etapa | SQL antes | Variables | SQL despues | Anotada |
 | --- | --- | --- | --- | --- |
 | 1. Cimientos de seguridad | 01 a 05 | `DATABASE_URL`, `JWT_EXPIRACION` | 06 | Si |
-| 2. Externos y avisos | 07 | `APP_URL_PUBLICA` | — | En curso: falta avisos, tasa y archivos |
+| 2. Externos y avisos | 07, 08 | `APP_URL_PUBLICA` | — | En curso: faltan tasa y archivos |
 | 3. Proyectos, bateria y tareas | — | — | — | Pendiente |
 | 4. Vista del cliente y revision | — | — | — | Pendiente |
 | 5. Presupuestos y proformas | — | — | — | Pendiente |

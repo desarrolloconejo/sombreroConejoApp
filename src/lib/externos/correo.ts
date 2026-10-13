@@ -1,4 +1,5 @@
 import { conSesion, type ActorDeBase, type Ejecutor } from "@/lib/db";
+import { notificarAAdministradores } from "@/lib/notificaciones";
 import * as correos from "@/models/correos";
 import type { ModoExterno, NuevoCorreo } from "@/types";
 
@@ -165,7 +166,20 @@ export async function entregarCorreos(
         };
       }
 
-      await conSesion(actor, (tx) => correos.anotarEntrega(id, resultado, tx));
+      await conSesion(actor, async (tx) => {
+        await correos.anotarEntrega(id, resultado, tx);
+
+        // Un correo que no salio no se arregla solo: alguien tiene que
+        // reintentarlo o hacerlo llegar de otra forma.
+        if (!resultado.enviado) {
+          await notificarAAdministradores(tx, {
+            tipo: "correo.fallido",
+            titulo: "Un correo no se pudo enviar",
+            cuerpo: `Para ${correo.para}: ${correo.asunto}`,
+            href: `/dashboard/salida?panel=ver&id=${id}`,
+          });
+        }
+      });
     } catch (error) {
       console.error(
         "[correo] no se pudo anotar la entrega:",

@@ -53,9 +53,11 @@ docker compose exec app-dev npm run seed
 ```
 
 El seed crea las tablas y deja la base lista para entrar: roles, cargos, una
-empresa de ejemplo y cinco cuentas: un administrador, tres de prueba (una por
-perfil) y `pruebas@conejo.test`, que es sobre la que las pruebas automaticas
-hacen lo que no se puede deshacer; con esa no se inicia sesion. Es idempotente. Las cuentas que crea y sus claves estan en
+empresa de ejemplo y seis cuentas: un administrador, tres de prueba (una por
+perfil) y dos reservadas a las pruebas automaticas, `pruebas@conejo.test` y
+`bloqueo@conejo.test`. Sobre esas dos las pruebas hacen lo que no se puede
+deshacer —restablecer la contrasena, bloquear la cuenta—; no se inicia sesion
+con ellas. Es idempotente. Las cuentas que crea y sus claves estan en
 `db/datos/semilla.mts`.
 
 | Servicio | Donde |
@@ -310,6 +312,28 @@ como entregado a mano.
 **Ningun correo lleva contrasenas, tokens ni codigos.** La bandeja guarda el
 texto completo de todo lo que se envia. Los textos estan en
 `src/lib/correos/plantillas.ts`.
+
+### Notificaciones
+
+La campana del encabezado lee `portal.notificaciones`: una fila por
+notificacion y por persona. Se escriben, como la auditoria y los correos, en la
+misma transaccion que el cambio que las provoca:
+
+```ts
+await notificarAAdministradores(tx, {
+  tipo: "cuenta.bloqueada",
+  titulo: "La cuenta de Carla Mendez se bloqueo",
+  href: "/dashboard/usuarios?busqueda=carla",
+});
+```
+
+Cada quien ve solo las suyas —ni un administrador lee las de otro—, y `href`
+solo admite rutas del panel. El layout las pide una vez por carga y las inyecta
+en la campana; abrirla las marca como leidas. No hay tiempo real: se actualiza
+al cargar una pagina.
+
+En el codigo, «notificacion» es esto y «aviso» es el mensaje flotante que
+confirma una accion (`ProveedorAvisos`). No son lo mismo.
 
 ### Seguridad por fila
 

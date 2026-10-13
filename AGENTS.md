@@ -140,6 +140,11 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   cuela por el `matcher`.
 - **Ningun correo lleva contrasenas, tokens ni codigos.** La bandeja de salida
   guarda el texto completo de cada uno.
+- Una **notificacion** es lo que se lee en la campana y vive en la base
+  (`portal.notificaciones`, `src/lib/notificaciones.ts`). Un **aviso** es el
+  mensaje flotante que confirma una accion (`ProveedorAvisos`). No se mezclan
+  los nombres. Las notificaciones se escriben dentro de `conSesion`, en la
+  transaccion del cambio, y su tipo sale de `TipoNotificacion`.
 - Un servicio externo se llama solo a traves de su adaptador de
   `src/lib/externos/`, y nunca dentro de una transaccion de la base. Para el
   correo: `encolarCorreo` dentro de `conSesion`, `entregarCorreos` despues.

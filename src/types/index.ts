@@ -93,6 +93,13 @@ export type {
 } from "./correo";
 
 export type {
+  TipoNotificacion,
+  NuevaNotificacion,
+  Notificacion,
+  ResumenDeNotificaciones,
+} from "./notificacion";
+
+export type {
   Columna,
   OpcionFiltro,
   DefinicionFiltro,
