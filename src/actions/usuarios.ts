@@ -322,7 +322,7 @@ export async function restablecerPassword(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
 ): Promise<EstadoFormulario> {
-  const sesion = await requerirAdmin();
+  const admin = await requerirAdmin();
 
   const id = comoIdentificador(datos.get("id"));
 
@@ -345,7 +345,7 @@ export async function restablecerPassword(
    * valiendo hasta caducar, asi que ni siquiera notaria el cambio hasta el
    * dia siguiente.
    */
-  if (usuario.id === sesion.usuarioId) {
+  if (usuario.id === admin.id) {
     return {
       ok: false,
       mensaje: "Para tu propia cuenta usa el cambio de contrasena de Mi perfil",
@@ -475,7 +475,7 @@ export async function cambiarEstadoUsuario(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
 ): Promise<EstadoFormulario> {
-  const sesion = await requerirAdmin();
+  const admin = await requerirAdmin();
 
   const id = comoIdentificador(datos.get("id"));
 
@@ -491,7 +491,7 @@ export async function cambiarEstadoUsuario(
 
   // Nadie se cierra a si mismo la puerta: quedaria fuera de la aplicacion sin
   // forma de volver a entrar a reactivarse.
-  if (usuario.id === sesion.usuarioId) {
+  if (usuario.id === admin.id) {
     return { ok: false, mensaje: "No puedes desactivar tu propia cuenta" };
   }
 

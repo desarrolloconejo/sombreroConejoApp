@@ -12,11 +12,17 @@ import { PanelMarca } from "./PanelMarca";
  * El fondo se aparta del --fondo general a proposito: el login va blanco en
  * claro, como el diseno aprobado, y no gris.
  */
-export function LoginWrapper({ volverA }: { volverA: string }) {
+export function LoginWrapper({
+  volverA,
+  sinAcceso,
+}: {
+  volverA: string;
+  sinAcceso: boolean;
+}) {
   return (
     <main className="relative flex min-h-dvh flex-1 flex-col bg-white lg:flex-row dark-tema:bg-fondo">
       <PanelMarca />
-      <LoginContent volverA={volverA} />
+      <LoginContent volverA={volverA} sinAcceso={sinAcceso} />
     </main>
   );
 }

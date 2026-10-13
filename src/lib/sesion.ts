@@ -15,7 +15,7 @@ import type { NombreRol, Sesion, SlugCargo, UsuarioCompleto } from "@/types";
  * alcance sin que nada avise.
  *
  * Por eso toda page protegida y toda action que lea o modifique datos empieza
- * llamando a `requerirSesion` o a `requerirRol`. El proxy evita el viaje
+ * llamando a una guardia: `requerirUsuario`, `requerirRol` o `requerirCargo`. El proxy evita el viaje
  * inutil; esto es lo que impide el acceso.
  */
 
@@ -67,16 +67,43 @@ export const usuarioActual = cache(async (): Promise<UsuarioCompleto | null> => 
 });
 
 /**
+ * A donde va quien tiene un token valido pero ya no puede entrar.
+ *
+ * No puede ser `/login` a secas: el proxy ve un token que verifica y lo
+ * devuelve al panel, y el panel lo vuelve a echar. Con este parametro el proxy
+ * borra la cookie y deja pasar, y el login explica el motivo.
+ */
+const SALIDA_FORZADA = "/login?motivo=sin-acceso";
+
+/**
+ * Si la cuenta puede seguir dentro, mirando el dato fresco.
+ *
+ * Un cliente depende ademas de su empresa: si la agencia deja de atenderla,
+ * sus personas pierden el acceso aunque su cuenta siga activa.
+ */
+function conservaElAcceso(usuario: UsuarioCompleto): boolean {
+  if (!usuario.activo) return false;
+  if (usuario.tipo === "cliente" && usuario.empresaActiva === false) return false;
+
+  return true;
+}
+
+/**
  * Igual que `usuarioActual`, pero manda al login si no hay nadie.
  *
- * Tambien echa a quien fue desactivado mientras tenia la sesion abierta: su
- * token sigue siendo valido, pero su cuenta ya no.
+ * Tambien echa a quien fue desactivado mientras tenia la sesion abierta, y al
+ * cliente cuya empresa se desactivo: su token sigue siendo valido, pero su
+ * acceso ya no.
  */
 export async function requerirUsuario(): Promise<UsuarioCompleto> {
   const usuario = await usuarioActual();
 
-  if (!usuario || !usuario.activo) {
+  if (!usuario) {
     redirect("/login");
+  }
+
+  if (!conservaElAcceso(usuario)) {
+    redirect(SALIDA_FORZADA);
   }
 
   return usuario;
@@ -121,21 +148,12 @@ export async function requerirEmpresa(): Promise<{
 }
 
 /**
- * Igual que `obtenerSesion`, pero manda al login si no hay sesion.
- * Devuelve la sesion ya garantizada, para no tener que comprobar null.
- */
-export async function requerirSesion(): Promise<Sesion> {
-  const sesion = await obtenerSesion();
-
-  if (!sesion) {
-    redirect("/login");
-  }
-
-  return sesion;
-}
-
-/**
- * Exige una sesion con alguno de los roles indicados.
+ * Exige que la persona tenga alguno de los roles indicados.
+ *
+ * Se decide con el rol LEIDO DE LA BASE, no con el del token. El token guarda
+ * el rol del momento en que se inicio sesion: decidir con el dejaba a un
+ * administrador degradado o desactivado crear cuentas y restablecer
+ * contrasenas hasta que su token caducara.
  *
  * Quien no tiene sesion va al login. Quien la tiene pero con otro rol vuelve
  * al panel: no se le manda al login porque su sesion es valida, lo que falta
@@ -143,18 +161,18 @@ export async function requerirSesion(): Promise<Sesion> {
  */
 export async function requerirRol(
   ...rolesPermitidos: NombreRol[]
-): Promise<Sesion> {
-  const sesion = await requerirSesion();
+): Promise<UsuarioCompleto> {
+  const usuario = await requerirUsuario();
 
-  if (!rolesPermitidos.includes(sesion.rol)) {
+  if (!rolesPermitidos.includes(usuario.rol)) {
     redirect("/dashboard");
   }
 
-  return sesion;
+  return usuario;
 }
 
 /** Atajo para lo que solo puede hacer un administrador. */
-export async function requerirAdmin(): Promise<Sesion> {
+export async function requerirAdmin(): Promise<UsuarioCompleto> {
   return requerirRol("admin");
 }
 
