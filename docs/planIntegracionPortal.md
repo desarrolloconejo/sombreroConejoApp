@@ -89,6 +89,10 @@ el responsable el 2026-10-13).
 
 ## Avance
 
+No se publica nada hasta terminar la integracion (decidido el 2026-10-13).
+Lo que cada etapa exige en produccion se va anotando en
+`docs/despliegueProduccion.md`.
+
 | Etapa | Rama | Que entrega | SQL para Neon | Estado |
 | --- | --- | --- | --- | --- |
 | 1 | `feat/etapa1-guardias-y-cabeceras` | Huecos 1, 8 y 10 cerrados; del 5, el acceso negado en el login y en cada peticion. Cargo `produccion` | `db/neon/01-cargo-produccion.sql` | Hecha |

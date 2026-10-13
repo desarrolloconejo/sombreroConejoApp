@@ -36,6 +36,7 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 | `CLAUDE.md` | Contrato: stack, principios, alcance por fases |
 | `README.md` | Puesta en marcha, comandos, convenciones, despliegue |
 | `docs/planIntegracionPortal.md` | Plan maestro de la integracion. Manda sobre los demas |
+| `docs/despliegueProduccion.md` | Guia viva del despliegue: SQL, variables y pasos, por etapa |
 | `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7. Ejecutado |
 | `docs/informeAuditoria.md` | Resultado de esa revision: que se corrigio y que quedo para el plan del portal |
 | `docs/planMejoraDiseno.md` | Plan de mejora del diseno y navegacion movil nueva |
@@ -179,6 +180,14 @@ valida a mano en `src/lib/validaciones.ts`.
 
 - **Una rama por funcionalidad**, que se une a `main` cuando esta terminada y
   probada. Subir `main` publica en Vercel.
+- **No se publica hasta terminar la integracion del portal.** `main` se
+  acumula en local; decidido por el responsable el 2026-10-13. No se sube ni
+  se propone subir a mitad.
+- **Todo lo que cambie produccion se anota en `docs/despliegueProduccion.md`
+  antes de dar la rama por terminada**: el archivo de `db/neon/` en su
+  seccion (antes o despues de subir), las variables de entorno, lo que hay
+  que comprobar y lo que quedo sin probar. Es lo que se seguira el dia del
+  despliegue.
 - Commits en espanol, descriptivos, que digan solo lo que cambia ese commit.
 - Antes de dar algo por hecho: `lint`, `typecheck` y las pruebas que toquen.
 - Lo que cambie como se usa o se construye el proyecto se refleja en `README.md`
