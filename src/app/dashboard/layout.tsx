@@ -1,11 +1,16 @@
 import { Bell } from "lucide-react";
 import { BuscadorGlobal } from "@/components/layout/BuscadorGlobal";
+import { GuardianSesion } from "@/components/layout/GuardianSesion";
 import { HeaderMovil } from "@/components/layout/HeaderMovil";
 import { ProveedorAvisos } from "@/components/layout/ProveedorAvisos";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BotonIcono } from "@/components/ui";
 import { modulosDe, vistaDeModulos } from "@/lib/navegacion";
-import { requerirUsuario } from "@/lib/sesion";
+import {
+  inactividadPermitida,
+  relojDeSesion,
+  requerirUsuario,
+} from "@/lib/sesion";
 
 /**
  * El armazon de todo el dashboard.
@@ -24,6 +29,10 @@ export default async function LayoutDashboard({
   const usuario = await requerirUsuario();
   const modulos = vistaDeModulos(modulosDe(usuario));
 
+  // Las dos horas con las que arranca el reloj del navegador. No cuesta otra
+  // consulta: salen de la misma que ya trajo al usuario.
+  const reloj = await relojDeSesion();
+
   const ficha = {
     nombre: usuario.nombre,
     apellido: usuario.apellido,
@@ -38,6 +47,14 @@ export default async function LayoutDashboard({
       perfectamente. Un aviso flotante ahi seria peor, no mejor.
     */
     <ProveedorAvisos>
+      {reloj && (
+        <GuardianSesion
+          accesoCaducaEn={reloj.accesoCaducaEn}
+          sesionCaducaEn={reloj.sesionCaducaEn}
+          inactividad={inactividadPermitida()}
+        />
+      )}
+
       <div className="flex flex-1 flex-col lg:flex-row">
         <Sidebar modulos={modulos} usuario={ficha} />
         <HeaderMovil modulos={modulos} usuario={ficha} />
