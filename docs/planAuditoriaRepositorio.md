@@ -1,6 +1,7 @@
 # Plan de auditoria y actualizacion del repositorio
 
-Fecha: 2026-10-13. Estado: **pendiente de ejecutar**.
+Fecha: 2026-10-13. Estado: **analisis hecho** (`docs/informeAuditoria.md`);
+arreglos y actualizaciones pendientes de aprobar.
 
 Revisar que cada libreria y cada API de plataforma se usa como dice su
 documentacion vigente, que nada sensible queda expuesto, y dejar las
