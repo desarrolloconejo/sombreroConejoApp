@@ -1763,3 +1763,56 @@ CREATE INDEX IF NOT EXISTS empresas_nombre_idx ON empresas (lower(nombre));
 Los dos indices son nuevos porque el listado filtra por estado y ordena por
 nombre, y hasta ahora ninguna de las dos columnas tenia uno: la tabla se leia
 entera.
+
+---
+
+## Etapa 25 — Preparacion del modulo de finanzas: Google Drive
+
+Primer paso hacia el modulo de finanzas. El plan completo vive fuera de este
+repositorio, en `appFacturas/docs/integracionFinanzasConejo.md`. De sus
+decisiones tecnicas quedaron cerradas tres:
+
+| Decision | Resultado |
+| --- | --- |
+| Seguridad por fila | La app pasara a conectarse con un rol sin privilegios, `conejo_app` |
+| Quien opera finanzas | El rol `admin` y el cargo `administracion` |
+| Comprobantes de pago y de retencion | Google Drive, carpeta `ConejoApp/Comprobantes` |
+
+### Por que un cliente OAuth y no una cuenta de servicio
+
+Una cuenta de servicio no tiene cuota de almacenamiento propia: solo puede
+guardar dentro de una unidad compartida de Google Workspace. Con un cliente
+OAuth los archivos pertenecen a la cuenta que autoriza y ocupan su espacio.
+
+El alcance es `drive.file`: la aplicacion solo ve lo que ella crea. De ahi sale
+una regla que no es obvia: **la carpeta la crea el script, no una persona**. Una
+carpeta hecha a mano desde la web de Drive seria invisible para la aplicacion.
+
+No entra ninguna libreria. La API de Drive es HTTP y Node trae `fetch`.
+
+### Construido
+
+- `scripts/driveProbar.mjs` y `npm run drive:probar`. Se ejecuta en el host,
+  porque abre un puerto local para recibir la respuesta de Google. La primera
+  vez pide la autorizacion en el navegador y guarda el refresh token en el
+  `.env`; despues crea la carpeta, guarda su id, sube un archivo de prueba, lo
+  lee de vuelta y lo borra.
+- Cuatro variables nuevas en `.env.example`: `DRIVE_CLIENT_ID`,
+  `SECRET_DRIVE_KEY1`, `DRIVE_REFRESH_TOKEN` y `DRIVE_CARPETA_COMPROBANTES_ID`.
+
+Va como `.mjs` y no como `.mts`: el Node del host es 22.17, que todavia no
+ejecuta TypeScript sin una bandera.
+
+### Verificado
+
+| Comprobacion | Resultado |
+| --- | --- |
+| El script arranca y se detiene si faltan variables | OK |
+| Autorizacion, creacion de la carpeta y subida | **Sin probar**: falta el id del cliente OAuth |
+
+### Lo que queda anotado
+
+- Mientras la pantalla de consentimiento de GCP este en «Testing», Google
+  caduca los refresh tokens a los 7 dias. Hay que publicarla.
+- Conviene autorizar con una cuenta del estudio y no con una personal: los
+  comprobantes quedan en el Drive de quien autoriza.

@@ -13,7 +13,8 @@
     "seed": "node --env-file-if-exists=.env db/seed.mts",
     "prueba:auditor": "npx tsx db/pruebas/auditor.mts",
     "prueba:modelos": "npx tsx db/pruebas/modelos.mts",
-    "sql:produccion": "node db/generarSql.mts"
+    "sql:produccion": "node db/generarSql.mts",
+    "drive:probar": "node --env-file=.env scripts/driveProbar.mjs"
   },
   "dependencies": {
     "bcryptjs": "3.0.3",
