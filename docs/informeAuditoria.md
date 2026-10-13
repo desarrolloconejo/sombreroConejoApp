@@ -332,7 +332,43 @@ prohibido.
 | 1 | A1: `next` y `eslint-config-next` a 16.4.0, `npm audit fix`. **Hecho** | `chore/auditoria-next` |
 | 2 | A2 y A4: `destinoSeguro` con su prueba, `retry` en los limites de error. **Hecho** | `fix/auditoria-login-y-errores` |
 | 3 | A5, A6, A7, A9, A12, A13 y A14. **Hecho** | `chore/auditoria-menores` |
-| 4 | Resto de la fase 3: `react`, `jose`, `pg`, `lucide-react`, tipos; evaluar `eslint` 10 y `typescript` 7 | `chore/auditoria-dependencias` |
+| 4 | Resto de la fase 3: `react`, `jose`, `pg`, `lucide-react`, tipos; evaluar `eslint` 10 y `typescript` 7. **Hecho** | `chore/auditoria-dependencias` |
+
+## Fase 3 — Dependencias
+
+Hecho el 2026-10-13.
+
+| Paquete | Antes | Ahora |
+| --- | --- | --- |
+| `next`, `eslint-config-next` | 16.3.2 | 16.4.0 |
+| `react`, `react-dom` | 19.2.8 | 19.3.0 |
+| `jose` | 6.2.10 | 6.2.12 |
+| `pg` | 8.23.0 | 8.23.1 |
+| `lucide-react` | 1.34.0 | 1.56.0 |
+| `@types/node`, `@types/react`, `@types/react-dom` | — | Ultima dentro de su rango |
+
+Las de ejecucion siguen fijadas a un numero exacto. Se subieron juntas y no de
+una en una como pedia el plan; al pasar todo a la primera no hizo falta
+separarlas. Las notas de React 19.3 (Context7) son correcciones y eventos
+nuevos; ninguna cambia lo que usa el proyecto. Los 65 iconos de `lucide-react`
+siguen existiendo con el mismo nombre: lo confirma el `typecheck`.
+
+Comprobado tras reconstruir el contenedor: lint, typecheck, auditor 19/19,
+modelos 53/53, unitarias 24/24, integracion 3/3 y build de produccion. La
+primera pasada de integracion, con el servidor recien reconstruido, necesito
+el reintento en una prueba; la segunda paso limpia.
+
+`npm audit --omit=dev`: cero avisos.
+
+Evaluadas y **no adoptadas**:
+
+| Paquete | Ultima | Por que no |
+| --- | --- | --- |
+| `eslint` | 10.12.0 | `eslint-config-next` 16.4.0 trae `eslint-plugin-react`, `eslint-plugin-import` y `eslint-plugin-jsx-a11y`, que solo declaran soporte hasta la 9. Node no es obstaculo: el contenedor usa la 24 |
+| `typescript` | 7.0.2 | `typescript-eslint`, tambien en su ultima version, solo admite hasta la 6.0 |
+| `@types/node` | 26 | Sigue a Node 24, que es el del contenedor |
+
+Se revisa cuando `eslint-config-next` declare soporte.
 
 Fuera de esta auditoria, por decision del responsable (2026-10-13):
 
