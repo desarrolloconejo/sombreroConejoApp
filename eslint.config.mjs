@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Skills de terceros para el asistente y salidas de Playwright: no son
+    // codigo del proyecto.
+    ".claude/**",
+    "test-results/**",
+    "playwright-report/**",
   ]),
 ]);
 

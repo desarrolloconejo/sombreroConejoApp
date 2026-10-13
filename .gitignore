@@ -68,3 +68,7 @@ cookie-*.txt
 # despliegue concreto, no una fuente de verdad: el esquema vive entero en
 # db/schema.sql y de ahi se extraen estos bloques.
 /db/migraciones-pendientes.sql
+
+# playwright
+/test-results/
+/playwright-report/

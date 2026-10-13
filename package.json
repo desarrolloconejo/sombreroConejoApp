@@ -14,7 +14,10 @@
     "prueba:auditor": "npx tsx db/pruebas/auditor.mts",
     "prueba:modelos": "npx tsx db/pruebas/modelos.mts",
     "sql:produccion": "node db/generarSql.mts",
-    "drive:probar": "node --env-file=.env scripts/driveProbar.mjs"
+    "drive:probar": "node --env-file=.env scripts/driveProbar.mjs",
+    "test": "playwright test",
+    "test:unitarias": "playwright test --project=unitarias",
+    "test:integracion": "playwright test --project=integracion"
   },
   "dependencies": {
     "bcryptjs": "3.0.3",
@@ -26,6 +29,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24",
     "@types/pg": "^8",
