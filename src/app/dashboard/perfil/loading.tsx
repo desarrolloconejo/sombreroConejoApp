@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 /**
  * Esqueleto de Mi perfil.
  *
- * Copia la geometria real de la page: las mismas dos columnas, las mismas
- * cinco tarjetas y los mismos altos de campo. Es lo que evita que al llegar
+ * Copia la geometria real de la page: las dos columnas de arriba, las
+ * tarjetas a todo el ancho de debajo y los mismos altos de campo. Es lo que evita que al llegar
  * los datos la pagina se reacomode delante de quien la esta mirando.
  *
  * Todo va marcado como decorativo salvo el aviso para lectores de pantalla:
@@ -111,70 +111,72 @@ export default function CargandoPerfil() {
                 <div className="hueso h-11 w-[168px] rounded-xl" />
               </div>
             </Tarjeta>
-
-            {/* Cambiar contrasena */}
-            <Tarjeta>
-              <CabeceraHueso />
-
-              <div className="grid gap-[15px] sm:grid-cols-2">
-                <CampoHueso ancho="w-[112px]" className="sm:col-span-2" />
-                <CampoHueso ancho="w-[118px]" />
-                <CampoHueso ancho="w-[104px]" />
-              </div>
-
-              <div className="mt-3 flex flex-col gap-1.5">
-                <div className="hueso h-3 w-[142px]" />
-                <div className="hueso h-3 w-[186px]" />
-                <div className="hueso h-3 w-[128px]" />
-              </div>
-
-              <div className="mt-5 flex justify-end gap-2.5 border-t border-borde pt-[18px]">
-                <div className="hueso h-11 w-[104px] rounded-xl" />
-                <div className="hueso h-11 w-[196px] rounded-xl" />
-              </div>
-            </Tarjeta>
-
-            {/* Verificacion en dos pasos */}
-            <Tarjeta>
-              <div className="flex items-start gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="hueso h-3.5 w-[172px]" />
-                  <div className="hueso mt-[5px] h-3 w-full max-w-[420px]" />
-                </div>
-                <div className="hueso h-6 w-[86px] rounded-full" />
-              </div>
-              <div className="mt-5 border-t border-borde pt-5">
-                <div className="hueso h-11 w-[186px] rounded-xl" />
-              </div>
-            </Tarjeta>
-
-            {/* Sesiones abiertas */}
-            <Tarjeta>
-              <div className="hueso h-3.5 w-[128px]" />
-              <div className="hueso mt-[5px] h-3 w-full max-w-[420px]" />
-
-              <div className="mt-4 flex items-center gap-3 border-t border-borde py-3">
-                <div className="hueso size-[18px] shrink-0 rounded" />
-                <div className="min-w-0 flex-1">
-                  <div className="hueso h-3.5 w-[150px]" />
-                  <div className="hueso mt-1.5 h-3 w-[190px]" />
-                </div>
-                <div className="hueso h-6 w-[86px] rounded-full" />
-              </div>
-            </Tarjeta>
-
-            {/* Cerrar sesion */}
-            <Tarjeta>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="min-w-0 flex-1">
-                  <div className="hueso h-3.5 w-[112px]" />
-                  <div className="hueso mt-[5px] h-3 w-full max-w-[380px]" />
-                  <div className="hueso mt-2.5 h-3 w-[210px]" />
-                </div>
-                <div className="hueso h-11 w-full rounded-xl sm:w-[160px]" />
-              </div>
-            </Tarjeta>
           </div>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-5">
+          {/* Cambiar contrasena */}
+          <Tarjeta>
+            <CabeceraHueso />
+
+            <div className="grid gap-[15px] sm:grid-cols-2">
+              <CampoHueso ancho="w-[112px]" className="sm:col-span-2" />
+              <CampoHueso ancho="w-[118px]" />
+              <CampoHueso ancho="w-[104px]" />
+            </div>
+
+            <div className="mt-3 flex flex-col gap-1.5">
+              <div className="hueso h-3 w-[142px]" />
+              <div className="hueso h-3 w-[186px]" />
+              <div className="hueso h-3 w-[128px]" />
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2.5 border-t border-borde pt-[18px]">
+              <div className="hueso h-11 w-[104px] rounded-xl" />
+              <div className="hueso h-11 w-[196px] rounded-xl" />
+            </div>
+          </Tarjeta>
+
+          {/* Verificacion en dos pasos */}
+          <Tarjeta>
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="hueso h-3.5 w-[172px]" />
+                <div className="hueso mt-[5px] h-3 w-full max-w-[420px]" />
+              </div>
+              <div className="hueso h-6 w-[86px] rounded-full" />
+            </div>
+            <div className="mt-5 border-t border-borde pt-5">
+              <div className="hueso h-11 w-[186px] rounded-xl" />
+            </div>
+          </Tarjeta>
+
+          {/* Sesiones abiertas */}
+          <Tarjeta>
+            <div className="hueso h-3.5 w-[128px]" />
+            <div className="hueso mt-[5px] h-3 w-full max-w-[420px]" />
+
+            <div className="mt-4 flex items-center gap-3 border-t border-borde py-3">
+              <div className="hueso size-[18px] shrink-0 rounded" />
+              <div className="min-w-0 flex-1">
+                <div className="hueso h-3.5 w-[150px]" />
+                <div className="hueso mt-1.5 h-3 w-[190px]" />
+              </div>
+              <div className="hueso h-6 w-[86px] rounded-full" />
+            </div>
+          </Tarjeta>
+
+          {/* Cerrar sesion */}
+          <Tarjeta>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="min-w-0 flex-1">
+                <div className="hueso h-3.5 w-[112px]" />
+                <div className="hueso mt-[5px] h-3 w-full max-w-[380px]" />
+                <div className="hueso mt-2.5 h-3 w-[210px]" />
+              </div>
+              <div className="hueso h-11 w-full rounded-xl sm:w-[160px]" />
+            </div>
+          </Tarjeta>
         </div>
       </div>
 
