@@ -228,6 +228,18 @@ acceso sin avisar dos minutos antes de que caduque. Tras 15 minutos sin
 actividad pregunta antes de hacerlo. Una page que llega con el acceso vencido
 pasa por `/renovar` y vuelve a la misma URL.
 
+#### Bloqueo y contrasena provisional
+
+Cinco contrasenas equivocadas seguidas bloquean la cuenta 15 minutos. Durante
+el bloqueo no se comprueba nada, tampoco la contrasena correcta, y el mensaje
+es el mismo que con un fallo normal: uno propio revelaria que ese correo
+existe. Entrar bien, o que un administrador restablezca la contrasena, pone el
+contador a cero.
+
+La contrasena que genera el alta o el restablecimiento es **provisional**: la
+conoce el administrador. Al entrar con ella, las guardias mandan a
+`/cambiar-clave` desde cualquier ruta hasta que la persona elija una propia.
+
 Los tres plazos se pueden acortar para probar: `SESION_ACCESO_SEGUNDOS`,
 `SESION_HORAS` y `SESION_INACTIVIDAD_MINUTOS` (ver `.env.example`).
 
@@ -307,7 +319,7 @@ tipo y el `CHECK` de la tabla.
 | `test:integracion` | Host, con la app levantada | Recorridos reales en un navegador |
 | `prueba:auditor` | Contenedor | La tabla completa de casos del auditor |
 | `prueba:modelos` | Contenedor | Los modelos contra la base; limpia lo que crea |
-| `prueba:sesiones` | Contenedor | Rotacion, reutilizacion y revocacion de sesiones |
+| `prueba:sesiones` | Contenedor | Rotacion, reutilizacion y revocacion de sesiones; bloqueo por intentos |
 
 Las pruebas de integracion entran con las cuentas de prueba de la semilla, que
 leen de `db/datos/semilla.mts`. Necesitan la base sembrada.

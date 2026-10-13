@@ -93,6 +93,7 @@ el responsable el 2026-10-13).
 | --- | --- | --- | --- | --- |
 | 1 | `feat/etapa1-guardias-y-cabeceras` | Huecos 1, 8 y 10 cerrados; del 5, el acceso negado en el login y en cada peticion. Cargo `produccion` | `db/neon/01-cargo-produccion.sql` | Hecha |
 | 1 | `feat/etapa1-sesiones` | Seccion 5.1 entera: acceso de 30 minutos, renovacion con rotacion, tabla `sesiones`, revocaciones, aviso por inactividad, «Sesiones abiertas» en Mi perfil. Cierra el hueco 2 y lo que faltaba del 5 | `db/neon/02-sesiones.sql`, **antes** de subir | Hecha |
+| 1 | `feat/etapa1-login-seguro` | Huecos 3 y 4: bloqueo de 15 minutos tras cinco fallos, y cambio obligatorio de la contrasena provisional en `/cambiar-clave` | `db/neon/03-acceso.sql`, **antes** de subir | Hecha |
 
 Diferencias con lo escrito en la seccion 5.1, decididas al construir:
 
