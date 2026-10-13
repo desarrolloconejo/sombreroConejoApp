@@ -108,6 +108,20 @@ export const USUARIOS: UsuarioSemilla[] = [
     telefono: null,
     perfil: { tipo: "trabajador", rol: "trabajador", cargo: "produccion" },
   },
+  /*
+   * La cuenta que las pruebas bloquean a proposito, fallando su contrasena.
+   * Va aparte de la anterior porque las pruebas corren en paralelo: si a una
+   * misma cuenta le restablecieran la contrasena mientras otra prueba cuenta
+   * sus fallos, el contador volveria a cero a mitad.
+   */
+  {
+    nombre: "Bloqueo",
+    apellido: "Automatico",
+    email: "bloqueo@conejo.test",
+    password: "Trabajador123*",
+    telefono: null,
+    perfil: { tipo: "trabajador", rol: "trabajador", cargo: "produccion" },
+  },
 ];
 
 /** Quien firma lo que siembra el seed: la creadora de contenido. */
