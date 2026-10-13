@@ -92,9 +92,18 @@ el responsable el 2026-10-13).
 | Etapa | Rama | Que entrega | SQL para Neon | Estado |
 | --- | --- | --- | --- | --- |
 | 1 | `feat/etapa1-guardias-y-cabeceras` | Huecos 1, 8 y 10 cerrados; del 5, el acceso negado en el login y en cada peticion. Cargo `produccion` | `db/neon/01-cargo-produccion.sql` | Hecha |
+| 1 | `feat/etapa1-sesiones` | Seccion 5.1 entera: acceso de 30 minutos, renovacion con rotacion, tabla `sesiones`, revocaciones, aviso por inactividad, «Sesiones abiertas» en Mi perfil. Cierra el hueco 2 y lo que faltaba del 5 | `db/neon/02-sesiones.sql`, **antes** de subir | Hecha |
 
-Del hueco 5 queda revocar las sesiones abiertas al desactivar la empresa, que
-llega con la tabla `sesiones`. Hoy esa persona sale en su siguiente peticion.
+Diferencias con lo escrito en la seccion 5.1, decididas al construir:
+
+- El aviso de inactividad no espera a un clic para renovar cuando hay
+  actividad: se renueva solo. Es lo decidido en «el modal solo aparece tras
+  inactividad».
+- Reutilizar un token de renovacion ya rotado revoca la sesion, salvo dentro
+  de un margen de 20 segundos: dos pestanas pueden pedir la renovacion a la
+  vez con el mismo token, y eso no es un robo.
+- `JWT_EXPIRACION` desaparece. Los plazos son `SESION_ACCESO_SEGUNDOS`,
+  `SESION_HORAS` y `SESION_INACTIVIDAD_MINUTOS`, los tres opcionales.
 
 ---
 

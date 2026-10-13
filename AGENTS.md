@@ -88,8 +88,13 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   hacer** es el dato fresco de la base. Todas las guardias (`requerirUsuario`,
   `requerirRol`, `requerirAdmin`, `requerirCargo`) leen de ella.
 - Quien tiene un token valido pero ya no puede entrar sale por
-  `/login?motivo=sin-acceso`, nunca por `/login` a secas: el proxy lo
-  devolveria al panel y entraria en bucle.
+  `/login?motivo=…`, nunca por `/login` a secas: el proxy lo devolveria al
+  panel y entraria en bucle. Los motivos son una lista cerrada en el login.
+- La autoridad de una sesion vive en la tabla `sesiones`, no en el token. Lo
+  que cambie que puede ver o hacer alguien **revoca sus sesiones**
+  (`src/models/sesiones.ts`); no basta con cambiar el dato.
+- `renovarSesion` es la unica action sin guardia, y es a proposito. Ninguna
+  otra puede saltarsela.
 - La politica de contenido la pone `src/proxy.ts` con un nonce por peticion.
   No se anaden scripts en linea ni origenes externos sin tocarla.
 - Los parametros de la URL nunca llegan crudos a un modelo: pasan por
@@ -160,6 +165,7 @@ docker compose exec app-dev npm run lint
 docker compose exec app-dev npm run typecheck
 docker compose exec app-dev npm run prueba:auditor  # casos del auditor
 docker compose exec app-dev npm run prueba:modelos  # modelos contra la base
+docker compose exec app-dev npm run prueba:sesiones # modelo de sesiones
 npm run test:unitarias                              # Playwright, sin navegador
 npm run test:integracion                            # Playwright, app levantada
 ```
