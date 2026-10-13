@@ -20,7 +20,7 @@ import type { NombreRol, Sesion, SlugCargo, UsuarioCompleto } from "@/types";
  * Registro unico de los modulos de la aplicacion.
  *
  * De aqui comen el sidebar, el cajon movil y el buscador global. Anadir un
- * modulo en el futuro es UNA entrada en `MODULOS`: si el registro estuviera
+ * modulo en el futuro es UNA entrada en `MODULOS`, con su `seccion`: si el registro estuviera
  * repartido entre la navegacion y el buscador, tarde o temprano uno de los dos
  * se quedaria atras.
  *
@@ -29,9 +29,38 @@ import type { NombreRol, Sesion, SlugCargo, UsuarioCompleto } from "@/types";
  * descuido un modulo al que quien mira no tiene acceso.
  */
 
+/**
+ * Las secciones del menu, en el orden en que se pintan.
+ *
+ * El menu va a crecer mucho con el portal: un administrador pasara de seis
+ * entradas a mas de veinte. Agruparlas es lo que hace que se siga pudiendo
+ * leer, y por eso cada modulo declara a cual pertenece.
+ *
+ * «Herramientas» es un rotulo, no un desplegable: como desplegable, Hooks
+ * quedaria a tres niveles y la navegacion solo admite uno.
+ */
+export const SECCIONES = [
+  { clave: "general", titulo: "General" },
+  { clave: "trabajo", titulo: "Trabajo" },
+  { clave: "herramientas", titulo: "Herramientas" },
+  { clave: "finanzas", titulo: "Finanzas" },
+  { clave: "sistema", titulo: "Sistema" },
+  { clave: "mi_espacio", titulo: "Mi espacio" },
+] as const;
+
+export type SeccionMenu = (typeof SECCIONES)[number]["clave"];
+
 export type Modulo = {
   /** El nombre que se ve en la navegacion. */
   titulo: string;
+
+  /**
+   * A que seccion del menu pertenece.
+   *
+   * Sin seccion, el modulo va al final y sin rotulo. Hoy solo es Mi perfil,
+   * que no es un modulo de trabajo sino la cuenta de quien mira.
+   */
+  seccion?: SeccionMenu;
 
   /** Una linea de que hace el modulo. Se ve en el buscador y en el movil. */
   subtitulo: string;
@@ -108,52 +137,12 @@ export type ActorNavegacion =
 const MODULOS: readonly Modulo[] = [
   {
     titulo: "Inicio",
+    seccion: "general",
     subtitulo: "Tu espacio de trabajo",
     href: "/dashboard",
     icono: House,
     alias: ["panel", "home", "principal"],
   },
-  {
-    titulo: "Usuarios",
-    subtitulo: "Alta de trabajadores y clientes",
-    href: "/dashboard/usuarios",
-    icono: Users,
-    roles: ["admin"],
-    alias: [
-      "personal",
-      "empleados",
-      "trabajadores",
-      "clientes",
-      "cuentas",
-      "permisos",
-      "alta",
-    ],
-  },
-  /*
-   * Empresas va JUNTO a Usuarios, y en ese orden.
-   *
-   * Son los dos lados de lo mismo: aqui estan las cuentas que atiende la
-   * agencia, y en Usuarios las personas que las representan. Y el orden no es
-   * casual: una persona de contacto solo se puede dar de alta si su empresa ya
-   * existe, asi que el modulo que va primero es el que se usa primero.
-   */
-  {
-    titulo: "Empresas",
-    subtitulo: "Los clientes que atiende la agencia",
-    href: "/dashboard/empresas",
-    icono: Building2,
-    roles: ["admin"],
-    alias: [
-      "clientes",
-      "cuentas",
-      "marcas",
-      "cartera",
-      "empresa",
-      "companias",
-      "rif",
-    ],
-  },
-
   /*
    * Hooks. Los submodulos son PASOS hacia un final, y el final es registrar
    * las metricas de la pieza, no auditarla: de ahi el orden.
@@ -164,6 +153,7 @@ const MODULOS: readonly Modulo[] = [
    */
   {
     titulo: "Hooks",
+    seccion: "herramientas",
     subtitulo: "Crear y auditar hooks de video corto",
     href: "/dashboard/hooks",
     icono: Zap,
@@ -231,7 +221,51 @@ const MODULOS: readonly Modulo[] = [
   },
 
   {
+    titulo: "Usuarios",
+    seccion: "sistema",
+    subtitulo: "Alta de trabajadores y clientes",
+    href: "/dashboard/usuarios",
+    icono: Users,
+    roles: ["admin"],
+    alias: [
+      "personal",
+      "empleados",
+      "trabajadores",
+      "clientes",
+      "cuentas",
+      "permisos",
+      "alta",
+    ],
+  },
+  /*
+   * Empresas va JUNTO a Usuarios, y en ese orden.
+   *
+   * Son los dos lados de lo mismo: aqui estan las cuentas que atiende la
+   * agencia, y en Usuarios las personas que las representan. Y el orden no es
+   * casual: una persona de contacto solo se puede dar de alta si su empresa ya
+   * existe, asi que el modulo que va primero es el que se usa primero.
+   */
+  {
+    titulo: "Empresas",
+    seccion: "sistema",
+    subtitulo: "Los clientes que atiende la agencia",
+    href: "/dashboard/empresas",
+    icono: Building2,
+    roles: ["admin"],
+    alias: [
+      "clientes",
+      "cuentas",
+      "marcas",
+      "cartera",
+      "empresa",
+      "companias",
+      "rif",
+    ],
+  },
+
+  {
     titulo: "Auditoria",
+    seccion: "sistema",
     subtitulo: "Quien hizo que, y cuando",
     href: "/dashboard/auditoria",
     icono: ScrollText,
@@ -325,6 +359,48 @@ export function modulosDe(quien: ActorNavegacion): Modulo[] {
   }
 
   return visibles;
+}
+
+/** Un tramo del menu: su rotulo y los modulos que caen en el. */
+export type GrupoDeMenu<T> = {
+  /** Estable, para usarlo como `key`. */
+  clave: string;
+
+  /** Nulo para los modulos sin seccion, que se pintan sin rotulo. */
+  titulo: string | null;
+  modulos: T[];
+};
+
+/**
+ * Reparte los modulos en las secciones del menu, en su orden.
+ *
+ * Una seccion sin modulos visibles NO aparece: un rotulo sin nada debajo le
+ * dice a quien mira que hay algo que no le dejan ver. Dentro de cada seccion
+ * se respeta el orden del registro.
+ *
+ * Es generica por lo mismo que `filtrarPorTermino`: la usan el sidebar y el
+ * menu movil sobre `ModuloVista`.
+ */
+export function porSecciones<T extends { seccion?: SeccionMenu }>(
+  modulos: readonly T[],
+): GrupoDeMenu<T>[] {
+  const grupos: GrupoDeMenu<T>[] = [];
+
+  for (const seccion of SECCIONES) {
+    const suyos = modulos.filter((modulo) => modulo.seccion === seccion.clave);
+
+    if (suyos.length > 0) {
+      grupos.push({ clave: seccion.clave, titulo: seccion.titulo, modulos: suyos });
+    }
+  }
+
+  const sueltos = modulos.filter((modulo) => modulo.seccion === undefined);
+
+  if (sueltos.length > 0) {
+    grupos.push({ clave: "sin_seccion", titulo: null, modulos: sueltos });
+  }
+
+  return grupos;
 }
 
 /**

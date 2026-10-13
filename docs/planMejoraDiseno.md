@@ -235,7 +235,7 @@ tener presente antes de empezar.
 | # | Tema | Problema | Propuesta |
 | --- | --- | --- | --- |
 | 4 | Atajos de la barra | Una sola prioridad por modulo no reproduce la tabla de atajos: el admin ve todo, asi que recibiria los dos modulos mas prioritarios del registro, no «Tablero» solo | Prioridad por rol y cargo |
-| 5 | Quien introduce `seccion` | La hoja agrupa por secciones, pero `seccion` no existe en `src/lib/navegacion.ts`, y el plan del portal la asigna a su etapa 1 | La introduce quien llegue primero, y el `Sidebar` la adopta a la vez |
+| 5 | Quien introduce `seccion` | **Resuelto.** La introdujo la etapa 1 del portal: cada modulo la declara y `porSecciones` la reparte. La hoja la reutiliza tal cual | — |
 
 **Lo que el plan da por hecho y no existe**
 

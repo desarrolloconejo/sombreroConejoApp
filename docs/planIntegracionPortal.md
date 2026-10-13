@@ -96,6 +96,12 @@ el responsable el 2026-10-13).
 | 1 | `feat/etapa1-login-seguro` | Huecos 3 y 4: bloqueo de 15 minutos tras cinco fallos, y cambio obligatorio de la contrasena provisional en `/cambiar-clave` | `db/neon/03-acceso.sql`, **antes** de subir | Hecha |
 | 1 | `feat/etapa1-auditoria` | Seccion 5.2 y hueco 9: tabla `auditoria` inmutable, anotada en la misma transaccion desde acceso, usuarios, empresas y perfil, y el modulo Auditoria para el admin | `db/neon/04-auditoria.sql`, **antes** de subir | Hecha |
 | 1 | `feat/etapa1-rol-app` | Huecos 6, 7 y 11: la app se conecta como `conejo_app`, con los permisos justos; `conSesion`; el hash sale de la vista general; `sql:produccion` ya no lleva la semilla, y la imagen `prod` tampoco | `db/neon/05-rol-de-la-aplicacion.sql` **antes** de subir (lleva el hueco de la contrasena) y `06-vista-sin-hash.sql` **despues** | Hecha |
+| 1 | `feat/etapa1-menu-secciones` | Seccion 9.1: cada modulo declara su `seccion`; el sidebar y el menu movil pintan un rotulo por seccion y omiten las vacias | Ninguno | Hecha |
+
+**La etapa 1 esta completa.** Quedan fuera de ella, para la etapa en que
+existan sus modulos, los tres criterios nuevos de visibilidad de la seccion
+9.3 (solo clientes, un permiso del cliente, «tiene tareas asignadas») y la
+lista de rutas por tipo de usuario del proxy.
 
 De la seccion 5.2 quedan para cuando existan sus entidades la pestana
 «Historial» de cada cosa y lo que ve el cliente; hoy la auditoria solo la

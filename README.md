@@ -303,6 +303,12 @@ Se consulta en `/dashboard/auditoria`, solo para administradores.
 
 ### Anadir un modulo
 
+Cada modulo declara su `seccion` en `src/lib/navegacion.ts`: General, Trabajo,
+Herramientas, Finanzas, Sistema o Mi espacio. El sidebar y el menu movil
+pintan un rotulo por seccion, y una seccion sin modulos visibles para quien
+mira no aparece. Sin seccion, el modulo va al final y sin rotulo; hoy solo es
+Mi perfil.
+
 1. Tablas en `db/schema.sql` y tipos en `src/types/`.
 2. Modelo en `src/models/` y actions en `src/actions/`, cada una con su guardia.
 3. Una entrada en `src/lib/navegacion.ts`: alimenta a la vez el menu y el
@@ -365,7 +371,7 @@ tipo y el `CHECK` de la tabla.
 
 | Bateria | Donde corre | Que cubre |
 | --- | --- | --- |
-| `test:unitarias` | Host | Funciones puras, con Playwright sin navegador: auditor de hooks, destino tras el login y limite de la contrasena |
+| `test:unitarias` | Host | Funciones puras, con Playwright sin navegador: auditor de hooks, destino tras el login, limite de la contrasena y reparto del menu por secciones |
 | `test:integracion` | Host, con la app levantada | Recorridos reales en un navegador |
 | `prueba:auditor` | Contenedor | La tabla completa de casos del auditor |
 | `prueba:modelos` | Contenedor | Los modelos contra la base; limpia lo que crea |

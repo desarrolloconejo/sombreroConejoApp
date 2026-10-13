@@ -9,6 +9,7 @@ import { iniciales } from "@/components/ui";
 import {
   activoEntre,
   aplanar,
+  porSecciones,
   type ModuloVista,
   type UsuarioNav,
 } from "@/lib/navegacion";
@@ -289,20 +290,37 @@ export function HeaderMovil({
             el, el desbordamiento se escaparia al cajon entero.
           */}
           <div className="barra-fina min-h-0 flex-1 overflow-y-auto px-4">
-            <p className="px-2.5 pt-3 pb-[7px] text-[9.5px] font-semibold tracking-[0.14em] text-nav-suave uppercase">
-              General
-            </p>
+            {/* Las mismas secciones que el sidebar: sale de un solo sitio. */}
+            <nav aria-label="Modulos" className="flex flex-col pb-2">
+              {porSecciones(modulos).map((grupo) => (
+                <div
+                  key={grupo.clave}
+                  role="group"
+                  aria-label={grupo.titulo ?? "Tu cuenta"}
+                  className="mt-3.5 flex flex-col gap-[3px] first:mt-0"
+                >
+                  {grupo.titulo ? (
+                    <p
+                      aria-hidden="true"
+                      className="px-2.5 pt-3 pb-[5px] text-[9.5px] font-semibold tracking-[0.14em] text-nav-suave uppercase"
+                    >
+                      {grupo.titulo}
+                    </p>
+                  ) : (
+                    <div aria-hidden="true" className="mx-2.5 mb-1 h-px bg-nav-borde" />
+                  )}
 
-            <nav aria-label="Modulos" className="flex flex-col gap-[3px] pb-2">
-              {modulos.map((modulo) => (
-                <ItemNavegacion
-                  key={modulo.href}
-                  modulo={modulo}
-                  ruta={ruta}
-                  activo={activo}
-                  medidas={MEDIDAS}
-                  alNavegar={() => setAbierto(false)}
-                />
+                  {grupo.modulos.map((modulo) => (
+                    <ItemNavegacion
+                      key={modulo.href}
+                      modulo={modulo}
+                      ruta={ruta}
+                      activo={activo}
+                      medidas={MEDIDAS}
+                      alNavegar={() => setAbierto(false)}
+                    />
+                  ))}
+                </div>
               ))}
             </nav>
           </div>
