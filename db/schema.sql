@@ -1061,6 +1061,8 @@ GRANT USAGE, SELECT ON SEQUENCE portal.notificaciones_id_seq TO conejo_app;
 -- Cada quien ve y marca solo sus avisos; ni un administrador lee los de otro.
 -- Avisar a otra persona si puede cualquiera con sesion declarada: es justo lo
 -- que hace falta para que el trabajo de uno le llegue a quien lo espera.
+-- Tambien la identidad `sistema`, que es la de las tareas programadas: cuando
+-- una lee algo raro, se lo dice a los administradores.
 ALTER TABLE portal.notificaciones ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS notificaciones_lee ON portal.notificaciones;
@@ -1071,10 +1073,76 @@ CREATE POLICY notificaciones_lee ON portal.notificaciones
 DROP POLICY IF EXISTS notificaciones_escribe ON portal.notificaciones;
 CREATE POLICY notificaciones_escribe ON portal.notificaciones
   FOR INSERT TO conejo_app
-  WITH CHECK (app_usuario_id() IS NOT NULL);
+  WITH CHECK (app_usuario_id() IS NOT NULL OR app_rol() = 'sistema');
 
 DROP POLICY IF EXISTS notificaciones_marca ON portal.notificaciones;
 CREATE POLICY notificaciones_marca ON portal.notificaciones
   FOR UPDATE TO conejo_app
   USING (usuario_id = app_usuario_id())
   WITH CHECK (usuario_id = app_usuario_id());
+
+-- ---------------------------------------------------------------------------
+-- finanzas.tasas_cambio: una fila por fuente, moneda y fecha valor.
+--
+-- Es un HISTORICO: una tasa registrada no se pisa. Cuando una factura la usa,
+-- ademas la copia, asi que lo que pase despues con esta tabla no la toca.
+--
+-- El valor es NUMERIC, no un numero de coma flotante: son bolivares por
+-- unidad de moneda, con los ocho decimales que publica el BCV, y con ellos se
+-- calcula dinero.
+--
+-- Los conjuntos cerrados tienen su espejo en src/types/tasa.ts.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS finanzas.tasas_cambio (
+  id              BIGSERIAL     PRIMARY KEY,
+
+  fuente          TEXT          NOT NULL,
+  moneda          TEXT          NOT NULL,
+  fecha_valor     DATE          NOT NULL,
+  valor           NUMERIC(20,8) NOT NULL,
+
+  -- Como llego: la leyo la aplicacion de la pagina, o la escribio una persona.
+  origen          TEXT          NOT NULL,
+  registrada_por  INTEGER       REFERENCES usuarios(id),
+  obtenida_en     TIMESTAMPTZ   NOT NULL DEFAULT now(),
+
+  CONSTRAINT tasas_cambio_fuente_valida
+    CHECK (fuente IN ('bcv')),
+  CONSTRAINT tasas_cambio_moneda_formato
+    CHECK (moneda ~ '^[A-Z]{3}$'),
+  CONSTRAINT tasas_cambio_valor_positivo
+    CHECK (valor > 0),
+  CONSTRAINT tasas_cambio_origen_valido
+    CHECK (origen IN ('automatica', 'manual')),
+  -- Una tasa escrita a mano tiene que decir quien la escribio.
+  CONSTRAINT tasas_cambio_manual_con_autor
+    CHECK (origen <> 'manual' OR registrada_por IS NOT NULL),
+  CONSTRAINT tasas_cambio_unica
+    UNIQUE (fuente, moneda, fecha_valor)
+);
+
+CREATE INDEX IF NOT EXISTS tasas_cambio_recientes_idx
+  ON finanzas.tasas_cambio (moneda, fecha_valor DESC);
+
+GRANT SELECT, INSERT ON finanzas.tasas_cambio TO conejo_app;
+REVOKE UPDATE ON finanzas.tasas_cambio FROM conejo_app;
+GRANT USAGE, SELECT ON SEQUENCE finanzas.tasas_cambio_id_seq TO conejo_app;
+
+-- La tasa del dia no es un secreto: la lee cualquiera con sesion, y tambien
+-- la tarea programada. Escribirla, solo quien opera finanzas y esa tarea.
+--
+-- `sistema` es la identidad con la que la aplicacion actua cuando no hay
+-- ninguna persona detras (`conSistema`, en src/lib/db.ts).
+ALTER TABLE finanzas.tasas_cambio ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS tasas_cambio_lee ON finanzas.tasas_cambio;
+CREATE POLICY tasas_cambio_lee ON finanzas.tasas_cambio
+  FOR SELECT TO conejo_app
+  USING (app_usuario_id() IS NOT NULL OR app_rol() = 'sistema');
+
+DROP POLICY IF EXISTS tasas_cambio_escribe ON finanzas.tasas_cambio;
+CREATE POLICY tasas_cambio_escribe ON finanzas.tasas_cambio
+  FOR INSERT TO conejo_app
+  WITH CHECK (
+    app_rol() IN ('admin', 'sistema') OR app_cargo() = 'administracion'
+  );
