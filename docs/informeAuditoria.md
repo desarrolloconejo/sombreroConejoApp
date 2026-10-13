@@ -11,21 +11,22 @@ arreglos esperan a que se apruebe la lista de abajo.
 
 El repositorio esta en buen estado: las reglas del contrato se cumplen, el
 bundle de cliente no lleva nada de servidor y el historial de git esta limpio.
-Hay **tres cosas que no deberian esperar** y un grupo de mejoras menores.
+Hay **dos cosas que no deberian esperar** (A1 y A2) y un grupo de mejoras
+menores. A3, A8 y A10 se tratan en el plan del portal; A11 ya esta corregido.
 
 | # | Severidad | Hallazgo | Cubierto por el plan del portal |
 | --- | --- | --- | --- |
 | A1 | Critica | `next` 16.3.2 tiene avisos de seguridad criticos; se corrigen en 16.4.0 | No |
 | A2 | Alta | Redireccion abierta en el login por `volverA`. **Reproducida** | No |
-| A3 | Alta | Las cuentas del seed pueden estar en produccion con su clave del repositorio | Solo hacia adelante (hueco 11) |
+| A3 | Alta | Las cuentas del seed pueden estar en produccion con su clave del repositorio | **Si**: hueco 11 y secciones 10.1 y 11 |
 | A4 | Media | Los limites de error usan `reset`, que no recupera un fallo de servidor | No |
 | A5 | Media | `.mcp.json` ejecuta Context7 con `npx -y` sin fijar version | No |
 | A6 | Baja | `pg` sin tiempos limite de consulta; cliente roto vuelve al pool | No |
 | A7 | Baja | El limite de 72 de la contrasena se mide en caracteres, no en bytes | No |
-| A8 | Baja | `jose`: no se exige `exp`; la cookie dura 8 h fijas aunque cambie `JWT_EXPIRACION` | Parcial (seccion 5.1) |
+| A8 | Baja | `jose`: no se exige `exp`; la cookie dura 8 h fijas aunque cambie `JWT_EXPIRACION` | **Si**: seccion 5.1 |
 | A9 | Baja | `sesionActual` es un punto de entrada publico sin uso; cinco funciones mas sin uso | No |
 | A10 | Baja | La imagen `prod` lleva dentro las claves del seed y las baterias de prueba | No |
-| A11 | Baja | El compose publica PostgreSQL y pgAdmin en todas las interfaces | No |
+| A11 | Baja | El compose publica PostgreSQL y pgAdmin en todas las interfaces. **Corregido** | No |
 | A12 | Baja | El `matcher` del proxy excluye por extension en cualquier ruta | No |
 | A13 | Baja | Sin frontera activa servidor/cliente; hay dos formas de ponerla sin dependencias | No |
 | A14 | Info | `next build` falla dentro del contenedor de desarrollo si no se fuerza `NODE_ENV` | No |
@@ -85,16 +86,21 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
 
 ### A3 — Cuentas del seed en produccion
 
+**Se trata en el plan del portal, no aqui.** Verificado el 2026-10-13.
+
 - **Evidencia:** `db/generarSql.mts:125-130` inserta en el SQL de produccion los
   usuarios de `db/datos/semilla.mts`, con sus contrasenas del repositorio. Son
-  cuatro, y una es de administrador. El plan del portal (hueco 11) deja de
-  incluirlas, pero no dice nada de las que ya se hayan pegado en Neon.
+  cuatro, y una es de administrador.
 - **Riesgo:** si esas cuentas existen en produccion con su clave original,
   cualquiera con acceso al repositorio entra, una de ellas como administrador.
-- **No verificable desde aqui:** la maquina de desarrollo no alcanza Neon.
-- **Arreglo, lo hace el responsable:** comprobar en Neon si existen; cambiar la
-  contrasena de la de administrador y desactivar las de prueba. Despues,
-  adelantar el cambio de `sql:produccion` previsto en la etapa 1.
+- **Donde queda cubierto:** `docs/planIntegracionPortal.md`, hueco 11 de la
+  seccion 5 («`sql:produccion` deja de incluirlas»), seccion 10.1 (que va y que
+  no va a produccion) y valores por defecto de la seccion 11 («dejan de
+  sembrarse; las que ya esten, las desactiva el admin»).
+- **Lo unico que ese plan no nombra:** la cuarta cuenta, la de administrador,
+  no es «de prueba» y no se desactiva. Su contrasena de produccion tiene que
+  ser distinta de la del repositorio; `debe_cambiar_clave` nace en falso para
+  las cuentas existentes, asi que nada obligara a cambiarla.
 
 ### A4 — Los limites de error usan `reset`
 
@@ -187,11 +193,18 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
 
 ### A11 — Puertos del compose
 
-- **Evidencia:** `docker-compose.yml:29` y `:54` publican PostgreSQL y pgAdmin
-  en todas las interfaces, con la clave de desarrollo y pgAdmin sin contrasena
-  maestra.
-- **Riesgo:** en una red compartida, cualquier equipo llega a la base local.
-- **Arreglo:** anteponer `127.0.0.1:` a los dos puertos.
+**Corregido el 2026-10-13.**
+
+- **Evidencia:** `docker-compose.yml` publicaba PostgreSQL y pgAdmin en todas
+  las interfaces (`0.0.0.0`), con la clave de desarrollo y pgAdmin sin
+  contrasena maestra.
+- **Riesgo:** en una red compartida, cualquier equipo llegaba a la base local.
+- **No era un choque de puertos:** el 5432 del equipo no intervenia; el
+  proyecto usa el 5433.
+- **Arreglo aplicado:** los dos puertos van con `127.0.0.1:` delante.
+  Comprobado tras recrear los contenedores: escuchan solo en la propia maquina,
+  la aplicacion responde y `prueba:modelos` da 53 de 53. La aplicacion sigue
+  publicada en toda la red a proposito, para poder probarla desde un telefono.
 
 ### A12 — `matcher` del proxy
 
@@ -272,11 +285,16 @@ Ejecutado el 2026-10-13 sobre `main` (`f34d134`).
 | --- | --- | --- |
 | 1 | A1: `next` y `eslint-config-next` a 16.4.0, `npm audit fix` | `chore/auditoria-next` |
 | 2 | A2 y A4: `destinoSeguro` con su prueba, `retry` en los limites de error | `fix/auditoria-login-y-errores` |
-| 3 | A3: lo comprueba el responsable en Neon. En codigo, adelantar el cambio de `sql:produccion` y A10 | `chore/auditoria-seed-produccion` |
-| 4 | A5 a A9 y A11 a A14 | `chore/auditoria-menores` |
-| 5 | Resto de la fase 3: `react`, `jose`, `pg`, `lucide-react`, tipos; evaluar `eslint` 10 y `typescript` 7 | `chore/auditoria-dependencias` |
+| 3 | A5, A6, A7, A9, A12, A13 y A14 | `chore/auditoria-menores` |
+| 4 | Resto de la fase 3: `react`, `jose`, `pg`, `lucide-react`, tipos; evaluar `eslint` 10 y `typescript` 7 | `chore/auditoria-dependencias` |
 
-Los huecos 1 a 11 de la seccion 5 del plan del portal siguen en su etapa 1. El
-hueco 1 —un administrador desactivado conserva sus permisos hasta ocho horas—
-es un cambio pequeno en `requerirAdmin`; si la etapa 1 se retrasa, conviene
-sacarlo de ella y hacerlo antes.
+Fuera de esta auditoria, por decision del responsable (2026-10-13):
+
+| Tema | Donde se trata |
+| --- | --- |
+| A3, cuentas del seed en produccion | Plan del portal: hueco 11, secciones 10.1 y 11 |
+| A10, contenido de la imagen `prod` | Va con A3: depende de que `sql:produccion` deje de leer la semilla |
+| A8 y las ocho horas de la sesion | Plan del portal, seccion 5.1: token de 30 minutos, tabla `sesiones` y guardias que leen de la base |
+| Los once huecos de la seccion 5 | Plan del portal, etapa 1 |
+
+A11 ya esta corregido.
