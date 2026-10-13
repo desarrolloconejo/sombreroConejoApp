@@ -1,6 +1,7 @@
 # Plan de integracion del portal completo en Conejo App
 
-Fecha: 2026-10-13. Sustituye como plan maestro a `docs/integracionFinanzas.md`,
+Fecha: 2026-10-13, con una segunda revision el mismo dia (sesiones, auditoria,
+cargos, tasa del BCV y correo por Gmail). Sustituye como plan maestro a `docs/integracionFinanzas.md`,
 que pasa a ser el capitulo de finanzas (seccion 7).
 
 **Fuentes.** El paquete de especificacion `appFacturas` (documentos 01 a 10,
@@ -17,8 +18,14 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Seguridad por fila | Opcion A: la app se conecta con el rol sin privilegios `conejo_app` |
 | Quien opera finanzas | Rol `admin` y cargo `administracion` |
 | Comprobantes | Google Drive, `ConejoApp/Comprobantes`. Probado el 2026-10-13 |
-| Servicios externos | **Simulados con JSON** mientras la app viva en Vercel (seccion 6) |
-| Plataforma | Vercel es temporal: la app se mudara. El plan separa lo que se construye ya de lo que se enciende tras la mudanza (seccion 10) |
+| Servicios externos | Detras de un adaptador con modo simulado (JSON) y modo real (seccion 6) |
+| Tasa de cambio | Se lee de la pagina del BCV cada hora (seccion 6.1) |
+| Correo | Gmail, con el mismo cliente OAuth que Drive (seccion 6.2) |
+| Sesiones | Token de acceso de 30 minutos y token de renovacion guardado en la base (seccion 5.1) |
+| Auditoria | Tabla `auditoria` que registra quien hace que, en toda la app (seccion 5.2) |
+| Cargos | Se anade `produccion`. `cuentas` son los ejecutivos y **solo ven las empresas que tienen asignadas** |
+| Neon | El rol de produccion, `neondb_owner`, tiene `BYPASSRLS` (comprobado el 2026-10-13): el rol `conejo_app` es obligatorio, no opcional |
+| Plataforma | Vercel es temporal: la app se mudara, previsiblemente a un VPS. El plan separa lo que se construye ya de lo que se enciende tras la mudanza (seccion 10) |
 | Aprovechar la integracion | Cerrar huecos de seguridad y mejorar flujos actuales (secciones 5 y 8) |
 
 ---
@@ -62,7 +69,7 @@ Tres bloques que hoy no existen en Conejo App, mas finanzas:
 | --- | --- |
 | `empresas`, `usuarios`, `clientes`, `trabajadores`, `cargos` | Son los «clientes», usuarios y roles del paquete. No se crea nada paralelo |
 | `requerirEmpresa()` (`src/lib/sesion.ts`), escrita y sin un solo uso | Es la guardia de toda la vista del cliente |
-| Cargo `cuentas`, que ningun modulo usa | Es el «ejecutivo de cuentas» del paquete |
+| Cargo `cuentas`, que ningun modulo usa | Son los ejecutivos de cuentas |
 | Cargo `administracion` | Opera finanzas |
 | Boton de notificaciones del layout, hoy deshabilitado («proximamente») | Se enciende con la tabla de avisos |
 | `Listado`, `PanelLateral`, `ModalConfirmacion`, estado en la URL | Bandeja de briefs, proyectos, documentos financieros, cobranza |
@@ -105,10 +112,10 @@ Tres bloques que hoy no existen en Conejo App, mas finanzas:
 | Usuario cliente | `usuarios` + `clientes` | Sigue perteneciendo a **una** empresa |
 | Permisos Aprobar y Finanzas | Dos columnas nuevas en `clientes`: `puede_aprobar`, `puede_ver_finanzas` | Las marca el admin en el modulo de Usuarios |
 | ADMIN | rol `admin` | |
-| EJECUTIVO | rol `trabajador`, cargo `cuentas` | **A confirmar** (pregunta 2) |
-| PRODUCCION | rol `trabajador`, cargos `diseno` y `redes` | **A confirmar** (pregunta 2) |
+| EJECUTIVO | rol `trabajador`, cargo `cuentas` | Decidido. Ve solo sus empresas asignadas |
+| PRODUCCION | rol `trabajador`, cargo **`produccion`**, que es nuevo | Decidido. `diseno` y `redes` son cargos distintos: falta definir si tambien reciben piezas (pregunta 2) |
 | — | cargo `administracion` | Opera finanzas; no ve produccion salvo decision contraria |
-| Asignacion ejecutivo ↔ cliente | Tabla nueva `portal.asignaciones` | **A confirmar** si se quiere (pregunta 3) |
+| Asignacion ejecutivo ↔ cliente | Tabla nueva `portal.asignaciones` | Decidido: se aplica desde el primer dia |
 | Prospecto | Tabla nueva `portal.prospectos` | Empresa que aun no es cliente |
 
 El nombre `clientes` significa la empresa en el paquete y la persona en Conejo.
@@ -132,7 +139,9 @@ Todo en `db/schema.sql`, idempotente. Tres zonas:
 | --- | --- |
 | `empresas` | `razon_social`, `domicilio_fiscal`, `correo_facturacion`, `es_agente_retencion`, `retencion_iva_pct`, `carpeta_drive_id` |
 | `clientes` | `puede_aprobar`, `puede_ver_finanzas` |
-| `usuarios` | `version_sesion`, `debe_cambiar_clave`, `intentos_fallidos`, `bloqueado_hasta` (seccion 5) |
+| `usuarios` | `debe_cambiar_clave`, `intentos_fallidos`, `bloqueado_hasta` (seccion 5) |
+| `cargos` | Fila nueva `produccion`. Tambien en `SlugCargo` y en la lista de `src/lib/jwt.ts` |
+| (nuevas en `public`) | `sesiones` (seccion 5.1) y `auditoria` (seccion 5.2): sirven a toda la app, no solo al portal |
 | `fichas_hook` | `pieza_id` opcional (seccion 8) |
 
 ### 4.2 Esquema `portal`
@@ -153,7 +162,6 @@ Todo en `db/schema.sql`, idempotente. Tres zonas:
 | `brief_versiones` | Contenido congelado al enviar, con su hash. Inmutable por trigger |
 | `brief_aclaraciones` | Hilo entre ejecutivo y solicitante |
 | `enlaces_brief` | Enlace privado del prospecto: solo el hash del token, vencimiento, revocacion |
-| `eventos` | **Bitacora general** de solo anadir (sin `UPDATE`, `DELETE` ni `TRUNCATE`) |
 | `notificaciones` | Avisos del portal, una fila por usuario |
 | `correos_salida` | Cada correo que la app «envia» (seccion 6) |
 
@@ -178,7 +186,8 @@ nuevo:
 | Cambio | Detalle |
 | --- | --- |
 | Vuelven los vinculos | `presupuestos.brief_id`, `presupuestos.proyecto_id`, `facturas.proyecto_id`, y la tabla `proforma_proyectos` |
-| La bitacora deja de ser propia | `finanzas.eventos` desaparece: todo escribe en `portal.eventos` |
+| La bitacora deja de ser propia | `finanzas.eventos` desaparece: todo escribe en `auditoria` |
+| Tabla nueva `finanzas.tasas_cambio` | Fuente, fecha valor, valor, cuando se obtuvo y si fue automatica o a mano (seccion 6.1) |
 | Los ajustes siguen aqui | `finanzas.ajustes` (emisor, talonario, medios de pago) |
 | Los seis ajustes de su seccion 4.4 | Siguen pendientes de visto bueno (pregunta 1) |
 
@@ -190,15 +199,15 @@ Cada hueco esta comprobado en el codigo actual.
 
 | # | Hueco | Donde se ve | Efecto hoy | Arreglo |
 | --- | --- | --- | --- | --- |
-| 1 | Las actions de Usuarios y Empresas deciden con el **token**, no con la base | `requerirAdmin` en `src/actions/usuarios.ts` y `src/actions/empresas.ts`; `src/lib/sesion.ts:144-159` | Un administrador degradado o **desactivado** sigue pudiendo crear usuarios y restablecer contrasenas hasta 8 horas | `requerirAdmin` pasa a leer el usuario fresco, como ya hace `requerirCargo` |
-| 2 | No hay forma de cerrar una sesion desde el servidor | Cambiar la contrasena (`src/actions/perfil.ts`) no toca ninguna sesion | Una sesion robada sobrevive al cambio de contrasena | `usuarios.version_sesion` viaja en el token; la guardia la compara. Sube al cambiar o restablecer contrasena, al desactivar y al cambiar rol o cargo |
+| 1 | Las actions de Usuarios y Empresas deciden con el **token**, no con la base | `requerirAdmin` en `src/actions/usuarios.ts` y `src/actions/empresas.ts`; `src/lib/sesion.ts:144-159` | Un administrador degradado o **desactivado** sigue pudiendo crear usuarios y restablecer contrasenas hasta 8 horas | Todas las guardias leen el usuario fresco, y con el su sesion (seccion 5.1) |
+| 2 | No hay forma de cerrar una sesion desde el servidor | Cambiar la contrasena (`src/actions/perfil.ts`) no toca ninguna sesion | Una sesion robada sobrevive al cambio de contrasena | Tabla `sesiones`: cambiar o restablecer la contrasena revoca todas las demas (seccion 5.1) |
 | 3 | El login no limita intentos | `src/actions/auth.ts` no cuenta fallos | Fuerza bruta sin freno, solo ralentizada por bcrypt | `intentos_fallidos` y `bloqueado_hasta`: 5 fallos, 15 minutos. El mensaje no revela si la cuenta existe |
 | 4 | La contrasena provisional no caduca ni obliga a cambiarse | `src/actions/usuarios.ts:184-207`: se genera y se entrega; no hay `debe_cambiar_clave` | La clave que conoce el administrador puede seguir en uso para siempre | `debe_cambiar_clave`: el dashboard redirige a cambiarla antes de dejar hacer nada |
-| 5 | Un cliente de una empresa **desactivada** sigue entrando | `empresaActiva` solo se usa para pintar un aviso en `DetalleUsuario.tsx` | Hoy no ve nada sensible; con proyectos y finanzas, si | Login y `requerirEmpresa` exigen empresa activa. Las politicas RLS tambien |
+| 5 | Un cliente de una empresa **desactivada** sigue entrando | `empresaActiva` solo se usa para pintar un aviso en `DetalleUsuario.tsx` | Hoy no ve nada sensible; con proyectos y finanzas, si | Se le niega el acceso en el login y en cada peticion, y sus sesiones abiertas se revocan al desactivar la empresa. La empresa y sus personas dejan de aparecer en los desplegables y listados de trabajo; en Usuarios y Empresas siguen visibles para el admin, marcadas |
 | 6 | La app se conecta como superusuario de la base | `docker-compose.yml:25`, `.env.example` | Cualquier politica RLS seria decorativa | Rol `conejo_app` (decidido) |
 | 7 | `vw_usuarios_completos` expone `password_hash` | `db/schema.sql:597` | Depende de que ningun modelo lo pida por error | Vista aparte solo para el login; la general deja de traerlo |
 | 8 | Sin cabeceras de seguridad | `next.config.ts` no define `headers` | La app se puede incrustar en un marco ajeno; sin politica de contenido | `Content-Security-Policy`, `frame-ancestors 'none'`, `X-Content-Type-Options`, `Referrer-Policy`, HSTS |
-| 9 | No hay bitacora general | Solo existe `ediciones_ficha` | No queda rastro de quien creo un usuario, desactivo una empresa o restablecio una clave | `portal.eventos`, que tambien registran los modulos actuales |
+| 9 | No hay bitacora general | Solo existe `ediciones_ficha` | No queda rastro de quien creo un usuario, desactivo una empresa o restablecio una clave | Tabla `auditoria` (seccion 5.2) |
 | 10 | El secreto de ejemplo del `.env.example` es valido | Mide mas de 32 caracteres, asi que `src/lib/jwt.ts` lo acepta | Un despliegue que olvide cambiarlo arranca firmando con un secreto publico | `jwt.ts` rechaza ese valor concreto en produccion |
 | 11 | Tres cuentas de prueba con contrasena en el repositorio | `db/datos/semilla.mts` | Entran a produccion si se siembran alli | `sql:produccion` deja de incluirlas |
 
@@ -210,19 +219,98 @@ privilegios, se extiende:
 
 | Sobre | Regla en la base |
 | --- | --- |
-| `portal.proyectos`, `piezas`, `pieza_fases`, `revisiones` | Un cliente solo ve filas de su empresa |
+| `portal.proyectos`, `piezas`, `pieza_fases`, `revisiones` | Un cliente solo ve filas de su empresa. Un ejecutivo, solo las de sus empresas asignadas |
 | `portal.pieza_contenido`, `versiones` | Un cliente solo las ve con la pieza en fase 5 o aprobada, y de las versiones solo la marcada como enviada |
 | `portal.comentarios_pieza`, `correos_salida`, `asignaciones` | Un cliente no ve ninguna |
 | `portal.briefs` y sus tablas | Un cliente solo ve los de su empresa |
-| `portal.eventos` | Un cliente solo ve los tipos de la lista blanca, de su empresa |
+| `auditoria` | Un cliente solo ve los tipos de la lista blanca, de su empresa. Es su «historial» |
 | `finanzas.*` | Lo ya planificado |
 
-Para los trabajadores la base deja pasar segun rol y cargo; el filtro fino (que
-ejecutivo, que pieza asignada) lo aplica la capa de servidor.
+Para produccion la base deja pasar segun el cargo, y el filtro fino (que pieza
+tiene asignada) lo aplica la capa de servidor.
 
 `conSesionFinanzas` se generaliza a **`conSesion`**, que declara usuario, rol,
 cargo y empresa, y por ella pasan todos los modelos nuevos. Sin sesion
 declarada, cero filas.
+
+### 5.1 Sesiones: acceso de 30 minutos y renovacion
+
+Sustituye al token unico de 8 horas.
+
+| Pieza | Como queda |
+| --- | --- |
+| Token de acceso | El JWT de hoy, pero de **30 minutos**. Lleva ademas el id de su sesion |
+| Token de renovacion | 32 bytes al azar, en su propia cookie `httpOnly`. En la base solo se guarda su **hash** |
+| Tabla `sesiones` | Usuario, hash del token, creada, ultimo uso, caduca, revocada, navegador |
+| Vida de la sesion | Tope absoluto (propongo 12 horas) aunque se renueve: se entra una vez al dia |
+
+**Renovar.** Dos minutos antes de que caduque el acceso aparece un modal con
+cuenta atras: «Tu sesion esta por vencer · Continuar». Al aceptar, una Server
+Action comprueba el token de renovacion contra la base —que no este revocado ni
+caducado, que el usuario siga activo y su empresa tambien—, lo **rota** (el viejo
+deja de valer) y emite otro acceso. No hay navegacion: la pantalla, el scroll y
+lo escrito en un formulario se quedan como estaban. Si el modal se ignora y el
+acceso caduca, sigue ahi: se renueva igual mientras la sesion no haya muerto.
+
+**Tres cosas que hay que tocar para que eso funcione de verdad:**
+
+1. **El proxy.** Hoy manda al login en cuanto el acceso no verifica, y eso
+   incluye el POST de la propia renovacion. Pasa a dejar pasar las peticiones
+   que traen cookie de renovacion; quien decide es la guardia.
+2. **Las guardias.** Una page que llega con el acceso vencido y renovacion
+   valida no va al login: va a una pantalla minima de renovar que devuelve a la
+   misma URL.
+3. **El reloj.** El modal no se fia de un temporizador: al volver a la pestana
+   o despertar el equipo, recalcula contra la hora de caducidad.
+
+**El token de renovacion no arregla por si solo el problema de las 8 horas**,
+solo lo acorta a 30 minutos. Lo que lo cierra es que las guardias leen de la
+base en cada peticion, y la consulta que ya trae al usuario trae tambien su
+sesion: una sesion revocada deja de valer **en la siguiente peticion**, no al
+caducar el acceso. No cuesta una consulta mas.
+
+| Que revoca sesiones | Cuales |
+| --- | --- |
+| Cerrar sesion | La propia |
+| Cambiar la contrasena | Todas las demas del usuario |
+| Restablecer la contrasena (lo hace un admin) | Todas las del usuario |
+| Desactivar un usuario | Todas las suyas |
+| Desactivar una empresa | Todas las de sus personas |
+| Cambiar rol, cargo o empresa de alguien | Todas las suyas |
+| Usar un token de renovacion ya rotado | Toda la sesion: es la senal de que alguien lo copio |
+
+De regalo sale una lista de «sesiones abiertas» en Mi perfil, con un boton para
+cerrar las demas.
+
+**Una cosa a decidir** (pregunta 4): un modal cada 30 minutos interrumpe a quien
+esta trabajando sin parar. La alternativa habitual es renovar en silencio
+mientras haya actividad y mostrar el modal solo tras un rato de inactividad.
+
+### 5.2 Auditoria
+
+Tabla `auditoria`, en `public` porque registra toda la app y no solo el portal.
+
+| Columna | Contenido |
+| --- | --- |
+| `actor_id`, `actor_rol`, `actor_cargo` | Quien. El rol y el cargo se copian: dentro de un ano importa lo que era entonces |
+| `accion` | Que, como texto cerrado: `usuario.creado`, `sesion.inicio`, `factura.anulada` |
+| `entidad`, `entidad_id`, `empresa_id` | Sobre que, y de que empresa |
+| `antes`, `despues` | Valores anterior y nuevo, en `JSONB`. Nunca contrasenas ni tokens |
+| `ip`, `creado_en` | Desde donde y cuando, con la hora del servidor |
+
+- **Solo se anade.** Un trigger rechaza `UPDATE`, `DELETE` y `TRUNCATE`; el rol
+  de la app ni siquiera tiene esos permisos.
+- **Se escribe en la misma transaccion** que el cambio. Si el cambio se deshace,
+  su linea tambien; si la linea no se puede escribir, el cambio no ocurre.
+- La escriben las **actions**, que son las que conocen la sesion, igual que hoy
+  con `ediciones_ficha`.
+- Pantalla de consulta para el admin, con el listado estandar: filtros por
+  persona, accion, entidad y fecha.
+
+Se registra desde la etapa 1 lo que ya existe —inicios de sesion y fallos,
+bloqueos, altas y cambios de usuarios y empresas, contrasenas restablecidas—, y
+cada modulo nuevo anade lo suyo. `ediciones_ficha` se queda como esta: es el
+historial que se muestra dentro de una ficha de hook.
 
 ### Lo que no se puede cerrar todavia
 
@@ -252,13 +340,14 @@ src/lib/externos/
 
 | Servicio | Modo simulado | Modo real, tras la mudanza |
 | --- | --- | --- |
-| **Correo** | Devuelve la respuesta de `correo.enviar.json` y **guarda el mensaje completo en `portal.correos_salida`** | SMTP o API del proveedor |
-| **Tasa de cambio** | Devuelve `tasaCambio.bcv.json`. El operador puede corregirla a mano | Consulta a la fuente que decida el negocio |
+| **Correo** | Devuelve la respuesta de `correo.enviar.json` y **guarda el mensaje completo en `portal.correos_salida`** | API de Gmail (seccion 6.2) |
+| **Tasa de cambio** | Devuelve `tasaCambio.bcv.json` | Lectura de la pagina del BCV (seccion 6.1) |
 | **Archivos** | Devuelve `archivos.subir.json` y guarda el archivo en una tabla de la base, con limite pequeno | Google Drive, que ya esta probado |
 
 El modo se elige por variable de entorno, una por servicio (`CORREO_MODO`,
-`TASA_MODO`, `ARCHIVOS_MODO`, con valores `simulado` o `real`). **Archivos
-arranca en `real`** porque Drive ya funciona; los otros dos, en `simulado`.
+`TASA_MODO`, `ARCHIVOS_MODO`, con valores `simulado` o `real`). **Archivos y
+tasa arrancan en `real`**: Drive ya funciona y la pagina del BCV se puede leer.
+El correo arranca en `simulado` hasta tener la cuenta de la empresa.
 
 **Los JSON no se escriben, se leen.** El disco de Vercel es de solo lectura,
 asi que lo que cambia —el correo «enviado»— va a la base y no a un archivo.
@@ -269,11 +358,73 @@ copia del brief. Con el correo simulado nadie los recibiria. Una pantalla del
 administrador lista `correos_salida` y permite copiar el contenido para
 entregarlo a mano, que es lo que ya se hace hoy con la contrasena provisional.
 
-Lo que no es un servicio externo pero tampoco existe en Vercel:
+### 6.1 Tasa del BCV
+
+**No hace falta Playwright.** Comprobado el 2026-10-13: `https://www.bcv.org.ve/`
+devuelve la tasa ya escrita en el HTML, sin JavaScript. Una peticion HTTP y una
+expresion regular bastan:
+
+| Dato | Donde esta en la pagina |
+| --- | --- |
+| Dolar | Dentro de `<div id="dolar">`, como `876,79760000` |
+| Euro | Dentro de `<div id="euro">` |
+| Fecha valor | Atributo `content="2026-10-13T00:00:00-04:00"` del primer `date-display-single` |
+
+Playwright ademas no cabria: es una dependencia nueva y su Chromium no entra en
+una funcion de Vercel.
+
+**Un tropiezo ya encontrado.** Desde Node la peticion falla con
+`UNABLE_TO_VERIFY_LEAF_SIGNATURE`: el servidor del BCV no envia su certificado
+intermedio. La solucion **no** es desactivar la verificacion: es entregarle a
+la peticion ese certificado intermedio, guardado en el repositorio, usando
+`node:https` con su opcion `ca`.
+
+| Pieza | Detalle |
+| --- | --- |
+| `finanzas.tasas_cambio` | Una fila por fuente y fecha valor. No se pisa: es historico |
+| Ruta `/api/cron/tasa` | Lee la pagina, valida y guarda. Protegida con un secreto en la cabecera |
+| Validacion | Numero positivo, fecha valor reconocible, y salto maximo respecto a la anterior. Una lectura rara **no se guarda** y avisa |
+| Entrada a mano | El operador siempre puede registrar o corregir una tasa; queda en la auditoria |
+| En la factura | La tasa se **copia** al emitir, con su fuente y su fecha. Lo que pase despues con la tabla no la toca |
+
+**Cada hora.** El BCV publica una tasa por dia habil, asi que la consulta
+horaria sirve para enterarse pronto, no porque cambie cada hora.
+
+| Donde | Como |
+| --- | --- |
+| Vercel, plan Hobby | Las tareas programadas estan limitadas a **una al dia**. Cada hora exige el plan Pro |
+| Vercel, mientras tanto | Refresco al usar: si la ultima lectura tiene mas de una hora cuando alguien abre finanzas, se vuelve a leer. Da la misma frescura sin tarea programada |
+| VPS | `cron` del sistema llamando a la misma ruta, cada hora |
+
+**A comprobar tras desplegar:** que el BCV responde a los servidores de Vercel.
+Aqui respondio, pero es habitual que filtre por pais de origen.
+
+### 6.2 Correo por Gmail
+
+Se puede, y con lo que ya hay: el mismo cliente OAuth, anadiendo el permiso
+`gmail.send`, y la API de Gmail llamada por `fetch`. Sin libreria.
+
+| Punto | Detalle |
+| --- | --- |
+| Remitente | La cuenta que autoriza. **Los correos saldran de esa direccion**, y por eso no puede ser una personal |
+| Permiso | `gmail.send` solo permite enviar; no lee el buzon |
+| Limite | Unos 2.000 envios al dia en Workspace, 500 en una cuenta personal. Sobra |
+| Autorizacion | Hay que repetir `drive:probar` pidiendo los dos permisos, lo que emite un token nuevo |
+| Mientras tanto | Modo simulado y bandeja de salida |
+
+**`gmail.send` es un permiso «sensible» para Google**, y eso es lo que decide
+la pregunta de la cuenta (seccion 11): con el proyecto de GCP dentro de la
+organizacion de Workspace de la empresa, la pantalla de consentimiento se marca
+como **Interna** y no hay verificacion, ni aviso de «aplicacion no verificada»,
+ni caducidad a los 7 dias. Con una cuenta personal, las tres cosas aparecen.
+
+### 6.3 Lo que no es un servicio externo
+
+Tampoco existe en Vercel:
 
 | Necesidad | Mientras tanto |
 | --- | --- |
-| Tareas programadas (fases atrasadas, proforma recurrente, enlaces vencidos) | Estado derivado al leer, y contadores en la portada con un boton para actuar |
+| Tareas programadas (fases atrasadas, proforma recurrente, enlaces vencidos) | Estado derivado al leer, y contadores en la portada con un boton para actuar. La de la tasa si existe (seccion 6.1) |
 | Tiempo real | `revalidatePath` y recarga |
 | PDF en el servidor | Pages imprimibles desde el navegador |
 
@@ -311,12 +462,13 @@ construyen, y eso lo dicen las secciones 2 a 6 de este plan.
 
 | Modulo | Ruta | Visible para | Contenido |
 | --- | --- | --- | --- |
-| Tablero | `/dashboard/tablero` | `cuentas`, admin | Proyectos con su bateria y las cuatro alertas |
+| Tablero | `/dashboard/tablero` | `cuentas`, admin | Proyectos de sus empresas asignadas, con su bateria y las cuatro alertas |
 | Proyectos | `/dashboard/proyectos` | `cuentas`, admin | Listado, matriz de piezas × fases, ficha de pieza |
-| Mi trabajo | `/dashboard/mi-trabajo` | `diseno`, `redes` | Cola de piezas asignadas, «marcar como lista» |
+| Mi trabajo | `/dashboard/mi-trabajo` | `produccion` (y `diseno`, `redes` si se decide) | Cola de piezas asignadas, «marcar como lista» |
 | Briefs (bandeja) | `/dashboard/briefs` | `cuentas`, admin | Recibidos, aclaraciones, las tres decisiones |
 | Finanzas | `/dashboard/finanzas` | `administracion`, admin | Presupuestos, proformas, facturas, pagos, cobranza, ajustes |
 | Bandeja de salida | `/dashboard/salida` | admin | Correos simulados |
+| Auditoria | `/dashboard/auditoria` | admin | Quien hizo que |
 | Mis proyectos | `/dashboard/mis-proyectos` | cliente | Sus proyectos, revision en fase 5, historial |
 | Mis briefs | `/dashboard/mis-briefs` | cliente | Sus briefs, nuevo brief |
 | Administracion | `/dashboard/administracion` | cliente con Finanzas | Documentos, estado de cuenta, reportar pago |
@@ -335,11 +487,11 @@ texto ademas de color y `aria-label` con el porcentaje.
 
 | Etapa | Entrega | Depende de |
 | --- | --- | --- |
-| **0. Preparacion** | Consulta de `BYPASSRLS` en Neon; respuestas de la seccion 11 | Tu |
-| **1. Cimientos de seguridad** | Rol `conejo_app`, `conSesion`, guardias con datos frescos, `version_sesion`, bloqueo de intentos, cambio obligatorio de clave, empresa activa, cabeceras, bitacora general. **La app actual queda mas segura aunque no se construya nada mas** | Etapa 0 |
-| **2. Externos simulados y avisos** | Adaptadores, JSON, bandeja de salida, campana | — |
-| **3. Proyectos y bateria** | Proyectos, piezas, fases, avance, tablero, Mi trabajo | Preguntas 2 y 3 |
-| **4. Vista del cliente y revision** | Mis proyectos, versiones, aprobar o corregir, historial | Pregunta 4 |
+| **0. Preparacion** | Respuestas de la seccion 11. La consulta de Neon ya esta hecha | Tu |
+| **1. Cimientos de seguridad** | Rol `conejo_app`, `conSesion`, guardias con datos frescos, sesiones con renovacion y modal, bloqueo de intentos, cambio obligatorio de clave, empresa activa, cabeceras, auditoria, cargo `produccion`. **La app actual queda mas segura aunque no se construya nada mas** | Etapa 0 |
+| **2. Externos y avisos** | Adaptadores, JSON, bandeja de salida, campana, lectura de la tasa del BCV | Cuenta de la empresa, solo para el correo real |
+| **3. Proyectos y bateria** | Proyectos, piezas, fases, avance, tablero, Mi trabajo | Pregunta 2 |
+| **4. Vista del cliente y revision** | Mis proyectos, versiones, aprobar o corregir, historial | Pregunta 5 |
 | **5. Presupuestos y proformas** | Editor, aprobacion del cliente, proforma ligada a proyectos | Pregunta 1 |
 | **6. Briefs** | Formato de producto, envio, bandeja, enlace de prospecto, brief → presupuesto → proyecto | Etapas 2, 3 y 5 |
 | **7. Facturas, pagos y cobranza** | Emision, talonario, comprobantes, estado de cuenta | **Negocio**: moneda y tasa, medios de pago, contador, hoja del talonario |
@@ -353,25 +505,53 @@ en algo utilizable y se registra en `agent.md`.
 
 ## 11. Lo que necesito de ti
 
-### Para empezar (etapas 0 y 1)
+### Ya resuelto
 
-| # | Que | Por que |
-| --- | --- | --- |
-| A | Ejecutar en el editor SQL de Neon: `SELECT rolname, rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user;` y pasarme el resultado | Si el rol de produccion se salta el RLS, hay que crear el nuevo antes que nada |
-| B | Confirmar que aceptas cerrar las sesiones abiertas una vez | Al introducir `version_sesion` todos tendran que volver a entrar |
+| Que | Resultado |
+| --- | --- |
+| Rol de Neon | `neondb_owner`: no es superusuario, pero **si tiene `BYPASSRLS`**. Confirma la opcion A |
+| Cargos | `cuentas` ejecutivos; `produccion` nuevo |
+| Asignaciones | Cada ejecutivo ve solo sus empresas |
+| Sesiones, cierre al cambiar clave, clave provisional, empresa desactivada, auditoria | Aceptado todo |
+| Destino | Un VPS, previsiblemente |
+
+### La cuenta de Google: conviene cambiarla ya
+
+**Si, antes de construir nada mas sobre ella.** Tres motivos, y el tercero es
+nuevo:
+
+1. Los archivos quedan en el Drive de quien autoriza, y moverlos despues obliga
+   a actualizar ids en la base.
+2. Las credenciales de GCP pertenecen a quien creo el proyecto.
+3. **Los correos saldran de esa cuenta.** Un presupuesto no puede llegarle a un
+   cliente desde un Gmail personal.
+
+Lo que hay que pedir:
+
+| Que | Para que |
+| --- | --- |
+| Una cuenta de Google Workspace de la empresa dedicada a esto (por ejemplo `portal@…`, o la `cuentas@…` que ya existe) | Sera el remitente de los correos y la duena de los archivos |
+| El proyecto de GCP creado **dentro de la organizacion** de Workspace, no en una cuenta suelta | Permite marcar la pantalla de consentimiento como Interna |
+| API de Drive y API de Gmail habilitadas en ese proyecto, y un cliente OAuth nuevo | Sustituye al actual |
+
+Con eso se vuelve a ejecutar `npm run drive:probar` y se cambian cuatro
+variables. El codigo no cambia.
 
 ### Decisiones tuyas
 
 | # | Pregunta | Mi propuesta |
 | --- | --- | --- |
 | 1 | Los seis ajustes al modelo de finanzas (`integracionFinanzas.md`, seccion 4.4) | Aceptarlos todos |
-| 2 | Que cargos hacen de ejecutivo y de produccion | `cuentas` ejecutivo; `diseno` y `redes` produccion |
-| 3 | ¿Cada ejecutivo ve solo sus empresas asignadas, o todos ven todas? | Empezar con todos ven todas; la tabla de asignaciones queda lista |
-| 4 | Video en revision mientras estemos en Vercel | Imagenes y PDF subidos a Drive; video como enlace externo (Frame.io, Drive, Dropbox) hasta la mudanza |
-| 5 | Como se imprime la factura | Desde el navegador |
-| 6 | ¿Conectar Hooks con las piezas? | Si, como vinculo opcional |
-| 7 | ¿Verificacion en dos pasos para quien emite facturas? | Si, en la etapa 8 |
-| 8 | ¿Se aceptan rutas API (`route.ts`)? Hacen falta para descargar archivos | Si |
+| 2 | ¿`diseno` y `redes` tambien reciben piezas y ven «Mi trabajo», o solo `produccion`? Dicho de otro modo: quien redacta la fase 1 y quien disena la fase 3 | Que una pieza se pueda asignar a cualquiera de los tres cargos |
+| 3 | ¿El cargo `administracion` ve proyectos, o solo finanzas? | Solo finanzas |
+| 4 | El modal de sesion: ¿siempre cada 30 minutos, o solo tras inactividad y renovacion silenciosa mientras se trabaja? | Solo tras inactividad |
+| 5 | Video en revision mientras estemos en Vercel | Imagenes y PDF a Drive; video como enlace externo hasta el VPS |
+| 6 | Como se imprime la factura | Desde el navegador |
+| 7 | ¿Conectar Hooks con las piezas? | Si, como vinculo opcional |
+| 8 | ¿Verificacion en dos pasos para quien emite facturas? | Si, en la etapa 8 |
+| 9 | ¿Se aceptan rutas API (`route.ts`)? Ya hacen falta dos: descargar archivos y la tarea de la tasa | Si |
+| 10 | Tope de la sesion aunque se renueve | 12 horas |
+| 11 | ¿Que tasa del BCV se guarda: dolar, euro o las dos? | Las dos; el negocio decide cual se usa al facturar |
 
 ### Del negocio
 
@@ -388,9 +568,9 @@ en algo utilizable y se registra en `agent.md`.
 
 | Que | Para que |
 | --- | --- |
-| A donde se mudara la app y cuando, aunque sea aproximado | Decide cuanto esfuerzo merece lo provisional |
-| La cuenta compartida de Drive | Antes de recibir archivos reales |
-| Proveedor de correo previsto | Para que el adaptador real no sea una sorpresa |
+| La cuenta de Workspace y el proyecto de GCP de la empresa | Drive y correo reales |
+| Plan de Vercel (Hobby o Pro) mientras dure | Decide si la tasa se lee con tarea programada o al usar |
+| Fecha aproximada de la mudanza al VPS | Decide cuanto esfuerzo merece lo provisional |
 
 ---
 
@@ -401,6 +581,8 @@ en algo utilizable y se registra en `agent.md`.
 | El alcance se multiplico por cuatro | Meses de trabajo, no semanas | Etapas que entregan algo usable cada una; la 1 ya vale por si sola |
 | Cambiar el rol de conexion rompe la app actual | Caida de modulos existentes | Etapa 1 aislada, con `prueba:modelos` corriendo como el rol nuevo |
 | Limite de tamano de peticion en Vercel | No caben videos por el servidor | Enlaces externos hasta la mudanza |
-| Correo simulado | El prospecto no recibe su enlace solo | Bandeja de salida y entrega a mano |
+| Correo simulado | El prospecto no recibe su enlace solo | Bandeja de salida y entrega a mano, hasta tener la cuenta de la empresa |
+| La pagina del BCV cambia de estructura o bloquea a los servidores | Deja de llegar la tasa | Validacion estricta, aviso al operador y entrada a mano |
+| El modal de sesion interrumpe demasiado | La gente lo acepta sin leer, o se queja | Renovacion silenciosa con actividad (pregunta 4) |
 | Migrar pegando SQL en Neon con mas de 25 tablas nuevas | Un error a medias deja el esquema inconsistente | El archivo es idempotente y se prueba entero en local antes |
 | Dos repositorios de especificacion | El plan y el paquete se desincronizan | Este documento manda; el paquete es referencia de reglas de negocio |

@@ -1851,3 +1851,22 @@ Tres decisiones nuevas, ademas de las de la etapa 25:
 
 No se construyo nada en esta etapa: es solo el plan. Las preguntas que hay que
 responder antes de empezar estan en su seccion 11.
+
+### Segunda revision del plan, el mismo dia
+
+Se cerraron decisiones que cambian la etapa 1:
+
+- **Sesiones.** El token unico de 8 horas pasa a ser un acceso de 30 minutos
+  mas un token de renovacion guardado (su hash) en una tabla `sesiones`. Un
+  modal permite continuar sin perder la pantalla. Queda escrito que la
+  renovacion sola no cierra el hueco, solo lo acorta: lo que lo cierra es que
+  las guardias lean de la base, y con el usuario su sesion.
+- **Auditoria.** Tabla `auditoria` de solo anadir, para toda la aplicacion.
+- **Cargos.** Se anade `produccion`; `cuentas` ve solo sus empresas asignadas.
+- **Tasa del BCV.** Se comprobo que la pagina trae la tasa en el HTML, asi que
+  no hace falta un navegador: basta una peticion. Desde Node falla la
+  verificacion TLS porque el BCV no envia su certificado intermedio; se resuelve
+  entregandoselo a la peticion, no apagando la verificacion.
+- **Correo.** Por la API de Gmail con el mismo cliente OAuth.
+- **Neon.** `neondb_owner` tiene `BYPASSRLS`: el rol sin privilegios es
+  obligatorio.
