@@ -9,6 +9,7 @@ import { iniciales } from "@/components/ui";
 import {
   activoEntre,
   aplanar,
+  porSecciones,
   type ModuloVista,
   type UsuarioNav,
 } from "@/lib/navegacion";
@@ -102,19 +103,44 @@ export function Sidebar({
         escaparia al padre, que es justo lo que se quiere evitar.
       */}
       <div className="barra-fina min-h-0 flex-1 overflow-y-auto px-[18px]">
-        <p className="px-3 pt-2 pb-2.5 text-[9.5px] font-semibold tracking-[0.16em] text-nav-suave/70 uppercase">
-          General
-        </p>
+        {/*
+          Un tramo por seccion. Las que no tienen ningun modulo visible para
+          esta persona ni siquiera llegan aqui: las descarta `porSecciones`.
+        */}
+        <nav aria-label="Modulos" className="flex flex-col pb-2">
+          {porSecciones(modulos).map((grupo) => (
+            <div
+              key={grupo.clave}
+              role="group"
+              aria-label={grupo.titulo ?? "Tu cuenta"}
+              // El aire entre secciones va en el grupo y no en el rotulo: el
+              // rotulo es siempre el primer hijo de SU grupo, asi que un
+              // `first:` puesto en el no distinguiria la primera seccion.
+              className="mt-3.5 flex flex-col gap-1.5 first:mt-0"
+            >
+              {grupo.titulo ? (
+                <p
+                  aria-hidden="true"
+                  className="px-3 pt-2 pb-1 text-[9.5px] font-semibold tracking-[0.16em] text-nav-suave/70 uppercase"
+                >
+                  {grupo.titulo}
+                </p>
+              ) : (
+                // Lo que no tiene seccion se separa con una linea, no con un
+                // rotulo: es una sola entrada y no hay nada que nombrar.
+                <div aria-hidden="true" className="mx-3 mb-1 h-px bg-nav-borde" />
+              )}
 
-        <nav aria-label="Modulos" className="flex flex-col gap-1.5 pb-2">
-          {modulos.map((modulo) => (
-            <ItemNavegacion
-              key={modulo.href}
-              modulo={modulo}
-              ruta={ruta}
-              activo={activo}
-              medidas={MEDIDAS}
-            />
+              {grupo.modulos.map((modulo) => (
+                <ItemNavegacion
+                  key={modulo.href}
+                  modulo={modulo}
+                  ruta={ruta}
+                  activo={activo}
+                  medidas={MEDIDAS}
+                />
+              ))}
+            </div>
           ))}
         </nav>
       </div>
