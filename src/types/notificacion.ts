@@ -11,7 +11,8 @@
 export type TipoNotificacion =
   | "cuenta.bloqueada"
   | "cuenta.clave_restablecida"
-  | "correo.fallido";
+  | "correo.fallido"
+  | "tasa.rechazada";
 
 /** Lo que hay que saber para notificar. Los destinatarios van aparte. */
 export type NuevaNotificacion = {

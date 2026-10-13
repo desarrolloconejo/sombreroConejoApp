@@ -23,7 +23,9 @@ export type AccionAuditoria =
   | "empresa.activada"
   | "empresa.desactivada"
   | "correo.entregado_a_mano"
-  | "correo.reintentado";
+  | "correo.reintentado"
+  | "tasa.registrada"
+  | "tasa.rechazada";
 
 /** Como se lee cada accion en pantalla. */
 export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
@@ -45,6 +47,8 @@ export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
   "empresa.desactivada": "Empresa desactivada",
   "correo.entregado_a_mano": "Correo entregado a mano",
   "correo.reintentado": "Reintento de envio de un correo",
+  "tasa.registrada": "Tasa de cambio registrada",
+  "tasa.rechazada": "Lectura de la tasa rechazada",
 };
 
 /**
@@ -56,6 +60,7 @@ export const MODULOS_DE_AUDITORIA = {
   usuario: "Usuarios",
   empresa: "Empresas",
   correo: "Correos",
+  tasa: "Tasa de cambio",
 } as const;
 
 export type ModuloAuditoria = keyof typeof MODULOS_DE_AUDITORIA;

@@ -100,6 +100,15 @@ export type {
 } from "./notificacion";
 
 export type {
+  FuenteTasa,
+  OrigenTasa,
+  TasaLeida,
+  LecturaDeTasas,
+  TasaDeCambio,
+  ResultadoDeTasas,
+} from "./tasa";
+
+export type {
   Columna,
   OpcionFiltro,
   DefinicionFiltro,
