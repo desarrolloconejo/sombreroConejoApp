@@ -408,6 +408,104 @@ async function principal(): Promise<void> {
     "enlace externo y ruta ajena al panel, rechazados",
   );
 
+  // ---------------------------------------- seguridad por fila: las tasas
+  const tasa: Record<string, unknown> = {};
+
+  try {
+    await transaccion(async (cliente) => {
+      const como = (id: number | null, rol: string, cargo = "") =>
+        cliente.query(
+          `SELECT set_config('app.usuario_id', $1, true),
+                  set_config('app.rol', $2, true),
+                  set_config('app.cargo', $3, true)`,
+          [id === null ? "" : String(id), rol, cargo],
+        );
+      // Una moneda que el BCV no publica, para no chocar con las reales.
+      const registrar = (fecha: string) =>
+        cliente.query(
+          `INSERT INTO finanzas.tasas_cambio (fuente, moneda, fecha_valor, valor, origen)
+           VALUES ('bcv', 'XXX', $1::date, 1.5, 'automatica')`,
+          [fecha],
+        );
+      const cuantas = async () =>
+        Number(
+          (
+            await cliente.query<{ n: string }>(
+              "SELECT count(*)::text AS n FROM finanzas.tasas_cambio WHERE moneda = 'XXX'",
+            )
+          ).rows[0].n,
+        );
+      const intentarDentro = async (accion: () => Promise<unknown>) => {
+        await cliente.query("SAVEPOINT intento");
+        try {
+          await accion();
+          await cliente.query("RELEASE SAVEPOINT intento");
+          return null;
+        } catch (error) {
+          await cliente.query("ROLLBACK TO SAVEPOINT intento");
+          return (error as { code?: string }).code ?? "desconocido";
+        }
+      };
+
+      await como(null, "sistema");
+      tasa.sistemaEscribe = await intentarDentro(() => registrar("2001-01-01"));
+
+      await como(otro.id, "trabajador", "redes");
+      tasa.cualquieraEscribe = await intentarDentro(() => registrar("2001-01-02"));
+      tasa.cualquieraLee = await cuantas();
+
+      await como(otro.id, "trabajador", "administracion");
+      tasa.administracionEscribe = await intentarDentro(() => registrar("2001-01-03"));
+
+      await como(null, "");
+      tasa.sinSesionLee = await cuantas();
+
+      await como(admin.id, "admin");
+      tasa.modifica = await intentarDentro(() =>
+        cliente.query("UPDATE finanzas.tasas_cambio SET valor = 2 WHERE moneda = 'XXX'"),
+      );
+      tasa.borra = await intentarDentro(() =>
+        cliente.query("DELETE FROM finanzas.tasas_cambio WHERE moneda = 'XXX'"),
+      );
+      tasa.repite = await intentarDentro(() => registrar("2001-01-01"));
+
+      throw new Deshacer();
+    });
+  } catch (error) {
+    if (!(error instanceof Deshacer)) throw error;
+  }
+
+  comprobar(
+    "La tarea programada puede registrar una tasa",
+    tasa.sistemaEscribe === null,
+    "identidad sistema, aceptada",
+  );
+  comprobar(
+    "Quien no opera finanzas no puede registrar tasas, pero las lee",
+    tasa.cualquieraEscribe === DENEGADO && tasa.cualquieraLee === 1,
+    `escribir: ${tasa.cualquieraEscribe}; lee ${tasa.cualquieraLee}`,
+  );
+  comprobar(
+    "El cargo de administracion si puede registrarlas",
+    tasa.administracionEscribe === null,
+    "aceptada",
+  );
+  comprobar(
+    "Sin sesion declarada no se ve ninguna tasa",
+    tasa.sinSesionLee === 0,
+    `${tasa.sinSesionLee} filas`,
+  );
+  comprobar(
+    "Una tasa registrada no se modifica ni se borra",
+    tasa.modifica === DENEGADO && tasa.borra === DENEGADO,
+    "UPDATE y DELETE denegados, tambien al administrador",
+  );
+  comprobar(
+    "No caben dos tasas de la misma moneda y fecha valor",
+    tasa.repite === "23505",
+    String(tasa.repite),
+  );
+
   console.log(`\n${pasan}/${pasan + fallan.length} comprobaciones correctas`);
   if (fallan.length > 0) {
     console.error(`\nFallan: ${fallan.join(", ")}`);

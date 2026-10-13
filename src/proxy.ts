@@ -17,8 +17,14 @@ import type { SlugCargo } from "@/types";
  * page y cada action, con las guardias de `src/lib/sesion.ts`.
  */
 
-/** Rutas accesibles sin haber iniciado sesion. */
-const RUTAS_PUBLICAS = ["/login"];
+/**
+ * Rutas accesibles sin haber iniciado sesion.
+ *
+ * `/api/cron` son las tareas programadas: las llama la plataforma, no una
+ * persona, asi que no traen cookie. No quedan abiertas: cada una exige su
+ * secreto en la cabecera, y sin el responde 401.
+ */
+const RUTAS_PUBLICAS = ["/login", "/api/cron"];
 
 /** Prefijos de ruta reservados al rol admin. */
 const RUTAS_SOLO_ADMIN = [
@@ -195,8 +201,10 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  // Con sesion iniciada, el login no tiene sentido.
-  if (sesion && esRutaPublica(pathname)) {
+  // Con sesion iniciada, el login no tiene sentido. Las tareas programadas
+  // no entran aqui: no son pantallas, y quien tenga sesion no las convierte
+  // en una redireccion.
+  if (sesion && esRutaPublica(pathname) && !pathname.startsWith("/api/")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

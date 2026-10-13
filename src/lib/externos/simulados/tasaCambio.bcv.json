@@ -1,0 +1,11 @@
+{
+  "fuente": "bcv",
+  "fechaValor": "2026-10-13",
+  "tasas": [
+    { "moneda": "EUR", "valor": "982.00454402" },
+    { "moneda": "CNY", "valor": "131.03154748" },
+    { "moneda": "TRY", "valor": "17.76980260" },
+    { "moneda": "RUB", "valor": "10.33956995" },
+    { "moneda": "USD", "valor": "876.79760000" }
+  ]
+}

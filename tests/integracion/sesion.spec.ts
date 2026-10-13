@@ -25,7 +25,7 @@ async function entrar(page: Page, email: string) {
   await page.getByPlaceholder("Tu contrasena").press("Enter");
 
   // Con margen: en desarrollo el primer inicio de sesion compila la action.
-  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 90_000 });
 }
 
 test("al entrar quedan las dos cookies, y ninguna la puede leer la pagina", async ({ page, context }) => {

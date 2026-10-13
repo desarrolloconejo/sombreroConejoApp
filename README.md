@@ -289,6 +289,7 @@ aplicacion no sabe cual esta activo.
 | Servicio | Variable | Por defecto |
 | --- | --- | --- |
 | Correo | `CORREO_MODO` | `simulado`: no hay cuenta de la empresa todavia |
+| Tasa de cambio | `TASA_MODO` | `real`: lee la pagina del BCV, que no pide cuenta |
 
 **Enviar un correo son dos pasos.** `encolarCorreo` escribe el mensaje en
 `portal.correos_salida` dentro de la transaccion del cambio que lo provoca, y
@@ -334,6 +335,36 @@ al cargar una pagina.
 
 En el codigo, «notificacion» es esto y «aviso» es el mensaje flotante que
 confirma una accion (`ProveedorAvisos`). No son lo mismo.
+
+### Tasa de cambio y tareas programadas
+
+`/api/cron/tasa` lee la pagina del BCV y guarda en `finanzas.tasas_cambio`
+todas las monedas que publica, con su fecha valor. La llama el programador de
+la plataforma (`vercel.json`, una vez al dia) y nadie mas: exige la cabecera
+`Authorization: Bearer <CRON_SECRET>`, y sin `CRON_SECRET` en el entorno
+responde 503.
+
+Para lanzarla en local hay que definir `CRON_SECRET` en el `.env`, recrear el
+contenedor y llamarla:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3100/api/cron/tasa
+```
+
+Tres cosas que no son obvias:
+
+- **Una lectura rara no se guarda.** Si la pagina no tiene exactamente la
+  forma esperada, o una moneda cambia mas de un 25 % respecto a la anterior,
+  se rechaza, se anota y se notifica a los administradores. El lector esta en
+  `src/lib/finanzas/tasaBcv.ts`, como funciones puras.
+- **El valor viaja como texto**, no como numero: son ocho decimales y con
+  ellos se calcula dinero. La base lo guarda en `NUMERIC`.
+- **El servidor del BCV no envia su certificado intermedio**, y Node rechaza la
+  conexion. No se apaga la verificacion: se le entrega ese intermedio, que
+  esta en `src/lib/externos/certificados/bcvIntermedio.ts` con su procedencia.
+
+Una tarea programada no tiene persona detras: escribe con `conSistema`, que
+declara el rol `sistema`. Las politicas de cada tabla dicen que puede hacer.
 
 ### Seguridad por fila
 
@@ -444,8 +475,8 @@ tipo y el `CHECK` de la tabla.
 
 | Bateria | Donde corre | Que cubre |
 | --- | --- | --- |
-| `test:unitarias` | Host | Funciones puras, con Playwright sin navegador: auditor de hooks, destino tras el login, limite de la contrasena y reparto del menu por secciones |
-| `test:integracion` | Host, con la app levantada | Recorridos reales en un navegador |
+| `test:unitarias` | Host | Funciones puras, con Playwright sin navegador: auditor de hooks, destino tras el login, limite de la contrasena, reparto del menu por secciones y lectura de la pagina del BCV |
+| `test:integracion` | Host, con la app levantada | Recorridos reales en un navegador. Recien recreado el contenedor, la primera pasada compila cada pantalla al vuelo y puede necesitar un reintento; la segunda ya va limpia |
 | `prueba:auditor` | Contenedor | La tabla completa de casos del auditor |
 | `prueba:modelos` | Contenedor | Los modelos contra la base; limpia lo que crea |
 | `prueba:sesiones` | Contenedor | Rotacion, reutilizacion y revocacion de sesiones; bloqueo por intentos |

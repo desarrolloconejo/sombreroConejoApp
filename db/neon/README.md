@@ -38,3 +38,4 @@ comprobaciones y la vuelta atras— esta en `docs/despliegueProduccion.md`.
 | `06-vista-sin-hash.sql` | Quita el hash de `vw_usuarios_completos`. **Despues** de publicar: la version anterior lo necesita para iniciar sesion | Pendiente |
 | `07-esquemas-y-correos.sql` | Crea los esquemas `portal` y `finanzas`, las funciones de sesion y `portal.correos_salida` con su politica. **Antes** de subir, despues del 05 | Pendiente |
 | `08-notificaciones.sql` | Crea `portal.notificaciones`, los avisos de la campana, con sus politicas. **Antes** de subir, despues del 07 | Pendiente |
+| `09-tasas-de-cambio.sql` | Crea `finanzas.tasas_cambio` y deja que la tarea programada escriba y notifique. **Antes** de subir, despues del 08 | Pendiente |

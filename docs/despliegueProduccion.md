@@ -1,7 +1,7 @@
 # Guia de despliegue a produccion
 
 Estado: **en preparacion**. No se publica nada hasta que la integracion del
-portal este completa y probada en local. Ultima etapa anotada: **2** (en curso).
+portal este completa y probada en local. Ultima etapa anotada: **2**.
 
 Este documento se va llenando etapa a etapa. Cada rama que cambie algo de
 produccion —esquema, variables de entorno, un paso manual— lo anota aqui antes
@@ -93,6 +93,7 @@ Necesitan el rol `conejo_app`: van despues del 5.
 | --- | --- | --- | --- |
 | 7 | `db/neon/07-esquemas-y-correos.sql` | Crea los esquemas `portal` y `finanzas`, las funciones de sesion y `portal.correos_salida` con sus politicas | `esquemas = 2`; `seguridad_por_fila = true` y `politicas = 3` |
 | 8 | `db/neon/08-notificaciones.sql` | Crea `portal.notificaciones`, lo que se lee en la campana, con sus politicas | `seguridad_por_fila = true` y `politicas = 3` |
+| 9 | `db/neon/09-tasas-de-cambio.sql` | Crea `finanzas.tasas_cambio` y deja que la tarea programada escriba y notifique | `seguridad_por_fila = true` y `politicas = 2`; `permisos = INSERT, SELECT` |
 
 ---
 
@@ -114,6 +115,8 @@ En Settings → Environment Variables, entorno de produccion.
 | Variable | Accion | Valor |
 | --- | --- | --- |
 | `APP_URL_PUBLICA` | **Anadir** | La direccion publica de la aplicacion, sin barra final (`https://app.…`). Es el enlace que llevan los correos. Sin ella los correos salen sin enlace |
+| `CRON_SECRET` | **Anadir** | Un secreto de 32 caracteres o mas, marcado como Sensitive. Protege las tareas programadas; Vercel lo envia solo en cada llamada. Sin el, la tarea de la tasa responde 503 y no corre. Se genera igual que la contrasena del rol |
+| `TASA_MODO` | No definir | Sin definir vale `real`: lee la pagina del BCV |
 | `CORREO_MODO` | No definir | Sin definir vale `simulado`: no se envia nada y los mensajes quedan en la bandeja de salida. Se pone en `real` el dia que exista la cuenta de Google de la empresa |
 
 La cadena del dueno (`neondb_owner`) se guarda aparte: hace falta para la
@@ -156,6 +159,11 @@ En la aplicacion publicada, con la cuenta de administrador.
 
 ### Etapa 2
 
+- [ ] En Vercel, Settings → Cron Jobs lista `/api/cron/tasa`. Lanzarla a mano
+      con su boton «Run» y comprobar el resultado en Auditoria, filtrando por
+      el modulo «Tasa de cambio»: debe aparecer «Tasa de cambio registrada».
+      Si aparece «Lectura de la tasa rechazada», el motivo esta en su detalle
+      (ver la seccion 9).
 - [ ] Bandeja de salida (en Sistema) abre, y muestra el aviso de que el correo
       esta en modo simulado.
 - [ ] La campana del encabezado se abre y dice que no hay notificaciones (o
@@ -222,6 +230,9 @@ anterior lo ignora.
   la bandeja de salida para entregarlo a mano. La contrasena provisional se
   sigue entregando en mano; el correo nunca la lleva.
 - El administrador tiene una entrada nueva en Sistema: «Bandeja de salida».
+- La tasa del BCV se lee sola una vez al dia. Todavia no se muestra en ninguna
+  pantalla: la usara finanzas. Si un dia no se puede leer, llega una
+  notificacion a los administradores.
 - **La campana funciona.** Avisa a los administradores cuando una cuenta se
   bloquea por intentos y cuando un correo no se pudo enviar, y a cada persona
   cuando le restablecen la contrasena. Se actualiza al cargar una pagina, no
@@ -250,6 +261,10 @@ resolver antes.
 | Tema | Estado |
 | --- | --- |
 | Correo en modo real (Gmail) | **Escrito y sin probar.** No hay cuenta de Google de la empresa. Antes de poner `CORREO_MODO=real` hay que repetir `npm run drive:probar` pidiendo tambien el permiso `gmail.send`, y probar un envio |
+| El BCV desde los servidores de Vercel | **Sin probar.** Desde aqui responde, pero es habitual que filtre por pais de origen. Si rechaza a Vercel, la tarea lo notificara cada dia y la tasa habra que registrarla a mano hasta mudarse al VPS |
+| Certificado del BCV | El suyo vence el **20 de noviembre de 2026**. Si al renovarlo cambian de autoridad, la lectura fallara y lo notificara: hay que sustituir el intermedio de `src/lib/externos/certificados/bcvIntermedio.ts`. No se arregla apagando la verificacion |
+| Frecuencia de la tarea | Una vez al dia (18:30 de Caracas), que es lo que permite el plan gratuito de Vercel. El «refresco al usar» del plan llega con el modulo de finanzas |
+| Registrar una tasa a mano | La base ya lo admite, para `admin` y `administracion`. La pantalla llega con finanzas (etapa 5) |
 | Correos que quedan «pendientes» | En modo real, si la funcion se corta entre confirmar el cambio y enviar, el correo queda como pendiente. No hay tarea que lo recoja: se reintenta a mano desde la bandeja |
 
 ---
@@ -259,7 +274,7 @@ resolver antes.
 | Etapa | SQL antes | Variables | SQL despues | Anotada |
 | --- | --- | --- | --- | --- |
 | 1. Cimientos de seguridad | 01 a 05 | `DATABASE_URL`, `JWT_EXPIRACION` | 06 | Si |
-| 2. Externos y avisos | 07, 08 | `APP_URL_PUBLICA` | — | En curso: faltan tasa y archivos |
+| 2. Externos y avisos | 07, 08, 09 | `APP_URL_PUBLICA`, `CRON_SECRET` | — | Si. El adaptador de archivos pasa a la etapa 4 |
 | 3. Proyectos, bateria y tareas | — | — | — | Pendiente |
 | 4. Vista del cliente y revision | — | — | — | Pendiente |
 | 5. Presupuestos y proformas | — | — | — | Pendiente |
