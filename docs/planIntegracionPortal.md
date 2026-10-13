@@ -24,6 +24,12 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Sesiones | Token de acceso de 30 minutos y token de renovacion guardado en la base (seccion 5.1) |
 | Auditoria | Tabla `auditoria` que registra quien hace que, en toda la app (seccion 5.2) |
 | Cargos | Se anade `produccion`. `cuentas` son los ejecutivos y **solo ven las empresas que tienen asignadas** |
+| Cuenta de Google | De momento la personal del responsable: crear un proyecto de GCP en la empresa exige una tarjeta que no hay. El correo sigue en modo simulado hasta entonces |
+| Cargo `administracion` | Ve solo finanzas |
+| Modal de sesion | Renovacion silenciosa mientras hay actividad; el modal solo aparece tras inactividad. Tope de 12 horas |
+| Video en revision | Enlaces externos |
+| Tarea de la tasa | Una vez al dia (plan gratuito de Vercel), mas refresco al usar |
+| Hooks y piezas | No se conectan por ahora |
 | Neon | El rol de produccion, `neondb_owner`, tiene `BYPASSRLS` (comprobado el 2026-10-13): el rol `conejo_app` es obligatorio, no opcional |
 | Plataforma | Vercel es temporal: la app se mudara, previsiblemente a un VPS. El plan separa lo que se construye ya de lo que se enciende tras la mudanza (seccion 10) |
 | Aprovechar la integracion | Cerrar huecos de seguridad y mejorar flujos actuales (secciones 5 y 8) |
@@ -142,7 +148,6 @@ Todo en `db/schema.sql`, idempotente. Tres zonas:
 | `usuarios` | `debe_cambiar_clave`, `intentos_fallidos`, `bloqueado_hasta` (seccion 5) |
 | `cargos` | Fila nueva `produccion`. Tambien en `SlugCargo` y en la lista de `src/lib/jwt.ts` |
 | (nuevas en `public`) | `sesiones` (seccion 5.1) y `auditoria` (seccion 5.2): sirven a toda la app, no solo al portal |
-| `fichas_hook` | `pieza_id` opcional (seccion 8) |
 
 ### 4.2 Esquema `portal`
 
@@ -282,9 +287,10 @@ caducar el acceso. No cuesta una consulta mas.
 De regalo sale una lista de «sesiones abiertas» en Mi perfil, con un boton para
 cerrar las demas.
 
-**Una cosa a decidir** (pregunta 4): un modal cada 30 minutos interrumpe a quien
-esta trabajando sin parar. La alternativa habitual es renovar en silencio
-mientras haya actividad y mostrar el modal solo tras un rato de inactividad.
+**Decidido: el modal solo aparece tras inactividad.** Mientras la persona
+trabaja —teclea, hace clic, navega— el acceso se renueva solo, sin avisar. Si
+pasa un rato sin actividad, al acercarse la caducidad sale el modal. Y haga lo
+que haga, a las 12 horas de haber entrado la sesion termina.
 
 ### 5.2 Auditoria
 
@@ -392,8 +398,8 @@ horaria sirve para enterarse pronto, no porque cambie cada hora.
 
 | Donde | Como |
 | --- | --- |
-| Vercel, plan Hobby | Las tareas programadas estan limitadas a **una al dia**. Cada hora exige el plan Pro |
-| Vercel, mientras tanto | Refresco al usar: si la ultima lectura tiene mas de una hora cuando alguien abre finanzas, se vuelve a leer. Da la misma frescura sin tarea programada |
+| Vercel, plan gratuito (**decidido**) | Tarea programada **una vez al dia** |
+| Ademas | Refresco al usar: si la ultima lectura tiene mas de una hora cuando alguien abre finanzas, se vuelve a leer. Da la misma frescura sin tarea programada |
 | VPS | `cron` del sistema llamando a la misma ruta, cada hora |
 
 **A comprobar tras desplegar:** que el BCV responde a los servidores de Vercel.
@@ -448,7 +454,7 @@ construyen, y eso lo dicen las secciones 2 a 6 de este plan.
 
 | Mejora | Que cambia |
 | --- | --- |
-| **Hooks se conecta con las piezas** | Una pieza de tipo reel o video puede llevar su hook: desde la pieza se abre el canvas con la empresa ya puesta, y la ficha queda ligada por `fichas_hook.pieza_id`. Hoy la ficha de un hook no sabe a que trabajo pertenece. **Opcional** (pregunta 6) |
+| **Hooks se conecta con las piezas** | **Aplazado.** Una pieza de tipo reel o video podria llevar su hook, ligando la ficha por `fichas_hook.pieza_id`. No se hace por ahora; anadir esa columna despues no rompe nada |
 | **El inicio del cliente deja de estar vacio** | Hoy un cliente entra y solo ve su perfil. Pasa a ver sus proyectos, lo que espera su revision y su saldo |
 | **La campana de avisos funciona** | El boton del layout deja de estar deshabilitado |
 | **El cargo `cuentas` empieza a servir** | Es quien opera la bandeja de briefs y el tablero |
@@ -464,7 +470,7 @@ construyen, y eso lo dicen las secciones 2 a 6 de este plan.
 | --- | --- | --- | --- |
 | Tablero | `/dashboard/tablero` | `cuentas`, admin | Proyectos de sus empresas asignadas, con su bateria y las cuatro alertas |
 | Proyectos | `/dashboard/proyectos` | `cuentas`, admin | Listado, matriz de piezas × fases, ficha de pieza |
-| Mi trabajo | `/dashboard/mi-trabajo` | `produccion` (y `diseno`, `redes` si se decide) | Cola de piezas asignadas, «marcar como lista» |
+| Mi trabajo | `/dashboard/mi-trabajo` | `produccion` (y `diseno`, `redes` si se decide, pregunta 2) | Cola de piezas asignadas, «marcar como lista» |
 | Briefs (bandeja) | `/dashboard/briefs` | `cuentas`, admin | Recibidos, aclaraciones, las tres decisiones |
 | Finanzas | `/dashboard/finanzas` | `administracion`, admin | Presupuestos, proformas, facturas, pagos, cobranza, ajustes |
 | Bandeja de salida | `/dashboard/salida` | admin | Correos simulados |
@@ -491,7 +497,7 @@ texto ademas de color y `aria-label` con el porcentaje.
 | **1. Cimientos de seguridad** | Rol `conejo_app`, `conSesion`, guardias con datos frescos, sesiones con renovacion y modal, bloqueo de intentos, cambio obligatorio de clave, empresa activa, cabeceras, auditoria, cargo `produccion`. **La app actual queda mas segura aunque no se construya nada mas** | Etapa 0 |
 | **2. Externos y avisos** | Adaptadores, JSON, bandeja de salida, campana, lectura de la tasa del BCV | Cuenta de la empresa, solo para el correo real |
 | **3. Proyectos y bateria** | Proyectos, piezas, fases, avance, tablero, Mi trabajo | Pregunta 2 |
-| **4. Vista del cliente y revision** | Mis proyectos, versiones, aprobar o corregir, historial | Pregunta 5 |
+| **4. Vista del cliente y revision** | Mis proyectos, versiones, aprobar o corregir, historial — |
 | **5. Presupuestos y proformas** | Editor, aprobacion del cliente, proforma ligada a proyectos | Pregunta 1 |
 | **6. Briefs** | Formato de producto, envio, bandeja, enlace de prospecto, brief → presupuesto → proyecto | Etapas 2, 3 y 5 |
 | **7. Facturas, pagos y cobranza** | Emision, talonario, comprobantes, estado de cuenta | **Negocio**: moneda y tasa, medios de pago, contador, hoja del talonario |
@@ -515,10 +521,12 @@ en algo utilizable y se registra en `agent.md`.
 | Sesiones, cierre al cambiar clave, clave provisional, empresa desactivada, auditoria | Aceptado todo |
 | Destino | Un VPS, previsiblemente |
 
-### La cuenta de Google: conviene cambiarla ya
+### La cuenta de Google: pendiente
 
-**Si, antes de construir nada mas sobre ella.** Tres motivos, y el tercero es
-nuevo:
+**De momento se sigue con la personal del responsable**, porque crear el
+proyecto de GCP en la empresa pide una tarjeta. Mientras tanto el correo se
+queda en modo simulado y Drive solo recibe archivos de prueba. Los motivos
+para cambiarla en cuanto se pueda:
 
 1. Los archivos quedan en el Drive de quien autoriza, y moverlos despues obliga
    a actualizar ids en la base.
@@ -537,21 +545,16 @@ Lo que hay que pedir:
 Con eso se vuelve a ejecutar `npm run drive:probar` y se cambian cuatro
 variables. El codigo no cambia.
 
-### Decisiones tuyas
+### Decisiones tuyas que siguen abiertas
 
 | # | Pregunta | Mi propuesta |
 | --- | --- | --- |
 | 1 | Los seis ajustes al modelo de finanzas (`integracionFinanzas.md`, seccion 4.4) | Aceptarlos todos |
-| 2 | ¿`diseno` y `redes` tambien reciben piezas y ven «Mi trabajo», o solo `produccion`? Dicho de otro modo: quien redacta la fase 1 y quien disena la fase 3 | Que una pieza se pueda asignar a cualquiera de los tres cargos |
-| 3 | ¿El cargo `administracion` ve proyectos, o solo finanzas? | Solo finanzas |
-| 4 | El modal de sesion: ¿siempre cada 30 minutos, o solo tras inactividad y renovacion silenciosa mientras se trabaja? | Solo tras inactividad |
-| 5 | Video en revision mientras estemos en Vercel | Imagenes y PDF a Drive; video como enlace externo hasta el VPS |
-| 6 | Como se imprime la factura | Desde el navegador |
-| 7 | ¿Conectar Hooks con las piezas? | Si, como vinculo opcional |
-| 8 | ¿Verificacion en dos pasos para quien emite facturas? | Si, en la etapa 8 |
-| 9 | ¿Se aceptan rutas API (`route.ts`)? Ya hacen falta dos: descargar archivos y la tarea de la tasa | Si |
-| 10 | Tope de la sesion aunque se renueve | 12 horas |
-| 11 | ¿Que tasa del BCV se guarda: dolar, euro o las dos? | Las dos; el negocio decide cual se usa al facturar |
+| 2 | Quien hace el trabajo de las piezas: solo el cargo `produccion`, o tambien `redes` (redacta) y `diseno` (disena) | Que una pieza se pueda asignar a cualquiera de los tres |
+| 3 | Como se imprime la factura | Desde el navegador |
+| 4 | ¿Verificacion en dos pasos para quien emite facturas? | Si, en la etapa 8 |
+| 5 | ¿Se aceptan rutas API (`route.ts`)? Hacen falta dos: descargar archivos y la tarea de la tasa | Si |
+| 6 | ¿Que tasa del BCV se guarda: dolar, euro o las dos? | Las dos; el negocio decide cual se usa al facturar |
 
 ### Del negocio
 
@@ -568,8 +571,7 @@ variables. El codigo no cambia.
 
 | Que | Para que |
 | --- | --- |
-| La cuenta de Workspace y el proyecto de GCP de la empresa | Drive y correo reales |
-| Plan de Vercel (Hobby o Pro) mientras dure | Decide si la tasa se lee con tarea programada o al usar |
+| La cuenta de Workspace y el proyecto de GCP de la empresa, cuando haya tarjeta | Drive y correo reales |
 | Fecha aproximada de la mudanza al VPS | Decide cuanto esfuerzo merece lo provisional |
 
 ---
@@ -583,6 +585,5 @@ variables. El codigo no cambia.
 | Limite de tamano de peticion en Vercel | No caben videos por el servidor | Enlaces externos hasta la mudanza |
 | Correo simulado | El prospecto no recibe su enlace solo | Bandeja de salida y entrega a mano, hasta tener la cuenta de la empresa |
 | La pagina del BCV cambia de estructura o bloquea a los servidores | Deja de llegar la tasa | Validacion estricta, aviso al operador y entrada a mano |
-| El modal de sesion interrumpe demasiado | La gente lo acepta sin leer, o se queja | Renovacion silenciosa con actividad (pregunta 4) |
 | Migrar pegando SQL en Neon con mas de 25 tablas nuevas | Un error a medias deja el esquema inconsistente | El archivo es idempotente y se prueba entero en local antes |
 | Dos repositorios de especificacion | El plan y el paquete se desincronizan | Este documento manda; el paquete es referencia de reglas de negocio |
