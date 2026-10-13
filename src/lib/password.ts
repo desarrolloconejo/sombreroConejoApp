@@ -29,8 +29,16 @@ const RONDAS = 12;
 const HASH_SENUELO =
   "$2b$12$J/Qv3RM/tWjHnf8VNsx0rezbGDhQQaWak6pkgRAxzUqh4/GMvg5wq";
 
-/** Longitud maxima que bcrypt tiene en cuenta: ignora lo que pase de 72 bytes. */
-export const LONGITUD_MAXIMA_PASSWORD = 72;
+/**
+ * Si bcrypt ignoraria parte de la contrasena.
+ *
+ * El limite es de 72 BYTES en UTF-8, no de 72 caracteres: una letra
+ * acentuada ocupa dos y un emoji cuatro, asi que medir la longitud del texto
+ * deja pasar contrasenas cuyo final no cuenta.
+ */
+export function excedeLimite(password: string): boolean {
+  return bcrypt.truncates(password);
+}
 
 /** Calcula el hash de una contrasena. */
 export async function hashear(password: string): Promise<string> {

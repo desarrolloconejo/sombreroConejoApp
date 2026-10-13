@@ -1,5 +1,5 @@
 import type { ErroresCampo, Tema } from "@/types";
-import { LONGITUD_MAXIMA_PASSWORD } from "./password";
+import { excedeLimite } from "./password";
 
 /**
  * Validacion de la entrada que llega desde los formularios.
@@ -90,8 +90,8 @@ export function validarPassword(valor: string): string | null {
     return `La contrasena debe tener al menos ${LIMITES.passwordMinima} caracteres`;
   }
 
-  if (valor.length > LONGITUD_MAXIMA_PASSWORD) {
-    return `La contrasena no puede pasar de ${LONGITUD_MAXIMA_PASSWORD} caracteres`;
+  if (excedeLimite(valor)) {
+    return "La contrasena es demasiado larga";
   }
 
   if (!/[a-z]/.test(valor)) return "La contrasena debe incluir una minuscula";
