@@ -414,11 +414,18 @@ servidor propio. La base esta en **Neon**.
 - **El disco es de solo lectura.** El codigo de servidor no escribe archivos.
   Por eso la subida de foto de perfil esta apagada.
 - **La base se migra pegando SQL.** La maquina de desarrollo no alcanza Neon,
-  asi que `npm run sql:produccion` genera el SQL y se pega en el editor de su
-  panel. Es idempotente.
+  asi que cada cambio de esquema entrega un archivo numerado en `db/neon/`, que
+  se pega en el editor de su panel. Son idempotentes y no llevan secretos.
+  `npm run sql:produccion` es otra cosa: genera el SQL de una base **nueva**.
 - **Primero la base, despues el codigo.** Si un cambio toca el esquema, se pega
   el SQL antes de subir `main`. Al reves, la aplicacion arranca contra tablas
-  que no existen.
+  que no existen. La excepcion es lo que le quita algo a la version publicada,
+  que se pega despues.
+- **El orden completo esta en
+  [docs/despliegueProduccion.md](docs/despliegueProduccion.md):** SQL,
+  variables de Vercel, comprobaciones y vuelta atras, etapa a etapa. No se
+  publica hasta terminar la integracion del portal.
+- **La aplicacion se conecta como `conejo_app`**, no como duena de la base.
 - **La base de produccion tiene datos reales.** No se le insertan datos de
   ejemplo.
 
@@ -429,6 +436,7 @@ servidor propio. La base esta en **Neon**.
 | [CLAUDE.md](CLAUDE.md) | Contrato del proyecto |
 | [AGENTS.md](AGENTS.md) | Contexto y reglas para asistentes de codigo |
 | [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md) | Plan de la integracion del portal |
+| [docs/despliegueProduccion.md](docs/despliegueProduccion.md) | Guia del despliegue: SQL, variables y pasos, etapa a etapa |
 | [docs/planAuditoriaRepositorio.md](docs/planAuditoriaRepositorio.md) | Plan de revision y actualizacion del repositorio. Ejecutado |
 | [docs/informeAuditoria.md](docs/informeAuditoria.md) | Resultado de esa revision, hallazgo a hallazgo |
 | [docs/planMejoraDiseno.md](docs/planMejoraDiseno.md) | Plan de mejora del diseno |

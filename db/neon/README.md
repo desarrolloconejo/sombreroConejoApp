@@ -23,6 +23,9 @@ La fuente del esquema sigue siendo `db/schema.sql`. Estos archivos son el
 extracto de lo que cambia en cada entrega, para no tener que pegar el esquema
 entero sobre una base con datos.
 
+El orden completo del despliegue —con las variables de Vercel, las
+comprobaciones y la vuelta atras— esta en `docs/despliegueProduccion.md`.
+
 ## Estado
 
 | Archivo | Que hace | Pegado en produccion |
