@@ -1823,3 +1823,31 @@ ejecuta TypeScript sin una bandera.
 - Las cuatro variables de Drive faltan en Vercel.
 - El plan de integracion se copio a `docs/integracionFinanzas.md`, que pasa a
   ser la copia que se mantiene.
+
+---
+
+## Etapa 26 — El alcance pasa a ser el portal completo
+
+Lo que iba a ser un modulo de finanzas pasa a ser el flujo entero del paquete
+`appFacturas`: brief, presupuesto, proyecto con piezas y bateria de cinco
+fases, revision del cliente, y despues proforma, factura y pagos. El plan
+maestro es `docs/planIntegracionPortal.md`; `docs/integracionFinanzas.md`
+queda como su capitulo de finanzas.
+
+Tres decisiones nuevas, ademas de las de la etapa 25:
+
+- **Servicios externos simulados con JSON** mientras la aplicacion viva en
+  Vercel, que es temporal. Cada servicio va detras de un adaptador con dos
+  implementaciones; lo que cambia en cada llamada va a la base, porque el disco
+  de Vercel es de solo lectura y un JSON ahi solo se puede leer.
+- **Aprovechar la integracion para cerrar huecos de seguridad.** El plan lista
+  once, comprobados en el codigo. El mas serio: las actions de Usuarios y
+  Empresas deciden con el token, asi que un administrador desactivado conserva
+  sus poderes hasta ocho horas.
+- **RLS tambien fuera de finanzas**, para aislar a un cliente de otro en
+  proyectos y briefs. De ahi sale `pieza_contenido` como tabla aparte: RLS
+  decide por fila y no por columna, y es la forma de que la propia base le
+  niegue el texto de una pieza al cliente antes de la fase 5.
+
+No se construyo nada en esta etapa: es solo el plan. Las preguntas que hay que
+responder antes de empezar estan en su seccion 11.

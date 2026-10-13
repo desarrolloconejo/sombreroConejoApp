@@ -2,6 +2,13 @@
 
 Documento de integracion. Fecha: 2026-10-09. Ultima revision: 2026-10-13. Desde esa revision vive en `docs/integracionFinanzas.md` de Conejo App; la copia de `appFacturas` se mantiene igual a esta.
 
+> **Desde el 2026-10-13 este documento es el capitulo de finanzas de un plan mayor**, `docs/planIntegracionPortal.md`, porque el alcance paso de «solo finanzas» al flujo completo (briefs, proyectos, piezas y fases). Donde los dos difieran, manda el plan. Cuatro cosas de este documento cambian por eso:
+>
+> - **Vuelven los vinculos con proyectos y briefs**: `presupuestos.brief_id`, `presupuestos.proyecto_id`, `facturas.proyecto_id` y la tabla `proforma_proyectos`. Lo que aqui dice «se eliminan» ya no aplica.
+> - **La bitacora es general**: `finanzas.eventos` no se crea; todo escribe en `portal.eventos`.
+> - **`conSesionFinanzas` pasa a llamarse `conSesion`** y la usan todos los modulos nuevos, declarando tambien la empresa.
+> - **El correo y la tasa de cambio dejan de estar fuera**: entran como servicios simulados con JSON mientras la app viva en Vercel.
+
 **Fuentes.** El paquete de especificacion del portal (este repositorio, analizado en `diagnostico/`), el informe de contexto `docs/contextoAppConejo.md` y, desde la segunda revision, **el codigo real de Conejo App** (`sombreroConejoApp`, rama `main`, commit `8ae8b67`). Lei completos `db/schema.sql`, `src/lib/db.ts`, `src/lib/sesion.ts` y `src/proxy.ts`, y las partes relevantes de `navegacion.ts`, `parametros.ts`, `seed.mts`, `generarSql.mts`, los tipos de sesion y `CLAUDE.md`. El resultado de esa validacion esta en la seccion 16. No modifique nada en ese repositorio.
 
 **Decisiones ya tomadas por ti:**
