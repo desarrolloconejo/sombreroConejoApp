@@ -11,7 +11,7 @@ Documento de integracion. Fecha: 2026-10-09. Ultima revision: 2026-10-13. Desde 
 > - **`conSesionFinanzas` pasa a llamarse `conSesion`** y la usan todos los modulos nuevos, declarando tambien la empresa.
 > - **El correo y la tasa de cambio dejan de estar fuera**: entran como servicios simulados con JSON mientras la app viva en Vercel.
 
-**Fuentes.** El paquete de especificacion del portal (este repositorio, analizado en `diagnostico/`), el informe de contexto `el informe de contexto original (hoy resumido en `AGENTS.md`)` y, desde la segunda revision, **el codigo real de Conejo App** (`sombreroConejoApp`, rama `main`, commit `8ae8b67`). Lei completos `db/schema.sql`, `src/lib/db.ts`, `src/lib/sesion.ts` y `src/proxy.ts`, y las partes relevantes de `navegacion.ts`, `parametros.ts`, `seed.mts`, `generarSql.mts`, los tipos de sesion y `CLAUDE.md`. El resultado de esa validacion esta en la seccion 16. No modifique nada en ese repositorio.
+**Fuentes.** El paquete de especificacion del portal (este repositorio, analizado en `diagnostico/`), el informe de contexto original (hoy resumido en `AGENTS.md`) y, desde la segunda revision, **el codigo real de Conejo App** (`sombreroConejoApp`, rama `main`, commit `8ae8b67`). Lei completos `db/schema.sql`, `src/lib/db.ts`, `src/lib/sesion.ts` y `src/proxy.ts`, y las partes relevantes de `navegacion.ts`, `parametros.ts`, `seed.mts`, `generarSql.mts`, los tipos de sesion y `CLAUDE.md`. El resultado de esa validacion esta en la seccion 16. No modifique nada en ese repositorio.
 
 **Decisiones ya tomadas por ti:**
 
