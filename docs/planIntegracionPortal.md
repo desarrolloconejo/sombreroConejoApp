@@ -8,7 +8,8 @@ seccion 7.
 **Fuentes.** El paquete de especificacion `appFacturas` (documentos 01 a 10,
 esquema, reglas SQL, configuracion y maquetas), su diagnostico, y el codigo de
 Conejo App en `main` (commit `b559385`). Los huecos de seguridad de la seccion 5
-estan comprobados contra el codigo, con el archivo donde se ven.
+estan comprobados contra el codigo, con el archivo donde se ven, y la auditoria
+del repositorio los volvio a confirmar el 2026-10-13 (`docs/informeAuditoria.md`).
 
 ## Decisiones tomadas
 
@@ -34,7 +35,7 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Catalogo de servicios | Lo que el cliente puede pedir es una lista cerrada; cada servicio trae su brief, sus piezas y sus tareas sugeridas (seccion 8.1) |
 | Herramientas | Seccion propia del menu. **Hooks es la primera** y se conecta al flujo a traves de las tareas (seccion 8.1) |
 | Menu | Agrupado por secciones (seccion 9). En movil, barra inferior con hoja en lugar de hamburguesa |
-| Planes hermanos | `docs/planAuditoriaRepositorio.md` (revision con Context7, conviene antes de la etapa 1) y `docs/planMejoraDiseno.md` (skills de diseno y navegacion movil) |
+| Planes hermanos | `docs/planAuditoriaRepositorio.md` (revision con Context7, **ya ejecutada**: ver «Punto de partida tras la auditoria») y `docs/planMejoraDiseno.md` (skills de diseno y navegacion movil) |
 | Tasas del BCV | Se guardan todas las que publica la pagina, no solo el dolar |
 | Asignacion de empresas | La hace el admin. El admin puede ademas actuar como ejecutivo |
 | Hooks | Lo ve solo `redes`, y el admin |
@@ -55,6 +56,36 @@ estan comprobados contra el codigo, con el archivo donde se ven.
 | Neon | El rol de produccion, `neondb_owner`, tiene `BYPASSRLS` (comprobado el 2026-10-13): el rol `conejo_app` es obligatorio, no opcional |
 | Plataforma | Vercel es temporal: la app se mudara, previsiblemente a un VPS. El plan separa lo que se construye ya de lo que se enciende tras la mudanza (seccion 10) |
 | Aprovechar la integracion | Cerrar huecos de seguridad y mejorar flujos actuales (secciones 5 y 8) |
+
+---
+
+## Punto de partida tras la auditoria
+
+La auditoria del repositorio termino el 2026-10-13. Lo que la etapa 1
+encuentra distinto de como se escribio este plan:
+
+| Tema | Como queda | Que implica aqui |
+| --- | --- | --- |
+| Versiones | `next` 16.4.0, `react` 19.3.0, `jose` 6.2.12, `pg` 8.23.1, `lucide-react` 1.56.0 | Ninguna dependencia de ejecucion tiene avisos |
+| Destino tras el login | `destinoSeguro` vive en `src/lib/redireccion.ts` y solo admite rutas del panel | La renovacion de sesion (5.1) y cualquier redireccion nueva lo reutilizan |
+| `matcher` del proxy | Solo excluye por extension la raiz y `/images` | La ruta publica `/brief/[token]` (9.2) se declara en el proxy |
+| Frontera servidor/cliente | Regla de lint sobre `src/components/**` | Los modulos nuevos nacen con ella |
+| Base | `query_timeout` de 15 segundos; una conexion rota no vuelve al pool | `conSesion` (etapa 1) se monta sobre `transaccion`, que ya lo hace |
+| Limites de error | Usan `retry` | Los `error.tsx` nuevos, igual |
+| Pruebas unitarias | Existen para el auditor, el destino del login y la contrasena | 10.2 parte de ahi |
+| Compose | PostgreSQL y pgAdmin solo en `127.0.0.1` | — |
+
+Lo que la auditoria encontro y **se resuelve en este plan**, no en ella:
+
+| Hallazgo | Donde |
+| --- | --- |
+| La sesion de 8 horas, `requiredClaims` de `jose` y la duracion fija de la cookie | Seccion 5.1 |
+| Cuentas del seed en produccion, y la imagen `prod` que lleva la semilla dentro | Hueco 11, secciones 10.1 y 11. El `Dockerfile` copia hoy `db/` entero: al separar la semilla, copiar solo lo que el arranque necesite |
+| Sin cabeceras de seguridad | Hueco 8. Anadir tambien `poweredByHeader: false` |
+| `statement_timeout` en el servidor | Etapa 1, al crear el rol `conejo_app`: se puede fijar en el propio rol y probarlo contra Neon |
+
+La cuenta de administrador del seed no existe en produccion (confirmado por
+el responsable el 2026-10-13).
 
 ---
 
@@ -940,7 +971,7 @@ Instaladas el 2026-10-13, antes de empezar la ejecucion:
 
 | Herramienta | Donde | Para que |
 | --- | --- | --- |
-| Context7 | `.mcp.json` | Documentacion actual de librerias |
+| Context7 | `.mcp.json` | Documentacion actual de librerias. Version fijada |
 | `impeccable` | `.claude/skills` | Criterio y comandos de diseno de interfaz |
 | `design-taste-frontend` | `.claude/skills` | Criterio visual. Esta pensada para paginas de presentacion, no para paneles: aplica al login y a lo que ve el cliente mas que al tablero |
 | Skills de Emil Kowalski | `.claude/skills` | Animacion, rendimiento del movimiento y sensacion nativa en movil. Se instalaron las nueve de web; quedaron fuera las de Swift, Expo y eleccion de librerias |

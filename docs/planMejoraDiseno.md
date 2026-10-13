@@ -225,6 +225,45 @@ Siguen abiertas:
 | 2 | ¿El buscador global se queda en la cabecera movil, ademas del de la hoja? | Si |
 | 3 | ¿Se activa el detector automatico de `impeccable` al editar? | No por ahora: primero ver que avisa |
 
+## Revision del plan contra el codigo
+
+Hecha el 2026-10-13. El plan es ejecutable; esto es lo que hay que resolver o
+tener presente antes de empezar.
+
+**Dos decisiones pendientes**
+
+| # | Tema | Problema | Propuesta |
+| --- | --- | --- | --- |
+| 4 | Atajos de la barra | Una sola prioridad por modulo no reproduce la tabla de atajos: el admin ve todo, asi que recibiria los dos modulos mas prioritarios del registro, no «Tablero» solo | Prioridad por rol y cargo |
+| 5 | Quien introduce `seccion` | La hoja agrupa por secciones, pero `seccion` no existe en `src/lib/navegacion.ts`, y el plan del portal la asigna a su etapa 1 | La introduce quien llegue primero, y el `Sidebar` la adopta a la vez |
+
+**Lo que el plan da por hecho y no existe**
+
+| Tema | Como esta hoy |
+| --- | --- |
+| Cabecera movil con titulo y buscador | No los tiene: lleva hamburguesa, campana apagada y avatar. `BuscadorGlobal` solo se monta en escritorio. Es trabajo nuevo, falta `BuscadorGlobal.tsx` en la tabla de archivos y no se dice que pasa con el avatar |
+| `review-animations` | Lleva `disable-model-invocation`: solo la lanza el responsable con `/review-animations` |
+| Cargos de la tabla de atajos | `produccion` aun no existe; `direccion` y `tecnologia` existen y no tienen fila, asi que quedan en Inicio y Menu |
+| Pages imprimibles | No hay ninguna ni estilos de impresion: la regla de la barra no se puede probar hasta la factura |
+| Pruebas a 360 px | El proyecto `integracion` de Playwright solo usa escritorio: hace falta un proyecto movil o fijar el tamano en cada prueba |
+
+**Detalles a anadir**
+
+- Con `viewport-fit=cover` (`viewportFit: "cover"` en el `viewport` de
+  `src/app/layout.tsx`) hay que respetar tambien las areas seguras superior y
+  laterales, no solo la inferior.
+- Al abrir la hoja el foco va al boton de cerrar, no al buscador: en un
+  telefono, enfocar el buscador levanta el teclado y tapa media hoja.
+- Ocultar la barra con un campo enfocado necesita JavaScript de cliente.
+- Las capturas de la fase 1 son 72 (12 pantallas, 2 temas, 3 anchos): decidir
+  donde se guardan y si entran al repositorio.
+- `impeccable init` escribe un `PRODUCT.md` en la raiz: anadirlo a la tabla de
+  documentos de `AGENTS.md`.
+- `moduloActivo` (`src/lib/navegacion.ts`) esta sin uso y sirve para el titulo
+  de la cabecera movil.
+- Al terminar: actualizar la linea de `diseno/` en el `README.md` y los
+  comentarios que nombran el cajon en `navegacion.ts` y en el layout del panel.
+
 ## Criterios de terminado
 
 - La navegacion movil nueva esta en `main`, con sus pruebas, y el cajon ya no existe.

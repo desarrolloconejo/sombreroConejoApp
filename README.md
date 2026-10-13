@@ -6,8 +6,10 @@ los procesos de la agencia, orientada a sus trabajadores y a sus clientes.
 Hoy cubre autenticacion, usuarios, empresas, perfil y el modulo de Hooks. Esta
 en marcha la integracion de un portal completo —briefs, proyectos, revision del
 cliente y finanzas—, cuyo plan vive en
-[docs/planIntegracionPortal.md](docs/planIntegracionPortal.md). Hay otros dos
-planes pendientes: la revision del repositorio y la mejora del diseno.
+[docs/planIntegracionPortal.md](docs/planIntegracionPortal.md). La revision
+del repositorio ya se hizo y su resultado esta en
+[docs/informeAuditoria.md](docs/informeAuditoria.md); queda pendiente el plan de
+mejora del diseno.
 
 ## Stack
 
@@ -63,6 +65,10 @@ perfil). Es idempotente. Las cuentas que crea y sus claves estan en
 Los puertos los fija el `.env`. Dentro de la red de Docker la base siempre es
 `db:5432`.
 
+PostgreSQL y pgAdmin solo se publican en `127.0.0.1`: no se llega a ellos
+desde otro equipo de la red. La aplicacion si queda visible en la red local,
+para poder abrirla desde un telefono.
+
 Para las pruebas de navegador, una sola vez en el host:
 
 ```bash
@@ -113,7 +119,8 @@ src/
   actions/      logica de negocio ('use server'); orquestan los modelos
   models/       unica capa que consulta la base de datos
   types/        tipos compartidos
-  lib/          infraestructura: base, sesion, jwt, validaciones, navegacion
+  lib/          infraestructura: base, sesion, jwt, validaciones, navegacion,
+                redireccion
   lib/hooks/    criterio del modulo de hooks, como funciones puras
   proxy.ts      barrera de rutas (en Next 16 sustituye a middleware.ts)
 db/
@@ -132,7 +139,9 @@ diseno/         maquetas aprobadas
 ```
 
 Regla de dependencias: los componentes nunca importan de `models/`, y `models/`
-nunca importa de `next/`.
+nunca importa de `next/`. La primera la comprueba el lint: `src/components/**`
+no puede importar `models/` ni `lib/db`, `lib/jwt`, `lib/sesion` o
+`lib/password`.
 
 ## Como se trabaja
 
@@ -191,6 +200,10 @@ export default async function Pagina() {
 Hay dos ejes independientes: el **rol** (admin, trabajador, cliente) decide lo
 que se puede hacer, y el **cargo** decide lo que se ve. Para un cliente, el
 equivalente al cargo es su empresa. El admin se salta el filtro de cargo.
+
+Un destino de redireccion que llegue en la URL —hoy, `volverA` en el login—
+pasa siempre por `destinoSeguro` (`src/lib/redireccion.ts`), que solo deja
+volver a rutas del panel.
 
 ### Anadir un modulo
 
@@ -256,7 +269,7 @@ tipo y el `CHECK` de la tabla.
 
 | Bateria | Donde corre | Que cubre |
 | --- | --- | --- |
-| `test:unitarias` | Host | Funciones puras, con Playwright sin navegador |
+| `test:unitarias` | Host | Funciones puras, con Playwright sin navegador: auditor de hooks, destino tras el login y limite de la contrasena |
 | `test:integracion` | Host, con la app levantada | Recorridos reales en un navegador |
 | `prueba:auditor` | Contenedor | La tabla completa de casos del auditor |
 | `prueba:modelos` | Contenedor | Los modelos contra la base; limpia lo que crea |
@@ -312,5 +325,6 @@ servidor propio. La base esta en **Neon**.
 | [CLAUDE.md](CLAUDE.md) | Contrato del proyecto |
 | [AGENTS.md](AGENTS.md) | Contexto y reglas para asistentes de codigo |
 | [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md) | Plan de la integracion del portal |
-| [docs/planAuditoriaRepositorio.md](docs/planAuditoriaRepositorio.md) | Plan de revision y actualizacion del repositorio |
+| [docs/planAuditoriaRepositorio.md](docs/planAuditoriaRepositorio.md) | Plan de revision y actualizacion del repositorio. Ejecutado |
+| [docs/informeAuditoria.md](docs/informeAuditoria.md) | Resultado de esa revision, hallazgo a hallazgo |
 | [docs/planMejoraDiseno.md](docs/planMejoraDiseno.md) | Plan de mejora del diseno |

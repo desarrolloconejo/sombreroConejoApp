@@ -35,8 +35,8 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 | `CLAUDE.md` | Contrato: stack, principios, alcance por fases |
 | `README.md` | Puesta en marcha, comandos, convenciones, despliegue |
 | `docs/planIntegracionPortal.md` | Plan maestro de la integracion. Manda sobre los demas |
-| `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7 |
-| `docs/informeAuditoria.md` | Hallazgos de esa revision, con evidencia y orden de arreglo |
+| `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7. Ejecutado |
+| `docs/informeAuditoria.md` | Resultado de esa revision: que se corrigio y que quedo para el plan del portal |
 | `docs/planMejoraDiseno.md` | Plan de mejora del diseno y navegacion movil nueva |
 
 El paquete de especificacion original del portal vive fuera, en la carpeta
@@ -50,7 +50,8 @@ src/components/   interfaz. Cliente solo donde hace falta
 src/actions/      logica de negocio ('use server'). Conocen la sesion
 src/models/       UNICA capa que consulta la base
 src/types/        tipos, reexportados desde index.ts
-src/lib/          infraestructura: db, sesion, jwt, validaciones, navegacion
+src/lib/          infraestructura: db, sesion, jwt, validaciones, navegacion,
+                  redireccion
 src/lib/hooks/    criterio del modulo de hooks como funciones puras
 src/proxy.ts      barrera de rutas (en Next 16 sustituye a middleware.ts)
 db/               schema.sql, seed, generador de SQL de produccion, pruebas
@@ -75,6 +76,8 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Conjuntos cerrados como `TEXT` + `CHECK`, con su espejo en `src/types`. Si se
   anade un valor hay que tocar los dos sitios.
 - Las personas y las empresas **no se borran, se desactivan**.
+- Toda consulta tiene un tope de 15 segundos (`query_timeout` en
+  `src/lib/db.ts`). Lo que necesite mas no es una consulta de peticion.
 
 **Seguridad**
 
@@ -86,6 +89,11 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   `leerEstadoListado`, que nunca lanza.
 - Un panel nuevo (`?panel=`) hay que anadirlo a la lista blanca de
   `src/lib/parametros.ts`, o se ignora sin avisar.
+- Un destino de redireccion que venga de la URL pasa por `destinoSeguro`
+  (`src/lib/redireccion.ts`). Nunca se le da a `redirect` un valor crudo.
+- El `matcher` de `src/proxy.ts` solo excluye por extension lo que cuelga de
+  la raiz y `/images`. Una ruta publica nueva se declara en el proxy, no se
+  cuela por el `matcher`.
 - Ningun secreto entra al repositorio. `.env` esta ignorado; en `.env.example`
   y en los documentos van los **nombres** de las variables, no sus valores.
 
@@ -96,6 +104,8 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   `dark-tema:`, **no** `dark:`.
 - Una sola tipografia, Poppins. Iconos de `lucide-react`.
 - Cada modulo trae su propio `loading.tsx` con la geometria de su page.
+- Un limite de error (`error.tsx`) reintenta con `retry`, no con `reset`:
+  `reset` repinta sin volver a pedir los datos al servidor.
 - Los listados usan el componente `Listado`, con el estado en la URL.
 - React 19 vacia los campos no controlados al terminar una action: los
   formularios largos controlan sus valores con `useCampos`.
@@ -149,7 +159,7 @@ npm run test:integracion                            # Playwright, app levantada
 
 | Herramienta | Uso |
 | --- | --- |
-| Context7 (MCP, `.mcp.json`) | Documentacion actual de librerias. Para Next 16 manda la copia local de `node_modules/next/dist/docs/` |
+| Context7 (MCP, `.mcp.json`) | Documentacion actual de librerias. Para Next 16 manda la copia local de `node_modules/next/dist/docs/`. Su version esta fijada y se sube a mano |
 | Skills de diseno (`.claude/skills/`) | `impeccable`, `design-taste-frontend` y las de Emil Kowalski para animacion y movil |
 | Playwright | Pruebas unitarias y de integracion |
 
