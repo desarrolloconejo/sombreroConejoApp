@@ -272,7 +272,14 @@ async function principal(): Promise<void> {
       diseno: await idDe("diseno@conejo.test"),
       produccion: await idDe("pruebas@conejo.test"),
       admin: await idDe(USUARIOS[0].email),
+      cliente: await idDe("cliente@empresa.test"),
     };
+
+    // La persona de la empresa de ejemplo decide en la fase 5.
+    await cliente.query(
+      "UPDATE clientes SET puede_aprobar = TRUE WHERE usuario_id = $1",
+      [equipo.cliente],
+    );
 
     await cliente.query(
       `INSERT INTO portal.asignaciones (usuario_id, empresa_id, creado_por)
