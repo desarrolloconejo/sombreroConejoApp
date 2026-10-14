@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { USUARIOS } from "../../db/datos/semilla.mts";
+import { EMAIL_ADMIN_PRUEBAS, USUARIOS } from "../../db/datos/semilla.mts";
 import { codigoDelPaso, pasoDe } from "../../src/lib/totp";
 
 /**
@@ -60,7 +60,7 @@ async function escribirCredenciales(page: Page) {
  */
 async function retirarSiLosTiene(browser: Browser) {
   const admin = USUARIOS.find(
-    (u) => u.perfil.tipo === "trabajador" && u.perfil.rol === "admin",
+    (u) => u.email === EMAIL_ADMIN_PRUEBAS,
   );
   if (!admin) throw new Error("La semilla no trae ningun administrador");
 

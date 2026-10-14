@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { EMAIL_EJECUTIVO, USUARIOS } from "../../db/datos/semilla.mts";
+import { EMAIL_ADMIN_PRUEBAS, EMAIL_EJECUTIVO, USUARIOS } from "../../db/datos/semilla.mts";
 
 /**
  * Las asignaciones de ejecutivos, desde la ficha de una empresa.
@@ -11,7 +11,7 @@ import { EMAIL_EJECUTIVO, USUARIOS } from "../../db/datos/semilla.mts";
 
 function administrador() {
   const admin = USUARIOS.find(
-    (u) => u.perfil.tipo === "trabajador" && u.perfil.rol === "admin",
+    (u) => u.email === EMAIL_ADMIN_PRUEBAS,
   );
   if (!admin) throw new Error("La semilla no trae ningun administrador");
   return admin;

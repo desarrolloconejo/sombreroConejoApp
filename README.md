@@ -55,8 +55,10 @@ docker compose exec app-dev npm run seed
 ```
 
 El seed crea las tablas y deja la base lista para entrar: roles, cargos, una
-empresa de ejemplo y nueve cuentas: un administrador, cuatro de prueba (una por
-perfil, entre ellas el ejecutivo `cuentas@conejo.test`) y cuatro reservadas a las pruebas automaticas, `pruebas@conejo.test`, `sintareas@conejo.test`,
+empresa de ejemplo y diez cuentas: un administrador, cuatro de prueba (una por
+perfil, entre ellas el ejecutivo `cuentas@conejo.test`), el administrador de las
+pruebas automaticas, `admin@conejo.test` —asi el administrador de verdad puede
+activar sus dos pasos sin dejarlas fuera—, y cuatro reservadas a las pruebas automaticas, `pruebas@conejo.test`, `sintareas@conejo.test`,
 `bloqueo@conejo.test` y `dospasos@conejo.test`. Sobre esas cuatro las pruebas hacen lo que no se puede
 deshacer —restablecer la contrasena, bloquear o desactivar la cuenta—; no se inicia sesion
 con ellas. Siembra tambien dos proyectos de ejemplo de la empresa, asignada al

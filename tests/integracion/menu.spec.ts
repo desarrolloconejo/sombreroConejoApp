@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { USUARIOS } from "../../db/datos/semilla.mts";
+import { EMAIL_ADMIN_PRUEBAS, USUARIOS } from "../../db/datos/semilla.mts";
 
 /**
  * El menu por secciones, tal como lo ve cada quien.
@@ -25,7 +25,7 @@ async function entrar(page: Page, email: string) {
 
 function administrador() {
   const admin = USUARIOS.find(
-    (u) => u.perfil.tipo === "trabajador" && u.perfil.rol === "admin",
+    (u) => u.email === EMAIL_ADMIN_PRUEBAS,
   );
   if (!admin) throw new Error("La semilla no trae ningun administrador");
   return admin.email;
