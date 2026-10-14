@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 
+import { AvisoPresupuestos } from "@/components/administracion";
 import { InicioWrapper } from "@/components/inicio";
 import { AvisoRevision, TarjetaProyectoCliente } from "@/components/misProyectos";
 import { conSesion } from "@/lib/db";
+import * as presupuestos from "@/models/presupuestos";
 import * as proyectos from "@/models/proyectos";
 import { requerirUsuario } from "@/lib/sesion";
 import * as usuarios from "@/models/usuarios";
@@ -53,8 +55,15 @@ export default async function PaginaInicio() {
       ? await conSesion(usuario, (tx) => proyectos.enCurso(tx))
       : null;
 
+  // Y, si ve las finanzas de su empresa, lo que espera su aprobacion.
+  const presupuestosPendientes =
+    usuario.tipo === "cliente" && usuario.puedeVerFinanzas
+      ? (await conSesion(usuario, (tx) => presupuestos.porAprobar(tx))).length
+      : 0;
+
   const destacado = enCurso && (
     <>
+      <AvisoPresupuestos pendientes={presupuestosPendientes} />
       <AvisoRevision piezas={enCurso.reduce((suma, p) => suma + p.alertas.esperando_cliente, 0)} />
       {enCurso.length > 0 && (
         <section aria-label="Tus proyectos en curso">
