@@ -9,7 +9,8 @@
  * Que hace, en orden:
  *   1. Si no hay DRIVE_REFRESH_TOKEN, pide la autorizacion en el navegador y
  *      lo guarda en el .env. Solo ocurre la primera vez.
- *   2. Crea ConejoApp/Comprobantes si no existe, y guarda su id en el .env.
+ *   2. Crea ConejoApp/Comprobantes y ConejoApp/Piezas si no existen, y guarda
+ *      sus ids en el .env.
  *   3. Sube un archivo de prueba, lo vuelve a leer y lo borra.
  *
  * No usa ninguna libreria: la API de Drive es HTTP y Node trae fetch.
@@ -233,6 +234,12 @@ async function principal() {
 
   await guardarEnEnv("DRIVE_CARPETA_COMPROBANTES_ID", carpetaId);
   console.log(`Carpeta ${CARPETAS.join("/")} lista`);
+
+  // Las versiones de las piezas, junto a los comprobantes.
+  const raiz = await carpeta(token, CARPETAS[0], "root");
+  const piezas = await carpeta(token, "Piezas", raiz);
+  await guardarEnEnv("DRIVE_CARPETA_PIEZAS_ID", piezas);
+  console.log(`Carpeta ${CARPETAS[0]}/Piezas lista`);
   console.log(`https://drive.google.com/drive/folders/${carpetaId}`);
 
   await probarSubida(token, carpetaId);
