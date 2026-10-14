@@ -20,8 +20,11 @@ import {
   limpiarOpcional,
   limpiarTexto,
 } from "@/lib/validaciones";
+import * as asignaciones from "@/models/asignaciones";
 import * as clientes from "@/models/clientes";
+import * as proyectos from "@/models/proyectos";
 import * as sesiones from "@/models/sesiones";
+import * as tareas from "@/models/tareas";
 import * as trabajadores from "@/models/trabajadores";
 import * as usuarios from "@/models/usuarios";
 import type {
@@ -30,6 +33,20 @@ import type {
   UsuarioCompleto,
   ValoresAuditoria,
 } from "@/types";
+
+/** «1 tarea abierta», «3 tareas abiertas», o null si no hay ninguna. */
+function cuantos(total: number, singular: string, plural: string): string | null {
+  if (total === 0) return null;
+
+  return `${total} ${total === 1 ? singular : plural}`;
+}
+
+/** «a», «a y b», «a, b y c». */
+function enumerar(partes: string[]): string {
+  return partes.length <= 1
+    ? (partes[0] ?? "")
+    : `${partes.slice(0, -1).join(", ")} y ${partes[partes.length - 1]}`;
+}
 
 /** Lo que de una cuenta se anota cuando cambia. Nunca la contrasena. */
 function paraAuditoria(usuario: UsuarioCompleto): ValoresAuditoria {
@@ -641,6 +658,34 @@ export async function cambiarEstadoUsuario(
         ok: false,
         mensaje:
           "Es el unico administrador activo. Nombra a otro antes de desactivarlo.",
+      };
+    }
+  }
+
+  /*
+   * Y sin dejar trabajo huerfano (P4 y P5 del plan).
+   *
+   * Quien se va con tareas abiertas, proyectos a su cargo o empresas
+   * asignadas dejaria cosas que nadie ve ni atiende. Primero se reasignan; lo
+   * que ya esta hecho se queda a su nombre.
+   */
+  if (!activar) {
+    const pendiente = await conSesion(admin, async (tx) => ({
+      tareas: await tareas.contarAbiertasDe(id, tx),
+      proyectos: await proyectos.contarEnCursoDe(id, tx),
+      empresas: await asignaciones.contarDe(id, tx),
+    }));
+
+    const partes = [
+      cuantos(pendiente.tareas, "tarea abierta", "tareas abiertas"),
+      cuantos(pendiente.proyectos, "proyecto a su cargo", "proyectos a su cargo"),
+      cuantos(pendiente.empresas, "empresa asignada", "empresas asignadas"),
+    ].filter((parte): parte is string => parte !== null);
+
+    if (partes.length > 0) {
+      return {
+        ok: false,
+        mensaje: `Tiene ${enumerar(partes)}. Reasignalos antes de desactivar la cuenta.`,
       };
     }
   }

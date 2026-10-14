@@ -200,6 +200,22 @@ export async function enCurso(ejecutor: Ejecutor): Promise<Proyecto[]> {
   return filas.map(comoProyecto);
 }
 
+/** Cuantos proyectos activos o pausados lleva una persona como ejecutivo. */
+export async function contarEnCursoDe(
+  ejecutivoId: number,
+  ejecutor: Ejecutor,
+): Promise<number> {
+  const fila = await consultarUno<{ total: number }>(
+    `SELECT count(*)::int AS total
+     FROM portal.proyectos
+     WHERE ejecutivo_id = $1 AND estado IN ('activo', 'pausado')`,
+    [ejecutivoId],
+    ejecutor,
+  );
+
+  return fila?.total ?? 0;
+}
+
 /** Un proyecto, si quien pregunta lo puede ver. */
 export async function buscarPorId(
   id: number,
