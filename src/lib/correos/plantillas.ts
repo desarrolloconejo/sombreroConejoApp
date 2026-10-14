@@ -72,3 +72,31 @@ export function correoDeClaveRestablecida(persona: Destinatario): NuevoCorreo {
       despedida(),
   };
 }
+
+/**
+ * El aviso a quien aprueba por una empresa: una pieza espera su revision.
+ *
+ * Solo dice cual y donde verla. No lleva la pieza ni enlaces a sus archivos:
+ * eso se ve dentro, con su sesion.
+ */
+export function correoDePiezaEnRevision(
+  persona: Destinatario,
+  pieza: { titulo: string; proyecto: string },
+): NuevoCorreo {
+  const acceso = direccionDeAcceso();
+
+  return {
+    para: persona.email,
+    paraUsuarioId: persona.id,
+    empresaId: persona.empresaId,
+    tipo: "pieza_en_revision",
+    asunto: `Una pieza espera tu revision: ${pieza.titulo}`,
+    cuerpo:
+      `Hola, ${persona.nombre}:\n\n` +
+      `«${pieza.titulo}», del proyecto ${pieza.proyecto}, esta lista para que la revises.\n\n` +
+      "Puedes aprobarla o pedir una correccion desde Mis proyectos" +
+      (acceso ? `, entrando aqui: ${acceso}` : "") +
+      ".\n" +
+      despedida(),
+  };
+}

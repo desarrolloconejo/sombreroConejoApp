@@ -58,6 +58,7 @@ function paraAuditoria(usuario: UsuarioCompleto): ValoresAuditoria {
     rol: usuario.rol,
     cargo: usuario.cargo,
     empresa: usuario.empresaNombre,
+    puedeAprobar: usuario.puedeAprobar,
   };
 }
 
@@ -554,6 +555,9 @@ export async function editarUsuario(
           { empresaId: vinculo.empresaId, cargo: vinculo.cargo },
           cliente,
         );
+
+        // No cierra sesiones: la base consulta el permiso en cada decision.
+        await clientes.cambiarPermisoDeAprobar(id, datos.get("puedeAprobar") === "on", cliente);
       }
 
       const actualizado = await usuarios.buscarPorId(id, cliente);

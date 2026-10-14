@@ -18,6 +18,9 @@ export type TipoNotificacion =
   | "tarea.asignada"
   | "tarea.puede_empezar"
   | "fase.lista"
+  | "pieza.en_revision"
+  | "pieza.aprobada"
+  | "pieza.correccion"
   | "tasa.rechazada";
 
 /** Lo que hay que saber para notificar. Los destinatarios van aparte. */
