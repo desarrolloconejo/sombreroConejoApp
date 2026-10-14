@@ -70,7 +70,9 @@ export function EtiquetaDocumento({
         "text-[10.5px] font-semibold uppercase tracking-[0.06em]",
         SOLIDAS.has(situacion)
           ? "border-transparent bg-acento text-acento-contraste"
-          : situacion === "rechazado" || situacion === "anulada" || situacion === "vencido"
+          : situacion === "rechazado" ||
+              situacion === "anulada" ||
+              situacion === "vencido"
             ? "border-blackberry/40 text-blackberry dark-tema:border-gold/40 dark-tema:text-acento"
             : "border-borde text-suave",
       ].join(" ")}
@@ -80,53 +82,101 @@ export function EtiquetaDocumento({
   );
 }
 
-/** Los renglones de un documento, solo lectura. */
+/**
+ * Los renglones de un documento, solo lectura.
+ *
+ * En movil, una lista apilada: descripcion arriba y «cantidad x precio» con su
+ * subtotal debajo. Una tabla de cuatro columnas no cabe en 390 px sin
+ * desplazarse de lado, y el cliente lo lee sobre todo en el telefono. Desde
+ * tablet, la tabla.
+ */
 export function TablaRenglones({ renglones }: { renglones: Renglon[] }) {
   if (renglones.length === 0) {
-    return <p className="text-[13px] text-suave">Este documento no tiene renglones.</p>;
+    return (
+      <p className="text-[13px] text-suave">
+        Este documento no tiene renglones.
+      </p>
+    );
   }
 
   return (
-    <div className="-mx-4 overflow-x-auto sm:mx-0">
-      <table className="w-full min-w-[520px] border-collapse text-[13px]">
-        <caption className="sr-only">Renglones del documento</caption>
-        <thead>
-          <tr className="border-b border-borde text-left text-[11px] font-bold uppercase tracking-[0.08em] text-suave">
-            <th scope="col" className="px-4 py-2 font-bold sm:pl-0">
-              Descripcion
-            </th>
-            <th scope="col" className="px-2 py-2 text-right font-bold">
-              Cantidad
-            </th>
-            <th scope="col" className="px-2 py-2 text-right font-bold">
-              Precio
-            </th>
-            <th scope="col" className="px-4 py-2 text-right font-bold sm:pr-0">
-              Subtotal
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {renglones.map((renglon) => (
-            <tr key={renglon.id} className="border-b border-borde/70 last:border-0">
-              <td className="px-4 py-2.5 sm:pl-0">
-                {renglon.descripcion}
-                {renglon.exento && (
-                  <span className="ml-2 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-suave">
-                    Exento
-                  </span>
-                )}
-              </td>
-              <td className="px-2 py-2.5 text-right tabular-nums">{cantidadLegible(renglon.cantidad)}</td>
-              <td className="px-2 py-2.5 text-right tabular-nums">{dolares(renglon.precioUnitario)}</td>
-              <td className="px-4 py-2.5 text-right font-semibold tabular-nums sm:pr-0">
-                {dolares(renglon.subtotal)}
-              </td>
+    <>
+      <ul
+        aria-label="Renglones del documento"
+        className="flex flex-col sm:hidden"
+      >
+        {renglones.map((renglon) => (
+          <li
+            key={renglon.id}
+            className="border-b border-borde/70 py-2.5 first:pt-0 last:border-0"
+          >
+            <p className="text-[13.5px] leading-snug">
+              {renglon.descripcion}
+              {renglon.exento && (
+                <span className="ml-2 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-suave">
+                  Exento
+                </span>
+              )}
+            </p>
+            <p className="mt-1 flex justify-between gap-3 text-[12.5px] tabular-nums">
+              <span className="text-suave">
+                {cantidadLegible(renglon.cantidad)} x{" "}
+                {dolares(renglon.precioUnitario)}
+              </span>
+              <span className="font-semibold">{dolares(renglon.subtotal)}</span>
+            </p>
+          </li>
+        ))}
+      </ul>
+
+      <div className="hidden sm:block">
+        <table className="w-full border-collapse text-[13px]">
+          <caption className="sr-only">Renglones del documento</caption>
+          <thead>
+            <tr className="border-b border-borde text-left text-[11px] font-bold uppercase tracking-[0.08em] text-suave">
+              <th scope="col" className="py-2 pr-2 font-bold">
+                Descripcion
+              </th>
+              <th scope="col" className="px-2 py-2 text-right font-bold">
+                Cantidad
+              </th>
+              <th scope="col" className="px-2 py-2 text-right font-bold">
+                Precio
+              </th>
+              <th scope="col" className="py-2 pl-2 text-right font-bold">
+                Subtotal
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {renglones.map((renglon) => (
+              <tr
+                key={renglon.id}
+                className="border-b border-borde/70 last:border-0"
+              >
+                <td className="py-2.5 pr-2">
+                  {renglon.descripcion}
+                  {renglon.exento && (
+                    <span className="ml-2 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-suave">
+                      Exento
+                    </span>
+                  )}
+                </td>
+                <td className="px-2 py-2.5 text-right tabular-nums">
+                  {cantidadLegible(renglon.cantidad)}
+                </td>
+                <td className="px-2 py-2.5 text-right tabular-nums">
+                  {dolares(renglon.precioUnitario)}
+                </td>
+                <td className="py-2.5 pl-2 text-right font-semibold tabular-nums">
+                  {dolares(renglon.subtotal)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

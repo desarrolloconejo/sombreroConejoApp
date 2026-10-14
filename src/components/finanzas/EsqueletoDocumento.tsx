@@ -31,7 +31,7 @@ export function EsqueletoDocumento({ etiqueta }: { etiqueta: string }) {
           <div className="hueso h-3 w-[130px]" />
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
           <div>
             <div className="hueso mb-3 h-[22px] w-[120px]" />
             <div className={SECCION}>
