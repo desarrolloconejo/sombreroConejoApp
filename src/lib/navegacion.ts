@@ -4,6 +4,7 @@ import {
   Building2,
   ChartNoAxesColumn,
   FileText,
+  FolderKanban,
   History,
   House,
   Library,
@@ -144,6 +145,22 @@ const MODULOS: readonly Modulo[] = [
     icono: House,
     alias: ["panel", "home", "principal"],
   },
+  /*
+   * Proyectos lo ven el admin y los ejecutivos de cuentas: son quienes los
+   * gestionan. Quien solo hace tareas llega a sus piezas desde Mi trabajo, no
+   * desde aqui.
+   */
+  {
+    titulo: "Proyectos",
+    seccion: "trabajo",
+    subtitulo: "Piezas, fases y tareas de cada cliente",
+    href: "/dashboard/proyectos",
+    icono: FolderKanban,
+    roles: ["admin", "trabajador"],
+    cargos: ["cuentas"],
+    alias: ["bateria", "piezas", "fases", "parrilla", "matriz", "entregables", "clientes"],
+  },
+
   /*
    * Hooks. Los submodulos son PASOS hacia un final, y el final es registrar
    * las metricas de la pieza, no auditarla: de ahi el orden.

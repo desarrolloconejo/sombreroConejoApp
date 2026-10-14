@@ -82,6 +82,12 @@ export type PersonaBreve = {
   nombre: string;
 };
 
+/** Alguien del equipo a quien se le puede asignar trabajo. */
+export type PersonaDeEquipo = PersonaBreve & {
+  /** El nombre del cargo, para distinguir a quien se elige. */
+  cargo: string | null;
+};
+
 /** Que ejecutivo atiende a que empresa. */
 export type Asignacion = {
   id: number;

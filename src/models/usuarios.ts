@@ -11,6 +11,7 @@ import type {
   DatosPerfil,
   FiltrosUsuarios,
   Pagina,
+  PersonaDeEquipo,
   Tema,
   Usuario,
   UsuarioCompleto,
@@ -523,4 +524,21 @@ export async function contarPorRol(rol: string): Promise<number> {
   );
 
   return Number(fila?.total ?? 0);
+}
+
+/**
+ * El equipo de la agencia: los trabajadores activos, para asignarles tareas,
+ * fases o piezas. Con su cargo, que ayuda a elegir.
+ */
+export async function equipo(ejecutor?: Ejecutor): Promise<PersonaDeEquipo[]> {
+  return consultar<PersonaDeEquipo>(
+    `SELECT id,
+            nombre || ' ' || apellido AS nombre,
+            cargo
+     FROM vw_usuarios_completos
+     WHERE activo AND tipo = 'trabajador'
+     ORDER BY lower(nombre), lower(apellido)`,
+    [],
+    ejecutor,
+  );
 }

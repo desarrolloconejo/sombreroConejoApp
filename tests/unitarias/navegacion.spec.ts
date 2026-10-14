@@ -12,6 +12,7 @@ import { modulosDe, porSecciones } from "@/lib/navegacion";
 const ADMIN = { rol: "admin", cargo: "direccion" } as const;
 const REDES = { rol: "trabajador", cargo: "redes" } as const;
 const DISENO = { rol: "trabajador", cargo: "diseno" } as const;
+const CUENTAS = { rol: "trabajador", cargo: "cuentas" } as const;
 const CLIENTE = { rol: "cliente", cargo: null } as const;
 
 /** Las secciones tal como se leerian en el menu: rotulo y titulos. */
@@ -25,6 +26,7 @@ function menuDe(quien: Parameters<typeof modulosDe>[0]) {
 test("el administrador ve todas las secciones que tienen algo, en su orden", () => {
   expect(menuDe(ADMIN)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
+    { seccion: "Trabajo", modulos: ["Proyectos"] },
     { seccion: "Herramientas", modulos: ["Hooks"] },
     {
       seccion: "Sistema",
@@ -38,6 +40,14 @@ test("redes ve Herramientas y no ve Sistema", () => {
   expect(menuDe(REDES)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
     { seccion: "Herramientas", modulos: ["Hooks"] },
+    { seccion: null, modulos: ["Mi perfil"] },
+  ]);
+});
+
+test("un ejecutivo de cuentas ve Proyectos en Trabajo, y no ve Hooks", () => {
+  expect(menuDe(CUENTAS)).toEqual([
+    { seccion: "General", modulos: ["Inicio"] },
+    { seccion: "Trabajo", modulos: ["Proyectos"] },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
 });
@@ -56,7 +66,7 @@ test("un cliente no ve nada de la agencia", () => {
 });
 
 test("Mi perfil va siempre el ultimo, y sin rotulo", () => {
-  for (const quien of [ADMIN, REDES, DISENO, CLIENTE]) {
+  for (const quien of [ADMIN, REDES, DISENO, CUENTAS, CLIENTE]) {
     const ultimo = menuDe(quien).at(-1);
 
     expect(ultimo).toEqual({ seccion: null, modulos: ["Mi perfil"] });

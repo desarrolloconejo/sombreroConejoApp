@@ -90,13 +90,14 @@ test("desactivar y reactivar una cuenta deja las dos lineas, con su antes y su d
   const admin = administrador();
   await entrar(page, admin.email, admin.password);
 
-  // La cuenta de diseno no la usa ninguna otra prueba, y se deja como estaba.
-  await page.goto("/dashboard/usuarios?busqueda=diseno%40conejo.test");
+  // Una cuenta sin trabajo asignado: con tareas abiertas no se dejaria
+  // desactivar. Ninguna otra prueba la usa, y se deja como estaba.
+  await page.goto("/dashboard/usuarios?busqueda=sintareas%40conejo.test");
   await visible(page.getByRole("link", { name: /^Desactivar la cuenta de/ })).click();
   await page.getByRole("button", { name: "Desactivar cuenta" }).click({ timeout: 30_000 });
   await expect(page.getByText("quedo desactivada").first()).toBeVisible({ timeout: 30_000 });
 
-  await page.goto("/dashboard/usuarios?busqueda=diseno%40conejo.test");
+  await page.goto("/dashboard/usuarios?busqueda=sintareas%40conejo.test");
   await visible(page.getByRole("link", { name: /^Reactivar la cuenta de/ })).click();
   await page.getByRole("button", { name: "Reactivar cuenta" }).click({ timeout: 30_000 });
   await expect(page.getByText("vuelve a estar activa").first()).toBeVisible({ timeout: 30_000 });

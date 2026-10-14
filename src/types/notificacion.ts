@@ -14,6 +14,10 @@ export type TipoNotificacion =
   | "cuenta.dos_pasos_retirados"
   | "correo.fallido"
   | "empresa.asignada"
+  | "proyecto.asignado"
+  | "tarea.asignada"
+  | "tarea.puede_empezar"
+  | "fase.lista"
   | "tasa.rechazada";
 
 /** Lo que hay que saber para notificar. Los destinatarios van aparte. */

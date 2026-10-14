@@ -24,6 +24,14 @@ export const LIMITES = {
   direccion: 200,
   url: 1000,
   passwordMinima: 8,
+  proyecto: 120,
+  descripcion: 1000,
+  pieza: 120,
+  tarea: 160,
+  motivo: 500,
+  copy: 5000,
+  comentario: 2000,
+  piezasPorProyecto: 60,
 } as const;
 
 /**
@@ -290,4 +298,80 @@ export function validarCambioPassword(
   }
 
   return resultado({ actual, nueva, confirmacion }, errores);
+}
+
+/**
+ * Una fecha sin hora, como AAAA-MM-DD, que exista de verdad. Null si viene
+ * vacia o no es una fecha: "2026-02-30" tiene la forma pero no existe.
+ */
+export function comoFecha(valor: unknown): string | null {
+  if (typeof valor !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(valor)) return null;
+
+  const [anio, mes, dia] = valor.split("-").map(Number);
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia));
+
+  const existe =
+    fecha.getUTCFullYear() === anio &&
+    fecha.getUTCMonth() === mes - 1 &&
+    fecha.getUTCDate() === dia;
+
+  return existe && anio >= 2000 && anio <= 2100 ? valor : null;
+}
+
+/** Lo que se puede cambiar de un proyecto, ya validado. */
+export function validarProyecto(datos: FormData): Validacion<{
+  nombre: string;
+  descripcion: string | null;
+  ejecutivoId: number | null;
+  fechaInicio: string | null;
+  fechaEstimadaCierre: string | null;
+}> {
+  const nombre = limpiarTexto(datos.get("nombre"), LIMITES.proyecto);
+  const descripcion = limpiarOpcional(datos.get("descripcion"), LIMITES.descripcion);
+  const ejecutivoId = comoIdentificador(datos.get("ejecutivoId"));
+  const fechaInicio = comoFecha(datos.get("fechaInicio"));
+  const fechaEstimadaCierre = comoFecha(datos.get("fechaEstimadaCierre"));
+
+  const errores: ErroresCampo = {};
+
+  if (!nombre) errores.nombre = "Ponle un nombre al proyecto";
+  if (ejecutivoId === null) errores.ejecutivoId = "Elige quien lo lleva";
+
+  if (datos.get("fechaInicio") && !fechaInicio) {
+    errores.fechaInicio = "Esa fecha no existe";
+  }
+
+  if (datos.get("fechaEstimadaCierre") && !fechaEstimadaCierre) {
+    errores.fechaEstimadaCierre = "Esa fecha no existe";
+  }
+
+  if (fechaInicio && fechaEstimadaCierre && fechaEstimadaCierre < fechaInicio) {
+    errores.fechaEstimadaCierre = "El cierre no puede ser antes del inicio";
+  }
+
+  return resultado(
+    { nombre, descripcion, ejecutivoId, fechaInicio, fechaEstimadaCierre },
+    errores,
+  );
+}
+
+/** Una tarea nueva o editada, ya validada. */
+export function validarTarea(datos: FormData): Validacion<{
+  titulo: string;
+  responsableId: number | null;
+  fechaEstimada: string | null;
+}> {
+  const titulo = limpiarTexto(datos.get("titulo"), LIMITES.tarea);
+  const responsableId = comoIdentificador(datos.get("responsableId"));
+  const fechaEstimada = comoFecha(datos.get("fechaEstimada"));
+
+  const errores: ErroresCampo = {};
+
+  if (!titulo) errores.titulo = "Di que hay que hacer";
+
+  if (datos.get("fechaEstimada") && !fechaEstimada) {
+    errores.fechaEstimada = "Esa fecha no existe";
+  }
+
+  return resultado({ titulo, responsableId, fechaEstimada }, errores);
 }

@@ -22,8 +22,9 @@ estricto, Tailwind 4, PostgreSQL 17 con SQL puro (`pg`), sesiones JWT (`jose`).
 Todo —codigo, comentarios, tablas, commits y documentos— va en **espanol, sin
 tildes en el codigo**.
 
-Hoy existen: login, inicio, Mi perfil, Usuarios, Empresas, Auditoria, Bandeja
-de salida y el modulo de Hooks.
+Hoy existen: login, inicio, Mi perfil, Usuarios, Empresas (con sus ejecutivos
+asignados), Auditoria, Bandeja de salida, Proyectos (piezas, bateria de
+fases y tareas) y el modulo de Hooks.
 Esta en marcha la integracion de un portal completo (briefs, proyectos con
 bateria de fases y tareas, revision del cliente, finanzas). **Antes de
 construir nada de eso, lee `docs/planIntegracionPortal.md`**: es el plan
@@ -193,6 +194,9 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Un modulo nuevo declara su `seccion` en `src/lib/navegacion.ts`. El menu se
   agrupa con `porSecciones`; ni el sidebar ni el menu movil llevan rotulos
   escritos a mano.
+- Si el resultado de una action hace desaparecer el componente que la lanzo
+  (completar una fase, quitar una tarea), su `useActionState` vive en un
+  componente que sigue en pantalla. Si no, el aviso se pierde al revalidar.
 - React 19 vacia los campos no controlados al terminar una action: los
   formularios largos controlan sus valores con `useCampos`.
 - Los archivos `'use server'` solo exportan funciones asincronas; tipos y

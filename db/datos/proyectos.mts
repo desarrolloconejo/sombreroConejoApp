@@ -78,10 +78,16 @@ async function crearPieza(
       ? -3 * (pieza.completas - fase + 1)
       : (pieza.vence ?? 3) + 4 * (fase - pieza.completas - 1);
 
+    // Redaccion la lleva redes; diseno, el disenador; los controles, el
+    // ejecutivo. La fase 5 es del cliente: no tiene responsable del equipo.
+    const responsable =
+      fase === 1 ? equipo.redes : fase === 3 ? equipo.diseno : fase === 5 ? null : equipo.ejecutivo;
+
     await cliente.query(
       `INSERT INTO portal.pieza_fases
-         (pieza_id, fase, estado, fecha_estimada, completada_en, completada_por, ronda_completada)
-       VALUES ($1, $2, $3, CURRENT_DATE + $4::int,
+         (pieza_id, fase, estado, fecha_estimada, responsable_id,
+          completada_en, completada_por, ronda_completada)
+       VALUES ($1, $2, $3, CURRENT_DATE + $4::int, $8,
                CASE WHEN $5 THEN now() + make_interval(days => $4::int) END,
                CASE WHEN $5 THEN $6::int END,
                CASE WHEN $5 THEN $7::int END)`,
@@ -93,6 +99,7 @@ async function crearPieza(
         completada,
         equipo.ejecutivo,
         pieza.ronda ?? 1,
+        responsable,
       ],
     );
   }

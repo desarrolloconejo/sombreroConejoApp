@@ -107,7 +107,7 @@ Lo que cada etapa exige en produccion se va anotando en
 | 8 (adelantada) | `feat/dos-pasos` | Seccion 5.3: verificacion en dos pasos con app de codigos, codigos de respaldo, retirada por un administrador | `db/neon/10-dos-pasos.sql` | Hecha |
 | 3 | `feat/etapa3-modelo` | Tablas de la bateria con seguridad por fila (asignaciones, proyectos, piezas, copy, fases, tareas, comentarios), vistas del avance, catalogo de servicios, reglas puras y modelos. Reglas en `docs/reglasBateria.md` | `db/neon/11-proyectos.sql` | Hecha |
 | 3 | `feat/etapa3-asignaciones` | El admin asigna ejecutivos a cada empresa desde su ficha en Empresas, y el ejecutivo recibe una notificacion. No se desactiva a nadie con tareas abiertas, proyectos a su cargo o empresas asignadas (P4, P5) | Ninguno | Hecha |
-| 3 | `feat/etapa3-proyectos` | Modulo Proyectos: listado, alta desde el catalogo, matriz de piezas por fases, ficha de pieza con fases, tareas, copy y comentarios. Componente bateria | Ninguno | Pendiente |
+| 3 | `feat/etapa3-proyectos` | Modulo Proyectos: listado, alta desde el catalogo, matriz de piezas por fases, ficha de pieza con fases, tareas, copy y comentarios. Componente bateria. Registro de herramientas con Hooks | Ninguno | Hecha |
 | 3 | `feat/etapa3-tablero` | Tablero con las cuatro alertas y filtros | Ninguno | Pendiente |
 | 3 | `feat/etapa3-mi-trabajo` | Mi trabajo: las tareas de cada uno, marcar lista, abrir la herramienta | Ninguno | Pendiente |
 | 3 | `feat/etapa3-hooks-herramienta` | Hooks como herramienta: `fichas_hook.tarea_id`, el canvas abre con la tarea, y la tarea queda lista cuando la ficha aprueba la auditoria | Uno, por llegar | Pendiente |
