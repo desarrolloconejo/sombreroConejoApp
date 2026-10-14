@@ -98,6 +98,21 @@ export async function aprobadoresDe(
   );
 }
 
+/** Concede o retira el permiso de ver las finanzas de su empresa. */
+export async function cambiarPermisoDeFinanzas(
+  usuarioId: number,
+  puedeVerFinanzas: boolean,
+  ejecutor?: Ejecutor,
+): Promise<boolean> {
+  const afectadas = await ejecutar(
+    "UPDATE clientes SET puede_ver_finanzas = $2 WHERE usuario_id = $1",
+    [usuarioId, puedeVerFinanzas],
+    ejecutor,
+  );
+
+  return afectadas === 1;
+}
+
 /** Concede o retira el permiso de aprobar. */
 export async function cambiarPermisoDeAprobar(
   usuarioId: number,

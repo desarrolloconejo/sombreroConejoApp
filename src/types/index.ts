@@ -158,3 +158,20 @@ export type {
   EstadoListado,
   ConfigListado,
 } from "./listado";
+
+export { NOMBRES_DE_SITUACION, NOMBRES_DE_ESTADO_PROFORMA } from "./finanzas";
+export type {
+  EstadoPresupuesto,
+  SituacionPresupuesto,
+  EstadoProforma,
+  TipoDocumento,
+  Importes,
+  Renglon,
+  RenglonNuevo,
+  Presupuesto,
+  Proforma,
+  ProyectoDeProforma,
+  DatosNuevoPresupuesto,
+  FiltrosPresupuestos,
+  FiltrosProformas,
+} from "./finanzas";

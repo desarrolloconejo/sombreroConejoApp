@@ -88,6 +88,12 @@ export type UsuarioCompleto = Usuario & {
 
   /** Si puede decidir en la fase 5 por su empresa. Solo clientes. */
   puedeAprobar: boolean | null;
+
+  /**
+   * Si ve las finanzas de su empresa y aprueba presupuestos. Solo clientes:
+   * en el equipo, finanzas va por rol y cargo.
+   */
+  puedeVerFinanzas: boolean | null;
 };
 
 /**

@@ -55,8 +55,9 @@ docker compose exec app-dev npm run seed
 ```
 
 El seed crea las tablas y deja la base lista para entrar: roles, cargos, una
-empresa de ejemplo y diez cuentas: un administrador, cuatro de prueba (una por
-perfil, entre ellas el ejecutivo `cuentas@conejo.test`), el administrador de las
+empresa de ejemplo y once cuentas: un administrador, cinco de prueba (una por
+perfil, entre ellas el ejecutivo `cuentas@conejo.test` y `finanzas@conejo.test`, de
+administracion), el administrador de las
 pruebas automaticas, `admin@conejo.test` —asi el administrador de verdad puede
 activar sus dos pasos sin dejarlas fuera—, y cuatro reservadas a las pruebas automaticas, `pruebas@conejo.test`, `sintareas@conejo.test`,
 `bloqueo@conejo.test` y `dospasos@conejo.test`. Sobre esas cuatro las pruebas hacen lo que no se puede
@@ -64,6 +65,9 @@ deshacer —restablecer la contrasena, bloquear o desactivar la cuenta—; no se
 con ellas. Siembra tambien dos proyectos de ejemplo de la empresa, asignada al
 ejecutivo: una parrilla de redes de diez piezas que suma el 60 % y ensena las
 cuatro alertas, y un proyecto especial recien empezado (`db/datos/proyectos.mts`).
+Y finanzas de ejemplo: un presupuesto por aprobar, uno aprobado con su
+proforma emitida, un borrador y una proforma recurrente a la que ya le toca la
+siguiente (`db/datos/finanzas.mts`).
 Es idempotente. Las cuentas que crea y sus claves estan en
 `db/datos/semilla.mts`.
 

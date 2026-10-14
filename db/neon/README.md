@@ -43,3 +43,4 @@ comprobaciones y la vuelta atras— esta en `docs/despliegueProduccion.md`.
 | `11-proyectos.sql` | Etapa 3: asignaciones, proyectos, piezas, copy, fases, tareas y comentarios, con sus politicas y las vistas del avance. **Antes** de subir, despues del 07 | Pendiente |
 | `12-hooks-herramienta.sql` | Etapa 3: `fichas_hook.tarea_id`, la ficha que cumple una tarea. **Antes** de subir, despues del 11 | Pendiente |
 | `13-revision-del-cliente.sql` | Etapa 4: permiso de aprobar de cada cliente (y su columna en `vw_usuarios_completos`), versiones, decisiones del cliente, almacen del modo simulado de archivos y `portal.decidir_fase_5`. **Antes** de subir, despues del 12 | Pendiente |
+| `14-presupuestos-y-proformas.sql` | Etapa 5: permiso de finanzas de cada cliente (y su columna en `vw_usuarios_completos`), presupuestos, proformas, renglones, contadores y sus funciones; deja a quien opera finanzas leer los proyectos. **Antes** de subir, despues del 13 | Pendiente |
