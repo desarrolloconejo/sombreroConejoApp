@@ -82,7 +82,13 @@ export function CopyPieza({
   );
 }
 
-const FECHA = new Intl.DateTimeFormat("es-VE", { dateStyle: "medium", timeStyle: "short" });
+// Con zona fija: el servidor (UTC) y el navegador tienen que escribir la misma
+// hora, o la hidratacion falla y React rehace el arbol (y se pierden clics).
+const FECHA = new Intl.DateTimeFormat("es-VE", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "America/Caracas",
+});
 
 export function ComentariosPieza({
   piezaId,

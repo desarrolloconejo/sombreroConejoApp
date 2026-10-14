@@ -19,11 +19,14 @@ import type { ResumenDeNotificaciones } from "@/types";
  * solo una visible a la vez, y por eso cada una lleva su propio `id`.
  */
 
+// Con zona fija: el servidor (UTC) y el navegador tienen que escribir la misma
+// hora, o la hidratacion falla y React rehace el arbol.
 const CUANDO = new Intl.DateTimeFormat("es-VE", {
   day: "numeric",
   month: "short",
   hour: "numeric",
   minute: "2-digit",
+  timeZone: "America/Caracas",
 });
 
 /** "9+" a partir de diez: el numero exacto no cabe ni hace falta. */
