@@ -108,6 +108,11 @@ export function DetalleUsuario({
                 )}
               </Dato>
               <Dato rotulo="Cargo">{usuario.cargo}</Dato>
+              <Dato rotulo="Revision">
+                {usuario.puedeAprobar
+                  ? "Puede aprobar piezas o pedir correcciones"
+                  : "Ve el avance, pero no decide"}
+              </Dato>
             </>
           )}
 

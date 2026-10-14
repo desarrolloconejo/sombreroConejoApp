@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Check, Mail, Phone } from "lucide-react";
 
 import { editarUsuario } from "@/actions/usuarios";
@@ -56,6 +56,9 @@ export function FormularioEditarUsuario({
   // El resultado sale como aviso flotante: en un formulario largo, una alerta
   // arriba queda fuera de la vista de quien acaba de pulsar el boton.
   useAvisoDeAccion(estado);
+
+  // Controlada: React vacia las casillas no controladas al terminar la action.
+  const [puedeAprobar, setPuedeAprobar] = useState(usuario.puedeAprobar ?? false);
 
   // Controlados a proposito: React vacia los campos no controlados en cuanto
   // la action termina, tambien cuando devuelve errores. Sin esto, un correo
@@ -208,6 +211,23 @@ export function FormularioEditarUsuario({
                 error={errores.cargo}
                 className="col-span-2"
               />
+
+              <label className="col-span-2 flex items-start gap-3 rounded-xl border border-borde px-4 py-3 text-[12.5px] leading-relaxed">
+                <input
+                  type="checkbox"
+                  name="puedeAprobar"
+                  checked={puedeAprobar}
+                  onChange={(evento) => setPuedeAprobar(evento.target.checked)}
+                  className="mt-0.5 size-[18px] shrink-0 accent-[var(--acento)]"
+                />
+                <span>
+                  <b className="font-semibold">Puede aprobar piezas.</b>{" "}
+                  <span className="text-suave">
+                    Decide en la fase 5 por su empresa: aprueba o pide una
+                    correccion. Sin esto ve el avance, pero no decide.
+                  </span>
+                </span>
+              </label>
             </>
           )}
         </div>
