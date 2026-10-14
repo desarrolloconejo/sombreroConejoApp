@@ -13,6 +13,7 @@ export type TipoNotificacion =
   | "cuenta.clave_restablecida"
   | "cuenta.dos_pasos_retirados"
   | "correo.fallido"
+  | "empresa.asignada"
   | "tasa.rechazada";
 
 /** Lo que hay que saber para notificar. Los destinatarios van aparte. */

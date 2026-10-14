@@ -71,17 +71,30 @@ export async function crear(
 }
 
 /** Quita una asignacion. Devuelve la que quito, o null si no existia. */
-export async function quitar(
-  id: number,
-  ejecutor: Ejecutor,
-): Promise<{ usuarioId: number; empresaId: number } | null> {
-  return consultarUno<{ usuarioId: number; empresaId: number }>(
-    `DELETE FROM portal.asignaciones
-     WHERE id = $1
-     RETURNING usuario_id AS "usuarioId", empresa_id AS "empresaId"`,
+export async function quitar(id: number, ejecutor: Ejecutor): Promise<Asignacion | null> {
+  return consultarUno<Asignacion>(
+    `WITH a AS (
+       DELETE FROM portal.asignaciones WHERE id = $1
+       RETURNING id, usuario_id, empresa_id, creado_en
+     )
+     SELECT ${COLUMNAS}
+     FROM a
+     JOIN usuarios u ON u.id = a.usuario_id
+     JOIN empresas e ON e.id = a.empresa_id`,
     [id],
     ejecutor,
   );
+}
+
+/** Cuantas empresas tiene asignadas una persona. */
+export async function contarDe(usuarioId: number, ejecutor: Ejecutor): Promise<number> {
+  const fila = await consultarUno<{ total: number }>(
+    "SELECT count(*)::int AS total FROM portal.asignaciones WHERE usuario_id = $1",
+    [usuarioId],
+    ejecutor,
+  );
+
+  return fila?.total ?? 0;
 }
 
 /**
