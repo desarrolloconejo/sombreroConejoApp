@@ -3,6 +3,7 @@ import {
   BookOpen,
   Building2,
   ChartNoAxesColumn,
+  FileSpreadsheet,
   FileText,
   FolderKanban,
   History,
@@ -11,6 +12,7 @@ import {
   ListChecks,
   LayoutDashboard,
   Library,
+  ReceiptText,
   ScrollText,
   Send,
   ShieldCheck,
@@ -269,6 +271,31 @@ const MODULOS: readonly Modulo[] = [
         alias: ["fichas", "piezas", "archivo", "borradores"],
       },
     ],
+  },
+
+  /*
+   * Finanzas: lo opera el administrador y el cargo de administracion. Nadie
+   * mas del equipo lo ve (seccion 7.2 del plan).
+   */
+  {
+    titulo: "Presupuestos",
+    seccion: "finanzas",
+    subtitulo: "Lo que se ofrece a cada cliente",
+    href: "/dashboard/presupuestos",
+    icono: FileSpreadsheet,
+    roles: ["admin", "trabajador"],
+    cargos: ["administracion"],
+    alias: ["cotizacion", "cotizaciones", "oferta", "precios", "aprobar", "finanzas"],
+  },
+  {
+    titulo: "Proformas",
+    seccion: "finanzas",
+    subtitulo: "De lo aprobado, lo que se va a facturar",
+    href: "/dashboard/proformas",
+    icono: ReceiptText,
+    roles: ["admin", "trabajador"],
+    cargos: ["administracion"],
+    alias: ["prefactura", "recurrente", "mensual", "contrato", "finanzas", "cobro"],
   },
 
   {
