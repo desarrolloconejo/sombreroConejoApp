@@ -529,6 +529,22 @@ export async function contarPorRol(rol: string): Promise<number> {
 }
 
 /**
+ * Quien opera finanzas: los administradores y los trabajadores de
+ * administracion, activos. Son a quienes se avisa de lo que decide un cliente.
+ */
+export async function operadoresDeFinanzas(ejecutor?: Ejecutor): Promise<number[]> {
+  const filas = await consultar<{ id: number }>(
+    `SELECT id FROM vw_usuarios_completos
+     WHERE activo AND (rol = 'admin' OR (rol = 'trabajador' AND cargo_slug = 'administracion'))
+     ORDER BY id`,
+    [],
+    ejecutor,
+  );
+
+  return filas.map((fila) => fila.id);
+}
+
+/**
  * El equipo de la agencia: los trabajadores activos, para asignarles tareas,
  * fases o piezas. Con su cargo, que ayuda a elegir.
  */

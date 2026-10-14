@@ -49,6 +49,8 @@ const RUTAS_SOLO_ADMIN = [
 const RUTAS_POR_CARGO: { prefijo: string; cargos: SlugCargo[] }[] = [
   { prefijo: "/dashboard/hooks", cargos: ["redes"] },
   { prefijo: "/dashboard/tablero", cargos: ["cuentas"] },
+  { prefijo: "/dashboard/presupuestos", cargos: ["administracion"] },
+  { prefijo: "/dashboard/proformas", cargos: ["administracion"] },
 ];
 
 /**

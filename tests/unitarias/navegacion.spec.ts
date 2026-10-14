@@ -29,6 +29,7 @@ test("el administrador ve todas las secciones que tienen algo, en su orden", () 
     { seccion: "General", modulos: ["Inicio"] },
     { seccion: "Trabajo", modulos: ["Tablero", "Proyectos", "Mi trabajo"] },
     { seccion: "Herramientas", modulos: ["Hooks"] },
+    { seccion: "Finanzas", modulos: ["Presupuestos", "Proformas"] },
     {
       seccion: "Sistema",
       modulos: ["Usuarios", "Empresas", "Auditoria", "Bandeja de salida"],
@@ -62,11 +63,19 @@ test("diseno ve Mi trabajo y nada mas de Trabajo", () => {
   ]);
 });
 
-test("una seccion sin modulos visibles no deja su rotulo", () => {
-  // Administracion no ve todavia nada de Trabajo ni de Finanzas.
-  const secciones = menuDe(ADMINISTRACION).map((grupo) => grupo.seccion);
+test("administracion ve Finanzas, y una seccion sin modulos no deja su rotulo", () => {
+  // No ve nada de Trabajo: su seccion no aparece, ni vacia.
+  expect(menuDe(ADMINISTRACION)).toEqual([
+    { seccion: "General", modulos: ["Inicio"] },
+    { seccion: "Finanzas", modulos: ["Presupuestos", "Proformas"] },
+    { seccion: null, modulos: ["Mi perfil"] },
+  ]);
+});
 
-  expect(secciones).toEqual(["General", null]);
+test("nadie mas del equipo ve Finanzas", () => {
+  for (const quien of [REDES, DISENO, CUENTAS, CLIENTE]) {
+    expect(menuDe(quien).map((grupo) => grupo.seccion)).not.toContain("Finanzas");
+  }
 });
 
 test("un cliente ve su espacio y nada de la agencia", () => {

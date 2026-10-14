@@ -80,6 +80,25 @@ export async function actualizar(
 }
 
 /**
+ * Quien ve las finanzas de una empresa: sus personas activas con el permiso.
+ * Son a quienes se avisa de un presupuesto o una proforma.
+ */
+export async function conFinanzasDe(
+  empresaId: number,
+  ejecutor?: Ejecutor,
+): Promise<{ id: number; nombre: string; email: string; empresaId: number }[]> {
+  return consultar(
+    `SELECT u.id, u.nombre, u.email, c.empresa_id AS "empresaId"
+     FROM clientes c
+     JOIN usuarios u ON u.id = c.usuario_id
+     WHERE c.empresa_id = $1 AND c.puede_ver_finanzas AND u.activo
+     ORDER BY u.id`,
+    [empresaId],
+    ejecutor,
+  );
+}
+
+/**
  * Quien puede decidir en la fase 5 por una empresa: sus personas activas con
  * el permiso de aprobar. Son a quienes se avisa de que una pieza les espera.
  */

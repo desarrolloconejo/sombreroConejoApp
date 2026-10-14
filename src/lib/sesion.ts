@@ -311,6 +311,30 @@ export async function requerirEmpresa(): Promise<{
 }
 
 /**
+ * Exige que la persona opere finanzas: el administrador, o un trabajador de
+ * administracion. Es `requerirCargo("administracion")` con nombre propio,
+ * para que cada page y action de finanzas diga lo que exige.
+ */
+export async function requerirFinanzas(): Promise<UsuarioCompleto> {
+  return requerirCargo("administracion");
+}
+
+/**
+ * Exige un cliente con permiso de ver las finanzas de su empresa. Sin el
+ * permiso vuelve al panel: su sesion es valida, lo que falta es permiso.
+ */
+export async function requerirFinanzasDeEmpresa(): Promise<{
+  usuario: UsuarioCompleto;
+  empresaId: number;
+}> {
+  const datos = await requerirEmpresa();
+
+  if (!datos.usuario.puedeVerFinanzas) redirect("/dashboard");
+
+  return datos;
+}
+
+/**
  * Exige que la persona tenga alguno de los roles indicados.
  *
  * Se decide con el rol LEIDO DE LA BASE, no con el del token. El token guarda
