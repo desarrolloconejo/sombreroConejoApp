@@ -43,6 +43,8 @@ export type Equipo = {
   diseno: number;
   produccion: number;
   admin: number;
+  /** La persona del cliente que aprueba. */
+  cliente: number;
 };
 
 /** El responsable de una tarea, segun de que trata. */
@@ -113,6 +115,45 @@ async function crearPieza(
       equipo.redes,
     ],
   );
+
+  // Lo que vio el cliente: desde la fase 4 hay una version enviada.
+  const ronda = pieza.ronda ?? 1;
+  if (pieza.completas >= 3) {
+    await cliente.query(
+      `INSERT INTO portal.versiones
+         (pieza_id, numero, ronda, fase, origen, enlace, nombre, subida_por,
+          enviada_en, enviada_por)
+       VALUES ($1, 1, $2, 3, 'enlace', $3, $4, $5,
+               CASE WHEN $6 THEN now() END, CASE WHEN $6 THEN $7::int END)`,
+      [
+        piezaId,
+        ronda,
+        "https://www.figma.com/file/ejemplo-conejo",
+        `Propuesta de «${pieza.titulo}»`,
+        equipo.diseno,
+        pieza.completas >= 4,
+        equipo.ejecutivo,
+      ],
+    );
+  }
+
+  // Lo que decidio: las aprobadas, su aprobacion; la que va por la segunda
+  // ronda, la correccion de diseno de la primera.
+  if (pieza.completas === 5) {
+    await cliente.query(
+      `INSERT INTO portal.revisiones (pieza_id, ronda, decision, autor_id)
+       VALUES ($1, $2, 'aprobada', $3)`,
+      [piezaId, ronda, equipo.cliente],
+    );
+  }
+  if (ronda > 1) {
+    await cliente.query(
+      `INSERT INTO portal.revisiones
+         (pieza_id, ronda, decision, tipo_correccion, comentario, fases_reabiertas, autor_id)
+       VALUES ($1, 1, 'correccion', 'diseno', $2, '{3,4,5}', $3)`,
+      [piezaId, "Los colores no son los de la marca.", equipo.cliente],
+    );
+  }
 
   const tareas = servicio.tareasSugeridas(pieza.tipo as never);
 

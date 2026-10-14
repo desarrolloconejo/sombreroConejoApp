@@ -241,3 +241,62 @@ export type FiltrosProyectos = {
   pagina?: number;
   porPagina?: number;
 };
+
+/** De donde sale una version: un archivo subido o un enlace externo. */
+export type OrigenVersion = "archivo" | "enlace";
+
+export type DecisionRevision = "aprobada" | "correccion";
+
+export const NOMBRES_DE_CORRECCION: Record<TipoCorreccion, string> = {
+  redaccion: "Redaccion",
+  diseno: "Diseno o edicion",
+  ambas: "Redaccion y diseno",
+};
+
+/** Una version de una pieza. Nunca lleva donde esta guardado el archivo. */
+export type Version = {
+  id: number;
+  piezaId: number;
+  numero: number;
+  ronda: number;
+  fase: NumeroFase;
+  origen: OrigenVersion;
+  /** Solo en las de enlace. */
+  enlace: string | null;
+  nombre: string;
+  mime: string | null;
+  tamano: number | null;
+  subidaPorNombre: string;
+  creadaEn: Date;
+  /** Cuando se marco como la que vera el cliente. */
+  enviadaEn: Date | null;
+};
+
+/** Lo que hace falta para guardar una version. */
+export type NuevaVersion = {
+  piezaId: number;
+  ronda: number;
+  fase: NumeroFase;
+  origen: OrigenVersion;
+  archivoId?: string | null;
+  enlace?: string | null;
+  nombre: string;
+  mime?: string | null;
+  tamano?: number | null;
+};
+
+/** La decision del cliente en una ronda. */
+export type Revision = {
+  id: number;
+  piezaId: number;
+  ronda: number;
+  decision: DecisionRevision;
+  tipoCorreccion: TipoCorreccion | null;
+  comentario: string | null;
+  fasesReabiertas: NumeroFase[];
+  versionId: number | null;
+  autorNombre: string;
+  creadaEn: Date;
+  ajustadaPorNombre: string | null;
+  ajustadaEn: Date | null;
+};

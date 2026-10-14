@@ -85,6 +85,9 @@ export type UsuarioCompleto = Usuario & {
   empresaId: number | null;
   empresaNombre: string | null;
   empresaActiva: boolean | null;
+
+  /** Si puede decidir en la fase 5 por su empresa. Solo clientes. */
+  puedeAprobar: boolean | null;
 };
 
 /**

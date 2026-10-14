@@ -11,6 +11,10 @@ import {
   porcentajeProyecto,
   rutaDeCorreccion,
   sumarDias,
+  textoDeRuta,
+  rutaAjustable,
+  rutaConAnadidas,
+  faltaVersionEnviada,
   type EstadoDeFase,
 } from "@/lib/portal/fases";
 import type { NumeroFase } from "@/types";
@@ -228,5 +232,35 @@ test.describe("catalogo", () => {
         expect(servicio.tipo).toBe("especial");
       }
     }
+  });
+});
+
+test.describe("revision del cliente", () => {
+  test("el texto de la ruta dice a donde vuelve y que se conserva", () => {
+    expect(textoDeRuta("redes_sociales", [1, 2, 4, 5])).toBe(
+      "La pieza vuelve a redaccion de contenido (fase 1) y repite las fases 1, 2, 4 y 5. Se conserva lo hecho en la fase 3.",
+    );
+    expect(textoDeRuta("redes_sociales", [1, 2, 3, 4, 5])).toContain("No se conserva ninguna fase.");
+  });
+
+  test("la ruta se ajusta solo mientras no se complete nada de la ronda nueva", () => {
+    const fases = [
+      { estado: "completada" as const, rondaCompletada: 1 },
+      { estado: "en_curso" as const, rondaCompletada: null },
+    ];
+    expect(rutaAjustable(fases, 2)).toBe(true);
+    expect(rutaAjustable([...fases, { estado: "completada" as const, rondaCompletada: 2 }], 2)).toBe(false);
+    expect(rutaAjustable(fases, 1)).toBe(false);
+  });
+
+  test("al ajustar solo se anaden fases, en orden", () => {
+    expect(rutaConAnadidas([1, 2, 4, 5], [3])).toEqual([1, 2, 3, 4, 5]);
+    expect(rutaConAnadidas([3, 4, 5], [])).toEqual([3, 4, 5]);
+  });
+
+  test("la fase 4 no se completa sin version enviada", () => {
+    expect(faltaVersionEnviada(4, false)).not.toBeNull();
+    expect(faltaVersionEnviada(4, true)).toBeNull();
+    expect(faltaVersionEnviada(3, false)).toBeNull();
   });
 });

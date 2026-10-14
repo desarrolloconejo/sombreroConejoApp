@@ -15,7 +15,9 @@ import * as asignaciones from "@/models/asignaciones";
 import * as comentarios from "@/models/comentariosPieza";
 import * as piezas from "@/models/piezas";
 import * as proyectos from "@/models/proyectos";
+import * as revisiones from "@/models/revisiones";
 import * as tareas from "@/models/tareas";
+import * as versiones from "@/models/versiones";
 
 let pasan = 0;
 const fallan: string[] = [];
@@ -512,6 +514,7 @@ async function principal(): Promise<void> {
   );
 
   await probarProyectos();
+  await probarRevision();
 
   console.log(`\n${pasan}/${pasan + fallan.length} comprobaciones correctas`);
   if (fallan.length > 0) {
@@ -805,6 +808,223 @@ async function probarProyectos(): Promise<void> {
     r.comentaComoOtro === DENEGADO,
     String(r.comentaComoOtro),
   );
+}
+
+/**
+ * La revision del cliente: que versiones ve segun la fase, quien puede
+ * decidir y que la unica via del cliente sobre las fases solo haga lo que la
+ * decision pide.
+ */
+async function probarRevision(): Promise<void> {
+  const fila = async (email: string) => {
+    const persona = await consultarUno<{ id: number; empresaId: number | null }>(
+      `SELECT id, empresa_id AS "empresaId" FROM vw_usuarios_completos
+       WHERE lower(email) = lower($1)`,
+      [email],
+    );
+    if (!persona) throw new Error(`Falta ${email}: ejecuta npm run seed`);
+    return persona;
+  };
+
+  const admin = await fila("juanvivas043@gmail.com");
+  const cliente = await fila("cliente@empresa.test");
+  const empresaA = cliente.empresaId as number;
+
+  const r: Record<string, unknown> = {};
+
+  try {
+    await transaccion(async (tx) => {
+      const como = (id: number, rol: string, cargo = "", empresa: number | null = null) =>
+        tx.query(
+          `SELECT set_config('app.usuario_id', $1, true), set_config('app.rol', $2, true),
+                  set_config('app.cargo', $3, true), set_config('app.empresa_id', $4, true)`,
+          [String(id), rol, cargo, empresa === null ? "" : String(empresa)],
+        );
+      const intentarDentro = async (accion: () => Promise<unknown>) => {
+        await tx.query("SAVEPOINT intento");
+        try {
+          await accion();
+          await tx.query("RELEASE SAVEPOINT intento");
+          return null;
+        } catch (error) {
+          await tx.query("ROLLBACK TO SAVEPOINT intento");
+          return (error as { code?: string }).code ?? "desconocido";
+        }
+      };
+      const comoAdmin = () => como(admin.id, "admin", "direccion");
+      const comoCliente = (empresa = empresaA) => como(cliente.id, "cliente", "", empresa);
+
+      // ---- Una pieza en la fase 3 con dos versiones; solo una se envia.
+      await comoAdmin();
+      await tx.query("UPDATE clientes SET puede_aprobar = false WHERE usuario_id = $1", [cliente.id]);
+      const proyecto = await proyectos.crear(
+        {
+          empresaId: empresaA,
+          ejecutivoId: admin.id,
+          servicio: "redes_sociales",
+          tipo: "redes_sociales",
+          nombre: "Permisos revision",
+        },
+        admin.id,
+        tx,
+      );
+      const pieza = await piezas.crear(proyecto, { tipo: "post", titulo: "R1" }, admin.id, tx);
+      for (const fase of [1, 2] as const) await piezas.completarFase(pieza, fase, 1, admin.id, tx);
+
+      const datosVersion = (nombre: string) => ({
+        piezaId: pieza,
+        ronda: 1,
+        fase: 3 as const,
+        origen: "enlace" as const,
+        enlace: "https://www.figma.com/file/prueba",
+        nombre,
+      });
+      const borrador = await versiones.crear(datosVersion("Borrador"), admin.id, tx);
+      const buena = await versiones.crear(datosVersion("Buena"), admin.id, tx);
+      await versiones.marcarEnviada(buena, pieza, 1, admin.id, tx);
+      r.dosEnviadas = await intentarDentro(() =>
+        tx.query("UPDATE portal.versiones SET enviada_en = now(), enviada_por = $2 WHERE id = $1", [
+          borrador,
+          admin.id,
+        ]),
+      );
+
+      await comoCliente();
+      r.antesDeFase5 = (await versiones.dePieza(pieza, tx)).length;
+      r.clienteSube = await intentarDentro(() =>
+        versiones.crear(datosVersion("Del cliente"), cliente.id, tx),
+      );
+
+      // ---- La pieza llega a la fase 5: el cliente ve solo la enviada.
+      await comoAdmin();
+      for (const fase of [3, 4] as const) await piezas.completarFase(pieza, fase, 1, admin.id, tx);
+
+      await comoCliente();
+      r.enFase5 = (await versiones.dePieza(pieza, tx)).map((v) => v.nombre);
+      r.otraEmpresaVe = await (async () => {
+        await comoCliente(empresaA + 100000);
+        return (await versiones.dePieza(pieza, tx)).length;
+      })();
+
+      // ---- Sin el permiso de aprobar, no decide.
+      await comoCliente();
+      r.sinPermisoRevisa = await intentarDentro(() =>
+        revisiones.crear(
+          {
+            piezaId: pieza,
+            ronda: 1,
+            aprobar: true,
+            tipoCorreccion: null,
+            comentario: null,
+            fasesReabiertas: [],
+            versionId: buena,
+          },
+          cliente.id,
+          tx,
+        ),
+      );
+      r.sinPermisoDecide = await intentarDentro(() =>
+        revisiones.aplicarDecision(pieza, true, [], tx),
+      );
+      r.clienteMueveFases = (
+        await tx.query("UPDATE portal.pieza_fases SET estado = 'completada' WHERE pieza_id = $1", [pieza])
+      ).rowCount;
+
+      // ---- Con el permiso: pide una correccion de redaccion.
+      await comoAdmin();
+      await tx.query("UPDATE clientes SET puede_aprobar = true WHERE usuario_id = $1", [cliente.id]);
+
+      await comoCliente();
+      r.rutaRara = await intentarDentro(() => revisiones.aplicarDecision(pieza, false, [5], tx));
+      await revisiones.crear(
+        {
+          piezaId: pieza,
+          ronda: 1,
+          aprobar: false,
+          tipoCorreccion: "redaccion",
+          comentario: "Cambiar el copy",
+          fasesReabiertas: [1, 2, 4, 5],
+          versionId: buena,
+        },
+        cliente.id,
+        tx,
+      );
+      r.rondaNueva = await revisiones.aplicarDecision(pieza, false, [1, 2, 4, 5], tx);
+
+      await comoAdmin();
+      const tras = await piezas.buscarPorId(pieza, tx);
+      r.fasesTras = tras?.fases.map((f) => `${f.fase}:${f.estado}`).join(" ");
+      r.rondaPieza = tras?.ronda;
+      r.versionesTras = (await versiones.dePieza(pieza, tx)).length;
+
+      await comoCliente();
+      r.yaNoEspera = await intentarDentro(() => revisiones.aplicarDecision(pieza, true, [], tx));
+      r.yaNoVe = (await versiones.dePieza(pieza, tx)).length;
+
+      // ---- Otra pieza llega a la fase 5 y el cliente la aprueba.
+      await comoAdmin();
+      const otra = await piezas.crear(proyecto, { tipo: "post", titulo: "R2" }, admin.id, tx);
+      for (const fase of [1, 2, 3, 4] as const) await piezas.completarFase(otra, fase, 1, admin.id, tx);
+
+      await comoCliente();
+      await revisiones.crear(
+        {
+          piezaId: otra,
+          ronda: 1,
+          aprobar: true,
+          tipoCorreccion: null,
+          comentario: null,
+          fasesReabiertas: [],
+          versionId: null,
+        },
+        cliente.id,
+        tx,
+      );
+      await revisiones.aplicarDecision(otra, true, [], tx);
+      r.aprobada = (await piezas.buscarPorId(otra, tx))?.avance.aprobada;
+
+      throw new Deshacer();
+    });
+  } catch (error) {
+    if (!(error instanceof Deshacer)) throw error;
+  }
+
+  comprobar("Solo una version enviada por ronda", r.dosEnviadas === "23505", String(r.dosEnviadas));
+  comprobar(
+    "El cliente no ve versiones antes de la fase 5 ni puede subirlas",
+    r.antesDeFase5 === 0 && r.clienteSube === DENEGADO,
+    `ve ${r.antesDeFase5}; subir: ${r.clienteSube}`,
+  );
+  comprobar(
+    "En la fase 5 el cliente ve solo la version enviada",
+    Array.isArray(r.enFase5) && r.enFase5.join() === "Buena",
+    JSON.stringify(r.enFase5),
+  );
+  comprobar("Un cliente de otra empresa no ve las versiones", r.otraEmpresaVe === 0, `${r.otraEmpresaVe}`);
+  comprobar(
+    "Sin el permiso de aprobar no se decide",
+    r.sinPermisoRevisa === DENEGADO && r.sinPermisoDecide === DENEGADO,
+    `revision: ${r.sinPermisoRevisa}; decision: ${r.sinPermisoDecide}`,
+  );
+  comprobar("El cliente no mueve fases por su cuenta", r.clienteMueveFases === 0, `${r.clienteMueveFases} filas`);
+  comprobar(
+    "Una ruta que se salta los controles se rechaza",
+    r.rutaRara === "23514",
+    String(r.rutaRara),
+  );
+  comprobar(
+    "Corregir la redaccion reabre 1, 2, 4 y 5, conserva la 3 y sube la ronda",
+    r.rondaNueva === 2 &&
+      r.rondaPieza === 2 &&
+      r.fasesTras === "1:en_curso 2:pendiente 3:completada 4:pendiente 5:pendiente",
+    `ronda ${r.rondaNueva}; ${r.fasesTras}`,
+  );
+  comprobar(
+    "Tras la correccion la pieza ya no espera decision y el cliente deja de ver la version",
+    r.yaNoEspera === "23514" && r.yaNoVe === 0 && r.versionesTras === 2,
+    `decidir: ${r.yaNoEspera}; ve ${r.yaNoVe}`,
+  );
+  comprobar("Aprobar completa la fase 5", r.aprobada === true, String(r.aprobada));
 }
 
 principal()
