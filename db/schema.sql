@@ -1998,8 +1998,23 @@ GRANT EXECUTE ON FUNCTION portal.cliente_aprueba(integer) TO conejo_app;
 ALTER TABLE portal.versiones  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE portal.revisiones ENABLE ROW LEVEL SECURITY;
 
--- Versiones: el equipo de la pieza, todas; el cliente, solo la enviada, y
--- solo con la pieza frente a el.
+-- La ronda en curso de una pieza. La politica de versiones la necesita para
+-- que el cliente vea solo la version de la ronda que revisa, y la tabla de
+-- piezas tiene su propia seguridad por fila: por eso es SECURITY DEFINER.
+CREATE OR REPLACE FUNCTION portal.ronda_de_pieza(p_pieza integer)
+  RETURNS smallint
+  LANGUAGE sql STABLE SECURITY DEFINER
+  SET search_path = public, pg_temp
+  AS $fn$
+    SELECT ronda FROM portal.piezas WHERE id = p_pieza
+  $fn$;
+
+REVOKE ALL ON FUNCTION portal.ronda_de_pieza(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION portal.ronda_de_pieza(integer) TO conejo_app;
+
+-- Versiones: el equipo de la pieza, todas; el cliente, solo la enviada de la
+-- ronda en curso, y solo con la pieza frente a el. Las de rondas anteriores
+-- ya fueron corregidas: no las vuelve a ver, ni las descarga.
 DROP POLICY IF EXISTS versiones_lee ON portal.versiones;
 CREATE POLICY versiones_lee ON portal.versiones
   FOR SELECT TO conejo_app
@@ -2007,6 +2022,7 @@ CREATE POLICY versiones_lee ON portal.versiones
     portal.gestiona_pieza(pieza_id)
     OR portal.trabaja_en_pieza(pieza_id)
     OR (enviada_en IS NOT NULL
+        AND ronda = portal.ronda_de_pieza(pieza_id)
         AND portal.cliente_ve_pieza(pieza_id)
         AND portal.pieza_en_revision(pieza_id))
   );
