@@ -55,6 +55,7 @@ const COLUMNAS = `
   f.nota_auditor      AS "notaAuditor",
   f.metrica_principal AS "metricaPrincipal",
   f.estado,
+  f.tarea_id          AS "tareaId",
   f.creado_por        AS "creadoPor",
   u.nombre            AS "creadoPorNombre",
   f.creado_en         AS "creadoEn",
@@ -454,6 +455,30 @@ export async function guardarNota(
   );
 
   return afectadas === 1;
+}
+
+/**
+ * Liga la ficha a la tarea que cumple. Solo si aun no tiene otra: una ficha
+ * nacida para una tarea no se cambia de tarea por abrirla desde otra.
+ */
+export async function vincularTarea(id: number, tareaId: number): Promise<boolean> {
+  const afectadas = await ejecutar(
+    "UPDATE fichas_hook SET tarea_id = $2 WHERE id = $1 AND tarea_id IS NULL",
+    [id, tareaId],
+  );
+
+  return afectadas === 1;
+}
+
+/** La ultima ficha escrita para una tarea, para seguir donde se dejo. */
+export async function ultimaDeTarea(tareaId: number): Promise<FichaHook | null> {
+  return consultarUno<FichaHook>(
+    `SELECT ${COLUMNAS} ${DESDE}
+     WHERE f.tarea_id = $1
+     ORDER BY f.actualizado_en DESC, f.id DESC
+     LIMIT 1`,
+    [tareaId],
+  );
 }
 
 /**
