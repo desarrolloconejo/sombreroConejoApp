@@ -52,6 +52,20 @@ const RUTAS_POR_CARGO: { prefijo: string; cargos: SlugCargo[] }[] = [
 ];
 
 /**
+ * Las pantallas de una herramienta a las que se llega desde una tarea.
+ *
+ * Quien tiene asignada una tarea de hooks sin ser de redes entra al canvas y
+ * al auditor por ella. El proxy no puede consultar la base, asi que solo deja
+ * pasar la peticion que trae `?tarea=`; la page comprueba que esa tarea sea de
+ * verdad suya (`requerirHooks`), y si no, lo devuelve al panel.
+ */
+const RUTAS_POR_TAREA = ["/dashboard/hooks/nuevo", "/dashboard/hooks/auditor"];
+
+function llegaPorTarea(ruta: string, parametros: URLSearchParams): boolean {
+  return RUTAS_POR_TAREA.includes(ruta) && parametros.has("tarea");
+}
+
+/**
  * Con este parametro el login se muestra aunque el token verifique.
  *
  * Lo ponen las guardias cuando el token es valido pero la sesion ya no (la
@@ -229,7 +243,7 @@ export async function proxy(request: NextRequest) {
 
   // Y lo mismo por area. El admin se lo salta, igual que en requerirCargo:
   // su rol le da acceso a todas las areas de la agencia.
-  if (sesion && sesion.rol !== "admin") {
+  if (sesion && sesion.rol !== "admin" && !llegaPorTarea(pathname, request.nextUrl.searchParams)) {
     const cargos = cargosDeRuta(pathname);
 
     if (cargos && (!sesion.cargo || !cargos.includes(sesion.cargo))) {

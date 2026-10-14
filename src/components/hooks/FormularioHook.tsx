@@ -120,7 +120,14 @@ export function FormularioHook({
   etiquetaRegla,
   hrefNuevaEmpresa,
   plantilla = false,
+  tarea = null,
 }: {
+  /**
+   * La tarea que cumple esta ficha, si se llego desde una. Viaja en el
+   * formulario y propone el cliente de su proyecto.
+   */
+  tarea?: { id: number; empresaId: number } | null;
+
   empresas: Empresa[];
   ficha: FichaHook | null;
 
@@ -155,9 +162,13 @@ export function FormularioHook({
   // El resultado sale como aviso flotante: en un formulario largo, una alerta
   // arriba queda fuera de la vista de quien acaba de pulsar el boton.
   useAvisoDeAccion(estado);
-  const [campos, setCampos] = useState<Campos>(() =>
-    referencia ? desdeReferencia(referencia) : desdeFicha(ficha, plantilla),
-  );
+  const [campos, setCampos] = useState<Campos>(() => {
+    const iniciales = referencia ? desdeReferencia(referencia) : desdeFicha(ficha, plantilla);
+
+    return tarea && !iniciales.empresaId
+      ? { ...iniciales, empresaId: String(tarea.empresaId) }
+      : iniciales;
+  });
 
   /*
    * Sobre que ficha se esta escribiendo ahora mismo.
@@ -204,6 +215,7 @@ export function FormularioHook({
         eso, pulsar "Guardar" dos veces crearia dos fichas iguales.
       */}
       {idActual !== null && <input type="hidden" name="id" value={idActual} />}
+      {tarea && <input type="hidden" name="tareaId" value={tarea.id} />}
 
       {/* Los controlados viajan igual, pero se declaran explicitos para que
           el formulario siga sirviendo si el estado se quedara atras. */}
