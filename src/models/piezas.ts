@@ -393,3 +393,47 @@ export async function guardarCopy(
 
   return filas > 0;
 }
+
+/**
+ * Reabre fases ya completadas de una pieza y deja en curso la primera de las
+ * que quedan por hacer. Lo usa el ajuste de la ruta de una correccion: las
+ * fases anadidas vuelven a pendiente aunque se hubieran conservado.
+ */
+export async function reabrirFases(
+  piezaId: number,
+  fases: readonly NumeroFase[],
+  ejecutor: Ejecutor,
+): Promise<void> {
+  await ejecutar(
+    `UPDATE portal.pieza_fases
+     SET estado = 'pendiente', completada_en = NULL, completada_por = NULL,
+         ronda_completada = NULL
+     WHERE pieza_id = $1 AND (fase = ANY($2::smallint[]) OR estado = 'en_curso')`,
+    [piezaId, fases],
+    ejecutor,
+  );
+
+  await ejecutar(
+    `UPDATE portal.pieza_fases
+     SET estado = 'en_curso'
+     WHERE pieza_id = $1
+       AND fase = (SELECT min(fase) FROM portal.pieza_fases
+                   WHERE pieza_id = $1 AND estado = 'pendiente')`,
+    [piezaId],
+    ejecutor,
+  );
+}
+
+/**
+ * Si quien pregunta trabaja en la pieza o la gestiona: puede subir versiones
+ * y escribir su copy. La respuesta es la de las funciones de la base.
+ */
+export async function puedeTrabajar(id: number, ejecutor: Ejecutor): Promise<boolean> {
+  const fila = await consultarUno<{ puede: boolean }>(
+    "SELECT portal.gestiona_pieza($1) OR portal.trabaja_en_pieza($1) AS puede",
+    [id],
+    ejecutor,
+  );
+
+  return fila?.puede ?? false;
+}

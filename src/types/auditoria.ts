@@ -47,7 +47,12 @@ export type AccionAuditoria =
   | "tarea.editada"
   | "tarea.lista"
   | "tarea.reabierta"
-  | "tarea.quitada";
+  | "tarea.quitada"
+  | "version.subida"
+  | "version.enviada"
+  | "pieza.aprobada"
+  | "pieza.correccion_pedida"
+  | "pieza.ruta_ajustada";
 
 /** Como se lee cada accion en pantalla. */
 export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
@@ -93,6 +98,11 @@ export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
   "tarea.lista": "Tarea marcada como lista",
   "tarea.reabierta": "Tarea reabierta",
   "tarea.quitada": "Tarea quitada",
+  "version.subida": "Version subida",
+  "version.enviada": "Version marcada para el cliente",
+  "pieza.aprobada": "Pieza aprobada por el cliente",
+  "pieza.correccion_pedida": "El cliente pidio una correccion",
+  "pieza.ruta_ajustada": "Ruta de una correccion ajustada",
 };
 
 /**
@@ -109,6 +119,7 @@ export const MODULOS_DE_AUDITORIA = {
   pieza: "Piezas",
   fase: "Fases",
   tarea: "Tareas",
+  version: "Versiones",
 } as const;
 
 export type ModuloAuditoria = keyof typeof MODULOS_DE_AUDITORIA;

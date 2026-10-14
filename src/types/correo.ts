@@ -15,12 +15,13 @@ export type ModoExterno = "simulado" | "real";
  * La tabla solo comprueba la forma: cada modulo anade los suyos aqui y en
  * `NOMBRES_DE_CORREO`, igual que con las acciones de la auditoria.
  */
-export type TipoCorreo = "bienvenida" | "clave_restablecida";
+export type TipoCorreo = "bienvenida" | "clave_restablecida" | "pieza_en_revision";
 
 /** Como se lee cada tipo en pantalla. */
 export const NOMBRES_DE_CORREO: Record<TipoCorreo, string> = {
   bienvenida: "Bienvenida",
   clave_restablecida: "Contrasena restablecida",
+  pieza_en_revision: "Pieza lista para revisar",
 };
 
 /**

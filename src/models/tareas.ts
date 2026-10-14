@@ -209,3 +209,18 @@ export async function quitar(id: number, ejecutor: Ejecutor): Promise<boolean> {
 
   return filas > 0;
 }
+
+/** Devuelve a pendiente las tareas de unas fases que se reabren. */
+export async function reabrirDeFases(
+  piezaId: number,
+  fases: readonly number[],
+  ejecutor: Ejecutor,
+): Promise<number> {
+  return ejecutar(
+    `UPDATE portal.tareas
+     SET estado = 'pendiente', lista_en = NULL, lista_por = NULL
+     WHERE pieza_id = $1 AND fase = ANY($2::smallint[]) AND estado = 'lista'`,
+    [piezaId, fases],
+    ejecutor,
+  );
+}
