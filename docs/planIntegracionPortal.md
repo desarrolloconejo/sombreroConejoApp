@@ -105,6 +105,12 @@ Lo que cada etapa exige en produccion se va anotando en
 | 2 | `feat/etapa2-avisos` | `portal.notificaciones` con seguridad por fila y la campana del encabezado, en escritorio y movil. Notifica el bloqueo de una cuenta y el correo fallido a los administradores, y la contrasena restablecida a su dueno | `db/neon/08-notificaciones.sql` | Hecha |
 | 2 | `feat/etapa2-tasa-bcv` | Seccion 6.1: `finanzas.tasas_cambio`, lector de la pagina del BCV con su certificado intermedio, validacion, tarea programada `/api/cron/tasa` y la identidad `sistema` | `db/neon/09-tasas-de-cambio.sql` | Hecha |
 | 8 (adelantada) | `feat/dos-pasos` | Seccion 5.3: verificacion en dos pasos con app de codigos, codigos de respaldo, retirada por un administrador | `db/neon/10-dos-pasos.sql` | Hecha |
+| 3 | `feat/etapa3-modelo` | Tablas de la bateria con seguridad por fila (asignaciones, proyectos, piezas, copy, fases, tareas, comentarios), vistas del avance, catalogo de servicios, reglas puras y modelos. Reglas en `docs/reglasBateria.md` | `db/neon/11-proyectos.sql` | Hecha |
+| 3 | `feat/etapa3-asignaciones` | El admin asigna ejecutivos a cada empresa desde Empresas; no se desactiva a nadie con tareas o empresas sin reasignarlas (P4, P5) | Ninguno | Pendiente |
+| 3 | `feat/etapa3-proyectos` | Modulo Proyectos: listado, alta desde el catalogo, matriz de piezas por fases, ficha de pieza con fases, tareas, copy y comentarios. Componente bateria | Ninguno | Pendiente |
+| 3 | `feat/etapa3-tablero` | Tablero con las cuatro alertas y filtros | Ninguno | Pendiente |
+| 3 | `feat/etapa3-mi-trabajo` | Mi trabajo: las tareas de cada uno, marcar lista, abrir la herramienta | Ninguno | Pendiente |
+| 3 | `feat/etapa3-hooks-herramienta` | Hooks como herramienta: `fichas_hook.tarea_id`, el canvas abre con la tarea, y la tarea queda lista cuando la ficha aprueba la auditoria | Uno, por llegar | Pendiente |
 
 **La etapa 2 esta completa**, salvo el adaptador de archivos, que por
 decision del responsable (2026-10-13) pasa a la etapa 4: hoy nada lo usa, y
@@ -175,6 +181,23 @@ Sobre la campana:
   usaba esa palabra para los mensajes flotantes.
 - No hay pagina de «todas las notificaciones»: la campana muestra las doce
   ultimas. Se anade cuando haya volumen que lo pida.
+
+Sobre la etapa 3, decidido al construir el modelo:
+
+- **Las reglas de detalle del paquete pasan al repositorio** en
+  `docs/reglasBateria.md`: plantillas, avance, rutas de correccion, alertas y
+  quien ve que. Ya no hace falta la carpeta `appFacturas` para esta etapa.
+- Las preguntas P1 a P9 se construyen con la propuesta de la seccion 12. Las
+  tareas sugeridas de los dos servicios (P3) son una propuesta y estan en
+  `src/lib/portal/catalogo.ts`, para que el negocio las corrija.
+- La fase 5 no la completa el equipo: espera a la decision del cliente, que
+  llega en la etapa 4. Hasta entonces una pieza llega a «esperando al cliente»
+  y ahi se queda.
+- Quien hace una tarea ve el proyecto, la pieza y su copy, pero solo de las
+  piezas donde trabaja; no mueve fases ni reasigna su tarea.
+- Una tarea solo se quita mientras esta pendiente. Las demas cosas no se
+  borran: las piezas se cancelan con motivo y dejan de contar para el avance.
+- `revisiones` y `versiones` no se crean todavia: son de la etapa 4.
 
 Sobre el rol de la aplicacion:
 

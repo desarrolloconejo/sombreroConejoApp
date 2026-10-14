@@ -54,11 +54,14 @@ docker compose exec app-dev npm run seed
 ```
 
 El seed crea las tablas y deja la base lista para entrar: roles, cargos, una
-empresa de ejemplo y siete cuentas: un administrador, tres de prueba (una por
-perfil) y tres reservadas a las pruebas automaticas, `pruebas@conejo.test`,
+empresa de ejemplo y ocho cuentas: un administrador, cuatro de prueba (una por
+perfil, entre ellas el ejecutivo `cuentas@conejo.test`) y tres reservadas a las pruebas automaticas, `pruebas@conejo.test`,
 `bloqueo@conejo.test` y `dospasos@conejo.test`. Sobre esas tres las pruebas hacen lo que no se puede
 deshacer —restablecer la contrasena, bloquear la cuenta—; no se inicia sesion
-con ellas. Es idempotente. Las cuentas que crea y sus claves estan en
+con ellas. Siembra tambien dos proyectos de ejemplo de la empresa, asignada al
+ejecutivo: una parrilla de redes de diez piezas que suma el 60 % y ensena las
+cuatro alertas, y un proyecto especial recien empezado (`db/datos/proyectos.mts`).
+Es idempotente. Las cuentas que crea y sus claves estan en
 `db/datos/semilla.mts`.
 
 | Servicio | Donde |
@@ -129,6 +132,7 @@ src/
   lib/          infraestructura: base, sesion, jwt, validaciones, navegacion,
                 redireccion
   lib/hooks/    criterio del modulo de hooks, como funciones puras
+  lib/portal/   catalogo de servicios y reglas de la bateria de fases, puras
   proxy.ts      barrera de rutas (en Next 16 sustituye a middleware.ts)
 db/
   schema.sql    definicion completa e idempotente del esquema
@@ -413,6 +417,12 @@ Las politicas leen quien pregunta con `app_usuario_id()`, `app_rol()`,
 `app_cargo()` y `app_empresa_id()`. `prueba:permisos` las comprueba con la
 conexion de la aplicacion.
 
+Cuando una politica tiene que mirar otra tabla con politicas (ver una pieza
+depende de su proyecto y de sus tareas), lo pregunta a una funcion
+`SECURITY DEFINER` del esquema `portal` (`portal.gestiona_empresa`,
+`portal.trabaja_en_pieza`…), que lee como duena y solo responde si o no.
+Escrito directamente, las politicas se llamarian unas a otras en bucle.
+
 ### Auditoria
 
 La tabla `auditoria` guarda una linea por cada cosa que alguien hace: quien
@@ -572,6 +582,7 @@ servidor propio. La base esta en **Neon**.
 | [CLAUDE.md](CLAUDE.md) | Contrato del proyecto |
 | [AGENTS.md](AGENTS.md) | Contexto y reglas para asistentes de codigo |
 | [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md) | Plan de la integracion del portal |
+| [docs/reglasBateria.md](docs/reglasBateria.md) | Reglas de proyectos, piezas, fases y tareas: avance, correcciones, alertas y quien ve que |
 | [docs/despliegueProduccion.md](docs/despliegueProduccion.md) | Guia del despliegue: SQL, variables y pasos, etapa a etapa |
 | [docs/planAuditoriaRepositorio.md](docs/planAuditoriaRepositorio.md) | Plan de revision y actualizacion del repositorio. Ejecutado |
 | [docs/informeAuditoria.md](docs/informeAuditoria.md) | Resultado de esa revision, hallazgo a hallazgo |
