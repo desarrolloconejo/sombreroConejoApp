@@ -4,15 +4,20 @@ import { revalidatePath } from "next/cache";
 
 import { anotar } from "@/lib/auditoria";
 import { conSesion } from "@/lib/db";
+import { correoDePiezaEnRevision } from "@/lib/correos/plantillas";
+import { encolarCorreo, entregarCorreos } from "@/lib/externos/correo";
 import { notificarA } from "@/lib/notificaciones";
 import { piezaGestionada } from "@/lib/portal/acceso";
 import { nombreDeFase, servicioPorSlug } from "@/lib/portal/catalogo";
 import {
   esFaseDeTrabajo,
+  faltaVersionEnviada,
+  rutaAjustable,
+  rutaConAnadidas,
   faseQueSePuedeRegresar,
   motivoParaNoCompletar,
 } from "@/lib/portal/fases";
-import { RUTA_PROYECTOS, rutaPieza, rutaProyecto } from "@/lib/portal/rutas";
+import { RUTA_PROYECTOS, rutaMiPieza, rutaPieza, rutaProyecto } from "@/lib/portal/rutas";
 import { requerirCargo, requerirRol } from "@/lib/sesion";
 import {
   comoFecha,
@@ -20,11 +25,14 @@ import {
   LIMITES,
   limpiarTexto,
 } from "@/lib/validaciones";
+import * as clientes from "@/models/clientes";
 import * as comentarios from "@/models/comentariosPieza";
 import * as piezas from "@/models/piezas";
 import * as proyectos from "@/models/proyectos";
+import * as revisiones from "@/models/revisiones";
 import * as tareas from "@/models/tareas";
 import * as usuarios from "@/models/usuarios";
+import * as versiones from "@/models/versiones";
 import type { EstadoFormulario, NumeroFase, TipoPieza } from "@/types";
 
 /**
@@ -217,11 +225,9 @@ export async function completarFase(
     if (pieza.estado !== "activa") return { motivo: "La pieza esta cancelada." };
 
     const todas = await tareas.dePieza(piezaId, tx);
-    const motivo = motivoParaNoCompletar(
-      pieza.fases,
-      fase,
-      todas.filter((tarea) => tarea.fase === fase),
-    );
+    const motivo =
+      motivoParaNoCompletar(pieza.fases, fase, todas.filter((tarea) => tarea.fase === fase)) ??
+      faltaVersionEnviada(fase, (await versiones.enviadaDeRonda(piezaId, pieza.ronda, tx)) !== null);
 
     if (motivo) return { motivo };
 
@@ -254,11 +260,44 @@ export async function completarFase(
       });
     }
 
-    return { proyectoId: proyecto.id, nombre: nombreDeFase(proyecto.tipo, fase) };
+    // Completar la fase 4 es enviarla al cliente: se avisa a quien aprueba
+    // por la empresa, en la campana y por correo.
+    const correos: number[] = [];
+
+    if (fase === 4) {
+      const aprobadores = await clientes.aprobadoresDe(proyecto.empresaId, tx);
+
+      await notificarA(
+        tx,
+        aprobadores.map((persona) => persona.id),
+        {
+          tipo: "pieza.en_revision",
+          titulo: `«${pieza.titulo}» espera tu revision`,
+          cuerpo: `Del proyecto ${proyecto.nombre}.`,
+          href: rutaMiPieza(proyecto.id, piezaId),
+          empresaId: proyecto.empresaId,
+        },
+      );
+
+      for (const persona of aprobadores) {
+        correos.push(
+          await encolarCorreo(
+            tx,
+            usuario,
+            correoDePiezaEnRevision(persona, { titulo: pieza.titulo, proyecto: proyecto.nombre }),
+          ),
+        );
+      }
+    }
+
+    return { proyectoId: proyecto.id, nombre: nombreDeFase(proyecto.tipo, fase), correos };
   });
 
   if (resultado === null) return NO_ALCANCE;
   if ("motivo" in resultado) return { ok: false, mensaje: resultado.motivo };
+
+  // El correo sale despues de confirmar el cambio, nunca dentro.
+  await entregarCorreos(usuario, resultado.correos);
 
   revalidar(resultado.proyectoId, piezaId);
 
@@ -434,4 +473,64 @@ export async function comentarPieza(
   revalidar(resultado, piezaId);
 
   return { ok: true, mensaje: "Comentario anadido" };
+}
+
+/**
+ * El ejecutivo ajusta la ruta de la ultima correccion: anade fases a las que
+ * pidio el cliente. Solo mientras no se haya completado ninguna fase de la
+ * ronda nueva, y solo anadiendo (docs/reglasBateria.md).
+ */
+export async function ajustarRuta(
+  _estadoPrevio: EstadoFormulario,
+  datos: FormData,
+): Promise<EstadoFormulario> {
+  const usuario = await requerirCargo("cuentas");
+
+  const piezaId = comoIdentificador(datos.get("piezaId"));
+  if (piezaId === null) return NO_ALCANCE;
+
+  const pedidas = datos
+    .getAll("anadir")
+    .map(comoFase)
+    .filter((fase): fase is NumeroFase => fase !== null && fase < 4);
+
+  if (pedidas.length === 0) return { ok: false, mensaje: "Marca alguna fase que anadir" };
+
+  const resultado = await conSesion(usuario, async (tx) => {
+    const contexto = await piezaGestionada(piezaId, tx);
+    if (!contexto) return null;
+
+    const { pieza, proyecto } = contexto;
+    const revision = await revisiones.deRonda(piezaId, pieza.ronda - 1, tx);
+
+    if (!revision || revision.decision !== "correccion" || !rutaAjustable(pieza.fases, pieza.ronda)) {
+      return { motivo: "La ruta ya no se puede ajustar: la ronda nueva ya avanzo." };
+    }
+
+    const anadidas = pedidas.filter((fase) => !revision.fasesReabiertas.includes(fase));
+    if (anadidas.length === 0) return { motivo: "Esas fases ya estaban en la ruta." };
+
+    const nueva = rutaConAnadidas(revision.fasesReabiertas, anadidas);
+
+    await piezas.reabrirFases(piezaId, anadidas, tx);
+    await tareas.reabrirDeFases(piezaId, anadidas, tx);
+    await revisiones.ajustar(revision.id, nueva, usuario.id, tx);
+
+    await anotar(tx, usuario, "pieza.ruta_ajustada", {
+      entidad: "pieza",
+      entidadId: piezaId,
+      empresaId: proyecto.empresaId,
+      antes: { fases: revision.fasesReabiertas.join(",") },
+      despues: { fases: nueva.join(",") },
+    });
+
+    return { proyectoId: proyecto.id };
+  });
+
+  if (resultado === null) return NO_ALCANCE;
+  if ("motivo" in resultado) return { ok: false, mensaje: resultado.motivo };
+
+  revalidar(resultado.proyectoId, piezaId);
+
+  return { ok: true, mensaje: "Ruta ajustada" };
 }
