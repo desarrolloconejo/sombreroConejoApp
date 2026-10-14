@@ -961,6 +961,21 @@ async function probarRevision(): Promise<void> {
       r.yaNoEspera = await intentarDentro(() => revisiones.aplicarDecision(pieza, true, [], tx));
       r.yaNoVe = (await versiones.dePieza(pieza, tx)).length;
 
+      // ---- La ronda 2 llega a la fase 5: el cliente ve solo su version, no
+      // la de la ronda 1, aunque tambien se le envio.
+      await comoAdmin();
+      for (const fase of [1, 2] as const) await piezas.completarFase(pieza, fase, 2, admin.id, tx);
+      const segunda = await versiones.crear(
+        { ...datosVersion("Ronda 2"), ronda: 2 },
+        admin.id,
+        tx,
+      );
+      await versiones.marcarEnviada(segunda, pieza, 2, admin.id, tx);
+      await piezas.completarFase(pieza, 4, 2, admin.id, tx);
+
+      await comoCliente();
+      r.rondaDosVe = (await versiones.dePieza(pieza, tx)).map((v) => v.nombre).join(", ");
+
       // ---- Otra pieza llega a la fase 5 y el cliente la aprueba.
       await comoAdmin();
       const otra = await piezas.crear(proyecto, { tipo: "post", titulo: "R2" }, admin.id, tx);
@@ -1023,6 +1038,11 @@ async function probarRevision(): Promise<void> {
     "Tras la correccion la pieza ya no espera decision y el cliente deja de ver la version",
     r.yaNoEspera === "23514" && r.yaNoVe === 0 && r.versionesTras === 2,
     `decidir: ${r.yaNoEspera}; ve ${r.yaNoVe}`,
+  );
+  comprobar(
+    "En la ronda 2 el cliente ve solo la version de esa ronda",
+    r.rondaDosVe === "Ronda 2",
+    String(r.rondaDosVe),
   );
   comprobar("Aprobar completa la fase 5", r.aprobada === true, String(r.aprobada));
 }

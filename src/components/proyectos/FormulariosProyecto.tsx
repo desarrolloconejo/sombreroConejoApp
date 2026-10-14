@@ -126,7 +126,7 @@ const CAMBIOS: Record<
     icono: Pause,
   },
   cerrado: {
-    boton: "Cerrar",
+    boton: "Cerrar el proyecto",
     explica: "Solo con todas sus piezas aprobadas. Sale del tablero.",
     icono: Power,
   },
