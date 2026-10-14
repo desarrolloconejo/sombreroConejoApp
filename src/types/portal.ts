@@ -187,6 +187,7 @@ export type Tarea = {
 export type TareaAsignada = Tarea & {
   proyectoId: number;
   proyectoNombre: string;
+  proyectoTipo: TipoProyecto;
   empresaNombre: string;
   piezaTitulo: string;
   piezaTipo: TipoPieza;

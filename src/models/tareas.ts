@@ -38,7 +38,8 @@ export async function dePieza(piezaId: number, ejecutor: Ejecutor): Promise<Tare
 
 /**
  * Las tareas de una persona, con donde estan. Solo las de piezas activas y
- * proyectos en curso: lo cancelado o cerrado no es trabajo pendiente.
+ * proyectos en curso: lo cancelado o cerrado no es trabajo pendiente. Las
+ * listas, si se piden, solo las de las dos ultimas semanas.
  *
  * Primero las de fecha mas cercana; las que no tienen fecha, al final.
  */
@@ -51,6 +52,7 @@ export async function asignadasA(
     `SELECT ${COLUMNAS},
             pr.id                         AS "proyectoId",
             pr.nombre                     AS "proyectoNombre",
+            pr.tipo                       AS "proyectoTipo",
             e.nombre                      AS "empresaNombre",
             p.titulo                      AS "piezaTitulo",
             p.tipo                        AS "piezaTipo",
@@ -64,7 +66,8 @@ export async function asignadasA(
      WHERE t.responsable_id = $1
        AND p.estado = 'activa'
        AND pr.estado IN ('activo', 'pausado')
-       AND ($2 OR t.estado = 'pendiente')
+       AND (t.estado = 'pendiente'
+            OR ($2 AND t.lista_en > now() - interval '14 days'))
      ORDER BY t.estado DESC, t.fecha_estimada NULLS LAST, pr.nombre, p.orden, t.orden`,
     [usuarioId, opciones.incluirListas],
     ejecutor,
