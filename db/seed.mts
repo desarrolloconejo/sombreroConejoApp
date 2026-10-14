@@ -18,7 +18,8 @@ import { join } from "node:path";
 import { Client } from "pg";
 import bcrypt from "bcryptjs";
 import { APERTURAS } from "./datos/aperturas.mts";
-import { sembrarProyectos } from "./datos/proyectos.mts";
+import { sembrarFinanzas } from "./datos/finanzas.mts";
+import { PROYECTO_ESPECIAL, sembrarProyectos } from "./datos/proyectos.mts";
 import {
   EMAIL_CREADORA,
   EMAIL_EJECUTIVO,
@@ -275,9 +276,10 @@ async function principal(): Promise<void> {
       cliente: await idDe("cliente@empresa.test"),
     };
 
-    // La persona de la empresa de ejemplo decide en la fase 5.
+    // La persona de la empresa de ejemplo decide en la fase 5 y ve las
+    // finanzas de su empresa.
     await cliente.query(
-      "UPDATE clientes SET puede_aprobar = TRUE WHERE usuario_id = $1",
+      "UPDATE clientes SET puede_aprobar = TRUE, puede_ver_finanzas = TRUE WHERE usuario_id = $1",
       [equipo.cliente],
     );
 
@@ -291,6 +293,16 @@ async function principal(): Promise<void> {
 
     const proyectosNuevos = await sembrarProyectos(cliente, empresaId, equipo);
     console.log(`Proyectos de ejemplo listos (${proyectosNuevos} nuevos)`);
+
+    const { rows: especial } = await cliente.query<{ id: number }>(
+      "SELECT id FROM portal.proyectos WHERE empresa_id = $1 AND nombre = $2 ORDER BY id LIMIT 1",
+      [empresaId, PROYECTO_ESPECIAL],
+    );
+    const documentos = await sembrarFinanzas(cliente, empresaId, especial[0]?.id ?? null, {
+      admin: equipo.admin,
+      cliente: equipo.cliente,
+    });
+    console.log(`Finanzas de ejemplo listas (${documentos} documentos nuevos)`);
 
     // -- Resumen ------------------------------------------------------------
     const { rows: resumen } = await cliente.query<{

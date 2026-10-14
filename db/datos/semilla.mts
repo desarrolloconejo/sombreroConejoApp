@@ -171,6 +171,18 @@ export const USUARIOS: UsuarioSemilla[] = [
     perfil: { tipo: "trabajador", rol: "trabajador", cargo: "cuentas" },
   },
   /*
+   * Quien opera finanzas sin ser administrador: el cargo de administracion
+   * ve presupuestos y proformas, y nada mas del trabajo de la agencia.
+   */
+  {
+    nombre: "Ana",
+    apellido: "Rivas",
+    email: "finanzas@conejo.test",
+    password: "Trabajador123*",
+    telefono: null,
+    perfil: { tipo: "trabajador", rol: "trabajador", cargo: "administracion" },
+  },
+  /*
    * La cuenta que las pruebas desactivan y reactivan. No puede tener trabajo
    * asignado: con tareas abiertas no se deja desactivar a nadie.
    */
