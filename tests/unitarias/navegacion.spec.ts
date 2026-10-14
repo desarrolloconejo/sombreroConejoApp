@@ -12,6 +12,7 @@ import { modulosDe, porSecciones } from "@/lib/navegacion";
 const ADMIN = { rol: "admin", cargo: "direccion" } as const;
 const REDES = { rol: "trabajador", cargo: "redes" } as const;
 const DISENO = { rol: "trabajador", cargo: "diseno" } as const;
+const ADMINISTRACION = { rol: "trabajador", cargo: "administracion" } as const;
 const CUENTAS = { rol: "trabajador", cargo: "cuentas" } as const;
 const CLIENTE = { rol: "cliente", cargo: null } as const;
 
@@ -26,7 +27,7 @@ function menuDe(quien: Parameters<typeof modulosDe>[0]) {
 test("el administrador ve todas las secciones que tienen algo, en su orden", () => {
   expect(menuDe(ADMIN)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
-    { seccion: "Trabajo", modulos: ["Tablero", "Proyectos"] },
+    { seccion: "Trabajo", modulos: ["Tablero", "Proyectos", "Mi trabajo"] },
     { seccion: "Herramientas", modulos: ["Hooks"] },
     {
       seccion: "Sistema",
@@ -39,6 +40,7 @@ test("el administrador ve todas las secciones que tienen algo, en su orden", () 
 test("redes ve Herramientas y no ve Sistema", () => {
   expect(menuDe(REDES)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
+    { seccion: "Trabajo", modulos: ["Mi trabajo"] },
     { seccion: "Herramientas", modulos: ["Hooks"] },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
@@ -47,13 +49,22 @@ test("redes ve Herramientas y no ve Sistema", () => {
 test("un ejecutivo de cuentas ve Tablero y Proyectos en Trabajo, y no ve Hooks", () => {
   expect(menuDe(CUENTAS)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
-    { seccion: "Trabajo", modulos: ["Tablero", "Proyectos"] },
+    { seccion: "Trabajo", modulos: ["Tablero", "Proyectos", "Mi trabajo"] },
+    { seccion: null, modulos: ["Mi perfil"] },
+  ]);
+});
+
+test("diseno ve Mi trabajo y nada mas de Trabajo", () => {
+  expect(menuDe(DISENO)).toEqual([
+    { seccion: "General", modulos: ["Inicio"] },
+    { seccion: "Trabajo", modulos: ["Mi trabajo"] },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
 });
 
 test("una seccion sin modulos visibles no deja su rotulo", () => {
-  const secciones = menuDe(DISENO).map((grupo) => grupo.seccion);
+  // Administracion no ve todavia nada de Trabajo ni de Finanzas.
+  const secciones = menuDe(ADMINISTRACION).map((grupo) => grupo.seccion);
 
   expect(secciones).toEqual(["General", null]);
 });
