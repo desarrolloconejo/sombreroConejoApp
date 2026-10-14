@@ -3,3 +3,5 @@ export { CabeceraPieza } from "./CabeceraPieza";
 export { FasesPieza } from "./FasesPieza";
 export { ComentariosPieza, CopyPieza } from "./ContenidoPieza";
 export { CancelarPieza, EditarPieza } from "./FormulariosPieza";
+export { RevisionesPieza } from "./RevisionesPieza";
+export { VersionesPieza } from "./VersionesPieza";
