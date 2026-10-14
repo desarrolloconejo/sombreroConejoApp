@@ -212,6 +212,8 @@ En la aplicacion publicada, con la cuenta de administrador.
       fase: la bateria pasa al 20 %.
 - [ ] El Tablero (en Trabajo) muestra el proyecto de prueba, y al pulsar una
       alerta filtra la tabla.
+- [ ] Asignar una tarea a otra persona: le llega la notificacion, y en Mi
+      trabajo la ve y la puede marcar.
 - [ ] Cancelar el proyecto de prueba desde «Estado»: sale del Tablero.
 - [ ] Con una cuenta de otro cargo, `/dashboard/proyectos` devuelve al inicio.
 
@@ -302,6 +304,8 @@ anterior lo ignora.
 - No se puede desactivar a alguien con tareas abiertas, proyectos a su cargo o
   empresas asignadas: el mensaje dice cuantas tiene, y hay que reasignarlas
   antes.
+- **Mi trabajo** aparece para todo el equipo salvo administracion: las tareas
+  de cada uno, de todos los proyectos.
 - **Tablero** y **Proyectos** aparecen en la seccion Trabajo para el administrador y los
   ejecutivos de cuentas. Cada pieza recorre cinco fases; el ejecutivo las
   completa, y quien tiene una tarea la marca como lista y recibe una
