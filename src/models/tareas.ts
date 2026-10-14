@@ -71,6 +71,30 @@ export async function asignadasA(
   );
 }
 
+/**
+ * Cuantas tareas pendientes tiene una persona en trabajo vivo: piezas activas
+ * de proyectos activos o pausados.
+ */
+export async function contarAbiertasDe(
+  usuarioId: number,
+  ejecutor: Ejecutor,
+): Promise<number> {
+  const fila = await consultarUno<{ total: number }>(
+    `SELECT count(*)::int AS total
+     FROM portal.tareas t
+     JOIN portal.piezas p     ON p.id = t.pieza_id
+     JOIN portal.proyectos pr ON pr.id = p.proyecto_id
+     WHERE t.responsable_id = $1
+       AND t.estado = 'pendiente'
+       AND p.estado = 'activa'
+       AND pr.estado IN ('activo', 'pausado')`,
+    [usuarioId],
+    ejecutor,
+  );
+
+  return fila?.total ?? 0;
+}
+
 /** Una tarea, con la pieza y la empresa a la que pertenece. */
 export async function buscarPorId(
   id: number,

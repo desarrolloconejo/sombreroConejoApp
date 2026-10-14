@@ -4,7 +4,8 @@ import type { ReactNode } from "react";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
 import { BotonEnlace, Estado, Etiqueta } from "@/components/ui";
 import { ENLACES_EMPRESA } from "@/lib/validaciones";
-import type { Empresa, EstadoFicha } from "@/types";
+import type { Asignacion, Empresa, EstadoFicha, PersonaBreve } from "@/types";
+import { EjecutivosEmpresa } from "./EjecutivosEmpresa";
 
 /**
  * La ficha de una empresa en modo lectura, dentro del panel lateral.
@@ -51,11 +52,17 @@ export function DetalleEmpresa({
   empresa,
   contactos,
   piezas,
+  asignados,
+  candidatos,
   hrefEditar,
   hrefContactos,
   hrefCerrar,
 }: {
   empresa: Empresa;
+  /** Los ejecutivos que la atienden. */
+  asignados: Asignacion[];
+  /** Los ejecutivos de cuentas que se le pueden asignar. */
+  candidatos: PersonaBreve[];
   /** Personas de contacto activas de esta cuenta. */
   contactos: number;
   /** Sus piezas, repartidas por estado. */
@@ -127,6 +134,15 @@ export function DetalleEmpresa({
             <Texto valor={empresa.direccion} />
           </Dato>
         </dl>
+
+        <SeparadorPanel>Quien la atiende</SeparadorPanel>
+
+        <EjecutivosEmpresa
+          empresaId={empresa.id}
+          activa={empresa.activo}
+          asignados={asignados}
+          candidatos={candidatos}
+        />
 
         <SeparadorPanel>Donde publica</SeparadorPanel>
 

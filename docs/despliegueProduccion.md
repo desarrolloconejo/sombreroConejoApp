@@ -281,6 +281,16 @@ anterior lo ignora.
   cuando le restablecen la contrasena. Se actualiza al cargar una pagina, no
   en tiempo real.
 
+### Etapa 3
+
+- En la ficha de cada empresa aparece «Quien la atiende»: ahi el
+  administrador asigna los ejecutivos de cuentas. **Un ejecutivo solo ve los
+  proyectos de las empresas que tiene asignadas**, y recibe una notificacion
+  al asignarle una.
+- No se puede desactivar a alguien con tareas abiertas, proyectos a su cargo o
+  empresas asignadas: el mensaje dice cuantas tiene, y hay que reasignarlas
+  antes.
+
 ### Verificacion en dos pasos
 
 - **A todos se les pedira configurarla la primera vez que entren.** Usa una

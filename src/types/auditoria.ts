@@ -26,6 +26,8 @@ export type AccionAuditoria =
   | "empresa.editada"
   | "empresa.activada"
   | "empresa.desactivada"
+  | "empresa.ejecutivo_asignado"
+  | "empresa.ejecutivo_quitado"
   | "correo.entregado_a_mano"
   | "correo.reintentado"
   | "tasa.registrada"
@@ -53,6 +55,8 @@ export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
   "empresa.editada": "Empresa editada",
   "empresa.activada": "Empresa reactivada",
   "empresa.desactivada": "Empresa desactivada",
+  "empresa.ejecutivo_asignado": "Ejecutivo asignado a la empresa",
+  "empresa.ejecutivo_quitado": "Ejecutivo retirado de la empresa",
   "correo.entregado_a_mano": "Correo entregado a mano",
   "correo.reintentado": "Reintento de envio de un correo",
   "tasa.registrada": "Tasa de cambio registrada",
