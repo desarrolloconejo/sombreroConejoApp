@@ -157,6 +157,18 @@ export const USUARIOS: UsuarioSemilla[] = [
     telefono: "+58 412 555 0105",
     perfil: { tipo: "trabajador", rol: "trabajador", cargo: "cuentas" },
   },
+  /*
+   * La cuenta que las pruebas desactivan y reactivan. No puede tener trabajo
+   * asignado: con tareas abiertas no se deja desactivar a nadie.
+   */
+  {
+    nombre: "Sin",
+    apellido: "Tareas",
+    email: "sintareas@conejo.test",
+    password: "Trabajador123*",
+    telefono: null,
+    perfil: { tipo: "trabajador", rol: "trabajador", cargo: "diseno" },
+  },
 ];
 
 /** El ejecutivo al que el seed asigna la empresa de ejemplo. */
