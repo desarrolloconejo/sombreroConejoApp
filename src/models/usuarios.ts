@@ -59,7 +59,8 @@ const COLUMNAS_COMPLETO = `
   fecha_ingreso  AS "fechaIngreso",
   empresa_id     AS "empresaId",
   empresa_nombre AS "empresaNombre",
-  empresa_activa AS "empresaActiva"
+  empresa_activa AS "empresaActiva",
+  puede_aprobar  AS "puedeAprobar"
 `;
 
 /** Columnas por las que se permite ordenar, y su nombre real en la base. */

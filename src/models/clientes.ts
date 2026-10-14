@@ -78,3 +78,35 @@ export async function actualizar(
 
   return afectadas === 1;
 }
+
+/**
+ * Quien puede decidir en la fase 5 por una empresa: sus personas activas con
+ * el permiso de aprobar. Son a quienes se avisa de que una pieza les espera.
+ */
+export async function aprobadoresDe(empresaId: number, ejecutor?: Ejecutor): Promise<number[]> {
+  const filas = await consultar<{ id: number }>(
+    `SELECT u.id
+     FROM clientes c
+     JOIN usuarios u ON u.id = c.usuario_id
+     WHERE c.empresa_id = $1 AND c.puede_aprobar AND u.activo`,
+    [empresaId],
+    ejecutor,
+  );
+
+  return filas.map((fila) => fila.id);
+}
+
+/** Concede o retira el permiso de aprobar. */
+export async function cambiarPermisoDeAprobar(
+  usuarioId: number,
+  puedeAprobar: boolean,
+  ejecutor?: Ejecutor,
+): Promise<boolean> {
+  const afectadas = await ejecutar(
+    "UPDATE clientes SET puede_aprobar = $2 WHERE usuario_id = $1",
+    [usuarioId, puedeAprobar],
+    ejecutor,
+  );
+
+  return afectadas === 1;
+}

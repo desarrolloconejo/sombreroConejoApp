@@ -114,6 +114,7 @@ export {
   NOMBRES_DE_TIPO_PIEZA,
   NOMBRES_DE_ESTADO_FASE,
   NOMBRES_DE_ALERTA,
+  NOMBRES_DE_CORRECCION,
 } from "./portal";
 export type {
   TipoProyecto,
@@ -142,6 +143,11 @@ export type {
   DatosNuevaTarea,
   DatosNuevoProyecto,
   FiltrosProyectos,
+  OrigenVersion,
+  DecisionRevision,
+  Version,
+  NuevaVersion,
+  Revision,
 } from "./portal";
 
 export type {
