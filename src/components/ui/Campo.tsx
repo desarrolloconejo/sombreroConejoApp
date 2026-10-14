@@ -17,6 +17,10 @@ const CONTROL =
   "disabled:opacity-60 disabled:cursor-not-allowed " +
   "aria-[invalid=true]:border-blackberry aria-[invalid=true]:shadow-[0_0_0_3px_rgb(96_34_73_/_0.14)]";
 
+// Para controles que no son un Campo entero (una fila con varios), con el
+// mismo aspecto.
+export const CLASE_CONTROL = CONTROL;
+
 export function Campo({
   id,
   etiqueta,
