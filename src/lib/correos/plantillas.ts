@@ -74,6 +74,36 @@ export function correoDeClaveRestablecida(persona: Destinatario): NuevoCorreo {
 }
 
 /**
+ * El aviso a quien ve las finanzas de una empresa: tiene un presupuesto para
+ * aprobar.
+ *
+ * Dice cual y hasta cuando vale, sin importes: el detalle se ve dentro, con
+ * su sesion. Un correo reenviado no deberia llevar lo que cuesta un trabajo.
+ */
+export function correoDePresupuestoEnviado(
+  persona: Destinatario,
+  presupuesto: { numero: string; titulo: string; validoHasta: string },
+): NuevoCorreo {
+  const acceso = direccionDeAcceso();
+
+  return {
+    para: persona.email,
+    paraUsuarioId: persona.id,
+    empresaId: persona.empresaId,
+    tipo: "presupuesto_enviado",
+    asunto: `Tienes un presupuesto para aprobar: ${presupuesto.titulo}`,
+    cuerpo:
+      `Hola, ${persona.nombre}:\n\n` +
+      `Te enviamos el presupuesto ${presupuesto.numero}, «${presupuesto.titulo}». ` +
+      `Vale hasta el ${presupuesto.validoHasta}.\n\n` +
+      "Puedes verlo y aprobarlo o rechazarlo desde Administracion" +
+      (acceso ? `, entrando aqui: ${acceso}` : "") +
+      ".\n" +
+      despedida(),
+  };
+}
+
+/**
  * El aviso a quien aprueba por una empresa: una pieza espera su revision.
  *
  * Solo dice cual y donde verla. No lleva la pieza ni enlaces a sus archivos:

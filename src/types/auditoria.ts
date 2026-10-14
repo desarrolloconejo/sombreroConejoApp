@@ -52,7 +52,17 @@ export type AccionAuditoria =
   | "version.enviada"
   | "pieza.aprobada"
   | "pieza.correccion_pedida"
-  | "pieza.ruta_ajustada";
+  | "pieza.ruta_ajustada"
+  | "presupuesto.creado"
+  | "presupuesto.editado"
+  | "presupuesto.enviado"
+  | "presupuesto.aprobado"
+  | "presupuesto.rechazado"
+  | "proforma.creada"
+  | "proforma.editada"
+  | "proforma.emitida"
+  | "proforma.anulada"
+  | "proforma.recurrencia_cambiada";
 
 /** Como se lee cada accion en pantalla. */
 export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
@@ -103,6 +113,16 @@ export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
   "pieza.aprobada": "Pieza aprobada por el cliente",
   "pieza.correccion_pedida": "El cliente pidio una correccion",
   "pieza.ruta_ajustada": "Ruta de una correccion ajustada",
+  "presupuesto.creado": "Presupuesto creado",
+  "presupuesto.editado": "Presupuesto editado",
+  "presupuesto.enviado": "Presupuesto enviado al cliente",
+  "presupuesto.aprobado": "Presupuesto aprobado",
+  "presupuesto.rechazado": "Presupuesto rechazado",
+  "proforma.creada": "Proforma creada",
+  "proforma.editada": "Proforma editada",
+  "proforma.emitida": "Proforma emitida",
+  "proforma.anulada": "Proforma anulada",
+  "proforma.recurrencia_cambiada": "Recurrencia de una proforma cambiada",
 };
 
 /**
@@ -120,6 +140,8 @@ export const MODULOS_DE_AUDITORIA = {
   fase: "Fases",
   tarea: "Tareas",
   version: "Versiones",
+  presupuesto: "Presupuestos",
+  proforma: "Proformas",
 } as const;
 
 export type ModuloAuditoria = keyof typeof MODULOS_DE_AUDITORIA;

@@ -21,7 +21,10 @@ export type TipoNotificacion =
   | "pieza.en_revision"
   | "pieza.aprobada"
   | "pieza.correccion"
-  | "tasa.rechazada";
+  | "tasa.rechazada"
+  | "presupuesto.enviado"
+  | "presupuesto.resuelto"
+  | "proforma.emitida";
 
 /** Lo que hay que saber para notificar. Los destinatarios van aparte. */
 export type NuevaNotificacion = {
