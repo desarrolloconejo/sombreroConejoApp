@@ -13,11 +13,16 @@
 import { conSesion, consultar, consultarUno, obtenerPool, transaccion } from "@/lib/db";
 import * as asignaciones from "@/models/asignaciones";
 import * as comentarios from "@/models/comentariosPieza";
+import { importesDe } from "@/lib/finanzas/calculo";
 import * as piezas from "@/models/piezas";
+import * as presupuestos from "@/models/presupuestos";
+import * as proformas from "@/models/proformas";
 import * as proyectos from "@/models/proyectos";
+import * as renglones from "@/models/renglones";
 import * as revisiones from "@/models/revisiones";
 import * as tareas from "@/models/tareas";
 import * as versiones from "@/models/versiones";
+import type { RenglonNuevo } from "@/types";
 
 let pasan = 0;
 const fallan: string[] = [];
@@ -515,6 +520,7 @@ async function principal(): Promise<void> {
 
   await probarProyectos();
   await probarRevision();
+  await probarFinanzas();
 
   console.log(`\n${pasan}/${pasan + fallan.length} comprobaciones correctas`);
   if (fallan.length > 0) {
@@ -1045,6 +1051,345 @@ async function probarRevision(): Promise<void> {
     String(r.rondaDosVe),
   );
   comprobar("Aprobar completa la fase 5", r.aprobada === true, String(r.aprobada));
+}
+
+/**
+ * Presupuestos y proformas (etapa 5): quien ve que, lo que el cliente no puede
+ * tocar, lo que queda congelado y que la base calcula lo mismo que la vista
+ * previa del editor.
+ */
+async function probarFinanzas(): Promise<void> {
+  const fila = async (email: string) => {
+    const persona = await consultarUno<{ id: number; empresaId: number | null }>(
+      `SELECT id, empresa_id AS "empresaId" FROM vw_usuarios_completos
+       WHERE lower(email) = lower($1)`,
+      [email],
+    );
+    if (!persona) throw new Error(`Falta ${email}: ejecuta npm run seed`);
+    return persona;
+  };
+
+  const admin = await fila("juanvivas043@gmail.com");
+  const operador = await fila("finanzas@conejo.test");
+  const cuentas = await fila("cuentas@conejo.test");
+  const cliente = await fila("cliente@empresa.test");
+  const empresaA = cliente.empresaId as number;
+
+  const r: Record<string, unknown> = {};
+
+  // Los casos con los que se compara la base con la vista previa.
+  const CASOS: RenglonNuevo[][] = [
+    [{ descripcion: "a", cantidad: "1", precioUnitario: "100", exento: false }],
+    [
+      { descripcion: "a", cantidad: "3", precioUnitario: "33.33", exento: false },
+      { descripcion: "b", cantidad: "2.5", precioUnitario: "19.99", exento: true },
+    ],
+    [
+      { descripcion: "a", cantidad: "1.005", precioUnitario: "1", exento: false },
+      { descripcion: "b", cantidad: "0.333", precioUnitario: "0.10", exento: false },
+      { descripcion: "c", cantidad: "0.125", precioUnitario: "0.20", exento: false },
+    ],
+    [
+      { descripcion: "a", cantidad: "1", precioUnitario: "0.03", exento: false },
+      { descripcion: "b", cantidad: "1", precioUnitario: "0.03", exento: false },
+      { descripcion: "c", cantidad: "1", precioUnitario: "0.03", exento: false },
+    ],
+    [{ descripcion: "a", cantidad: "999.999", precioUnitario: "12345.67", exento: false }],
+  ];
+
+  try {
+    await transaccion(async (tx) => {
+      const como = (id: number, rol: string, cargo = "", empresa: number | null = null) =>
+        tx.query(
+          `SELECT set_config('app.usuario_id', $1, true), set_config('app.rol', $2, true),
+                  set_config('app.cargo', $3, true), set_config('app.empresa_id', $4, true)`,
+          [String(id), rol, cargo, empresa === null ? "" : String(empresa)],
+        );
+      const intentarDentro = async (accion: () => Promise<unknown>) => {
+        await tx.query("SAVEPOINT intento");
+        try {
+          await accion();
+          await tx.query("RELEASE SAVEPOINT intento");
+          return null;
+        } catch (error) {
+          await tx.query("ROLLBACK TO SAVEPOINT intento");
+          return (error as { code?: string }).code ?? "desconocido";
+        }
+      };
+      const comoAdmin = () => como(admin.id, "admin", "direccion");
+      const comoOperador = () => como(operador.id, "trabajador", "administracion");
+      const comoCliente = (empresa = empresaA) => como(cliente.id, "cliente", "", empresa);
+      const cuantos = async () =>
+        Number(
+          (await tx.query<{ n: string }>("SELECT count(*)::text AS n FROM finanzas.presupuestos")).rows[0]
+            .n,
+        );
+      const datos = (titulo: string) => ({
+        empresaId: empresaA,
+        proyectoId: null,
+        titulo,
+        validoHasta: "2099-12-31",
+        notas: null,
+      });
+
+      // ---- La base calcula lo mismo que la vista previa.
+      await comoOperador();
+      const coincidencias: string[] = [];
+      for (const [i, caso] of CASOS.entries()) {
+        const id = await presupuestos.crear(datos(`Calculo ${i}`), operador.id, tx);
+        await renglones.guardar("presupuesto", id, caso, tx);
+        const guardado = await presupuestos.buscarPorId(id, tx);
+        const previo = importesDe(caso);
+        const igual =
+          guardado?.baseImponible === previo.baseImponible &&
+          guardado.montoExento === previo.montoExento &&
+          guardado.ivaMonto === previo.ivaMonto &&
+          guardado.total === previo.total;
+        coincidencias.push(igual ? "si" : `NO (${guardado?.total} vs ${previo.total})`);
+      }
+      r.calculo = coincidencias.join(", ");
+
+      // ---- Numeracion consecutiva.
+      const uno = await presupuestos.crear(datos("Numero 1"), operador.id, tx);
+      const dos = await presupuestos.crear(datos("Numero 2"), operador.id, tx);
+      const n1 = (await presupuestos.buscarPorId(uno, tx))?.numero ?? 0;
+      const n2 = (await presupuestos.buscarPorId(dos, tx))?.numero ?? 0;
+      r.consecutivos = n2 === n1 + 1;
+      r.leeSecuencias = await intentarDentro(() => tx.query("SELECT * FROM finanzas.secuencias"));
+
+      // ---- Un borrador con renglones, que se envia.
+      const enviado = await presupuestos.crear(datos("Para el cliente"), operador.id, tx);
+      await renglones.guardar("presupuesto", enviado, CASOS[0], tx);
+      const borrador = await presupuestos.crear(datos("Sigue en borrador"), operador.id, tx);
+      await renglones.guardar("presupuesto", borrador, CASOS[0], tx);
+      r.enviaSinRenglones = await presupuestos.enviar(dos, operador.id, tx);
+      r.envia = await presupuestos.enviar(enviado, operador.id, tx);
+
+      // Fuera de borrador nada cambia de importes ni de renglones.
+      r.renglonesTrasEnviar = await intentarDentro(() =>
+        renglones.guardar("presupuesto", enviado, CASOS[1], tx),
+      );
+      r.totalTrasEnviar = await intentarDentro(() =>
+        tx.query("UPDATE finanzas.presupuestos SET total = total + 1 WHERE id = $1", [enviado]),
+      );
+      r.vuelveABorrador = await intentarDentro(() =>
+        tx.query(
+          "UPDATE finanzas.presupuestos SET estado = 'borrador', enviado_en = NULL, enviado_por = NULL WHERE id = $1",
+          [enviado],
+        ),
+      );
+
+      // Nada se borra, y los renglones solo se escriben por su funcion.
+      r.borra = await intentarDentro(() =>
+        tx.query("DELETE FROM finanzas.presupuestos WHERE id = $1", [borrador]),
+      );
+      r.escribeRenglon = await intentarDentro(() =>
+        tx.query(
+          `INSERT INTO finanzas.documento_items
+             (presupuesto_id, orden, descripcion, cantidad, precio_unitario, subtotal)
+           VALUES ($1, 9, 'x', 1, 1, 1)`,
+          [borrador],
+        ),
+      );
+
+      // ---- Quien ve que.
+      await comoCliente();
+      const conPermiso = await presupuestos.porAprobar(tx);
+      r.clienteVe = conPermiso.map((p) => p.titulo).includes("Para el cliente");
+      r.clienteVeBorrador = (await presupuestos.buscarPorId(borrador, tx)) !== null;
+      r.clienteLeeRenglones = (await renglones.deDocumento("presupuesto", enviado, tx)).length;
+      r.clienteRenglonesBorrador = (await renglones.deDocumento("presupuesto", borrador, tx)).length;
+
+      await comoCliente(empresaA + 100000);
+      r.otraEmpresaVe = await cuantos();
+
+      await como(cuentas.id, "trabajador", "cuentas");
+      r.ejecutivoVe = await cuantos();
+
+      await comoAdmin();
+      await tx.query("UPDATE clientes SET puede_ver_finanzas = false WHERE usuario_id = $1", [cliente.id]);
+      await comoCliente();
+      r.sinPermisoVe = await cuantos();
+      r.sinPermisoResuelve = await intentarDentro(() =>
+        presupuestos.resolverComoCliente(enviado, true, null, tx),
+      );
+      await comoAdmin();
+      await tx.query("UPDATE clientes SET puede_ver_finanzas = true WHERE usuario_id = $1", [cliente.id]);
+
+      // ---- El cliente no escribe: ni montos, ni presupuestos nuevos.
+      await comoCliente();
+      r.clienteCambiaMontos = (
+        await tx.query("UPDATE finanzas.presupuestos SET total = 1 WHERE id = $1", [enviado])
+      ).rowCount;
+      r.clienteCrea = await intentarDentro(() =>
+        presupuestos.crear(datos("Del cliente"), cliente.id, tx),
+      );
+
+      // Rechazar exige motivo; aprobar, una sola vez.
+      r.rechazaSinMotivo = await intentarDentro(() =>
+        presupuestos.resolverComoCliente(enviado, false, "  ", tx),
+      );
+      r.aprueba = await intentarDentro(() => presupuestos.resolverComoCliente(enviado, true, null, tx));
+      r.apruebaDosVeces = await intentarDentro(() =>
+        presupuestos.resolverComoCliente(enviado, true, null, tx),
+      );
+
+      // Un enviado vencido ya no se resuelve.
+      await comoOperador();
+      const vencido = await presupuestos.crear(datos("Vencido"), operador.id, tx);
+      await renglones.guardar("presupuesto", vencido, CASOS[0], tx);
+      await presupuestos.enviar(vencido, operador.id, tx);
+      await tx.query(
+        "UPDATE finanzas.presupuestos SET valido_hasta = finanzas.hoy() - 1 WHERE id = $1",
+        [vencido],
+      );
+      await comoCliente();
+      r.apruebaVencido = await intentarDentro(() =>
+        presupuestos.resolverComoCliente(vencido, true, null, tx),
+      );
+
+      // ---- La proforma: una sola por presupuesto aprobado.
+      await comoOperador();
+      r.proformaDeBorrador = await intentarDentro(() => proformas.desde("presupuesto", borrador, tx));
+      const proforma = await proformas.desde("presupuesto", enviado, tx);
+      const copia = await proformas.buscarPorId(proforma, tx);
+      r.proformaCopiaImportes = copia?.total === (await presupuestos.buscarPorId(enviado, tx))?.total;
+      r.proformaDoble = await intentarDentro(() => proformas.desde("presupuesto", enviado, tx));
+
+      // Sus proyectos, solo de su empresa. Quien opera finanzas los ve para
+      // poder ligarlos, aunque no gestione ninguna empresa.
+      await comoAdmin();
+      const otraEmpresa = (
+        await tx.query<{ id: number }>(
+          "INSERT INTO empresas (nombre) VALUES ($1) RETURNING id",
+          ["Permisos finanzas"],
+        )
+      ).rows[0].id;
+      const ajeno = await proyectos.crear(
+        {
+          empresaId: otraEmpresa,
+          ejecutivoId: admin.id,
+          servicio: "redes_sociales",
+          tipo: "redes_sociales",
+          nombre: "Ajeno",
+        },
+        admin.id,
+        tx,
+      );
+      await comoOperador();
+      const propios = await proformas.proyectosLigables(empresaA, tx);
+      r.operadorVeProyectos = propios.length;
+      r.ligaAjeno = await intentarDentro(() => proformas.ligarProyectos(proforma, [ajeno], tx));
+      if (propios.length > 0) await proformas.ligarProyectos(proforma, [propios[0].id], tx);
+      r.ligados = (await proformas.proyectosDe(proforma, tx)).length;
+
+      // El cliente no ve la proforma en borrador; emitida, si.
+      await comoCliente();
+      r.clienteVeProformaBorrador = (await proformas.buscarPorId(proforma, tx)) !== null;
+      await comoOperador();
+      r.emite = await proformas.emitir(proforma, operador.id, tx);
+      await comoCliente();
+      r.clienteVeProformaEmitida = (await proformas.buscarPorId(proforma, tx)) !== null;
+
+      // Recurrente: preparar la siguiente copia y adelanta un mes.
+      await comoOperador();
+      await proformas.cambiarRecurrencia(proforma, true, "2026-01-15", tx);
+      const siguiente = await proformas.desde("recurrente", proforma, tx);
+      const tras = await proformas.buscarPorId(proforma, tx);
+      const nueva = await proformas.buscarPorId(siguiente, tx);
+      r.recurrente =
+        tras?.proximaEmision === "2026-02-15" &&
+        nueva?.estado === "borrador" &&
+        nueva.origenId === proforma &&
+        nueva.total === copia?.total;
+
+      // Anular exige motivo; una anulada no vuelve.
+      r.anulaSinMotivo = await intentarDentro(() => proformas.anular(siguiente, " ", operador.id, tx));
+      r.anula = await proformas.anular(siguiente, "Duplicada", operador.id, tx);
+      r.reactiva = await intentarDentro(() =>
+        tx.query("UPDATE finanzas.proformas SET estado = 'emitida' WHERE id = $1", [siguiente]),
+      );
+
+      throw new Deshacer();
+    });
+  } catch (error) {
+    if (!(error instanceof Deshacer)) throw error;
+  }
+
+  console.log("\nFinanzas: presupuestos y proformas\n");
+
+  comprobar("La base calcula lo mismo que la vista previa", !String(r.calculo).includes("NO"), String(r.calculo));
+  comprobar("Los numeros son consecutivos", r.consecutivos === true, String(r.consecutivos));
+  comprobar("Nadie lee los contadores directamente", r.leeSecuencias === DENEGADO, String(r.leeSecuencias));
+  comprobar(
+    "No se envia un presupuesto sin renglones",
+    r.enviaSinRenglones === false && r.envia === true,
+    `sin renglones: ${r.enviaSinRenglones}; con renglones: ${r.envia}`,
+  );
+  comprobar(
+    "Enviado, no cambian sus renglones ni sus importes",
+    r.renglonesTrasEnviar === "23514" && r.totalTrasEnviar === "23514",
+    `renglones: ${r.renglonesTrasEnviar}; total: ${r.totalTrasEnviar}`,
+  );
+  comprobar("Un enviado no vuelve a borrador", r.vuelveABorrador === "23514", String(r.vuelveABorrador));
+  comprobar(
+    "La aplicacion no borra presupuestos ni escribe renglones por su cuenta",
+    r.borra === DENEGADO && r.escribeRenglon === DENEGADO,
+    `DELETE: ${r.borra}; INSERT renglon: ${r.escribeRenglon}`,
+  );
+  comprobar(
+    "El cliente con permiso ve lo enviado de su empresa y sus renglones",
+    r.clienteVe === true && Number(r.clienteLeeRenglones) > 0,
+    `ve: ${r.clienteVe}; renglones: ${r.clienteLeeRenglones}`,
+  );
+  comprobar(
+    "El cliente no ve borradores ni sus renglones",
+    r.clienteVeBorrador === false && r.clienteRenglonesBorrador === 0,
+    `borrador: ${r.clienteVeBorrador}; renglones: ${r.clienteRenglonesBorrador}`,
+  );
+  comprobar("Un cliente de otra empresa no ve nada", r.otraEmpresaVe === 0, `${r.otraEmpresaVe}`);
+  comprobar("Un ejecutivo de cuentas no ve finanzas", r.ejecutivoVe === 0, `${r.ejecutivoVe}`);
+  comprobar(
+    "Sin el permiso de finanzas, el cliente no ve ni decide",
+    r.sinPermisoVe === 0 && r.sinPermisoResuelve === DENEGADO,
+    `ve ${r.sinPermisoVe}; decide: ${r.sinPermisoResuelve}`,
+  );
+  comprobar(
+    "El cliente no cambia montos ni crea presupuestos",
+    r.clienteCambiaMontos === 0 && r.clienteCrea === DENEGADO,
+    `UPDATE: ${r.clienteCambiaMontos} filas; INSERT: ${r.clienteCrea}`,
+  );
+  comprobar(
+    "Rechazar exige motivo; aprobar va una sola vez",
+    r.rechazaSinMotivo === "23514" && r.aprueba === null && r.apruebaDosVeces === "23514",
+    `sin motivo: ${r.rechazaSinMotivo}; aprueba: ${r.aprueba}; otra vez: ${r.apruebaDosVeces}`,
+  );
+  comprobar("Un presupuesto vencido ya no se aprueba", r.apruebaVencido === "23514", String(r.apruebaVencido));
+  comprobar(
+    "La proforma sale solo de un aprobado, una vez, con sus importes",
+    r.proformaDeBorrador === "23514" && r.proformaCopiaImportes === true && r.proformaDoble === "23505",
+    `de borrador: ${r.proformaDeBorrador}; importes: ${r.proformaCopiaImportes}; doble: ${r.proformaDoble}`,
+  );
+  comprobar(
+    "Una proforma solo se liga a proyectos de su empresa",
+    Number(r.operadorVeProyectos) > 0 && r.ligaAjeno === "23514" && r.ligados === 1,
+    `ve ${r.operadorVeProyectos} proyectos; ajeno: ${r.ligaAjeno}; ligados: ${r.ligados}`,
+  );
+  comprobar(
+    "El cliente ve la proforma emitida, no la de borrador",
+    r.clienteVeProformaBorrador === false && r.emite === true && r.clienteVeProformaEmitida === true,
+    `borrador: ${r.clienteVeProformaBorrador}; emitida: ${r.clienteVeProformaEmitida}`,
+  );
+  comprobar(
+    "La recurrente prepara su copia en borrador y adelanta un mes",
+    r.recurrente === true,
+    String(r.recurrente),
+  );
+  comprobar(
+    "Anular exige motivo y una anulada no se reactiva",
+    r.anulaSinMotivo === "23514" && r.anula === true && r.reactiva === "23514",
+    `sin motivo: ${r.anulaSinMotivo}; reactiva: ${r.reactiva}`,
+  );
 }
 
 principal()

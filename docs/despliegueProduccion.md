@@ -127,6 +127,16 @@ Necesita el esquema `portal` y las funciones de sesion del 07.
 El permiso de aprobar nace apagado para todos: tras publicar, el
 administrador lo marca en Usuarios a quien deba decidir por cada empresa.
 
+### Etapa 5 — Presupuestos y proformas
+
+| # | Archivo | Que hace | Resultado esperado |
+| --- | --- | --- | --- |
+| 14 | `db/neon/14-presupuestos-y-proformas.sql` | Permiso de finanzas de cada cliente, presupuestos, proformas, renglones, contadores de numeracion y sus funciones. Deja a quien opera finanzas leer los proyectos | `tablas = 5` y `con_seguridad_por_fila = 5`; `politicas = 8`, `funciones = 10` y `politica_proyectos = 1`; `clientes_con_finanzas = 0` |
+
+El permiso de finanzas nace apagado para todos: tras publicar, el
+administrador lo marca en Usuarios a quien deba ver los presupuestos de cada
+empresa. La numeracion empieza en 1 para presupuestos y proformas.
+
 No inserta datos. Tras publicar, el administrador asigna a cada ejecutivo
 (cargo `cuentas`) sus empresas desde Empresas: sin asignaciones, un ejecutivo
 no ve ningun proyecto.
@@ -442,7 +452,7 @@ resolver antes.
 | Dos pasos (de la etapa 8) | 10 | `TOTP_CLAVE` | — | Si |
 | 3. Proyectos, bateria y tareas | 11, 12 | — | — | Si |
 | 4. Vista del cliente y revision | 13 | `DRIVE_*`, `DRIVE_CARPETA_PIEZAS_ID` | — | Si |
-| 5. Presupuestos y proformas | — | — | — | Pendiente |
+| 5. Presupuestos y proformas | 14 | — | — | En curso |
 | 6. Briefs | — | — | — | Pendiente |
 | 7. Facturas, pagos y cobranza | — | — | — | Pendiente |
 | 8. Endurecimiento y piloto | — | — | — | Pendiente |
