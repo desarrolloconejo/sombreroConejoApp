@@ -452,7 +452,7 @@ resolver antes.
 | Dos pasos (de la etapa 8) | 10 | `TOTP_CLAVE` | — | Si |
 | 3. Proyectos, bateria y tareas | 11, 12 | — | — | Si |
 | 4. Vista del cliente y revision | 13 | `DRIVE_*`, `DRIVE_CARPETA_PIEZAS_ID` | — | Si |
-| 5. Presupuestos y proformas | 14 | — | — | En curso |
+| 5. Presupuestos y proformas | 14 | — | — | Si |
 | 6. Briefs | — | — | — | Pendiente |
 | 7. Facturas, pagos y cobranza | — | — | — | Pendiente |
 | 8. Endurecimiento y piloto | — | — | — | Pendiente |

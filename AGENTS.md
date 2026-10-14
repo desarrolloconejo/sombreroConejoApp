@@ -24,8 +24,9 @@ tildes en el codigo**.
 
 Hoy existen: login, inicio, Mi perfil, Usuarios, Empresas (con sus ejecutivos
 asignados), Auditoria, Bandeja de salida, Tablero, Proyectos (piezas,
-bateria de fases y tareas), Mi trabajo, y para los clientes Mis proyectos
-(revision en la fase 5) y el modulo de Hooks.
+bateria de fases y tareas), Mi trabajo, Presupuestos y Proformas (para el admin
+y administracion), para los clientes Mis proyectos (revision en la fase 5) y
+Administracion (sus presupuestos y proformas), y el modulo de Hooks.
 Esta en marcha la integracion de un portal completo (briefs, proyectos con
 bateria de fases y tareas, revision del cliente, finanzas). **Antes de
 construir nada de eso, lee `docs/planIntegracionPortal.md`**: es el plan
@@ -182,6 +183,15 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   `sistema`.
 - El dinero y las tasas viajan como **texto decimal** y se guardan en
   `NUMERIC`. No pasan por `number`.
+- Los importes de presupuestos y proformas **los calcula la base** al guardar
+  los renglones (`finanzas.guardar_renglones`). La aplicacion no escribe
+  totales ni renglones por su cuenta: no tiene permiso. La vista previa del
+  editor (`src/lib/finanzas/calculo.ts`) sigue las mismas reglas con enteros
+  escalados, y `prueba:permisos` compara las dos.
+- Finanzas lo opera `requerirFinanzas` (admin o cargo `administracion`). El
+  cliente entra con `requerirFinanzasDeEmpresa`, que exige su casilla
+  `puede_ver_finanzas`. Un modulo del menu que dependa de esa casilla declara
+  `permiso: "finanzas"`.
 - No se desactiva la verificacion TLS para ningun servicio. Si a un servidor
   le falta un certificado intermedio, se le entrega con la opcion `ca`.
 - Un servicio externo se llama solo a traves de su adaptador de

@@ -134,7 +134,10 @@ o Docker deja de responder. Se arregla con `docker compose restart app-dev`; si
 Docker entero se cuelga, reiniciando Docker Desktop. Conviene no lanzar a la
 vez el `typecheck`, la bateria de integracion y otros proyectos en Docker, y
 pasar la integracion con `--workers=1`. Con memoria de sobra (16 GB para
-Docker) aguanta `--workers=2`.
+Docker) aguanta `--workers=2`. El servidor de desarrollo crece con cada pantalla que
+compila (pasa de 6 GB tras la bateria completa): antes de pasarla entera
+conviene `docker compose restart app-dev`, y si una prueba larga falla por
+tiempo, repetirla sola tras reiniciarlo antes de buscar un error.
 
 **Si una page que existe responde 404** y los registros muestran
 `Unexpected end of JSON input` o `Manifest file is empty`, el servidor de
@@ -564,6 +567,30 @@ Un componente que lanza una action cuyo resultado lo hace desaparecer
 de esa action: lo guarda un componente que sigue en pantalla
 (`MovimientosDeFase`, `TareasFase`). Si no, la revalidacion lo desmonta y el
 aviso no llega a verse.
+
+### Presupuestos y proformas
+
+Los operan el administrador y el cargo `administracion`
+(`finanzas@conejo.test` en la semilla); el cliente con la casilla «Puede ver
+las finanzas» los ve en Administracion. El ciclo y sus reglas estan en la
+seccion 7 del plan.
+
+- **Los importes los calcula la base.** El editor manda los renglones como
+  texto y `finanzas.guardar_renglones` los sustituye y recalcula base, exento,
+  IVA y total. La vista previa del navegador usa las mismas reglas
+  (`src/lib/finanzas/calculo.ts`), sin `number`.
+- **Fuera de borrador nada cambia de importe.** Lo impiden disparadores en la
+  base, igual que volver a borrador o reactivar algo anulado o resuelto.
+- **El cliente no escribe**: aprueba o rechaza con
+  `finanzas.cliente_resuelve_presupuesto`, que no toca montos.
+- **La numeracion no tiene huecos**: `finanzas.siguiente_numero`, en la misma
+  transaccion que el documento.
+- **Nada se emite solo.** Una proforma recurrente aparece en la portada de
+  Proformas cuando le toca, y «Preparar la siguiente» deja la copia en
+  borrador.
+- Las fichas guardan el estado de las actions que las cambian en un proveedor
+  por encima del formulario (`ProveedorGuardado`, `ProveedorProforma`,
+  `ProveedorDecision`), por la misma razon que en la bateria.
 
 ## Pruebas
 

@@ -23,7 +23,8 @@ cuentas estan en `db/datos/semilla.mts`.
 | `cuentas@conejo.test` | Ejecutivo de cuentas: proyectos, tablero, revision del lado del equipo |
 | `diseno@conejo.test` | Disenador: Mi trabajo, tareas asignadas |
 | `redes@conejo.test` | Creadora de contenido: Hooks |
-| `cliente@empresa.test` | Cliente con permiso de aprobar |
+| `finanzas@conejo.test` | Administracion: presupuestos y proformas |
+| `cliente@empresa.test` | Cliente con permiso de aprobar piezas y de ver las finanzas |
 
 Las cuentas `admin@conejo.test`, `pruebas@`, `sintareas@`, `bloqueo@` y
 `dospasos@` son de las pruebas automaticas: no se usan a mano.
@@ -128,3 +129,58 @@ salida deben coincidir con la hora de Caracas, no ir cuatro horas por delante.
 | Ajustar la ruta (`ajustarRuta`) | Su regla tiene pruebas unitarias; el recorrido en pantalla, solo el paso 9 |
 | Aviso «Nadie de la empresa puede aprobar» en la ficha | Solo a mano: quitar el permiso al unico cliente y abrir una pieza como ejecutivo |
 | Drive real | Sin probar. Hay que ejecutar `npm run drive:probar` (crea tambien `ConejoApp/Piezas`) y subir una imagen con `ARCHIVOS_MODO=real` |
+
+---
+
+## Etapa 5 — Presupuestos y proformas
+
+La semilla deja un presupuesto por aprobar, uno aprobado con su proforma
+emitida, un borrador y una proforma recurrente a la que ya le toca la
+siguiente.
+
+**Administracion (como `finanzas@conejo.test`)**
+
+1. El menu muestra Finanzas (Presupuestos y Proformas) y nada de Trabajo.
+2. Presupuestos → «Nuevo presupuesto»: elegir la empresa, ponerle titulo. Se
+   abre su editor.
+3. Escribir dos renglones, uno exento, con cantidades decimales (2,5) y precios
+   con centimos. La vista previa suma sola; guardar y comprobar que los
+   importes del documento son los mismos.
+4. «Guardar y enviar al cliente». El presupuesto deja de ser editable. El
+   correo queda en la Bandeja de salida (como administrador) y no lleva
+   importes.
+5. En otro presupuesto enviado, «Registrar a nombre del cliente» → rechazarlo
+   sin motivo (debe pedirlo) y con motivo. La ficha dice que lo registraste tu.
+
+**Cliente (como `cliente@empresa.test`)**
+
+6. El inicio avisa de los presupuestos que esperan su aprobacion.
+7. Administracion → abrir uno → los renglones y el total se leen bien en el
+   telefono (390 px), sin desplazarse de lado.
+8. Rechazar pide el motivo; aprobar no. Tras decidir, los botones desaparecen.
+9. Un borrador no aparece, y su URL escrita a mano da «Esta pagina no existe».
+
+**De vuelta como administracion**
+
+10. La campana avisa de lo que decidio el cliente. En el aprobado, «Generar la
+    proforma» lleva a ella en borrador, con los renglones copiados.
+11. Ligarla a un proyecto, «Guardar y emitir». El cliente la ve en su
+    Administracion, con el proyecto.
+12. Marcarla «Se repite cada mes» con la fecha de hoy: aparece arriba en
+    Proformas. «Preparar la siguiente» crea la copia en borrador y deja de
+    pedirla (la fecha avanza un mes).
+13. Anular una proforma pide el motivo; anulada, no vuelve.
+
+**Permisos (como administrador)**
+
+14. En Usuarios, quitar «Puede ver las finanzas» al cliente: Administracion
+    desaparece de su menu y la URL lo devuelve al inicio. Volver a marcarlo.
+15. Como `cuentas@conejo.test` o `redes@conejo.test`, `/dashboard/presupuestos`
+    devuelve al inicio.
+
+### Sin hacer todavia
+
+| Que | Cuando |
+| --- | --- |
+| PDF de presupuestos y proformas | Etapa 7, con la libreria del PDF de la factura |
+| Correo al cliente cuando se emite una proforma | Solo campana por ahora; se decide con el correo real |
