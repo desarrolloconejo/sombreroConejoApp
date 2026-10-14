@@ -121,6 +121,14 @@ docker compose up -d --build -V  # reconstruir tras cambiar dependencias
 Tras anadir o quitar una dependencia hay que reconstruir con `-V`: los
 `node_modules` del contenedor viven en un volumen propio y no se enteran solos.
 
+**Si la maquina va justa de memoria** (Docker Desktop sobre WSL toma por
+defecto la mitad de la RAM), el servidor de desarrollo puede quedarse sin ella:
+los registros de `app-dev` muestran `ENOMEM` y la app cierra las conexiones,
+o Docker deja de responder. Se arregla con `docker compose restart app-dev`; si
+Docker entero se cuelga, reiniciando Docker Desktop. Conviene no lanzar a la
+vez el `typecheck`, la bateria de integracion y otros proyectos en Docker, y
+pasar la integracion con `--workers=1`.
+
 ## Estructura
 
 ```
@@ -517,6 +525,7 @@ tipo y el `CHECK` de la tabla.
 ### El modulo de Proyectos
 
 ```
+/dashboard/tablero                           las cuatro alertas y lo que esta en curso
 /dashboard/proyectos                         listado y alta
 /dashboard/proyectos/[id]                    resumen y matriz de piezas por fases
 /dashboard/proyectos/[id]/piezas/[piezaId]   fases, tareas, copy y comentarios

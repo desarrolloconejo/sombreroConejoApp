@@ -7,6 +7,7 @@ import {
   FolderKanban,
   History,
   House,
+  LayoutDashboard,
   Library,
   ScrollText,
   Send,
@@ -145,6 +146,21 @@ const MODULOS: readonly Modulo[] = [
     icono: House,
     alias: ["panel", "home", "principal"],
   },
+  /*
+   * El tablero es lo primero que abre un ejecutivo al empezar el dia: va
+   * delante de Proyectos.
+   */
+  {
+    titulo: "Tablero",
+    seccion: "trabajo",
+    subtitulo: "Lo que esta en curso y sus alertas",
+    href: "/dashboard/tablero",
+    icono: LayoutDashboard,
+    roles: ["admin", "trabajador"],
+    cargos: ["cuentas"],
+    alias: ["control", "alertas", "atrasados", "resumen", "panel de control"],
+  },
+
   /*
    * Proyectos lo ven el admin y los ejecutivos de cuentas: son quienes los
    * gestionan. Quien solo hace tareas llega a sus piezas desde Mi trabajo, no

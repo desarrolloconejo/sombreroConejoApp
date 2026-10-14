@@ -11,6 +11,7 @@ import type {
   EstadoProyecto,
   FiltrosProyectos,
   NombreEmpresa,
+  NumeroFase,
   Pagina,
   PersonaBreve,
   Proyecto,
@@ -214,6 +215,32 @@ export async function contarEnCursoDe(
   );
 
   return fila?.total ?? 0;
+}
+
+/**
+ * En que fase va cada proyecto: la mas atrasada de sus piezas activas sin
+ * aprobar, y cuantas piezas hay en ella. Es lo que dice el tablero en
+ * «Fase actual». Un proyecto con todo aprobado no aparece.
+ */
+export async function fasesMasAtrasadas(
+  ejecutor: Ejecutor,
+): Promise<Map<number, { fase: NumeroFase; piezas: number }>> {
+  const filas = await consultar<{ proyectoId: number; fase: NumeroFase; piezas: number }>(
+    `SELECT proyecto_id AS "proyectoId", fase, count(*)::int AS piezas
+     FROM (
+       SELECT proyecto_id,
+              fase_actual AS fase,
+              min(fase_actual) OVER (PARTITION BY proyecto_id) AS minima
+       FROM portal.v_progreso_pieza
+       WHERE estado = 'activa' AND fase_actual IS NOT NULL
+     ) actuales
+     WHERE fase = minima
+     GROUP BY proyecto_id, fase`,
+    [],
+    ejecutor,
+  );
+
+  return new Map(filas.map(({ proyectoId, ...resto }) => [proyectoId, resto]));
 }
 
 /** Un proyecto, si quien pregunta lo puede ver. */
