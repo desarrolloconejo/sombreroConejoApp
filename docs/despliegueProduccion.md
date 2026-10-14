@@ -122,7 +122,7 @@ Necesita el esquema `portal` y las funciones de sesion del 07.
 
 | # | Archivo | Que hace | Resultado esperado |
 | --- | --- | --- | --- |
-| 13 | `db/neon/13-revision-del-cliente.sql` | Permiso de aprobar, versiones, decisiones del cliente, almacen simulado de archivos y la funcion `portal.decidir_fase_5` | `tablas = 3` y `con_seguridad_por_fila = 2`; `politicas = 6` y `funciones = 2`; `nadie_aprueba_aun` igual a `clientes` |
+| 13 | `db/neon/13-revision-del-cliente.sql` | Permiso de aprobar, versiones, decisiones del cliente, almacen simulado de archivos y la funcion `portal.decidir_fase_5` | `tablas = 3` y `con_seguridad_por_fila = 2`; `politicas = 6` y `funciones = 3`; `nadie_aprueba_aun` igual a `clientes` |
 
 El permiso de aprobar nace apagado para todos: tras publicar, el
 administrador lo marca en Usuarios a quien deba decidir por cada empresa.
@@ -441,7 +441,7 @@ resolver antes.
 | 2. Externos y avisos | 07, 08, 09 | `APP_URL_PUBLICA`, `CRON_SECRET` | — | Si. El adaptador de archivos pasa a la etapa 4 |
 | Dos pasos (de la etapa 8) | 10 | `TOTP_CLAVE` | — | Si |
 | 3. Proyectos, bateria y tareas | 11, 12 | — | — | Si |
-| 4. Vista del cliente y revision | 13 | `DRIVE_*`, `DRIVE_CARPETA_PIEZAS_ID` | — | En curso (ver `docs/traspaso.md`) |
+| 4. Vista del cliente y revision | 13 | `DRIVE_*`, `DRIVE_CARPETA_PIEZAS_ID` | — | Si |
 | 5. Presupuestos y proformas | — | — | — | Pendiente |
 | 6. Briefs | — | — | — | Pendiente |
 | 7. Facturas, pagos y cobranza | — | — | — | Pendiente |

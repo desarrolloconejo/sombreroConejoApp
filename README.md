@@ -129,7 +129,14 @@ los registros de `app-dev` muestran `ENOMEM` y la app cierra las conexiones,
 o Docker deja de responder. Se arregla con `docker compose restart app-dev`; si
 Docker entero se cuelga, reiniciando Docker Desktop. Conviene no lanzar a la
 vez el `typecheck`, la bateria de integracion y otros proyectos en Docker, y
-pasar la integracion con `--workers=1`.
+pasar la integracion con `--workers=1`. Con memoria de sobra (16 GB para
+Docker) aguanta `--workers=2`.
+
+**Si una page que existe responde 404** y los registros muestran
+`Unexpected end of JSON input` o `Manifest file is empty`, el servidor de
+desarrollo tiene un manifiesto a medio escribir. Pasa si algo regenera `.next`
+mientras corre, por ejemplo `next typegen` dentro del contenedor. Se arregla
+con `docker compose restart app-dev`.
 
 ## Estructura
 
@@ -625,6 +632,7 @@ servidor propio. La base esta en **Neon**.
 | [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md) | Plan de la integracion del portal |
 | [docs/reglasBateria.md](docs/reglasBateria.md) | Reglas de proyectos, piezas, fases y tareas: avance, correcciones, alertas y quien ve que |
 | [docs/despliegueProduccion.md](docs/despliegueProduccion.md) | Guia del despliegue: SQL, variables y pasos, etapa a etapa |
+| [docs/verificacionManual.md](docs/verificacionManual.md) | Lo que hay que probar a mano antes de publicar, etapa por etapa |
 | [docs/planAuditoriaRepositorio.md](docs/planAuditoriaRepositorio.md) | Plan de revision y actualizacion del repositorio. Ejecutado |
 | [docs/informeAuditoria.md](docs/informeAuditoria.md) | Resultado de esa revision, hallazgo a hallazgo |
 | [docs/planMejoraDiseno.md](docs/planMejoraDiseno.md) | Plan de mejora del diseno |
