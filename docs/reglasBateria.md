@@ -80,7 +80,12 @@ Los dos ejemplos son pruebas obligatorias:
 
 ## Correccion en la fase 5
 
-Se construye en la etapa 4, pero la ruta ya esta en el catalogo y probada.
+La decide el cliente con el permiso de aprobar (`clientes.puede_aprobar`, que
+concede el administrador). Lo que revisa es la version que el ejecutivo marco
+como enviada; sin ella la fase 4 no se completa. El cliente no mueve fases: su
+unica via es `portal.decidir_fase_5`, que comprueba el permiso, que la pieza le
+espera, y que la ruta pase por los controles 4 y 5. Al reabrir una fase de
+trabajo, sus tareas vuelven a pendiente.
 
 | Proyecto | Correccion | Reabre | Conserva |
 | --- | --- | --- | --- |
@@ -92,7 +97,8 @@ Se construye en la etapa 4, pero la ruta ya esta en el catalogo y probada.
 - Las fases 2 y 4 se repiten siempre que la ruta pasa por ellas.
 - La menor fase reabierta pasa a `en_curso`; la ronda de la pieza sube en uno.
 - El ejecutivo puede ajustar la ruta mientras no se haya completado ninguna
-  fase de la ronda nueva.
+  fase de la ronda nueva, y **solo anadiendo** fases: quitar una daria por
+  bueno algo que el cliente pidio rehacer.
 - La ruta de solo diseno (S-02) y la de especiales (S-01) son supuestos del
   paquete sin confirmar. Sin limite de rondas (D-02) ni plazo para el cliente
   (D-08).
