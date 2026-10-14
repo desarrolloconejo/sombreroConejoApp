@@ -4,12 +4,13 @@ import { PerfilWrapper } from "@/components/perfil";
 import { obtenerSesion, requerirUsuario } from "@/lib/sesion";
 import * as dosPasosModelo from "@/models/dosPasos";
 import * as sesiones from "@/models/sesiones";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 export const metadata: Metadata = {
   title: "Mi perfil",
 };
 
-const FECHA = new Intl.DateTimeFormat("es-VE", { dateStyle: "long" });
+const FECHA = new Intl.DateTimeFormat("es-VE", { timeZone: ZONA_HORARIA, dateStyle: "long" });
 
 /**
  * La page es de servidor y hace solo lo que le toca: exigir la sesion, leer a

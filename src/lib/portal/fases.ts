@@ -8,6 +8,7 @@ import type {
   TipoCorreccion,
   TipoProyecto,
 } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Las reglas de la bateria como funciones puras.
@@ -132,7 +133,7 @@ export function aplicarCorreccion(
 export function hoyEnCaracas(ahora: Date = new Date()): string {
   // en-CA escribe las fechas como AAAA-MM-DD.
   return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Caracas",
+    timeZone: ZONA_HORARIA,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",

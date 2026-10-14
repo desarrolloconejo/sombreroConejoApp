@@ -5,6 +5,7 @@ import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
 import { BotonEnlace, Etiqueta } from "@/components/ui";
 import { ESTANDAR_INSERT, ESTANDAR_VOZ } from "@/lib/hooks/listas";
 import type { Empresa, ReglaHook } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Ficha detallada de una regla (modo "Ver más"), dentro del panel lateral.
@@ -15,6 +16,7 @@ import type { Empresa, ReglaHook } from "@/types";
  */
 
 const FORMATO = new Intl.DateTimeFormat("es-VE", {
+  timeZone: ZONA_HORARIA,
   dateStyle: "long",
   timeStyle: "short",
 });

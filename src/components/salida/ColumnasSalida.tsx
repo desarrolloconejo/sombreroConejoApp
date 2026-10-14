@@ -12,6 +12,7 @@ import {
   type EstadoListado,
   type TipoCorreo,
 } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Las columnas de la bandeja de salida.
@@ -33,8 +34,8 @@ export const REJILLA_SALIDA = Object.values(ANCHOS)
   .map((ancho) => (ancho.endsWith("fr") ? `minmax(0, ${ancho})` : ancho))
   .join(" ");
 
-const FECHA = new Intl.DateTimeFormat("es-VE", { dateStyle: "medium" });
-const HORA = new Intl.DateTimeFormat("es-VE", { timeStyle: "short" });
+const FECHA = new Intl.DateTimeFormat("es-VE", { timeZone: ZONA_HORARIA, dateStyle: "medium" });
+const HORA = new Intl.DateTimeFormat("es-VE", { timeZone: ZONA_HORARIA, timeStyle: "short" });
 
 /** Como se lee un tipo de correo. Uno sin nombre se muestra tal cual. */
 export function nombreDeCorreo(tipo: string): string {

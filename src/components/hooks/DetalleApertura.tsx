@@ -5,6 +5,7 @@ import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
 import { BotonEnlace, Etiqueta } from "@/components/ui";
 import { nombreMecanismo, nombreTerritorio } from "@/lib/hooks/catalogo";
 import type { Apertura } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Ficha detallada de una apertura (modo "Ver más"), dentro del panel lateral.
@@ -14,6 +15,7 @@ import type { Apertura } from "@/types";
  */
 
 const FORMATO = new Intl.DateTimeFormat("es-VE", {
+  timeZone: ZONA_HORARIA,
   dateStyle: "long",
   timeStyle: "short",
 });

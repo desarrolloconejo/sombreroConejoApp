@@ -3,6 +3,7 @@ import { Clock, LogOut } from "lucide-react";
 
 import { cerrarSesion } from "@/actions/auth";
 import { Boton } from "@/components/ui";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * El cierre de sesion, con la constancia del ultimo acceso.
@@ -17,6 +18,7 @@ const TARJETA =
   "surge rounded-[15px] border border-borde bg-superficie p-[22px] shadow-[var(--sombra)]";
 
 const FORMATO = new Intl.DateTimeFormat("es-VE", {
+  timeZone: ZONA_HORARIA,
   dateStyle: "long",
   timeStyle: "short",
 });

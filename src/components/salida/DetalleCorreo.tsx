@@ -6,6 +6,7 @@ import type { CorreoSalida } from "@/types";
 
 import { AccionesCorreo } from "./AccionesCorreo";
 import { estadoDeCorreo, nombreDeCorreo } from "./ColumnasSalida";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Un correo abierto: a quien iba, en que quedo y lo que dice.
@@ -16,6 +17,7 @@ import { estadoDeCorreo, nombreDeCorreo } from "./ColumnasSalida";
  */
 
 const CUANDO = new Intl.DateTimeFormat("es-VE", {
+  timeZone: ZONA_HORARIA,
   dateStyle: "long",
   timeStyle: "short",
 });

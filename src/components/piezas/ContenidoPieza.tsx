@@ -7,6 +7,7 @@ import { comentarPieza, guardarCopy } from "@/actions/piezas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { Boton } from "@/components/ui";
 import { ESTADO_INICIAL, type ComentarioPieza } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * El copy de la pieza y la conversacion interna sobre ella.
@@ -87,7 +88,7 @@ export function CopyPieza({
 const FECHA = new Intl.DateTimeFormat("es-VE", {
   dateStyle: "medium",
   timeStyle: "short",
-  timeZone: "America/Caracas",
+  timeZone: ZONA_HORARIA,
 });
 
 export function ComentariosPieza({

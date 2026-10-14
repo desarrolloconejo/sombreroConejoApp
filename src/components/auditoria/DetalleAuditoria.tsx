@@ -4,6 +4,7 @@ import { PanelCuerpo, SeparadorPanel } from "@/components/listado";
 import type { LineaAuditoria, ValoresAuditoria } from "@/types";
 
 import { nombreDeAccion, nombreDeActor } from "./ColumnasAuditoria";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * El detalle de una linea: quien, cuando, desde donde, y el antes y el despues
@@ -14,6 +15,7 @@ import { nombreDeAccion, nombreDeActor } from "./ColumnasAuditoria";
  */
 
 const CUANDO = new Intl.DateTimeFormat("es-VE", {
+  timeZone: ZONA_HORARIA,
   dateStyle: "full",
   timeStyle: "medium",
 });
