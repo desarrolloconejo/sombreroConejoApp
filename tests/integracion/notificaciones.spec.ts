@@ -110,10 +110,13 @@ test("una cuenta que se bloquea le llega a la campana del administrador", async 
 });
 
 test("quien no tiene notificaciones ve la campana vacia, no un error", async ({ page }) => {
-  const cliente = USUARIOS.find((u) => u.email === "cliente@empresa.test");
-  if (!cliente) throw new Error("La semilla no trae la cuenta del cliente");
+  // Una cuenta a la que ninguna prueba le genera notificaciones. El cliente
+  // ya no sirve: desde la etapa 4 se le avisa de cada pieza que espera su
+  // revision.
+  const redes = USUARIOS.find((u) => u.email === "redes@conejo.test");
+  if (!redes) throw new Error("La semilla no trae la cuenta de redes");
 
-  await entrar(page, cliente.email, cliente.password);
+  await entrar(page, redes.email, redes.password);
 
   await campana(page).click();
   await expect(
