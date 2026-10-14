@@ -60,7 +60,8 @@ const COLUMNAS_COMPLETO = `
   empresa_id     AS "empresaId",
   empresa_nombre AS "empresaNombre",
   empresa_activa AS "empresaActiva",
-  puede_aprobar  AS "puedeAprobar"
+  puede_aprobar  AS "puedeAprobar",
+  puede_ver_finanzas AS "puedeVerFinanzas"
 `;
 
 /** Columnas por las que se permite ordenar, y su nombre real en la base. */
