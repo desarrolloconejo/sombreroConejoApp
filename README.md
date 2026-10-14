@@ -522,6 +522,11 @@ sus raices cortadas y sus espacios finales no son erratas.
 Para cambiar un objetivo hay que tocar tres sitios a la vez: el catalogo, el
 tipo y el `CHECK` de la tabla.
 
+Hooks es ademas una **herramienta** (`src/lib/herramientas.ts`): la tarea
+«Escribir el hook» lleva al canvas con `?tarea=`, la ficha queda ligada a ella
+(`fichas_hook.tarea_id`) y, cuando aprueba la auditoria, la tarea se da por
+lista. Quien no es de redes entra asi, y solo a su ficha.
+
 ### El modulo de Proyectos
 
 ```

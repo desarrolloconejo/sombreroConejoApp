@@ -116,6 +116,8 @@ Necesita el esquema `portal` y las funciones de sesion del 07.
 | --- | --- | --- | --- |
 | 11 | `db/neon/11-proyectos.sql` | Crea asignaciones, proyectos, piezas, su copy, sus fases, tareas y comentarios internos, con sus politicas y las vistas del avance | `tablas = 7` y `con_seguridad_por_fila = 7`; `politicas = 22`; `vistas = 2` |
 
+| 12 | `db/neon/12-hooks-herramienta.sql` | Anade `fichas_hook.tarea_id`: la ficha que cumple una tarea | `columna = 1` e `indice = 1` |
+
 No inserta datos. Tras publicar, el administrador asigna a cada ejecutivo
 (cargo `cuentas`) sus empresas desde Empresas: sin asignaciones, un ejecutivo
 no ve ningun proyecto.
@@ -214,6 +216,9 @@ En la aplicacion publicada, con la cuenta de administrador.
       alerta filtra la tabla.
 - [ ] Asignar una tarea a otra persona: le llega la notificacion, y en Mi
       trabajo la ve y la puede marcar.
+- [ ] En un proyecto de prueba con un reel, asignar «Escribir el hook» a
+      alguien que no sea de redes. Con su cuenta, abrir Hooks desde Mi
+      trabajo, escribir un hook que apruebe y auditarlo: la tarea queda lista.
 - [ ] Cancelar el proyecto de prueba desde «Estado»: sale del Tablero.
 - [ ] Con una cuenta de otro cargo, `/dashboard/proyectos` devuelve al inicio.
 
@@ -379,7 +384,7 @@ resolver antes.
 | 1. Cimientos de seguridad | 01 a 05 | `DATABASE_URL`, `JWT_EXPIRACION` | 06 | Si |
 | 2. Externos y avisos | 07, 08, 09 | `APP_URL_PUBLICA`, `CRON_SECRET` | — | Si. El adaptador de archivos pasa a la etapa 4 |
 | Dos pasos (de la etapa 8) | 10 | `TOTP_CLAVE` | — | Si |
-| 3. Proyectos, bateria y tareas | 11 | — | — | En curso |
+| 3. Proyectos, bateria y tareas | 11, 12 | — | — | Si |
 | 4. Vista del cliente y revision | — | — | — | Pendiente |
 | 5. Presupuestos y proformas | — | — | — | Pendiente |
 | 6. Briefs | — | — | — | Pendiente |
