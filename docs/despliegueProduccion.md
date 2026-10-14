@@ -210,7 +210,9 @@ En la aplicacion publicada, con la cuenta de administrador.
       prueba con una pieza. Su pagina muestra la bateria al 0 % y la matriz.
 - [ ] En la ficha de la pieza, marcar la tarea de redaccion y completar la
       fase: la bateria pasa al 20 %.
-- [ ] Cancelar el proyecto de prueba desde «Estado».
+- [ ] El Tablero (en Trabajo) muestra el proyecto de prueba, y al pulsar una
+      alerta filtra la tabla.
+- [ ] Cancelar el proyecto de prueba desde «Estado»: sale del Tablero.
 - [ ] Con una cuenta de otro cargo, `/dashboard/proyectos` devuelve al inicio.
 
 ### Verificacion en dos pasos
@@ -300,7 +302,7 @@ anterior lo ignora.
 - No se puede desactivar a alguien con tareas abiertas, proyectos a su cargo o
   empresas asignadas: el mensaje dice cuantas tiene, y hay que reasignarlas
   antes.
-- **Proyectos** aparece en la seccion Trabajo para el administrador y los
+- **Tablero** y **Proyectos** aparecen en la seccion Trabajo para el administrador y los
   ejecutivos de cuentas. Cada pieza recorre cinco fases; el ejecutivo las
   completa, y quien tiene una tarea la marca como lista y recibe una
   notificacion cuando le asignan una o cuando su fase empieza.
