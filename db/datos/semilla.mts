@@ -76,6 +76,19 @@ export const USUARIOS: UsuarioSemilla[] = [
     telefono: "+58 412 555 0101",
     perfil: { tipo: "trabajador", rol: "admin", cargo: "direccion" },
   },
+  /*
+   * El administrador de las pruebas automaticas. Existe aparte para que el
+   * administrador de verdad pueda activar sus dos pasos con su telefono sin
+   * dejar fuera a las pruebas, que entran con correo y contrasena.
+   */
+  {
+    nombre: "Admin",
+    apellido: "Pruebas",
+    email: "admin@conejo.test",
+    password: "Administrador123*",
+    telefono: null,
+    perfil: { tipo: "trabajador", rol: "admin", cargo: "direccion" },
+  },
   {
     nombre: "Luis",
     apellido: "Perez",
@@ -170,6 +183,9 @@ export const USUARIOS: UsuarioSemilla[] = [
     perfil: { tipo: "trabajador", rol: "trabajador", cargo: "diseno" },
   },
 ];
+
+/** El administrador con el que entran las pruebas automaticas. */
+export const EMAIL_ADMIN_PRUEBAS = "admin@conejo.test";
 
 /** El ejecutivo al que el seed asigna la empresa de ejemplo. */
 export const EMAIL_EJECUTIVO = "cuentas@conejo.test";

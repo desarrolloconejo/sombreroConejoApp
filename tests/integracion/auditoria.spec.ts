@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { USUARIOS } from "../../db/datos/semilla.mts";
+import { EMAIL_ADMIN_PRUEBAS, USUARIOS } from "../../db/datos/semilla.mts";
 
 /**
  * La auditoria, vista desde el navegador.
@@ -14,10 +14,10 @@ function cuenta(email: string) {
   return usuario;
 }
 
-/** El administrador es la cuenta de la semilla con ese rol, sea cual sea. */
+/** El administrador de las pruebas, no el de verdad: ese puede tener dos pasos. */
 function administrador() {
   const admin = USUARIOS.find(
-    (u) => u.perfil.tipo === "trabajador" && u.perfil.rol === "admin",
+    (u) => u.email === EMAIL_ADMIN_PRUEBAS,
   );
   if (!admin) throw new Error("La semilla no trae ningun administrador");
   return admin;
