@@ -240,6 +240,20 @@ En la aplicacion publicada, con la cuenta de administrador.
       alguien que no sea de redes. Con su cuenta, abrir Hooks desde Mi
       trabajo, escribir un hook que apruebe y auditarlo: la tarea queda lista.
 - [ ] Cancelar el proyecto de prueba desde «Estado»: sale del Tablero.
+
+### Etapa 4
+
+- [ ] En Usuarios, marcar «Puede aprobar piezas» en la persona de contacto de
+      una empresa de prueba.
+- [ ] Con un proyecto de prueba de esa empresa: en la fase 3, subir una imagen
+      (Drive) y, en la fase 4, marcarla «Para el cliente» y completar la fase.
+      La version aparece en Drive, en `ConejoApp/Piezas`, con el nombre
+      estandar del estudio.
+- [ ] Con la cuenta del cliente: el inicio dice que una pieza espera su
+      revision; la imagen se ve; «Descargar» no aparece hasta aprobarla.
+- [ ] Pedir una correccion de redaccion: la pieza vuelve a la fase 1 y el
+      ejecutivo recibe la notificacion. Reenviarla y aprobarla: se descarga.
+- [ ] Con un cliente SIN el permiso: ve la pieza, pero no los botones.
 - [ ] Con una cuenta de otro cargo, `/dashboard/proyectos` devuelve al inicio.
 
 ### Verificacion en dos pasos
@@ -336,6 +350,18 @@ anterior lo ignora.
   completa, y quien tiene una tarea la marca como lista y recibe una
   notificacion cuando le asignan una o cuando su fase empieza.
 
+### Etapa 4
+
+- **Los clientes ven sus proyectos** en «Mi espacio → Mis proyectos», y el
+  inicio les dice cuantas piezas esperan su revision.
+- **Solo decide quien tenga «Puede aprobar piezas»**, que nace apagado para
+  todos: el administrador se lo marca a cada persona en Usuarios. Si en una
+  empresa nadie lo tiene, el ejecutivo ve el aviso en la ficha de la pieza.
+- El equipo sube cada version a la ficha de la pieza; el ejecutivo elige en la
+  fase 4 la que vera el cliente. Sin ella, la fase 4 no se completa.
+- Al pedir una correccion, la pieza vuelve a la fase que toca y sus tareas a
+  pendiente; la ronda sube.
+
 ### Verificacion en dos pasos
 
 - **A todos se les pedira configurarla la primera vez que entren.** Usa una
@@ -397,6 +423,16 @@ resolver antes.
 
 ---
 
+### Etapa 4
+
+| Tema | Estado |
+| --- | --- |
+| Subida a Drive en modo real | **Sin probar.** Aqui se probo en modo simulado. Hace falta volver a ejecutar `npm run drive:probar` (crea `ConejoApp/Piezas`) y comprobar la subida desde Vercel |
+| Peso maximo | 4 MB por archivo, por el limite de peticion de Vercel. Tras la mudanza se puede subir |
+| Tiempo real | No hay: la bateria del cliente se actualiza al recargar. Va con la mudanza (etapa 9) |
+| Boveda de marca e historial del cliente desde la auditoria | No se hicieron: el historial de cada pieza sale de sus decisiones. Quedan para cuando se pidan |
+| Correo de «pieza lista para revisar» | En modo simulado queda en la bandeja de salida |
+
 ## Registro por etapa
 
 | Etapa | SQL antes | Variables | SQL despues | Anotada |
@@ -405,7 +441,7 @@ resolver antes.
 | 2. Externos y avisos | 07, 08, 09 | `APP_URL_PUBLICA`, `CRON_SECRET` | — | Si. El adaptador de archivos pasa a la etapa 4 |
 | Dos pasos (de la etapa 8) | 10 | `TOTP_CLAVE` | — | Si |
 | 3. Proyectos, bateria y tareas | 11, 12 | — | — | Si |
-| 4. Vista del cliente y revision | 13 | `DRIVE_*`, `DRIVE_CARPETA_PIEZAS_ID` | — | En curso |
+| 4. Vista del cliente y revision | 13 | `DRIVE_*`, `DRIVE_CARPETA_PIEZAS_ID` | — | En curso (ver `docs/traspaso.md`) |
 | 5. Presupuestos y proformas | — | — | — | Pendiente |
 | 6. Briefs | — | — | — | Pendiente |
 | 7. Facturas, pagos y cobranza | — | — | — | Pendiente |

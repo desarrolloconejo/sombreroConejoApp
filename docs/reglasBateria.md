@@ -121,6 +121,8 @@ Caracas:
 | --- | --- | --- | --- | --- |
 | Proyecto, piezas, fases y fechas | Si | Si | Si, solo esas piezas | Si |
 | Copy (`pieza_contenido`) | Si | Si | Si | Solo con la pieza en fase 5 o aprobada |
+| Versiones | Todas | Todas | Todas; las sube | Solo la enviada, con la pieza en fase 5 o aprobada. Descarga solo aprobada |
+| Decisiones del cliente | Si; ajusta la ruta | Si; ajusta la ruta | Si | Las suyas. Decide quien tiene el permiso de aprobar |
 | Tareas | Si | Si | Si | **Nunca** |
 | Comentarios internos | Si | Si | Si | **Nunca** |
 | Crear y mover proyectos, piezas, fases y tareas | Si | Si | No | No |

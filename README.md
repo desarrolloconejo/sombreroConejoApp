@@ -535,6 +535,8 @@ lista. Quien no es de redes entra asi, y solo a su ficha.
 /dashboard/proyectos/[id]                    resumen y matriz de piezas por fases
 /dashboard/proyectos/[id]/piezas/[piezaId]   fases, tareas, copy y comentarios
 /dashboard/mi-trabajo                        las tareas de quien mira
+/dashboard/mis-proyectos                     el cliente: avance, revision y aprobacion
+/api/archivos/[versionId]                    la unica entrega de un archivo de una pieza
 ```
 
 Lo gestionan el admin y el ejecutivo de cuentas asignado a la empresa. Quien
