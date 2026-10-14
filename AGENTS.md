@@ -24,7 +24,7 @@ tildes en el codigo**.
 
 Hoy existen: login, inicio, Mi perfil, Usuarios, Empresas (con sus ejecutivos
 asignados), Auditoria, Bandeja de salida, Tablero, Proyectos (piezas,
-bateria de fases y tareas) y el modulo de Hooks.
+bateria de fases y tareas), Mi trabajo y el modulo de Hooks.
 Esta en marcha la integracion de un portal completo (briefs, proyectos con
 bateria de fases y tareas, revision del cliente, finanzas). **Antes de
 construir nada de eso, lee `docs/planIntegracionPortal.md`**: es el plan

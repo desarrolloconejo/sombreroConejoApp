@@ -529,6 +529,7 @@ tipo y el `CHECK` de la tabla.
 /dashboard/proyectos                         listado y alta
 /dashboard/proyectos/[id]                    resumen y matriz de piezas por fases
 /dashboard/proyectos/[id]/piezas/[piezaId]   fases, tareas, copy y comentarios
+/dashboard/mi-trabajo                        las tareas de quien mira
 ```
 
 Lo gestionan el admin y el ejecutivo de cuentas asignado a la empresa. Quien

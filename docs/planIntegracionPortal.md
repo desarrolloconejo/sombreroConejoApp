@@ -109,7 +109,7 @@ Lo que cada etapa exige en produccion se va anotando en
 | 3 | `feat/etapa3-asignaciones` | El admin asigna ejecutivos a cada empresa desde su ficha en Empresas, y el ejecutivo recibe una notificacion. No se desactiva a nadie con tareas abiertas, proyectos a su cargo o empresas asignadas (P4, P5) | Ninguno | Hecha |
 | 3 | `feat/etapa3-proyectos` | Modulo Proyectos: listado, alta desde el catalogo, matriz de piezas por fases, ficha de pieza con fases, tareas, copy y comentarios. Componente bateria. Registro de herramientas con Hooks | Ninguno | Hecha |
 | 3 | `feat/etapa3-tablero` | Tablero con las cuatro alertas, que filtran al pulsarlas; filtros por ejecutivo, cliente y tipo; la fase mas atrasada de cada proyecto | Ninguno | Hecha |
-| 3 | `feat/etapa3-mi-trabajo` | Mi trabajo: las tareas de cada uno, marcar lista, abrir la herramienta | Ninguno | Pendiente |
+| 3 | `feat/etapa3-mi-trabajo` | Mi trabajo: las tareas de cada uno en tres grupos (ahora, mas adelante, hechas en las dos ultimas semanas), marcar y reabrir, abrir la herramienta y la ficha de la pieza. Lo ve todo el equipo menos administracion | Ninguno | Hecha |
 | 3 | `feat/etapa3-hooks-herramienta` | Hooks como herramienta: `fichas_hook.tarea_id`, el canvas abre con la tarea, y la tarea queda lista cuando la ficha aprueba la auditoria | Uno, por llegar | Pendiente |
 
 **La etapa 2 esta completa**, salvo el adaptador de archivos, que por

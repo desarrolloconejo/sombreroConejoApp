@@ -7,6 +7,7 @@ import {
   FolderKanban,
   History,
   House,
+  ListChecks,
   LayoutDashboard,
   Library,
   ScrollText,
@@ -175,6 +176,21 @@ const MODULOS: readonly Modulo[] = [
     roles: ["admin", "trabajador"],
     cargos: ["cuentas"],
     alias: ["bateria", "piezas", "fases", "parrilla", "matriz", "entregables", "clientes"],
+  },
+
+  /*
+   * Mi trabajo es de todo el equipo menos administracion, que solo ve
+   * finanzas: cualquiera puede tener una tarea asignada.
+   */
+  {
+    titulo: "Mi trabajo",
+    seccion: "trabajo",
+    subtitulo: "Las tareas que tengo asignadas",
+    href: "/dashboard/mi-trabajo",
+    icono: ListChecks,
+    roles: ["admin", "trabajador"],
+    cargos: ["direccion", "cuentas", "redes", "diseno", "produccion", "tecnologia"],
+    alias: ["tareas", "pendientes", "asignado", "lo mio", "por hacer"],
   },
 
   /*
