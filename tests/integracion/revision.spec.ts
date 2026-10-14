@@ -153,7 +153,7 @@ test("dos rondas: el cliente corrige la redaccion y despues aprueba", async ({ p
   await page.goto(urlProyecto, { waitUntil: "networkidle" });
   await expect(page.getByText("1 de 1 pieza aprobada")).toBeVisible({ timeout: 60_000 });
   await page.getByRole("link", { name: "Estado" }).click();
-  await page.getByRole("button", { name: "Cerrar" }).click();
+  await page.getByRole("button", { name: "Cerrar el proyecto" }).click();
   await avisado(page, "El estado del proyecto cambio");
 });
 
