@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { leerRango } from "@/lib/externos/archivos";
 import {
   bloque,
   enlacePermitido,
@@ -101,5 +102,19 @@ test.describe("enlaces externos", () => {
 
   test("nombra el sitio sin www", () => {
     expect(sitioDeEnlace("https://www.dropbox.com/s/x")).toBe("dropbox.com");
+  });
+});
+
+test.describe("cabecera Range", () => {
+  test("entiende un trozo con y sin final", () => {
+    expect(leerRango("bytes=0-99")).toEqual({ inicio: 0, fin: 99 });
+    expect(leerRango("bytes=500-")).toEqual({ inicio: 500, fin: null });
+  });
+
+  test("lo que no se reconoce se ignora y se entrega entero", () => {
+    expect(leerRango(null)).toBeNull();
+    expect(leerRango("bytes=10-5")).toBeNull();
+    expect(leerRango("bytes=0-1,5-9")).toBeNull();
+    expect(leerRango("items=0-9")).toBeNull();
   });
 });
