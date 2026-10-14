@@ -18,8 +18,10 @@ import { join } from "node:path";
 import { Client } from "pg";
 import bcrypt from "bcryptjs";
 import { APERTURAS } from "./datos/aperturas.mts";
+import { sembrarProyectos } from "./datos/proyectos.mts";
 import {
   EMAIL_CREADORA,
+  EMAIL_EJECUTIVO,
   EMPRESA_DEMO,
   REFERENCIA,
   REGLAS,
@@ -249,6 +251,39 @@ async function principal(): Promise<void> {
       ],
     );
     console.log("Referencia de ejemplo lista");
+
+    // -- Proyectos ------------------------------------------------------------
+    //
+    // El ejecutivo de la semilla atiende a la empresa de ejemplo, y ella tiene
+    // dos proyectos: una parrilla de redes que reproduce el ejemplo A de la
+    // bateria (60 %) y un proyecto especial recien empezado.
+    const idDe = async (email: string): Promise<number> => {
+      const { rows } = await cliente.query<{ id: number }>(
+        "SELECT id FROM usuarios WHERE lower(email) = lower($1)",
+        [email],
+      );
+      if (!rows[0]) throw new Error(`No se encontro ${email} en la semilla`);
+      return rows[0].id;
+    };
+
+    const equipo = {
+      ejecutivo: await idDe(EMAIL_EJECUTIVO),
+      redes: creadoraId,
+      diseno: await idDe("diseno@conejo.test"),
+      produccion: await idDe("pruebas@conejo.test"),
+      admin: await idDe(USUARIOS[0].email),
+    };
+
+    await cliente.query(
+      `INSERT INTO portal.asignaciones (usuario_id, empresa_id, creado_por)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (usuario_id, empresa_id) DO NOTHING`,
+      [equipo.ejecutivo, empresaId, equipo.admin],
+    );
+    console.log(`Empresa de ejemplo asignada a ${EMAIL_EJECUTIVO}`);
+
+    const proyectosNuevos = await sembrarProyectos(cliente, empresaId, equipo);
+    console.log(`Proyectos de ejemplo listos (${proyectosNuevos} nuevos)`);
 
     // -- Resumen ------------------------------------------------------------
     const { rows: resumen } = await cliente.query<{

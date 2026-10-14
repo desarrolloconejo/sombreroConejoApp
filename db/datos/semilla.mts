@@ -144,7 +144,23 @@ export const USUARIOS: UsuarioSemilla[] = [
     pideDosPasos: true,
     perfil: { tipo: "trabajador", rol: "trabajador", cargo: "produccion" },
   },
+  /*
+   * El ejecutivo de cuentas. Solo ve los proyectos de las empresas que tiene
+   * asignadas, y el seed le asigna la de ejemplo. Las pruebas de permisos lo
+   * usan para comprobar que no ve las demas.
+   */
+  {
+    nombre: "Andres",
+    apellido: "Rojas",
+    email: "cuentas@conejo.test",
+    password: "Trabajador123*",
+    telefono: "+58 412 555 0105",
+    perfil: { tipo: "trabajador", rol: "trabajador", cargo: "cuentas" },
+  },
 ];
+
+/** El ejecutivo al que el seed asigna la empresa de ejemplo. */
+export const EMAIL_EJECUTIVO = "cuentas@conejo.test";
 
 /** Quien firma lo que siembra el seed: la creadora de contenido. */
 export const EMAIL_CREADORA = "redes@conejo.test";
