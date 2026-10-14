@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   User,
   Users,
+  Wallet,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -88,6 +89,13 @@ export type Modulo = {
   cargos?: SlugCargo[];
 
   /**
+   * Un permiso que ademas tiene que tener la persona. Hoy solo uno: el del
+   * cliente que ve las finanzas de su empresa, que no sale del rol sino de
+   * una casilla por persona.
+   */
+  permiso?: "finanzas";
+
+  /**
    * Submodulos que cuelgan de este.
    *
    * El padre tiene href propio y no es un contenedor vacio: `activoEntre`
@@ -139,7 +147,7 @@ export type UsuarioNav = {
  */
 export type ActorNavegacion =
   | Pick<Sesion, "rol" | "cargo">
-  | Pick<UsuarioCompleto, "rol" | "cargoSlug">;
+  | (Pick<UsuarioCompleto, "rol" | "cargoSlug"> & Partial<Pick<UsuarioCompleto, "puedeVerFinanzas">>);
 
 const MODULOS: readonly Modulo[] = [
   {
@@ -383,6 +391,17 @@ const MODULOS: readonly Modulo[] = [
     alias: ["proyectos", "revision", "aprobar", "piezas", "avance", "correccion"],
   },
 
+  {
+    titulo: "Administracion",
+    seccion: "mi_espacio",
+    subtitulo: "Presupuestos para aprobar y proformas",
+    href: "/dashboard/administracion",
+    icono: Wallet,
+    roles: ["cliente"],
+    permiso: "finanzas",
+    alias: ["finanzas", "presupuestos", "proformas", "aprobar", "pagos", "cuentas"],
+  },
+
   // Va siempre el ultimo: no es un modulo de trabajo, es la cuenta de quien
   // mira, y colocarlo en medio partia la lista de modulos en dos.
   {
@@ -429,6 +448,12 @@ function cargoDe(quien: ActorNavegacion): SlugCargo | null {
  */
 function puedeVer(modulo: Modulo, quien: ActorNavegacion): boolean {
   if (modulo.roles && !modulo.roles.includes(quien.rol)) return false;
+
+  // Un permiso por persona solo se conoce con el usuario de la base: con el
+  // token no se sabe, y el modulo no se muestra.
+  if (modulo.permiso === "finanzas" && !("puedeVerFinanzas" in quien && quien.puedeVerFinanzas)) {
+    return false;
+  }
 
   if (modulo.cargos && quien.rol !== "admin") {
     const cargo = cargoDe(quien);

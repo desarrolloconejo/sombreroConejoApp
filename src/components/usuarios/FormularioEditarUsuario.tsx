@@ -59,6 +59,7 @@ export function FormularioEditarUsuario({
 
   // Controlada: React vacia las casillas no controladas al terminar la action.
   const [puedeAprobar, setPuedeAprobar] = useState(usuario.puedeAprobar ?? false);
+  const [puedeVerFinanzas, setPuedeVerFinanzas] = useState(usuario.puedeVerFinanzas ?? false);
 
   // Controlados a proposito: React vacia los campos no controlados en cuanto
   // la action termina, tambien cuando devuelve errores. Sin esto, un correo
@@ -225,6 +226,23 @@ export function FormularioEditarUsuario({
                   <span className="text-suave">
                     Decide en la fase 5 por su empresa: aprueba o pide una
                     correccion. Sin esto ve el avance, pero no decide.
+                  </span>
+                </span>
+              </label>
+
+              <label className="col-span-2 flex items-start gap-3 rounded-xl border border-borde px-4 py-3 text-[12.5px] leading-relaxed">
+                <input
+                  type="checkbox"
+                  name="puedeVerFinanzas"
+                  checked={puedeVerFinanzas}
+                  onChange={(evento) => setPuedeVerFinanzas(evento.target.checked)}
+                  className="mt-0.5 size-[18px] shrink-0 accent-[var(--acento)]"
+                />
+                <span>
+                  <b className="font-semibold">Puede ver las finanzas.</b>{" "}
+                  <span className="text-suave">
+                    Ve los presupuestos y proformas de su empresa, y aprueba o
+                    rechaza presupuestos. Sin esto no ve ningun importe.
                   </span>
                 </span>
               </label>

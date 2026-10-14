@@ -100,7 +100,7 @@ export default async function PaginaPresupuesto(props: PageProps<"/dashboard/pre
           <EditorPresupuesto presupuesto={presupuesto} renglones={renglones} proyectos={proyectos} />
         </section>
       ) : (
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
           <section aria-labelledby="titulo-renglones" className="surge [--retraso:0.06s]">
             <h2 id="titulo-renglones" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
               Renglones

@@ -78,6 +78,17 @@ test("nadie mas del equipo ve Finanzas", () => {
   }
 });
 
+test("el cliente con permiso de finanzas ve Administracion; sin el, no", () => {
+  expect(menuDe({ ...CLIENTE, cargoSlug: null, puedeVerFinanzas: true })).toEqual([
+    { seccion: "General", modulos: ["Inicio"] },
+    { seccion: "Mi espacio", modulos: ["Mis proyectos", "Administracion"] },
+    { seccion: null, modulos: ["Mi perfil"] },
+  ]);
+  expect(menuDe({ ...CLIENTE, cargoSlug: null, puedeVerFinanzas: false })[1].modulos).toEqual([
+    "Mis proyectos",
+  ]);
+});
+
 test("un cliente ve su espacio y nada de la agencia", () => {
   expect(menuDe(CLIENTE)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },

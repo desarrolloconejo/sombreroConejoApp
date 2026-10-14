@@ -115,6 +115,11 @@ export function DetalleUsuario({
                   ? "Puede aprobar piezas o pedir correcciones"
                   : "Ve el avance, pero no decide"}
               </Dato>
+              <Dato rotulo="Finanzas">
+                {usuario.puedeVerFinanzas
+                  ? "Ve presupuestos y proformas, y aprueba presupuestos"
+                  : "No ve importes"}
+              </Dato>
             </>
           )}
 
