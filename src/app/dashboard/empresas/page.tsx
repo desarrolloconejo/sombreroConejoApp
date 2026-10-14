@@ -16,9 +16,11 @@ import {
   FormularioEmpresa,
 } from "@/components/empresas";
 import { BotonEnlace } from "@/components/ui";
+import { conSesion } from "@/lib/db";
 import { leerEstadoListado } from "@/lib/parametros";
 import { requerirAdmin } from "@/lib/sesion";
 import { conPanel } from "@/lib/urlListado";
+import * as asignacionesModelo from "@/models/asignaciones";
 import * as clientesModelo from "@/models/clientes";
 import * as empresasModelo from "@/models/empresas";
 import * as fichasModelo from "@/models/fichas";
@@ -83,7 +85,7 @@ export default async function PaginaEmpresas(
 ) {
   // El proxy ya filtra esta ruta por rol, pero la comprobacion tiene que estar
   // tambien aqui: es lo que impide el acceso si su matcher cambia.
-  await requerirAdmin();
+  const admin = await requerirAdmin();
 
   const parametros = await props.searchParams;
 
@@ -156,6 +158,20 @@ export default async function PaginaEmpresas(
           empresaPanel.id,
         ) ?? 0
       : 0;
+
+  // Quien atiende a la empresa, y a quien mas se le puede asignar.
+  const ejecutivosDePanel =
+    empresaPanel && estado.panel === "ver"
+      ? await conSesion(admin, async (tx) => {
+          const asignados = await asignacionesModelo.deEmpresa(empresaPanel.id, tx);
+          const yaEstan = new Set(asignados.map((asignacion) => asignacion.usuarioId));
+          const candidatos = (await asignacionesModelo.candidatos(tx)).filter(
+            (persona) => !yaEstan.has(persona.id),
+          );
+
+          return { asignados, candidatos };
+        })
+      : { asignados: [], candidatos: [] };
 
   const hrefCerrar = conPanel(RUTA, estado, null);
   const hrefAlta = conPanel(RUTA, estado, "nuevo");
@@ -230,6 +246,8 @@ export default async function PaginaEmpresas(
                   empresa={empresaPanel}
                   contactos={contactosDePanel}
                   piezas={piezasDePanel}
+                  asignados={ejecutivosDePanel.asignados}
+                  candidatos={ejecutivosDePanel.candidatos}
                   hrefEditar={conPanel(RUTA, estado, "editar", empresaPanel.id)}
                   /* Sus personas, en el modulo donde se gestionan. */
                   hrefContactos={`/dashboard/usuarios?empresa=${empresaPanel.id}`}
