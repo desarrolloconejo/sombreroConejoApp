@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
 import { InicioWrapper } from "@/components/inicio";
+import { AvisoRevision, TarjetaProyectoCliente } from "@/components/misProyectos";
+import { conSesion } from "@/lib/db";
+import * as proyectos from "@/models/proyectos";
 import { requerirUsuario } from "@/lib/sesion";
 import * as usuarios from "@/models/usuarios";
 
@@ -44,11 +47,36 @@ export default async function PaginaInicio() {
       ? (await usuarios.listar({ activo: [true], porPagina: 1 })).total
       : null;
 
+  // El inicio de un cliente: lo que espera su revision y sus proyectos.
+  const enCurso =
+    usuario.tipo === "cliente" && usuario.empresaId
+      ? await conSesion(usuario, (tx) => proyectos.enCurso(tx))
+      : null;
+
+  const destacado = enCurso && (
+    <>
+      <AvisoRevision piezas={enCurso.reduce((suma, p) => suma + p.alertas.esperando_cliente, 0)} />
+      {enCurso.length > 0 && (
+        <section aria-label="Tus proyectos en curso">
+          <h2 className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">Tus proyectos</h2>
+          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {enCurso.map((proyecto) => (
+              <li key={proyecto.id}>
+                <TarjetaProyectoCliente proyecto={proyecto} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </>
+  );
+
   return (
     <InicioWrapper
       usuario={usuario}
       saludo={saludoSegunLaHora()}
       usuariosActivos={usuariosActivos}
+      destacado={destacado}
     />
   );
 }

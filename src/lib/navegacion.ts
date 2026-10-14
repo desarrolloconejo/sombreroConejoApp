@@ -7,6 +7,7 @@ import {
   FolderKanban,
   History,
   House,
+  Layers,
   ListChecks,
   LayoutDashboard,
   Library,
@@ -339,6 +340,20 @@ const MODULOS: readonly Modulo[] = [
     icono: Send,
     roles: ["admin"],
     alias: ["correos", "correo", "email", "mensajes", "enviados", "salida", "avisos"],
+  },
+
+  /*
+   * Mi espacio: lo que ve el cliente de su empresa. Solo clientes; el equipo
+   * ve lo mismo, y mas, desde Proyectos.
+   */
+  {
+    titulo: "Mis proyectos",
+    seccion: "mi_espacio",
+    subtitulo: "Avance, y aprobar o pedir correcciones",
+    href: "/dashboard/mis-proyectos",
+    icono: Layers,
+    roles: ["cliente"],
+    alias: ["proyectos", "revision", "aprobar", "piezas", "avance", "correccion"],
   },
 
   // Va siempre el ultimo: no es un modulo de trabajo, es la cuenta de quien

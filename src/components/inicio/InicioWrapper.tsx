@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import type { Miga } from "@/components/layout/Breadcrumb";
 import { Wrapper } from "@/components/layout/Wrapper";
 import type { UsuarioCompleto } from "@/types";
@@ -23,10 +25,17 @@ export function InicioWrapper({
   usuario,
   saludo,
   usuariosActivos,
+  destacado,
 }: {
   usuario: UsuarioCompleto;
   saludo: string;
   usuariosActivos: number | null;
+
+  /**
+   * Lo que va antes de las cifras, si hay algo. Para un cliente: lo que
+   * espera su revision y sus proyectos en curso.
+   */
+  destacado?: ReactNode;
 }) {
   return (
     <Wrapper
@@ -35,6 +44,7 @@ export function InicioWrapper({
       titulo="Tu espacio de trabajo"
       descripcion="Desde aqui se centralizan los procesos del dia a dia de la agencia."
     >
+      {destacado && <div className="mb-8 flex flex-col gap-6">{destacado}</div>}
       <EstadoCuenta usuario={usuario} usuariosActivos={usuariosActivos} />
     </Wrapper>
   );

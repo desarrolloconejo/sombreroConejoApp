@@ -112,6 +112,13 @@ Lo que cada etapa exige en produccion se va anotando en
 | 3 | `feat/etapa3-mi-trabajo` | Mi trabajo: las tareas de cada uno en tres grupos (ahora, mas adelante, hechas en las dos ultimas semanas), marcar y reabrir, abrir la herramienta y la ficha de la pieza. Lo ve todo el equipo menos administracion | Ninguno | Hecha |
 | 3 | `feat/etapa3-hooks-herramienta` | Hooks como herramienta: `fichas_hook.tarea_id`, el canvas abre con la tarea y el cliente de su proyecto, y la tarea queda lista sola cuando la ficha aprueba la auditoria. Quien no es de redes entra al canvas y al auditor solo por su tarea | `db/neon/12-hooks-herramienta.sql` | Hecha |
 
+| 4 | `feat/etapa4-modelo` | Permiso de aprobar por persona, versiones con una sola enviada por ronda, decisiones del cliente y `portal.decidir_fase_5`, su unica via sobre las fases; nombre estandar, tipo por firma y lista blanca de enlaces | `db/neon/13-revision-del-cliente.sql` | Hecha |
+| 4 | `feat/etapa4-archivos` | Adaptador de archivos (simulado en la base, real en Drive) y la ruta `/api/archivos/[versionId]`: 404 a quien no puede ver, `Range`, descarga solo con la pieza aprobada | Ninguno | Hecha |
+| 4 | `feat/etapa4-versiones` | Lado del equipo: subir versiones (imagen o PDF hasta 4 MB, o enlace), marcar la del cliente en la fase 4, aviso y correo a quien aprueba, ajuste de la ruta, permiso de aprobar en Usuarios | Ninguno | **Escrita, sin unir**: falta pasar `tests/integracion/revision.spec.ts` |
+| 4 | `feat/etapa4-cliente` | Lado del cliente: inicio con lo que espera su revision, Mis proyectos, revision con aprobar o pedir correccion, aprobacion en lote, historial de rondas | Ninguno | **Escrita, sin unir**: sale de la anterior; falta la misma prueba |
+
+**La etapa 4 esta escrita, pero no unida.** Las dos primeras ramas estan en `main`; `feat/etapa4-versiones` y `feat/etapa4-cliente` estan en sus ramas, a falta de pasar la prueba de punta a punta. Lo que queda, paso a paso, en `docs/traspaso.md`. Quedan fuera, para la etapa 9 (VPS): el tiempo real (la bateria se actualiza al recargar, no sola), la boveda de marca y el historial del cliente sacado de la auditoria; y el video por el servidor, que hoy va por enlace.
+
 **La etapa 3 esta completa.** Queda para la etapa 4 lo que depende del cliente: la decision de la fase 5 (aprobar o pedir correccion, con `revisiones`), las versiones de cada pieza, la vista del cliente y que al reabrir fases por una correccion vuelvan a pendiente sus tareas.
 
 **La etapa 2 esta completa**, salvo el adaptador de archivos, que por
@@ -183,6 +190,24 @@ Sobre la campana:
   usaba esa palabra para los mensajes flotantes.
 - No hay pagina de «todas las notificaciones»: la campana muestra las doce
   ultimas. Se anade cuando haya volumen que lo pida.
+
+Sobre la etapa 4, decidido al construir:
+
+- **El cliente no mueve fases**: su unica via es `portal.decidir_fase_5`
+  (SECURITY DEFINER), que comprueba su permiso de aprobar, que la pieza le
+  espera, y que la ruta pase por los controles 4 y 5. La ruta la calcula la
+  aplicacion con el catalogo.
+- **La fase 4 exige la version enviada.** Completarla es enviarla: avisa en la
+  campana y por correo (simulado) a quien aprueba por la empresa.
+- **El ajuste de la ruta solo anade fases**, y solo mientras la ronda nueva no
+  haya completado ninguna. Quitar una seria dar por bueno lo que el cliente
+  pidio rehacer.
+- **Archivos de hasta 4 MB** (lo que cabe en una peticion de Vercel), por su
+  firma: PNG, JPG, GIF, WEBP o PDF. El video va por enlace (Frame.io, Drive,
+  Vimeo...), como ya estaba decidido.
+- El cliente ve **la version enviada y el copy** solo con la pieza en la fase 5
+  o aprobada (lo impone la base), y **descarga** solo con la pieza aprobada (C2).
+- Las fechas estimadas de cada fase se le muestran siempre (C3).
 
 Sobre la etapa 3, decidido al construir el modelo:
 
