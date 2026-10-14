@@ -36,6 +36,18 @@ export function sumarDias(fecha: string, dias: number): string {
   return resultado.toISOString().slice(0, 10);
 }
 
+/**
+ * Una fecha AAAA-MM-DD un mes despues, como la avanza la base: el 31 de enero
+ * pasa al ultimo dia de febrero, no al 3 de marzo.
+ */
+export function sumarUnMes(fecha: string): string {
+  const [ano, mes, dia] = fecha.split("-").map(Number);
+  const ultimoDelMes = new Date(Date.UTC(ano, mes + 1, 0)).getUTCDate();
+  const resultado = new Date(Date.UTC(ano, mes, Math.min(dia, ultimoDelMes)));
+
+  return resultado.toISOString().slice(0, 10);
+}
+
 /** Un importe en dolares para mostrar: 1234.5 -> «$1.234,50». */
 export function dolares(importe: string): string {
   const [entera, fraccion = ""] = importe.split(".");

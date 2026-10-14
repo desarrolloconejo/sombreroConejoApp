@@ -3,6 +3,7 @@ export {
   cantidadLegible,
   EtiquetaDocumento,
   fechaDia,
+  fechaDiaCorta,
   fechaHora,
   ResumenImportes,
   SECCION_DOCUMENTO,
