@@ -161,6 +161,17 @@ En Settings → Environment Variables, entorno de produccion.
 | --- | --- | --- |
 | `TOTP_CLAVE` | **Anadir** | 32 bytes en base64url, marcada como Sensitive. Cifra el secreto de los dos pasos de cada persona. Sin ella nadie puede configurarlos ni entrar con ellos. **No se cambia nunca una vez en uso**: cambiarla deja fuera a quien los tenga activados |
 
+### Etapa 4
+
+| Variable | Accion | Valor |
+| --- | --- | --- |
+| `DRIVE_CLIENT_ID`, `SECRET_DRIVE_KEY1`, `DRIVE_REFRESH_TOKEN` | **Anadir** | Las que deja `npm run drive:probar` en el `.env` local. Marcadas como Sensitive. Son las mismas que usaran los comprobantes en la etapa 7 |
+| `DRIVE_CARPETA_PIEZAS_ID` | **Anadir** | El id de `ConejoApp/Piezas`, que tambien deja `drive:probar` (hay que volver a ejecutarlo: antes solo creaba la de comprobantes) |
+| `ARCHIVOS_MODO` | No definir | Sin definir vale `real`: las versiones van a Drive. `simulado` las guarda en la base, hasta 4 MB, y es solo para desarrollo |
+
+Sin las variables de Drive, subir un archivo falla con un mensaje claro; las
+versiones por enlace (Figma, Frame.io...) funcionan igual.
+
 La cadena del dueno (`neondb_owner`) se guarda aparte: hace falta para la
 vuelta atras de la seccion 7 y deja de estar en Vercel.
 
@@ -394,7 +405,7 @@ resolver antes.
 | 2. Externos y avisos | 07, 08, 09 | `APP_URL_PUBLICA`, `CRON_SECRET` | — | Si. El adaptador de archivos pasa a la etapa 4 |
 | Dos pasos (de la etapa 8) | 10 | `TOTP_CLAVE` | — | Si |
 | 3. Proyectos, bateria y tareas | 11, 12 | — | — | Si |
-| 4. Vista del cliente y revision | 13 | — | — | En curso |
+| 4. Vista del cliente y revision | 13 | `DRIVE_*`, `DRIVE_CARPETA_PIEZAS_ID` | — | En curso |
 | 5. Presupuestos y proformas | — | — | — | Pendiente |
 | 6. Briefs | — | — | — | Pendiente |
 | 7. Facturas, pagos y cobranza | — | — | — | Pendiente |

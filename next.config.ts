@@ -39,6 +39,15 @@ const nextConfig: NextConfig = {
   // No hay por que anunciar con que esta hecha la aplicacion.
   poweredByHeader: false,
 
+  experimental: {
+    serverActions: {
+      // Una version de una pieza llega en una Server Action: 4 MB de archivo
+      // (lo que cabe en una peticion de Vercel) mas el resto del formulario.
+      // Lo que pase de 4 MB lo rechaza la action; los videos van por enlace.
+      bodySizeLimit: "5mb",
+    },
+  },
+
   async headers() {
     return [{ source: "/:path*", headers: CABECERAS_DE_SEGURIDAD }];
   },

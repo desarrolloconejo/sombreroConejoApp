@@ -161,6 +161,9 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   esas rutas aunque el cargo no toque (`RUTAS_POR_TAREA`), y la page decide
   con su guardia (`requerirHooks`). Sin el parametro, la regla del cargo es
   la de siempre.
+- Un archivo de una pieza solo se entrega por `/api/archivos/[versionId]`,
+  que decide con la sesion y las politicas de `versiones`. Lo que no se puede
+  ver responde **404, nunca 403**, y el id de Drive no sale del servidor.
 - El `matcher` de `src/proxy.ts` solo excluye por extension lo que cuelga de
   la raiz y `/images`. Una ruta publica nueva se declara en el proxy, no se
   cuela por el `matcher`.
