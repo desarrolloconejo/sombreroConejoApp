@@ -59,6 +59,7 @@ function paraAuditoria(usuario: UsuarioCompleto): ValoresAuditoria {
     cargo: usuario.cargo,
     empresa: usuario.empresaNombre,
     puedeAprobar: usuario.puedeAprobar,
+    puedeVerFinanzas: usuario.puedeVerFinanzas,
   };
 }
 
@@ -558,6 +559,7 @@ export async function editarUsuario(
 
         // No cierra sesiones: la base consulta el permiso en cada decision.
         await clientes.cambiarPermisoDeAprobar(id, datos.get("puedeAprobar") === "on", cliente);
+        await clientes.cambiarPermisoDeFinanzas(id, datos.get("puedeVerFinanzas") === "on", cliente);
       }
 
       const actualizado = await usuarios.buscarPorId(id, cliente);
