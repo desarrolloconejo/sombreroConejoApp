@@ -109,6 +109,40 @@ export type {
   ResultadoDeTasas,
 } from "./tasa";
 
+export {
+  NOMBRES_DE_ESTADO_PROYECTO,
+  NOMBRES_DE_TIPO_PIEZA,
+  NOMBRES_DE_ESTADO_FASE,
+  NOMBRES_DE_ALERTA,
+} from "./portal";
+export type {
+  TipoProyecto,
+  EstadoProyecto,
+  TipoPieza,
+  EstadoPieza,
+  NumeroFase,
+  FaseDeTrabajo,
+  EstadoFase,
+  EstadoTarea,
+  TipoCorreccion,
+  AlertaPieza,
+  PersonaBreve,
+  Asignacion,
+  AvanceProyecto,
+  AlertasProyecto,
+  Proyecto,
+  FasePieza,
+  AvancePieza,
+  Pieza,
+  Tarea,
+  TareaAsignada,
+  ComentarioPieza,
+  DatosNuevaPieza,
+  DatosNuevaTarea,
+  DatosNuevoProyecto,
+  FiltrosProyectos,
+} from "./portal";
+
 export type {
   Columna,
   OpcionFiltro,
