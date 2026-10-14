@@ -110,7 +110,9 @@ Lo que cada etapa exige en produccion se va anotando en
 | 3 | `feat/etapa3-proyectos` | Modulo Proyectos: listado, alta desde el catalogo, matriz de piezas por fases, ficha de pieza con fases, tareas, copy y comentarios. Componente bateria. Registro de herramientas con Hooks | Ninguno | Hecha |
 | 3 | `feat/etapa3-tablero` | Tablero con las cuatro alertas, que filtran al pulsarlas; filtros por ejecutivo, cliente y tipo; la fase mas atrasada de cada proyecto | Ninguno | Hecha |
 | 3 | `feat/etapa3-mi-trabajo` | Mi trabajo: las tareas de cada uno en tres grupos (ahora, mas adelante, hechas en las dos ultimas semanas), marcar y reabrir, abrir la herramienta y la ficha de la pieza. Lo ve todo el equipo menos administracion | Ninguno | Hecha |
-| 3 | `feat/etapa3-hooks-herramienta` | Hooks como herramienta: `fichas_hook.tarea_id`, el canvas abre con la tarea, y la tarea queda lista cuando la ficha aprueba la auditoria | Uno, por llegar | Pendiente |
+| 3 | `feat/etapa3-hooks-herramienta` | Hooks como herramienta: `fichas_hook.tarea_id`, el canvas abre con la tarea y el cliente de su proyecto, y la tarea queda lista sola cuando la ficha aprueba la auditoria. Quien no es de redes entra al canvas y al auditor solo por su tarea | `db/neon/12-hooks-herramienta.sql` | Hecha |
+
+**La etapa 3 esta completa.** Queda para la etapa 4 lo que depende del cliente: la decision de la fase 5 (aprobar o pedir correccion, con `revisiones`), las versiones de cada pieza, la vista del cliente y que al reabrir fases por una correccion vuelvan a pendiente sus tareas.
 
 **La etapa 2 esta completa**, salvo el adaptador de archivos, que por
 decision del responsable (2026-10-13) pasa a la etapa 4: hoy nada lo usa, y
@@ -198,6 +200,12 @@ Sobre la etapa 3, decidido al construir el modelo:
 - Una tarea solo se quita mientras esta pendiente. Las demas cosas no se
   borran: las piezas se cancelan con motivo y dejan de contar para el avance.
 - `revisiones` y `versiones` no se crean todavia: son de la etapa 4.
+- Hooks como herramienta: quien tiene una tarea de hook sin ser de redes
+  entra al canvas y al auditor solo con `?tarea=`, y solo ve su ficha y su
+  veredicto; la cola del equipo y las metricas siguen siendo de redes. El
+  proxy deja pasar esas dos rutas con el parametro y decide `requerirHooks`.
+- El ordenador de desarrollo va justo de memoria (5,7 GB, 2,7 para Docker):
+  la bateria de integracion se pasa con `--workers=1`.
 
 Sobre el rol de la aplicacion:
 

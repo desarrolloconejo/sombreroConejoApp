@@ -7,15 +7,13 @@ import { conSesion, type Ejecutor } from "@/lib/db";
 import { herramientaPorSlug } from "@/lib/herramientas";
 import { notificarA } from "@/lib/notificaciones";
 import { piezaGestionada } from "@/lib/portal/acceso";
-import { nombreDeFase } from "@/lib/portal/catalogo";
 import { RUTA_PROYECTOS, rutaPieza, rutaProyecto } from "@/lib/portal/rutas";
+import { cumplirTarea, tareaMarcable } from "@/lib/portal/tareas";
 import { requerirCargo, requerirRol } from "@/lib/sesion";
 import { comoIdentificador, validarTarea } from "@/lib/validaciones";
-import * as piezas from "@/models/piezas";
-import * as proyectos from "@/models/proyectos";
 import * as tareas from "@/models/tareas";
 import * as usuarios from "@/models/usuarios";
-import type { EstadoFormulario, FaseDeTrabajo, UsuarioCompleto } from "@/types";
+import type { EstadoFormulario, FaseDeTrabajo } from "@/types";
 
 /**
  * Las tareas de las fases 1 y 3.
@@ -171,24 +169,6 @@ export async function editarTarea(
   return { ok: true, mensaje: "Tarea actualizada" };
 }
 
-/**
- * Si la tarea la puede marcar quien llama: su responsable, o quien gestiona
- * la pieza. Devuelve la tarea con su proyecto, o null.
- */
-async function tareaMarcable(tareaId: number, usuario: UsuarioCompleto, tx: Ejecutor) {
-  const tarea = await tareas.buscarPorId(tareaId, tx);
-  if (!tarea) return null;
-
-  const gestiona = await proyectos.gestiona(tarea.proyectoId, tx);
-  if (tarea.responsableId !== usuario.id && !gestiona) return null;
-
-  const pieza = await piezas.buscarPorId(tarea.piezaId, tx);
-  const proyecto = await proyectos.buscarPorId(tarea.proyectoId, tx);
-  if (!pieza || !proyecto) return null;
-
-  return { tarea, pieza, proyecto };
-}
-
 export async function marcarTareaLista(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
@@ -202,33 +182,9 @@ export async function marcarTareaLista(
     const contexto = await tareaMarcable(tareaId, usuario, tx);
     if (!contexto) return null;
 
-    const { tarea, pieza, proyecto } = contexto;
+    if (!(await cumplirTarea(contexto, usuario, tx))) return "ya" as const;
 
-    if (!(await tareas.marcarLista(tareaId, usuario.id, tx))) return "ya" as const;
-
-    await anotar(tx, usuario, "tarea.lista", {
-      entidadId: tareaId,
-      empresaId: proyecto.empresaId,
-      despues: { titulo: tarea.titulo, pieza: pieza.titulo },
-    });
-
-    // Si con esta la fase queda lista, el ejecutivo la puede completar.
-    const pendientes = (await tareas.dePieza(pieza.id, tx)).filter(
-      (otra) => otra.fase === tarea.fase && otra.estado === "pendiente",
-    );
-    const enCurso = pieza.avance.faseActual === tarea.fase;
-
-    if (pendientes.length === 0 && enCurso && proyecto.ejecutivoId !== usuario.id) {
-      await notificarA(tx, [proyecto.ejecutivoId], {
-        tipo: "fase.lista",
-        titulo: `«${pieza.titulo}» esta lista para completar`,
-        cuerpo: `${nombreDeFase(proyecto.tipo, tarea.fase)}, de ${proyecto.nombre}.`,
-        href: rutaPieza(proyecto.id, pieza.id),
-        empresaId: proyecto.empresaId,
-      });
-    }
-
-    return { proyectoId: proyecto.id, piezaId: pieza.id };
+    return { proyectoId: contexto.proyecto.id, piezaId: contexto.pieza.id };
   });
 
   if (resultado === null) return NO_ALCANCE;

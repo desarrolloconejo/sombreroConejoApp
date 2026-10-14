@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Wrapper } from "@/components/layout/Wrapper";
 import { Auditor, PanelMetricasFicha, PendientesPaso } from "@/components/hooks";
 import { PanelLateral } from "@/components/listado";
+import { Alerta, BotonEnlace } from "@/components/ui";
 import { auditar, limitesPorDefecto } from "@/lib/hooks/auditor";
-import { requerirCargo } from "@/lib/sesion";
+import { requerirHooks } from "@/lib/portal/acceso";
 import * as empresasModelo from "@/models/empresas";
 import * as fichasModelo from "@/models/fichas";
 import * as referenciasModelo from "@/models/referencias";
@@ -41,12 +43,21 @@ function comoId(valor: unknown): number | null {
 export default async function PaginaAuditor(
   props: PageProps<"/dashboard/hooks/auditor">,
 ) {
-  await requerirCargo("redes");
-
   const parametros = await props.searchParams;
+
+  // Con `?tarea=` entra tambien quien llega desde su tarea de hooks.
+  const { usuario, tarea } = await requerirHooks(comoId(parametros.tarea));
+
+  /*
+   * Quien entra SOLO por su tarea ve su ficha y su veredicto, y nada mas: ni
+   * la cola del equipo ni las metricas, que son de redes.
+   */
+  const soloPorTarea =
+    tarea !== null && usuario.rol !== "admin" && usuario.cargoSlug !== "redes";
+
   const idPedida = comoId(parametros.ficha);
 
-  const [empresas, pendientes, ficha] = await Promise.all([
+  const [empresas, pendientes, pedida] = await Promise.all([
     empresasModelo.listarActivas(),
 
     // Un borrador es, por definicion, una pieza escrita que aun no ha pasado
@@ -60,6 +71,9 @@ export default async function PaginaAuditor(
 
     idPedida !== null ? fichasModelo.buscarPorId(idPedida) : null,
   ]);
+
+  // Por la tarea solo se abre una ficha de esa tarea.
+  const ficha = soloPorTarea && pedida?.tareaId !== tarea.id ? null : pedida;
 
   /*
    * El veredicto se vuelve a calcular aqui, no viaja por la URL.
@@ -91,9 +105,11 @@ export default async function PaginaAuditor(
    * donde salio, y no en un auditor vacio.
    */
   const hrefVuelta = ficha ? `${RUTA}?ficha=${ficha.id}` : "";
-  const hrefCorregir = ficha
-    ? `/dashboard/hooks/nuevo?panel=editar&id=${ficha.id}`
-    : "";
+  const hrefCorregir = !ficha
+    ? ""
+    : tarea
+      ? `/dashboard/hooks/nuevo?tarea=${tarea.id}`
+      : `/dashboard/hooks/nuevo?panel=editar&id=${ficha.id}`;
 
   /*
    * QUIEN PUEDE PASAR A METRICAS.
@@ -160,6 +176,54 @@ export default async function PaginaAuditor(
         colara por encima al pulsar una fila, el contenido se desplazaria hacia
         abajo justo debajo del cursor y se acabaria mirando otra cosa.
       */}
+      {tarea && (
+        <Alerta tono="info" className="surge mb-5">
+          Ficha de la tarea <b className="font-semibold">«{tarea.titulo}»</b>, de{" "}
+          <b className="font-semibold">«{tarea.piezaTitulo}»</b>.{" "}
+          {resultado?.aprobado
+            ? "Aprobo la auditoria: la tarea quedo lista."
+            : "Todavia no aprueba: corrigela y vuelve a auditarla."}{" "}
+          <Link href={tarea.hrefPieza} className="font-semibold underline underline-offset-2">
+            Volver a la pieza
+          </Link>
+        </Alerta>
+      )}
+
+      {soloPorTarea ? (
+        <div className="surge rounded-[15px] border border-borde bg-superficie px-[26px] py-6 shadow-[var(--sombra)]">
+          {ficha && resultado ? (
+            <>
+              <p className="text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">Nota</p>
+              <p className="mt-1 text-[40px] leading-none font-extrabold tracking-[-0.03em] tabular-nums">
+                {resultado.nota}
+                <span className="text-[16px] text-suave">/100</span>
+              </p>
+              <p className="mt-3 text-[15px] font-semibold">&laquo;{ficha.hablado}&raquo;</p>
+              <ul className="mt-4 flex flex-col gap-1.5">
+                {resultado.controles.map((control) => (
+                  <li key={control.clave} className="text-[12.5px]">
+                    <b className="font-semibold">{control.titulo}:</b>{" "}
+                    <span className="text-suave">{control.mensaje}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 border-t border-borde pt-5">
+                <BotonEnlace href={hrefCorregir} tamano="chico">
+                  {resultado.aprobado ? "Ver la ficha" : "Corregir la ficha"}
+                </BotonEnlace>
+              </div>
+            </>
+          ) : (
+            <p className="text-[13px] text-suave">
+              Esta tarea todavia no tiene una ficha auditada.{" "}
+              <Link href={`/dashboard/hooks/nuevo?tarea=${tarea.id}`} className="font-semibold text-acento underline underline-offset-2">
+                Escribirla
+              </Link>
+            </p>
+          )}
+        </div>
+      ) : (
+      <>
       <PendientesPaso
         fichas={pendientes.filas}
         titulo="Esperan auditoria"
@@ -189,6 +253,8 @@ export default async function PaginaAuditor(
           rutaLimpia={RUTA}
         />
       </div>
+      </>
+      )}
 
       {abrirMetricas && ficha && (
         <PanelLateral

@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 
 import { auditar } from "@/lib/hooks/auditor";
 import { metricaDe, SLUGS_OBJETIVO, SLUGS_PLATAFORMA } from "@/lib/hooks/catalogo";
+import { conSesion } from "@/lib/db";
+import { requerirHooks } from "@/lib/portal/acceso";
+import { cumplirTarea, tareaMarcable } from "@/lib/portal/tareas";
 import { requerirCargo } from "@/lib/sesion";
 import { comoIdentificador, limpiarOpcional, limpiarTexto } from "@/lib/validaciones";
 import * as ediciones from "@/models/ediciones";
@@ -22,7 +25,9 @@ import type {
 /**
  * Acciones del modulo de hooks.
  *
- * Todas empiezan con `requerirCargo("redes")`. El proxy ya filtra la ruta,
+ * Todas empiezan con `requerirCargo("redes")`, salvo las del canvas, que
+ * empiezan con `requerirHooks`: dejan pasar ademas a quien llega con una tarea
+ * de hooks suya (hooks como herramienta). El proxy ya filtra la ruta,
  * pero una Server Action es un POST a la page donde se usa: si el matcher
  * cambiara, esta linea es lo unico que seguiria impidiendo que cualquiera
  * escriba fichas.
@@ -136,7 +141,7 @@ export async function guardarBorrador(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
 ): Promise<EstadoAuditoria> {
-  const usuario = await requerirCargo("redes");
+  const { usuario, tarea } = await requerirHooks(comoIdentificador(datos.get("tareaId")));
 
   const { datos: ficha, errores } = validarFicha(datos);
 
@@ -152,6 +157,8 @@ export async function guardarBorrador(
 
     if (!actualizada) return { ok: false, mensaje: "Esa ficha ya no existe" };
 
+    if (tarea) await fichas.vincularTarea(id, tarea.id);
+
     // Quien la toco queda anotado: en el historial cualquiera edita la ficha
     // de cualquiera, y la ficha sola solo sabe quien la creo.
     await ediciones.registrar(id, usuario.id, "editada");
@@ -161,6 +168,8 @@ export async function guardarBorrador(
   }
 
   const creada = await fichas.crear(ficha, usuario.id);
+
+  if (tarea) await fichas.vincularTarea(creada.id, tarea.id);
 
   await ediciones.registrar(creada.id, usuario.id, "creada");
 
@@ -194,7 +203,7 @@ export async function auditarHook(
   _estadoPrevio: EstadoAuditoria,
   datos: FormData,
 ): Promise<EstadoAuditoria> {
-  const usuario = await requerirCargo("redes");
+  const { usuario, tarea } = await requerirHooks(comoIdentificador(datos.get("tareaId")));
 
   const { datos: ficha, errores } = validarFicha(datos);
 
@@ -214,6 +223,8 @@ export async function auditarHook(
 
   if (!guardada) return { ok: false, mensaje: "Esa ficha ya no existe" };
 
+  if (tarea) await fichas.vincularTarea(guardada.id, tarea.id);
+
   const limites = await reglas.limitesDeEmpresa(ficha.empresaId);
 
   const resultado = auditar({
@@ -228,6 +239,21 @@ export async function auditarHook(
   /* Se anota una sola linea, «auditada»: guardar y auditar son aqui un mismo
      gesto, y dos filas con la misma hora contarian dos veces lo mismo. */
   await ediciones.registrar(guardada.id, usuario.id, "auditada");
+
+  /*
+   * Hooks como herramienta: la ficha que cumple una tarea la da por lista en
+   * cuanto aprueba la auditoria. Una que no aprueba no la toca; se reescribe
+   * y se vuelve a auditar.
+   */
+  if (tarea && tarea.estado === "pendiente" && resultado.aprobado) {
+    await conSesion(usuario, async (tx) => {
+      const contexto = await tareaMarcable(tarea.id, usuario, tx);
+      if (contexto) await cumplirTarea(contexto, usuario, tx, "herramienta");
+    });
+
+    revalidatePath("/dashboard/mi-trabajo");
+    revalidatePath(tarea.hrefPieza);
+  }
 
   revalidatePath(RUTA_MODULO, "layout");
 
@@ -248,7 +274,9 @@ export async function auditarHook(
    * `redirect` lanza una excepcion de control de Next, asi que nada de lo que
    * hubiera despues se ejecutaria: es la ultima linea a proposito.
    */
-  redirect(`${RUTA_MODULO}/auditor?ficha=${guardada.id}`);
+  redirect(
+    `${RUTA_MODULO}/auditor?ficha=${guardada.id}${tarea ? `&tarea=${tarea.id}` : ""}`,
+  );
 }
 
 /**

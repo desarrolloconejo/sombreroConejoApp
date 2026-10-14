@@ -230,6 +230,8 @@ export type FichaHook = {
   notaAuditor: number | null;
   metricaPrincipal: string | null;
   estado: EstadoFicha;
+  /** La tarea que cumple, si se escribio desde una. */
+  tareaId: number | null;
   creadoPor: number;
   creadoPorNombre: string | null;
   creadoEn: Date;

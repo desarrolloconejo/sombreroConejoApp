@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Building2, Copy, Lock } from "lucide-react";
 
 import { Wrapper } from "@/components/layout/Wrapper";
 import { ModalConfirmacion } from "@/components/listado";
 import { AvisoAltaEmpresa } from "@/components/empresas";
 import { FormularioHook } from "@/components/hooks";
-import { BotonEnlace } from "@/components/ui";
+import { Alerta, BotonEnlace } from "@/components/ui";
 import { limitesPorDefecto } from "@/lib/hooks/auditor";
 import { leerEstadoListado } from "@/lib/parametros";
-import { requerirCargo } from "@/lib/sesion";
+import { requerirHooks } from "@/lib/portal/acceso";
 import * as empresasModelo from "@/models/empresas";
 import * as fichasModelo from "@/models/fichas";
 import * as referenciasModelo from "@/models/referencias";
@@ -50,9 +51,10 @@ const MIGAS = [
 export default async function PaginaNuevoHook(
   props: PageProps<"/dashboard/hooks/nuevo">,
 ) {
-  const sesion = await requerirCargo("redes");
-
   const parametros = await props.searchParams;
+
+  // Con `?tarea=` entra tambien quien llega desde su tarea de hooks.
+  const { usuario: sesion, tarea } = await requerirHooks(comoId(parametros.tarea));
 
   // Se reutiliza el lector del listado para no volver a escribir el saneado
   // de un id que llega por la URL: nunca lanza y cae a null ante basura.
@@ -86,7 +88,12 @@ export default async function PaginaNuevoHook(
 
   const [empresas, ficha, referencia] = await Promise.all([
     empresasModelo.listarActivas(),
-    estado.panelId !== null ? fichasModelo.buscarPorId(estado.panelId) : null,
+    estado.panelId !== null
+      ? fichasModelo.buscarPorId(estado.panelId)
+      : // Desde una tarea se sigue la ultima ficha escrita para ella.
+        tarea && !esPlantilla
+        ? fichasModelo.ultimaDeTarea(tarea.id)
+        : null,
     esPlantilla && idReferencia !== null
       ? referenciasModelo.buscarPorId(idReferencia)
       : null,
@@ -158,6 +165,20 @@ export default async function PaginaNuevoHook(
         es una ficha nueva, sin su id, que es exactamente la salida que se
         ofrece cuando hace falta otra version.
       */}
+      {tarea && (
+        <Alerta tono="info" className="surge mb-5">
+          Esta ficha cumple la tarea{" "}
+          <b className="font-semibold">«{tarea.titulo}»</b> de{" "}
+          <b className="font-semibold">«{tarea.piezaTitulo}»</b> ({tarea.proyectoNombre}).{" "}
+          {tarea.estado === "lista"
+            ? "La tarea ya esta lista."
+            : "Cuando apruebe la auditoria, la tarea quedara lista sola."}{" "}
+          <Link href={tarea.hrefPieza} className="font-semibold underline underline-offset-2">
+            Ver la pieza
+          </Link>
+        </Alerta>
+      )}
+
       {cerrada ? (
         <div className="surge rounded-[15px] border border-borde bg-superficie px-[26px] py-6 shadow-[var(--sombra)]">
           <p className="mb-2 flex items-center gap-2.5 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
@@ -196,6 +217,7 @@ export default async function PaginaNuevoHook(
         </div>
       ) : (
         <FormularioHook
+          tarea={tarea ? { id: tarea.id, empresaId: tarea.empresaId } : null}
           empresas={empresas}
           ficha={ficha}
           referencia={referencia}

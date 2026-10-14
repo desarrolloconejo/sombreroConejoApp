@@ -157,6 +157,10 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   `src/lib/parametros.ts`, o se ignora sin avisar.
 - Un destino de redireccion que venga de la URL pasa por `destinoSeguro`
   (`src/lib/redireccion.ts`). Nunca se le da a `redirect` un valor crudo.
+- Una herramienta se abre desde su tarea con `?tarea=`: el proxy deja pasar
+  esas rutas aunque el cargo no toque (`RUTAS_POR_TAREA`), y la page decide
+  con su guardia (`requerirHooks`). Sin el parametro, la regla del cargo es
+  la de siempre.
 - El `matcher` de `src/proxy.ts` solo excluye por extension lo que cuelga de
   la raiz y `/images`. Una ruta publica nueva se declara en el proxy, no se
   cuela por el `matcher`.
