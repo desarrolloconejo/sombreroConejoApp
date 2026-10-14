@@ -108,6 +108,18 @@ Necesita el rol y la vista del 5.
 | --- | --- | --- | --- |
 | 10 | `db/neon/10-dos-pasos.sql` | Cuatro columnas en `usuarios`, la tabla `codigos_respaldo` y tres columnas mas en `vw_usuarios_acceso` | `con_dos_pasos = 0` y `los_omitieron = 0`; `permisos = DELETE, INSERT, SELECT, UPDATE` |
 
+### Etapa 3 — Proyectos, bateria y tareas
+
+Necesita el esquema `portal` y las funciones de sesion del 07.
+
+| # | Archivo | Que hace | Resultado esperado |
+| --- | --- | --- | --- |
+| 11 | `db/neon/11-proyectos.sql` | Crea asignaciones, proyectos, piezas, su copy, sus fases, tareas y comentarios internos, con sus politicas y las vistas del avance | `tablas = 7` y `con_seguridad_por_fila = 7`; `politicas = 22`; `vistas = 2` |
+
+No inserta datos. Tras publicar, el administrador asigna a cada ejecutivo
+(cargo `cuentas`) sus empresas desde Empresas: sin asignaciones, un ejecutivo
+no ve ningun proyecto.
+
 ---
 
 ## 3. Variables de entorno en Vercel
@@ -320,6 +332,14 @@ resolver antes.
 | Obligatoria para administradores | **No lo es.** El plan la queria obligatoria para `admin` y `administracion`; por decision del responsable (2026-10-13) se pide por defecto a todos y cualquiera puede decir que no. Un administrador sin dos pasos sigue siendo posible |
 | Quien eligio «ahora no» | No se le vuelve a preguntar. No hay forma de volver a pedirselo a todos salvo pegando SQL |
 
+### Etapa 3
+
+| Tema | Estado |
+| --- | --- |
+| `db/neon/11-proyectos.sql` | Ensayado sobre una base nueva con el esquema de `main` antes de la etapa 3: aplica limpio y deja las tres comprobaciones en su valor |
+| Seguridad por fila de proyectos, piezas, fases y tareas | Probada con `prueba:permisos` en local, con el rol `conejo_app`. Sin probar contra Neon |
+| Cuentas de ejemplo | La semilla anade `cuentas@conejo.test` y dos proyectos de ejemplo. Son solo de desarrollo: `sql:produccion` no los lleva |
+
 ---
 
 ## Registro por etapa
@@ -329,7 +349,7 @@ resolver antes.
 | 1. Cimientos de seguridad | 01 a 05 | `DATABASE_URL`, `JWT_EXPIRACION` | 06 | Si |
 | 2. Externos y avisos | 07, 08, 09 | `APP_URL_PUBLICA`, `CRON_SECRET` | — | Si. El adaptador de archivos pasa a la etapa 4 |
 | Dos pasos (de la etapa 8) | 10 | `TOTP_CLAVE` | — | Si |
-| 3. Proyectos, bateria y tareas | — | — | — | Pendiente |
+| 3. Proyectos, bateria y tareas | 11 | — | — | En curso |
 | 4. Vista del cliente y revision | — | — | — | Pendiente |
 | 5. Presupuestos y proformas | — | — | — | Pendiente |
 | 6. Briefs | — | — | — | Pendiente |

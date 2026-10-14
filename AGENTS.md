@@ -36,6 +36,7 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 | `CLAUDE.md` | Contrato: stack, principios, alcance por fases |
 | `README.md` | Puesta en marcha, comandos, convenciones, despliegue |
 | `docs/planIntegracionPortal.md` | Plan maestro de la integracion. Manda sobre los demas |
+| `docs/reglasBateria.md` | Reglas de proyectos, piezas, fases y tareas, extraidas del paquete. Para la etapa 3 sustituye a `appFacturas` |
 | `docs/despliegueProduccion.md` | Guia viva del despliegue: SQL, variables y pasos, por etapa |
 | `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7. Ejecutado |
 | `docs/informeAuditoria.md` | Resultado de esa revision: que se corrigio y que quedo para el plan del portal |
@@ -55,6 +56,7 @@ src/types/        tipos, reexportados desde index.ts
 src/lib/          infraestructura: db, sesion, jwt, validaciones, navegacion,
                   redireccion
 src/lib/hooks/    criterio del modulo de hooks como funciones puras
+src/lib/portal/   catalogo de servicios y reglas de la bateria, como funciones puras
 src/lib/externos/ adaptadores de servicios externos, con modo simulado y real
 src/lib/correos/  lo que dice cada correo, como funciones puras
 src/lib/finanzas/ criterio de finanzas como funciones puras, y sus tareas
@@ -94,6 +96,14 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   modelos el `ejecutor` es **obligatorio**, y quien los llama lo saca de
   `conSesion`. Cada tabla nueva trae sus politicas y su comprobacion en
   `prueba:permisos`.
+- Si la politica de una tabla tiene que mirar otra tabla con politicas, lo
+  pregunta a una funcion `SECURITY DEFINER` de `portal` (`gestiona_empresa`,
+  `gestiona_pieza`, `trabaja_en_pieza`…). Escrito directamente en la politica,
+  las tablas se consultarian unas a otras en bucle.
+- El avance de una pieza o de un proyecto no se guarda: sale de
+  `portal.v_progreso_pieza` y `portal.v_progreso_proyecto`. Las reglas de cuando
+  se mueve una fase viven en `src/lib/portal/fases.ts`, y la action bloquea la
+  pieza (`piezas.bloquear`) antes de decidir.
 - Con seguridad por fila, un `INSERT … RETURNING` exige ademas permiso de
   lectura sobre la fila escrita. Si quien escribe puede no poder leerla, el
   identificador se reserva antes con `nextval`.
