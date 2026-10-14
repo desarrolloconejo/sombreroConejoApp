@@ -8,7 +8,7 @@ import {
   precioValido,
   subtotalDe,
 } from "@/lib/finanzas/calculo";
-import { dolares, numeroDe, situacionDe, sumarDias } from "@/lib/finanzas/documentos";
+import { dolares, numeroDe, situacionDe, sumarDias, sumarUnMes } from "@/lib/finanzas/documentos";
 
 /**
  * El calculo de presupuestos y proformas (seccion 7.5 del plan).
@@ -140,6 +140,13 @@ test.describe("presentacion", () => {
   test("suma dias sin depender de la zona horaria", () => {
     expect(sumarDias("2026-10-20", 15)).toBe("2026-11-04");
     expect(sumarDias("2026-12-25", 15)).toBe("2027-01-09");
+  });
+
+  test("avanza un mes como la base, sin saltar de mes", () => {
+    expect(sumarUnMes("2026-01-15")).toBe("2026-02-15");
+    expect(sumarUnMes("2026-01-31")).toBe("2026-02-28");
+    expect(sumarUnMes("2028-01-31")).toBe("2028-02-29");
+    expect(sumarUnMes("2026-12-10")).toBe("2027-01-10");
   });
 
   test("muestra dolares con separadores de aqui", () => {

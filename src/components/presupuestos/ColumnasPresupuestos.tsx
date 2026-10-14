@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-import { EtiquetaDocumento, fechaDia } from "@/components/finanzas/Documento";
+import { EtiquetaDocumento, fechaDiaCorta } from "@/components/finanzas/Documento";
 import { dolares, numeroDe, situacionDe } from "@/lib/finanzas/documentos";
 import { rutaPresupuesto } from "@/lib/finanzas/rutas";
 import {
@@ -70,7 +70,7 @@ export function columnasPresupuestos(): Columna<Presupuesto>[] {
       titulo: "Vale hasta",
       ancho: ANCHOS.validez,
       render: (presupuesto) => (
-        <span className="text-[12.5px] tabular-nums">{fechaDia(presupuesto.validoHasta)}</span>
+        <span className="text-[12.5px] tabular-nums">{fechaDiaCorta(presupuesto.validoHasta)}</span>
       ),
     },
     {

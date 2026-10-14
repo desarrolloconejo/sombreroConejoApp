@@ -42,6 +42,18 @@ const FECHA_DIA = new Intl.DateTimeFormat("es-VE", {
   year: "numeric",
 });
 
+/** La misma fecha, corta, para columnas estrechas: «14 nov 2026». */
+const FECHA_DIA_CORTA = new Intl.DateTimeFormat("es-VE", {
+  timeZone: "UTC",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
+export function fechaDiaCorta(fecha: string | null): string {
+  return fecha ? FECHA_DIA_CORTA.format(new Date(`${fecha}T00:00:00Z`)) : "—";
+}
+
 export function fechaHora(fecha: Date | null): string {
   return fecha ? FECHA_HORA.format(fecha) : "—";
 }
