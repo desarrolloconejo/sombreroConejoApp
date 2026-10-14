@@ -1820,3 +1820,21 @@ LEFT JOIN portal.pieza_fases f ON f.pieza_id = pi.id
 GROUP BY pr.id;
 
 GRANT SELECT ON portal.v_progreso_pieza, portal.v_progreso_proyecto TO conejo_app;
+
+-- ---------------------------------------------------------------------------
+-- Hooks como herramienta: la ficha que cumple una tarea.
+--
+-- Una tarea «Escribir el hook» abre el canvas, y la ficha que se escribe desde
+-- ahi queda ligada a ella. Cuando la ficha aprueba la auditoria, la tarea se
+-- da por lista.
+--
+-- Opcional: el modulo de hooks se sigue usando suelto, sin tarea. Si la tarea
+-- se quita (solo se puede mientras esta pendiente), la ficha se queda, sin
+-- tarea.
+-- ---------------------------------------------------------------------------
+ALTER TABLE fichas_hook
+  ADD COLUMN IF NOT EXISTS tarea_id INTEGER REFERENCES portal.tareas(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS fichas_hook_tarea_idx
+  ON fichas_hook (tarea_id)
+  WHERE tarea_id IS NOT NULL;

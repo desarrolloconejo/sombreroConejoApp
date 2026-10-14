@@ -41,3 +41,4 @@ comprobaciones y la vuelta atras— esta en `docs/despliegueProduccion.md`.
 | `09-tasas-de-cambio.sql` | Crea `finanzas.tasas_cambio` y deja que la tarea programada escriba y notifique. **Antes** de subir, despues del 08 | Pendiente |
 | `10-dos-pasos.sql` | Verificacion en dos pasos: tres columnas en `usuarios`, la tabla `codigos_respaldo` y tres columnas mas en `vw_usuarios_acceso`. **Antes** de subir, despues del 05 | Pendiente |
 | `11-proyectos.sql` | Etapa 3: asignaciones, proyectos, piezas, copy, fases, tareas y comentarios, con sus politicas y las vistas del avance. **Antes** de subir, despues del 07 | Pendiente |
+| `12-hooks-herramienta.sql` | Etapa 3: `fichas_hook.tarea_id`, la ficha que cumple una tarea. **Antes** de subir, despues del 11 | Pendiente |
