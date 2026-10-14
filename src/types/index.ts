@@ -127,6 +127,7 @@ export type {
   TipoCorreccion,
   AlertaPieza,
   PersonaBreve,
+  PersonaDeEquipo,
   Asignacion,
   AvanceProyecto,
   AlertasProyecto,

@@ -37,6 +37,19 @@ export async function deEmpresa(
   );
 }
 
+/**
+ * Todas las que ve quien pregunta: el admin, todas; un ejecutivo, las de las
+ * empresas que atiende.
+ */
+export async function visibles(ejecutor: Ejecutor): Promise<Asignacion[]> {
+  return consultar<Asignacion>(
+    `SELECT ${COLUMNAS} ${DESDE}
+     ORDER BY lower(e.nombre), lower(u.nombre)`,
+    [],
+    ejecutor,
+  );
+}
+
 /** Las empresas que atiende una persona. */
 export async function deUsuario(
   usuarioId: number,

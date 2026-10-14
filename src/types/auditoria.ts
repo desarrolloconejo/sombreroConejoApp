@@ -31,7 +31,23 @@ export type AccionAuditoria =
   | "correo.entregado_a_mano"
   | "correo.reintentado"
   | "tasa.registrada"
-  | "tasa.rechazada";
+  | "tasa.rechazada"
+  | "proyecto.creado"
+  | "proyecto.editado"
+  | "proyecto.estado_cambiado"
+  | "pieza.creada"
+  | "pieza.editada"
+  | "pieza.cancelada"
+  | "pieza.copy_editado"
+  | "pieza.comentada"
+  | "fase.completada"
+  | "fase.regresada"
+  | "fase.planificada"
+  | "tarea.creada"
+  | "tarea.editada"
+  | "tarea.lista"
+  | "tarea.reabierta"
+  | "tarea.quitada";
 
 /** Como se lee cada accion en pantalla. */
 export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
@@ -61,6 +77,22 @@ export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
   "correo.reintentado": "Reintento de envio de un correo",
   "tasa.registrada": "Tasa de cambio registrada",
   "tasa.rechazada": "Lectura de la tasa rechazada",
+  "proyecto.creado": "Proyecto creado",
+  "proyecto.editado": "Proyecto editado",
+  "proyecto.estado_cambiado": "Cambio de estado de un proyecto",
+  "pieza.creada": "Pieza anadida",
+  "pieza.editada": "Pieza editada",
+  "pieza.cancelada": "Pieza cancelada",
+  "pieza.copy_editado": "Copy de una pieza editado",
+  "pieza.comentada": "Comentario interno en una pieza",
+  "fase.completada": "Fase completada",
+  "fase.regresada": "Fase regresada",
+  "fase.planificada": "Fecha o responsable de una fase",
+  "tarea.creada": "Tarea creada",
+  "tarea.editada": "Tarea editada",
+  "tarea.lista": "Tarea marcada como lista",
+  "tarea.reabierta": "Tarea reabierta",
+  "tarea.quitada": "Tarea quitada",
 };
 
 /**
@@ -73,6 +105,10 @@ export const MODULOS_DE_AUDITORIA = {
   empresa: "Empresas",
   correo: "Correos",
   tasa: "Tasa de cambio",
+  proyecto: "Proyectos",
+  pieza: "Piezas",
+  fase: "Fases",
+  tarea: "Tareas",
 } as const;
 
 export type ModuloAuditoria = keyof typeof MODULOS_DE_AUDITORIA;

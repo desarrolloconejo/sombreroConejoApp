@@ -230,6 +230,21 @@ export async function buscarPorId(
   return fila ? comoProyecto(fila) : null;
 }
 
+/**
+ * Si quien pregunta gestiona el proyecto: lo crea, lo mueve y asigna. La
+ * respuesta es la de la base, la misma que aplican sus politicas.
+ */
+export async function gestiona(id: number, ejecutor: Ejecutor): Promise<boolean> {
+  const fila = await consultarUno<{ gestiona: boolean }>(
+    `SELECT portal.gestiona_empresa(empresa_id) AS gestiona
+     FROM portal.proyectos WHERE id = $1`,
+    [id],
+    ejecutor,
+  );
+
+  return fila?.gestiona ?? false;
+}
+
 /** Crea el proyecto y devuelve su id. Las piezas se crean aparte. */
 export async function crear(
   datos: DatosNuevoProyecto,
@@ -325,6 +340,18 @@ export async function empresasGestionables(ejecutor: Ejecutor): Promise<NombreEm
      FROM empresas
      WHERE activo AND portal.gestiona_empresa(id)
      ORDER BY lower(nombre)`,
+    [],
+    ejecutor,
+  );
+}
+
+/** Los administradores activos: pueden llevar cualquier proyecto. */
+export async function administradores(ejecutor: Ejecutor): Promise<PersonaBreve[]> {
+  return consultar<PersonaBreve>(
+    `SELECT id, nombre || ' ' || apellido AS nombre
+     FROM vw_usuarios_completos
+     WHERE activo AND rol = 'admin'
+     ORDER BY lower(nombre), lower(apellido)`,
     [],
     ejecutor,
   );
