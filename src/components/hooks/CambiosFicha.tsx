@@ -3,6 +3,7 @@ import { FilePlus2, Pencil, ShieldCheck, ChartNoAxesColumn } from "lucide-react"
 import { PanelCuerpo, PanelPie } from "@/components/listado";
 import { BotonEnlace } from "@/components/ui";
 import type { AccionEdicion, EdicionFicha } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Quien ha tocado esta ficha, y cuando.
@@ -48,8 +49,6 @@ const ACCIONES: Record<
  * cambio hecho a las dos de la tarde se leeria a las seis, y una hora
  * equivocada en un registro de cambios es peor que no tenerlo.
  */
-const ZONA = "America/Caracas";
-
 function cuando(fecha: Date): string {
   return new Intl.DateTimeFormat("es-VE", {
     day: "2-digit",
@@ -57,7 +56,7 @@ function cuando(fecha: Date): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: ZONA,
+    timeZone: ZONA_HORARIA,
   }).format(fecha);
 }
 

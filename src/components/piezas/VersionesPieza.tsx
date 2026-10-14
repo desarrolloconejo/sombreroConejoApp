@@ -8,6 +8,7 @@ import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { Boton, CLASE_CONTROL } from "@/components/ui";
 import { sitioDeEnlace } from "@/lib/portal/archivos";
 import { ESTADO_INICIAL, type Version } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Las versiones de una pieza, para el equipo.
@@ -22,7 +23,7 @@ import { ESTADO_INICIAL, type Version } from "@/types";
 const FECHA = new Intl.DateTimeFormat("es-VE", {
   dateStyle: "medium",
   timeStyle: "short",
-  timeZone: "America/Caracas",
+  timeZone: ZONA_HORARIA,
 });
 
 function Miniatura({ version }: { version: Version }) {

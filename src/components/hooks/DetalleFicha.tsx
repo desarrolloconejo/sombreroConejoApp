@@ -10,6 +10,7 @@ import {
   porcentajeDe,
 } from "@/lib/hooks/catalogo";
 import type { FichaConResultado } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * La ficha de un hook en modo lectura, dentro del panel lateral.
@@ -24,6 +25,7 @@ import type { FichaConResultado } from "@/types";
  */
 
 const FORMATO = new Intl.DateTimeFormat("es-VE", {
+  timeZone: ZONA_HORARIA,
   dateStyle: "long",
   timeStyle: "short",
 });

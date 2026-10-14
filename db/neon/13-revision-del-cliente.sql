@@ -368,11 +368,11 @@ SELECT count(*) AS tablas, count(*) FILTER (WHERE rowsecurity) AS con_seguridad_
 FROM pg_tables
 WHERE schemaname = 'portal' AND tablename IN ('versiones', 'revisiones', 'archivos_simulados');
 
--- Comprobacion 2. Debe devolver politicas = 6 y funciones = 2.
+-- Comprobacion 2. Debe devolver politicas = 6 y funciones = 3.
 SELECT (SELECT count(*) FROM pg_policies
         WHERE schemaname = 'portal' AND tablename IN ('versiones', 'revisiones')) AS politicas,
        (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-        WHERE n.nspname = 'portal' AND p.proname IN ('cliente_aprueba', 'decidir_fase_5')) AS funciones;
+        WHERE n.nspname = 'portal' AND p.proname IN ('cliente_aprueba', 'decidir_fase_5', 'ronda_de_pieza')) AS funciones;
 
 -- Comprobacion 3. Debe devolver nadie_aprueba_aun = numero de clientes: el
 -- permiso nace apagado para todos.

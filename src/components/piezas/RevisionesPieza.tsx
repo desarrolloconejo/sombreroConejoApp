@@ -14,6 +14,7 @@ import {
   type Revision,
   type TipoProyecto,
 } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Lo que decidio el cliente en cada ronda y, mientras se pueda, el ajuste de
@@ -25,7 +26,7 @@ import {
 const FECHA = new Intl.DateTimeFormat("es-VE", {
   dateStyle: "medium",
   timeStyle: "short",
-  timeZone: "America/Caracas",
+  timeZone: ZONA_HORARIA,
 });
 
 export function RevisionesPieza({

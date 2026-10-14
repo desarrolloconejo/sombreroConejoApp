@@ -5,6 +5,7 @@ import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
 import { BotonEnlace, Etiqueta } from "@/components/ui";
 import { nombrePlataforma, nombreTerritorio } from "@/lib/hooks/catalogo";
 import type { ReferenciaHook } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Ficha detallada de una referencia (modo "Ver más"), dentro del panel lateral.
@@ -14,6 +15,7 @@ import type { ReferenciaHook } from "@/types";
  */
 
 const FORMATO = new Intl.DateTimeFormat("es-VE", {
+  timeZone: ZONA_HORARIA,
   dateStyle: "long",
   timeStyle: "short",
 });

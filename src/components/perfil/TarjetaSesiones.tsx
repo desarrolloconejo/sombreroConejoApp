@@ -5,6 +5,7 @@ import { Etiqueta } from "@/components/ui";
 import type { SesionAbierta } from "@/types";
 
 import { CerrarOtrasSesiones } from "./CerrarOtrasSesiones";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Las sesiones que la persona tiene abiertas, y la forma de cerrar las demas.
@@ -20,6 +21,7 @@ const TARJETA =
   "surge rounded-[15px] border border-borde bg-superficie p-[22px] shadow-[var(--sombra)]";
 
 const FORMATO = new Intl.DateTimeFormat("es-VE", {
+  timeZone: ZONA_HORARIA,
   dateStyle: "medium",
   timeStyle: "short",
 });

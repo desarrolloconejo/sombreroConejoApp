@@ -2,6 +2,7 @@ import { CalendarClock, Clock, User, Users } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 
 import type { UsuarioCompleto } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * El estado de la cuenta: tres cifras cortas, en fila.
@@ -26,16 +27,19 @@ const CIFRA =
 const NOTA = "mt-[7px] text-[11.5px] leading-[1.45] text-suave";
 
 const FECHA_CORTA = new Intl.DateTimeFormat("es", {
+  timeZone: ZONA_HORARIA,
   day: "numeric",
   month: "short",
 });
 
 const HORA = new Intl.DateTimeFormat("es", {
+  timeZone: ZONA_HORARIA,
   hour: "2-digit",
   minute: "2-digit",
 });
 
 const MES_Y_ANO = new Intl.DateTimeFormat("es", {
+  timeZone: ZONA_HORARIA,
   month: "long",
   year: "numeric",
 });

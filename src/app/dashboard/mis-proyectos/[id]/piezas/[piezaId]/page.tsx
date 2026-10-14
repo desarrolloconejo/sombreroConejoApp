@@ -14,6 +14,7 @@ import * as proyectosModelo from "@/models/proyectos";
 import * as revisionesModelo from "@/models/revisiones";
 import * as versionesModelo from "@/models/versiones";
 import { NOMBRES_DE_CORRECCION } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * La revision de una pieza: lo que se le envio al cliente, su copy y su
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   title: "Revision",
 };
 
-const FECHA = new Intl.DateTimeFormat("es-VE", { dateStyle: "medium" });
+const FECHA = new Intl.DateTimeFormat("es-VE", { timeZone: ZONA_HORARIA, dateStyle: "medium" });
 
 export default async function PaginaRevision(
   props: PageProps<"/dashboard/mis-proyectos/[id]/piezas/[piezaId]">,

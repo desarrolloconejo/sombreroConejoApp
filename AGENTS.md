@@ -35,10 +35,10 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 
 | Archivo | Para que |
 | --- | --- |
-| `docs/traspaso.md` | **Leer primero mientras exista.** Donde quedo el trabajo (etapa 4 a medias), que falta y como verificarlo |
 | `CLAUDE.md` | Contrato: stack, principios, alcance por fases |
 | `README.md` | Puesta en marcha, comandos, convenciones, despliegue |
 | `docs/planIntegracionPortal.md` | Plan maestro de la integracion. Manda sobre los demas |
+| `docs/verificacionManual.md` | Lo que el responsable prueba a mano, etapa por etapa. Cada etapa anade su seccion al cerrarse |
 | `docs/reglasBateria.md` | Reglas de proyectos, piezas, fases y tareas, extraidas del paquete. Para la etapa 3 sustituye a `appFacturas` |
 | `docs/despliegueProduccion.md` | Guia viva del despliegue: SQL, variables y pasos, por etapa |
 | `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7. Ejecutado |
@@ -206,6 +206,9 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Si el resultado de una action hace desaparecer el componente que la lanzo
   (completar una fase, quitar una tarea), su `useActionState` vive en un
   componente que sigue en pantalla. Si no, el aviso se pierde al revalidar.
+- Todo `Intl.DateTimeFormat` fija `timeZone: ZONA_HORARIA` (`src/lib/fechas.ts`).
+  Sin ella el servidor escribe la hora en UTC, cuatro horas por delante, y
+  servidor y navegador pueden no coincidir y romper la hidratacion.
 - React 19 vacia los campos no controlados al terminar una action: los
   formularios largos controlan sus valores con `useCampos`.
 - Los archivos `'use server'` solo exportan funciones asincronas; tipos y

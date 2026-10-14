@@ -6,6 +6,7 @@ import { PanelCuerpo, PanelPie } from "@/components/listado";
 import { RetirarDosPasos } from "./RetirarDosPasos";
 import { Avatar, BotonEnlace, Estado, Etiqueta } from "@/components/ui";
 import type { NombreRol, UsuarioCompleto } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * La ficha de una cuenta, dentro del panel lateral.
@@ -20,11 +21,12 @@ import type { NombreRol, UsuarioCompleto } from "@/types";
  */
 
 const FORMATO = new Intl.DateTimeFormat("es-VE", {
+  timeZone: ZONA_HORARIA,
   dateStyle: "long",
   timeStyle: "short",
 });
 
-const FORMATO_CORTO = new Intl.DateTimeFormat("es-VE", { dateStyle: "long" });
+const FORMATO_CORTO = new Intl.DateTimeFormat("es-VE", { timeZone: ZONA_HORARIA, dateStyle: "long" });
 
 const NOMBRE_ROL: Record<NombreRol, string> = {
   admin: "Admin",

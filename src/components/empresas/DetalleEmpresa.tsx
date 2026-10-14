@@ -6,6 +6,7 @@ import { BotonEnlace, Estado, Etiqueta } from "@/components/ui";
 import { ENLACES_EMPRESA } from "@/lib/validaciones";
 import type { Asignacion, Empresa, EstadoFicha, PersonaBreve } from "@/types";
 import { EjecutivosEmpresa } from "./EjecutivosEmpresa";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * La ficha de una empresa en modo lectura, dentro del panel lateral.
@@ -15,7 +16,7 @@ import { EjecutivosEmpresa } from "./EjecutivosEmpresa";
  * muestra seis columnas y con eso no se prepara una reunion.
  */
 
-const FORMATO = new Intl.DateTimeFormat("es-VE", { dateStyle: "long" });
+const FORMATO = new Intl.DateTimeFormat("es-VE", { timeZone: ZONA_HORARIA, dateStyle: "long" });
 
 function Dato({ rotulo, children }: { rotulo: string; children: ReactNode }) {
   return (

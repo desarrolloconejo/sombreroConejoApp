@@ -7,6 +7,7 @@ import { Bell } from "lucide-react";
 
 import { marcarNotificacionesLeidas } from "@/actions/notificaciones";
 import type { ResumenDeNotificaciones } from "@/types";
+import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * La campana: cuantas notificaciones hay sin leer, y la lista al abrirla.
@@ -26,7 +27,7 @@ const CUANDO = new Intl.DateTimeFormat("es-VE", {
   month: "short",
   hour: "numeric",
   minute: "2-digit",
-  timeZone: "America/Caracas",
+  timeZone: ZONA_HORARIA,
 });
 
 /** "9+" a partir de diez: el numero exacto no cabe ni hace falta. */
