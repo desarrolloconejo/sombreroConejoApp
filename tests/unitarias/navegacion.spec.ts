@@ -69,9 +69,10 @@ test("una seccion sin modulos visibles no deja su rotulo", () => {
   expect(secciones).toEqual(["General", null]);
 });
 
-test("un cliente no ve nada de la agencia", () => {
+test("un cliente ve su espacio y nada de la agencia", () => {
   expect(menuDe(CLIENTE)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
+    { seccion: "Mi espacio", modulos: ["Mis proyectos"] },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
 });
