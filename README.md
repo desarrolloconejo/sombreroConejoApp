@@ -4,7 +4,8 @@ Plataforma interna de **El Conejo del Sombrero** para centralizar y automatizar
 los procesos de la agencia, orientada a sus trabajadores y a sus clientes.
 
 Hoy cubre autenticacion, usuarios, empresas, perfil, auditoria, la bandeja de
-salida de correos y el modulo de Hooks. Esta
+salida de correos, el modulo de Hooks y el de Proyectos (piezas, bateria de
+fases y tareas). Esta
 en marcha la integracion de un portal completo —briefs, proyectos, revision del
 cliente y finanzas—, cuyo plan vive en
 [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md). La revision
@@ -54,8 +55,8 @@ docker compose exec app-dev npm run seed
 ```
 
 El seed crea las tablas y deja la base lista para entrar: roles, cargos, una
-empresa de ejemplo y ocho cuentas: un administrador, cuatro de prueba (una por
-perfil, entre ellas el ejecutivo `cuentas@conejo.test`) y tres reservadas a las pruebas automaticas, `pruebas@conejo.test`,
+empresa de ejemplo y nueve cuentas: un administrador, cuatro de prueba (una por
+perfil, entre ellas el ejecutivo `cuentas@conejo.test`) y cuatro reservadas a las pruebas automaticas, `pruebas@conejo.test`, `sintareas@conejo.test`,
 `bloqueo@conejo.test` y `dospasos@conejo.test`. Sobre esas tres las pruebas hacen lo que no se puede
 deshacer —restablecer la contrasena, bloquear la cuenta—; no se inicia sesion
 con ellas. Siembra tambien dos proyectos de ejemplo de la empresa, asignada al
@@ -513,11 +514,32 @@ sus raices cortadas y sus espacios finales no son erratas.
 Para cambiar un objetivo hay que tocar tres sitios a la vez: el catalogo, el
 tipo y el `CHECK` de la tabla.
 
+### El modulo de Proyectos
+
+```
+/dashboard/proyectos                         listado y alta
+/dashboard/proyectos/[id]                    resumen y matriz de piezas por fases
+/dashboard/proyectos/[id]/piezas/[piezaId]   fases, tareas, copy y comentarios
+```
+
+Lo gestionan el admin y el ejecutivo de cuentas asignado a la empresa. Quien
+tiene una tarea abre la ficha de esa pieza, marca su tarea y escribe el copy,
+pero no mueve fases. Las reglas estan en
+[docs/reglasBateria.md](docs/reglasBateria.md); el criterio de la agencia
+(plantillas, servicios y tareas sugeridas), en `src/lib/portal/catalogo.ts`; y
+lo que decide si una fase se mueve, en `src/lib/portal/fases.ts`.
+
+Un componente que lanza una action cuyo resultado lo hace desaparecer
+—completar una fase, quitar una tarea, cancelar una pieza— no guarda el estado
+de esa action: lo guarda un componente que sigue en pantalla
+(`MovimientosDeFase`, `TareasFase`). Si no, la revalidacion lo desmonta y el
+aviso no llega a verse.
+
 ## Pruebas
 
 | Bateria | Donde corre | Que cubre |
 | --- | --- | --- |
-| `test:unitarias` | Host | Funciones puras, con Playwright sin navegador: auditor de hooks, destino tras el login, limite de la contrasena, reparto del menu por secciones y lectura de la pagina del BCV |
+| `test:unitarias` | Host | Funciones puras, con Playwright sin navegador: auditor de hooks, destino tras el login, limite de la contrasena, reparto del menu por secciones, lectura de la pagina del BCV y reglas de la bateria de fases |
 | `test:integracion` | Host, con la app levantada | Recorridos reales en un navegador. Recien recreado el contenedor, la primera pasada compila cada pantalla al vuelo y puede necesitar un reintento; la segunda ya va limpia |
 | `prueba:auditor` | Contenedor | La tabla completa de casos del auditor |
 | `prueba:modelos` | Contenedor | Los modelos contra la base; limpia lo que crea |

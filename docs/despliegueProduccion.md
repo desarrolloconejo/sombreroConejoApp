@@ -203,6 +203,16 @@ En la aplicacion publicada, con la cuenta de administrador.
       bandeja. Abrirlo, comprobar que **no** lleva la contrasena y que el
       enlace apunta a la direccion publica, y anotarlo como entregado.
 
+### Etapa 3
+
+- [ ] Asignar al menos un ejecutivo de cuentas a una empresa desde su ficha.
+- [ ] Con ese ejecutivo, abrir Proyectos (en Trabajo) y crear un proyecto de
+      prueba con una pieza. Su pagina muestra la bateria al 0 % y la matriz.
+- [ ] En la ficha de la pieza, marcar la tarea de redaccion y completar la
+      fase: la bateria pasa al 20 %.
+- [ ] Cancelar el proyecto de prueba desde «Estado».
+- [ ] Con una cuenta de otro cargo, `/dashboard/proyectos` devuelve al inicio.
+
 ### Verificacion en dos pasos
 
 - [ ] Al entrar por primera vez con la version nueva aparece la pantalla
@@ -290,6 +300,10 @@ anterior lo ignora.
 - No se puede desactivar a alguien con tareas abiertas, proyectos a su cargo o
   empresas asignadas: el mensaje dice cuantas tiene, y hay que reasignarlas
   antes.
+- **Proyectos** aparece en la seccion Trabajo para el administrador y los
+  ejecutivos de cuentas. Cada pieza recorre cinco fases; el ejecutivo las
+  completa, y quien tiene una tarea la marca como lista y recibe una
+  notificacion cuando le asignan una o cuando su fase empieza.
 
 ### Verificacion en dos pasos
 
