@@ -34,7 +34,15 @@ export type ArchivoNuevo = {
   nombre: string;
   mime: string;
   bytes: Uint8Array;
+  /** Donde va en Drive: las versiones de las piezas, o los comprobantes de pago. */
+  carpeta?: "piezas" | "comprobantes";
 };
+
+/** La carpeta de Drive de cada tipo de archivo. Las crea npm run drive:probar. */
+const CARPETAS = {
+  piezas: "DRIVE_CARPETA_PIEZAS_ID",
+  comprobantes: "DRIVE_CARPETA_COMPROBANTES_ID",
+} as const;
 
 /** Guarda el archivo y devuelve su identificador, con el prefijo de su sitio. */
 export async function subirArchivo(archivo: ArchivoNuevo): Promise<string> {
@@ -51,8 +59,9 @@ export async function subirArchivo(archivo: ArchivoNuevo): Promise<string> {
     return `simulado:${fila.id}`;
   }
 
-  const carpeta = process.env.DRIVE_CARPETA_PIEZAS_ID;
-  if (!carpeta) throw new Error("Falta DRIVE_CARPETA_PIEZAS_ID: ejecuta npm run drive:probar");
+  const variable = CARPETAS[archivo.carpeta ?? "piezas"];
+  const carpeta = process.env[variable];
+  if (!carpeta) throw new Error(`Falta ${variable}: ejecuta npm run drive:probar`);
 
   const token = await tokenDeGoogle();
   const cuerpo = new FormData();

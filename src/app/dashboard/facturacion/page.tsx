@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 
 import { ListaDocumentos } from "@/components/facturacion";
+import { ListaFacturas } from "@/components/facturas";
 import { fechaDia, fechaHora, SECCION_DOCUMENTO } from "@/components/finanzas";
 import { Wrapper } from "@/components/layout/Wrapper";
 import { conSesion } from "@/lib/db";
 import { numeroDe, situacionDe } from "@/lib/finanzas/documentos";
-import { rutaMiPresupuesto, rutaMiProforma } from "@/lib/finanzas/rutas";
+import { rutaMiFactura, rutaMiPresupuesto, rutaMiProforma } from "@/lib/finanzas/rutas";
 import { requerirFinanzasDeEmpresa } from "@/lib/sesion";
+import * as facturasModelo from "@/models/facturas";
 import * as presupuestosModelo from "@/models/presupuestos";
 import * as proformasModelo from "@/models/proformas";
 
@@ -23,12 +25,13 @@ const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Facturacio
  * Las consultas no filtran por empresa: lo hace la base, con la sesion.
  */
 export default async function PaginaFacturacion() {
-  const { usuario } = await requerirFinanzasDeEmpresa();
+  const { usuario, empresaId } = await requerirFinanzasDeEmpresa();
 
-  const { porAprobar, historial, proformas } = await conSesion(usuario, async (tx) => ({
+  const { porAprobar, historial, proformas, facturas } = await conSesion(usuario, async (tx) => ({
     porAprobar: await presupuestosModelo.porAprobar(tx),
     historial: await presupuestosModelo.historial(tx),
     proformas: await proformasModelo.emitidas(tx),
+    facturas: await facturasModelo.deEmpresa(empresaId, tx),
   }));
 
   return (
@@ -36,7 +39,7 @@ export default async function PaginaFacturacion() {
       migas={MIGAS}
       kicker={usuario.empresaNombre ?? "Tu empresa"}
       titulo="Facturacion"
-      descripcion="Los presupuestos que esperan tu aprobacion y las proformas de tu empresa."
+      descripcion="Los presupuestos que esperan tu aprobacion, las proformas y las facturas de tu empresa, y donde reportar lo que pagas."
     >
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <section aria-labelledby="titulo-por-aprobar" className="surge">
@@ -77,6 +80,19 @@ export default async function PaginaFacturacion() {
                 situacion: p.estado,
                 total: p.total,
               }))}
+            />
+          </div>
+        </section>
+
+        <section aria-labelledby="titulo-facturas" className="surge [--retraso:0.08s] lg:col-span-2">
+          <h2 id="titulo-facturas" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
+            Facturas
+          </h2>
+          <div className={SECCION_DOCUMENTO}>
+            <ListaFacturas
+              facturas={facturas}
+              ruta={rutaMiFactura}
+              vacio="Todavia no hay facturas. Aqui veras cada una, lo que falta por pagar y donde reportar tus pagos."
             />
           </div>
         </section>

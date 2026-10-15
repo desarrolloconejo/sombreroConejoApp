@@ -1,21 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ReceiptText } from "lucide-react";
+import { HandCoins, ReceiptText } from "lucide-react";
 
 import { columnasFacturas, EmitirFactura, filtrosFacturas } from "@/components/facturas";
 import { fechaDia, SECCION_DOCUMENTO } from "@/components/finanzas";
 import { Wrapper } from "@/components/layout/Wrapper";
 import { Listado, ListadoVacio } from "@/components/listado";
 import { conSesion } from "@/lib/db";
-import { dolares, numeroDe } from "@/lib/finanzas/documentos";
+import { bolivares, dolares, numeroDe } from "@/lib/finanzas/documentos";
 import { RUTA_FACTURAS, rutaFactura, rutaProforma } from "@/lib/finanzas/rutas";
 import { leerEstadoListado } from "@/lib/parametros";
 import { requerirFinanzas } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
 import * as empresasModelo from "@/models/empresas";
 import * as facturasModelo from "@/models/facturas";
+import * as pagosModelo from "@/models/pagos";
 import * as proformasModelo from "@/models/proformas";
-import type { EstadoCobro } from "@/types";
+import { NOMBRES_DE_TIPO_PAGO, type EstadoCobro } from "@/types";
 
 /**
  * Las facturas emitidas, con su estado de cobro. Arriba, las proformas
@@ -47,7 +48,7 @@ export default async function PaginaFacturas(props: PageProps<"/dashboard/factur
 
   const nombres = await empresasModelo.nombres();
 
-  const { pagina, porFacturar } = await conSesion(usuario, async (tx) => {
+  const { pagina, porFacturar, porConfirmar } = await conSesion(usuario, async (tx) => {
     const empresaIds = (estado.filtros.empresa ?? [])
       .map(comoIdentificador)
       .filter((id): id is number => id !== null);
@@ -66,6 +67,7 @@ export default async function PaginaFacturas(props: PageProps<"/dashboard/factur
         tx,
       ),
       porFacturar: await proformasModelo.porFacturar(tx),
+      porConfirmar: await pagosModelo.porConfirmar(tx),
     };
   });
 
@@ -76,6 +78,32 @@ export default async function PaginaFacturas(props: PageProps<"/dashboard/factur
       titulo="Facturas"
       descripcion="Lo facturado, en bolivares a la tasa del dia, y cuanto falta por cobrar de cada una."
     >
+      {porConfirmar.length > 0 && (
+        <section aria-labelledby="titulo-por-confirmar" className={`surge mb-6 ${SECCION_DOCUMENTO}`}>
+          <h2 id="titulo-por-confirmar" className="flex items-center gap-2 text-[15px] font-bold [&>svg]:size-4">
+            <HandCoins aria-hidden="true" className="text-acento" />
+            Pagos por confirmar
+          </h2>
+          <p className="mt-1 text-[12.5px] text-suave">
+            Lo que reportaron los clientes. No baja el saldo hasta que lo confirmes en su factura.
+          </p>
+          <ul className="mt-3 flex flex-col">
+            {porConfirmar.map((pago) => (
+              <li key={pago.id} className="border-t border-borde py-3">
+                <Link href={rutaFactura(pago.facturaId)} className="text-[13.5px] font-semibold hover:underline">
+                  {pago.empresaNombre} · factura {pago.facturaNumero}
+                </Link>
+                <p className="text-[12px] text-suave">
+                  {NOMBRES_DE_TIPO_PAGO[pago.tipo]}
+                  {pago.medioNombre ? ` · ${pago.medioNombre}` : ""} ·{" "}
+                  {pago.moneda === "USD" ? dolares(pago.monto) : bolivares(pago.monto)} · {pago.reportadoPorNombre}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {porFacturar.length > 0 && (
         <section aria-labelledby="titulo-por-facturar" className={`surge mb-6 ${SECCION_DOCUMENTO}`}>
           <h2 id="titulo-por-facturar" className="flex items-center gap-2 text-[15px] font-bold [&>svg]:size-4">
