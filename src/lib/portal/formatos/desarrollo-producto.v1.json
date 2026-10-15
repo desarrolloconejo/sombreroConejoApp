@@ -1,0 +1,770 @@
+{
+  "$schema": "./formato.schema.json",
+  "clave": "desarrollo-producto",
+  "version": 1,
+  "nombre": "Brief de Desarrollo de Producto",
+  "lema": "De la idea al anaquel, contigo.",
+  "tiempoEstimadoMinutos": 15,
+  "instrucciones": "Responde con la información disponible. Si aún no tienes una respuesta, escribe «No lo sé»; es una respuesta válida y nos ayuda a definir qué debemos resolver juntos.",
+  "confidencialidad": "Toda la información de producto y negocio compartida en este brief se trata de forma confidencial.",
+  "valorNoSe": "No lo sé",
+  "camposAutomaticos": {
+    "fechaEnvio": "La estampa el servidor al enviar (hora de Caracas). Reemplaza al campo «Fecha de entrega del brief» y a la «Fecha» de la firma del formato en papel.",
+    "fechaEntregaAspirada": "Campo de la plataforma (no de este formato): obligatoria al enviar, nunca anterior al día de envío.",
+    "codigo": "ECS-AAAAMMDD-XXXXXX, se asigna al enviar."
+  },
+  "pasos": [
+    {
+      "id": "datos",
+      "titulo": "Datos del proyecto",
+      "preguntas": [
+        {
+          "clave": "empresa",
+          "tipo": "texto_corto",
+          "texto": "Empresa / fabricante",
+          "obligatoria": true,
+          "permiteNoSe": false,
+          "prellenarDe": "cliente.nombre"
+        },
+        {
+          "clave": "marcaMadre",
+          "tipo": "texto_corto",
+          "texto": "Marca madre",
+          "ayuda": "¿Bajo qué marca saldría el producto, si ya existe?",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "productoIdea",
+          "tipo": "texto_corto",
+          "texto": "Producto (idea)",
+          "ayuda": "¿Cómo lo llamas por ahora?",
+          "obligatoria": true,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "responsableNombre",
+          "tipo": "texto_corto",
+          "texto": "Responsable: nombre",
+          "obligatoria": true,
+          "permiteNoSe": false,
+          "prellenarDe": "usuario.nombre"
+        },
+        {
+          "clave": "responsableCargo",
+          "tipo": "texto_corto",
+          "texto": "Responsable: cargo",
+          "obligatoria": true,
+          "permiteNoSe": false
+        },
+        {
+          "clave": "responsableCorreo",
+          "tipo": "email",
+          "texto": "Responsable: correo",
+          "obligatoria": true,
+          "prellenarDe": "usuario.email"
+        },
+        {
+          "clave": "responsableTelefono",
+          "tipo": "telefono",
+          "texto": "Responsable: teléfono",
+          "obligatoria": true
+        }
+      ]
+    },
+    {
+      "id": "idea",
+      "titulo": "01 · La idea",
+      "preguntas": [
+        {
+          "clave": "q01Producto",
+          "tipo": "texto_largo",
+          "texto": "¿Qué producto quieres desarrollar?",
+          "numero": 1,
+          "ayuda": "Descríbelo con tus palabras: qué es, qué hace y cómo te lo imaginas.",
+          "obligatoria": true,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q02Origen",
+          "tipo": "texto_largo",
+          "texto": "¿De dónde salió la idea?",
+          "numero": 2,
+          "ayuda": "¿Viste un hueco en el mercado? ¿Un cliente te lo pidió? ¿Viste algo afuera? ¿Tienes la materia prima?",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q03PorQueCompraria",
+          "tipo": "texto_largo",
+          "texto": "¿Por qué crees que la gente lo compraría?",
+          "numero": 3,
+          "ayuda": "¿Qué necesidad, antojo o problema resuelve que hoy no está bien resuelto?",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q04NivelDefinicion",
+          "tipo": "opcion_unica",
+          "texto": "¿Qué tan definido está?",
+          "numero": 4,
+          "obligatoria": true,
+          "opciones": [
+            {
+              "valor": "solo_idea",
+              "texto": "Solo es una idea en mi cabeza."
+            },
+            {
+              "valor": "idea_clara",
+              "texto": "Tengo la idea clara y algunos detalles."
+            },
+            {
+              "valor": "prototipo",
+              "texto": "Ya tengo fórmula o prototipo funcionando."
+            },
+            {
+              "valor": "pequena_escala",
+              "texto": "Ya lo produzco a pequeña escala."
+            },
+            {
+              "valor": "no_se",
+              "texto": "No lo sé."
+            }
+          ]
+        },
+        {
+          "clave": "q05Nombre",
+          "tipo": "opcion_unica",
+          "texto": "¿Ya tiene nombre?",
+          "numero": 5,
+          "obligatoria": true,
+          "opciones": [
+            {
+              "valor": "definitivo",
+              "texto": "Sí, y es definitivo."
+            },
+            {
+              "valor": "tentativo",
+              "texto": "Tengo uno tentativo, pero es negociable."
+            },
+            {
+              "valor": "varias_ideas",
+              "texto": "Tengo varias ideas sueltas."
+            },
+            {
+              "valor": "crear",
+              "texto": "No: necesito que ustedes lo creen."
+            },
+            {
+              "valor": "no_se",
+              "texto": "No lo sé."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "alcance",
+      "titulo": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+      "introduccion": "Para cada pieza del desarrollo, indica quién la aporta. Si marcas «No sé», lo revisamos juntos en la reunión.",
+      "preguntas": [
+        {
+          "clave": "alcance",
+          "tipo": "matriz_alcance",
+          "texto": "Alcance del desarrollo",
+          "obligatoria": true,
+          "columnas": [
+            {
+              "valor": "cliente",
+              "texto": "Lo tengo yo",
+              "textoFormatoPapel": "Lo tiene el cliente"
+            },
+            {
+              "valor": "agencia",
+              "texto": "Lo crea la agencia"
+            },
+            {
+              "valor": "no_se",
+              "texto": "No sé"
+            }
+          ],
+          "filas": [
+            {
+              "clave": "concepto",
+              "titulo": "Concepto y definición del producto",
+              "descripcion": "La idea afinada: qué es y para quién."
+            },
+            {
+              "clave": "naming",
+              "titulo": "Naming",
+              "descripcion": "Crear o validar el nombre."
+            },
+            {
+              "clave": "formula",
+              "titulo": "Fórmula o desarrollo del producto",
+              "descripcion": "Sabor, receta, materia prima, proveedor."
+            },
+            {
+              "clave": "estructuraEmpaque",
+              "titulo": "Estructura del empaque",
+              "descripcion": "La forma física: envase, tapa, material."
+            },
+            {
+              "clave": "disenoEmpaque",
+              "titulo": "Diseño gráfico del empaque",
+              "descripcion": "El arte, los colores, la etiqueta."
+            },
+            {
+              "clave": "identidadMarca",
+              "titulo": "Identidad de marca del producto",
+              "descripcion": "Logo y sistema visual, si es marca propia."
+            },
+            {
+              "clave": "registroLegales",
+              "titulo": "Registro sanitario y legales",
+              "descripcion": "Permisos, tabla nutricional, sellos."
+            },
+            {
+              "clave": "fotografia",
+              "titulo": "Fotografía del producto",
+              "descripcion": "Para empaque, catálogo y publicidad."
+            },
+            {
+              "clave": "estrategiaComunicacion",
+              "titulo": "Estrategia de comunicación",
+              "descripcion": "El plan: qué decir, a quién y dónde."
+            },
+            {
+              "clave": "planLanzamiento",
+              "titulo": "Plan de lanzamiento",
+              "descripcion": "Cómo y cuándo sale al mercado."
+            },
+            {
+              "clave": "puntoVenta",
+              "titulo": "Material de punto de venta",
+              "descripcion": "POP, exhibidores, sampling."
+            },
+            {
+              "clave": "redesContenido",
+              "titulo": "Manejo de redes y contenido",
+              "descripcion": "Community y contenido continuo."
+            },
+            {
+              "clave": "publicidadPauta",
+              "titulo": "Publicidad y pauta",
+              "descripcion": "Medios pagados."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "producto",
+      "titulo": "03 · El producto por dentro",
+      "preguntas": [
+        {
+          "clave": "q06Presentaciones",
+          "tipo": "texto_largo",
+          "texto": "Presentaciones y tamaños",
+          "numero": 6,
+          "ayuda": "¿En qué formatos lo imaginas? Tamaños, contenidos. Si no lo sabes, podemos recomendarte opciones.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q07Variantes",
+          "tipo": "texto_largo",
+          "texto": "Variantes",
+          "numero": 7,
+          "ayuda": "¿Habrá sabores, aromas o versiones? ¿Cuáles imaginas para empezar?",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q08Produccion",
+          "tipo": "texto_largo",
+          "texto": "¿Cómo se produce?",
+          "numero": 8,
+          "ayuda": "¿Lo fabricas tú, lo maquila un tercero o lo importas? Esto ayuda a entender tiempos y costos.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q09MateriaPrima",
+          "tipo": "texto_largo",
+          "texto": "Materia prima o insumo clave",
+          "numero": 9,
+          "ayuda": "¿Hay algo especial de lo que depende el producto: un ingrediente, proveedor único o componente estacional?",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q10Diferencial",
+          "tipo": "texto_largo",
+          "texto": "Lo que lo hace especial",
+          "numero": 10,
+          "ayuda": "¿Qué tiene este producto que la competencia no? Por ejemplo: natural, artesanal, más rendidor o con un sabor único.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q11Pendientes",
+          "tipo": "texto_largo",
+          "texto": "¿Qué le falta para estar listo?",
+          "numero": 11,
+          "ayuda": "Indica los pendientes que conoces: de producto, legales, producción u otros.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        }
+      ]
+    },
+    {
+      "id": "mercado",
+      "titulo": "04 · El mercado",
+      "preguntas": [
+        {
+          "clave": "q12Consumidor",
+          "tipo": "texto_largo",
+          "texto": "¿Quién lo va a consumir?",
+          "numero": 12,
+          "ayuda": "Descríbenos a la persona: edad, cómo es, cuándo y cómo usaría el producto.",
+          "obligatoria": true,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q13Comprador",
+          "tipo": "texto_largo",
+          "texto": "¿Quién lo va a comprar?",
+          "numero": 13,
+          "ayuda": "Si es distinto de quien lo consume —por ejemplo, la mamá compra y el niño come—, describe ambos perfiles.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q14Competencia",
+          "tipo": "texto_largo",
+          "texto": "¿Contra qué compite?",
+          "numero": 14,
+          "ayuda": "Marcas o productos concretos que hacen algo parecido, o que las personas compran hoy en vez de este producto.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q15CanalesVenta",
+          "tipo": "opcion_multiple",
+          "texto": "¿Dónde te gustaría venderlo?",
+          "numero": 15,
+          "obligatoria": true,
+          "opciones": [
+            {
+              "valor": "supermercados",
+              "texto": "Supermercados y cadenas."
+            },
+            {
+              "valor": "bodegas",
+              "texto": "Bodegas, abastos y kioscos."
+            },
+            {
+              "valor": "mayoristas",
+              "texto": "Mayoristas y distribuidores."
+            },
+            {
+              "valor": "farmacias",
+              "texto": "Farmacias."
+            },
+            {
+              "valor": "especializadas",
+              "texto": "Tiendas especializadas."
+            },
+            {
+              "valor": "en_linea",
+              "texto": "En línea: web propia o aplicaciones."
+            },
+            {
+              "valor": "venta_directa",
+              "texto": "Venta directa."
+            },
+            {
+              "valor": "no_se",
+              "texto": "No lo sé todavía."
+            }
+          ]
+        },
+        {
+          "clave": "q16Precio",
+          "tipo": "texto_largo",
+          "texto": "¿A qué precio lo imaginas?",
+          "numero": 16,
+          "ayuda": "Frente a lo que ya existe: ¿más barato, parecido o más caro pero mejor? Un estimado es suficiente.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        }
+      ]
+    },
+    {
+      "id": "empaque",
+      "titulo": "05 · El empaque",
+      "ocultoSi": "reglas.ocultarEmpaque",
+      "preguntas": [
+        {
+          "clave": "q17EstadoEmpaque",
+          "tipo": "opcion_unica",
+          "texto": "¿En qué punto está el empaque?",
+          "numero": 17,
+          "obligatoria": true,
+          "opciones": [
+            {
+              "valor": "desde_cero",
+              "texto": "No hay nada: hay que crearlo desde cero."
+            },
+            {
+              "valor": "idea",
+              "texto": "Tengo una idea de cómo lo quiero."
+            },
+            {
+              "valor": "estructura_sin_diseno",
+              "texto": "Tengo la estructura; falta el diseño."
+            },
+            {
+              "valor": "existe_ajustar",
+              "texto": "Ya existe y solo hay que ajustarlo."
+            },
+            {
+              "valor": "no_se",
+              "texto": "No lo sé."
+            }
+          ]
+        },
+        {
+          "clave": "q18Estilo",
+          "tipo": "texto_largo",
+          "texto": "¿Cómo te imaginas que se vea?",
+          "numero": 18,
+          "ayuda": "Estilos, colores y sensaciones. Puede ser natural, colorido, elegante, divertido, minimalista u otra dirección.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q19Referencias",
+          "tipo": "texto_largo",
+          "texto": "Empaques que te gustan",
+          "numero": 19,
+          "ayuda": "Comparte productos de cualquier categoría cuyo empaque admires y explica por qué.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q20Restricciones",
+          "tipo": "texto_largo",
+          "texto": "Restricciones del empaque",
+          "numero": 20,
+          "ayuda": "¿Existe algo que condicione el diseño? Por ejemplo: material obligatorio, tamaño de anaquel, requerimiento reciclable o presupuesto de impresión.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q21Obligatorio",
+          "tipo": "texto_largo",
+          "texto": "¿Qué debe decir sí o sí?",
+          "numero": 21,
+          "ayuda": "Sellos, avisos legales, tabla nutricional, marca madre u otra información obligatoria de la categoría.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        }
+      ]
+    },
+    {
+      "id": "lanzamiento",
+      "titulo": "06 · Lanzamiento y comunicación",
+      "preguntas": [
+        {
+          "clave": "q22ObjetivoLanzamiento",
+          "tipo": "opcion_multiple",
+          "texto": "¿Qué quieres lograr con el lanzamiento?",
+          "numero": 22,
+          "obligatoria": true,
+          "opciones": [
+            {
+              "valor": "prueba",
+              "texto": "Que la gente lo pruebe por primera vez."
+            },
+            {
+              "valor": "conocimiento",
+              "texto": "Que se sepa que existe."
+            },
+            {
+              "valor": "distribucion",
+              "texto": "Meterlo en las tiendas: que las cadenas lo acepten."
+            },
+            {
+              "valor": "posicionamiento",
+              "texto": "Posicionar la marca, más allá de este producto."
+            },
+            {
+              "valor": "no_se",
+              "texto": "No lo sé: ayúdennos a definirlo."
+            }
+          ]
+        },
+        {
+          "clave": "q23Escala",
+          "tipo": "opcion_unica",
+          "texto": "¿Qué tan grande lo imaginas?",
+          "numero": 23,
+          "obligatoria": true,
+          "opciones": [
+            {
+              "valor": "discreto",
+              "texto": "Discreto: empezar de a poco y crecer."
+            },
+            {
+              "valor": "mediano",
+              "texto": "Mediano: una zona o canal, bien hecho."
+            },
+            {
+              "valor": "grande",
+              "texto": "Grande: salir fuerte desde el día uno."
+            },
+            {
+              "valor": "no_se",
+              "texto": "No lo sé."
+            }
+          ]
+        },
+        {
+          "clave": "q24Medios",
+          "tipo": "opcion_multiple",
+          "texto": "¿Dónde quieres comunicar?",
+          "numero": 24,
+          "obligatoria": true,
+          "opciones": [
+            {
+              "valor": "redes",
+              "texto": "Redes sociales."
+            },
+            {
+              "valor": "influencers",
+              "texto": "Influencers."
+            },
+            {
+              "valor": "digital",
+              "texto": "Publicidad digital."
+            },
+            {
+              "valor": "tv_radio",
+              "texto": "TV o radio."
+            },
+            {
+              "valor": "exterior",
+              "texto": "Vallas y exterior."
+            },
+            {
+              "valor": "punto_venta",
+              "texto": "Solo en el punto de venta."
+            },
+            {
+              "valor": "no_se",
+              "texto": "No lo sé."
+            }
+          ]
+        },
+        {
+          "clave": "q25IdeaUnica",
+          "tipo": "texto_largo",
+          "texto": "Lo único que la gente debe entender",
+          "numero": 25,
+          "ayuda": "Si las personas captaran una sola idea sobre el producto, ¿cuál debería ser?",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q26Exito",
+          "tipo": "texto_largo",
+          "texto": "¿Cómo sabrás que salió bien?",
+          "numero": 26,
+          "ayuda": "¿Qué tendría que pasar para que consideres exitoso el lanzamiento? Por ejemplo: ventas, número de tiendas, solicitudes o recompra.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        }
+      ]
+    },
+    {
+      "id": "recursos",
+      "titulo": "07 · Recursos y tiempos",
+      "preguntas": [
+        {
+          "clave": "q27Presupuesto",
+          "tipo": "texto_largo",
+          "texto": "Presupuesto del desarrollo",
+          "numero": 27,
+          "ayuda": "Indica un rango y la moneda. Aclara si contempla diseño, producción de piezas y lanzamiento.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q28EstadoPresupuesto",
+          "tipo": "opcion_unica",
+          "texto": "Estado del presupuesto",
+          "numero": 28,
+          "obligatoria": true,
+          "opciones": [
+            {
+              "valor": "aprobado",
+              "texto": "Aprobado."
+            },
+            {
+              "valor": "en_aprobacion",
+              "texto": "En aprobación."
+            },
+            {
+              "valor": "por_definir",
+              "texto": "Por definir: quiero saber cuánto cuesta antes."
+            }
+          ]
+        },
+        {
+          "clave": "q29FechaLanzamiento",
+          "tipo": "texto_largo",
+          "texto": "¿Para cuándo quieres lanzar?",
+          "numero": 29,
+          "ayuda": "¿Existe una fecha objetivo? ¿La marca una temporada, una feria o algún compromiso?",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q30Aportes",
+          "tipo": "opcion_multiple",
+          "texto": "¿Qué aportas tú al proyecto?",
+          "numero": 30,
+          "obligatoria": true,
+          "opciones": [
+            {
+              "valor": "muestras",
+              "texto": "Producto o muestras físicas."
+            },
+            {
+              "valor": "formula",
+              "texto": "Fórmula o receta."
+            },
+            {
+              "valor": "marca_madre",
+              "texto": "Marca madre ya establecida."
+            },
+            {
+              "valor": "distribucion",
+              "texto": "Fuerza de ventas o distribución propia."
+            },
+            {
+              "valor": "contactos",
+              "texto": "Contactos en las cadenas o tiendas."
+            },
+            {
+              "valor": "estudios",
+              "texto": "Estudios o datos del mercado."
+            },
+            {
+              "valor": "nada",
+              "texto": "Nada aún: partimos de cero juntos."
+            }
+          ]
+        },
+        {
+          "clave": "q31Decisores",
+          "tipo": "texto_largo",
+          "texto": "¿Quién decide de tu lado?",
+          "numero": 31,
+          "ayuda": "Indica quién aprueba el nombre, el empaque y la estrategia. Si es un comité o hay socios involucrados, cuéntanos cómo funciona.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        }
+      ]
+    },
+    {
+      "id": "cierre",
+      "titulo": "08 · Antes de enviarlo",
+      "preguntas": [
+        {
+          "clave": "q32FueraAlcance",
+          "tipo": "texto_largo",
+          "texto": "Fuera de alcance",
+          "numero": 32,
+          "ayuda": "¿Hay algo ya resuelto o que no quieres que toquemos?",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q33NoPreguntamos",
+          "tipo": "texto_largo",
+          "texto": "Lo que no te preguntamos",
+          "numero": 33,
+          "ayuda": "¿Qué debemos saber de esta idea o de tu negocio que no aparece en las preguntas anteriores?",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q34MayorDuda",
+          "tipo": "texto_largo",
+          "texto": "Tu mayor duda o miedo",
+          "numero": 34,
+          "ayuda": "¿Qué es lo que más te preocupa de sacar este producto? Una respuesta honesta ayuda a que podamos cuidarte mejor en el proceso.",
+          "obligatoria": false,
+          "permiteNoSe": true
+        },
+        {
+          "clave": "q35Material",
+          "tipo": "texto_largo",
+          "texto": "Material que adjuntas",
+          "numero": 35,
+          "ayuda": "Incluye enlaces o describe bocetos, fotos, muestras, referencias, estudios y el logo de la marca madre.",
+          "obligatoria": false,
+          "permiteNoSe": true,
+          "adjuntos": {
+            "permitir": true,
+            "nota": "DECISIÓN DE IMPLEMENTACIÓN: en la etapa 4 solo se aceptan enlaces y texto. Subida de archivos queda para una versión posterior."
+          }
+        },
+        {
+          "clave": "confirmacion",
+          "tipo": "confirmacion",
+          "obligatoria": true,
+          "texto": "Confirmo que la información de este brief es correcta.",
+          "ayuda": "Reemplaza a la firma del formato en papel. Queda registrado quién confirma (usuario) y la fecha y hora reales del servidor."
+        }
+      ]
+    }
+  ],
+  "reglas": [
+    {
+      "id": "ocultarEmpaque",
+      "descripcion": "Si el cliente marca que TIENE la estructura y el diseño del empaque, se oculta el paso «05 · El empaque» para ahorrarle preguntas.",
+      "cuando": {
+        "todas": [
+          {
+            "pregunta": "alcance",
+            "fila": "estructuraEmpaque",
+            "igual": "cliente"
+          },
+          {
+            "pregunta": "alcance",
+            "fila": "disenoEmpaque",
+            "igual": "cliente"
+          }
+        ]
+      },
+      "entonces": {
+        "ocultarPaso": "empaque",
+        "avisoAlUsuario": "Marcaste que el empaque lo tienes tú. Ocultaremos el paso 06 · El empaque para ahorrarte preguntas."
+      },
+      "efectoEnContenidoCongelado": "Las preguntas de un paso oculto NO se incluyen en el contenido enviado ni en el correo."
+    }
+  ],
+  "avisos": [
+    {
+      "id": "contadorNoSe",
+      "descripcion": "Contador visible de respuestas «No sé» / «No lo sé»; se muestra en el panel «Al enviar».",
+      "textoCero": "Ninguna respuesta marcada «No sé» por ahora.",
+      "textoUno": "1 respuesta marcada «No sé». La revisamos juntos en la reunión de arranque.",
+      "textoVarios": "{n} respuestas marcadas «No sé». Las revisamos juntos en la reunión de arranque."
+    }
+  ]
+}
