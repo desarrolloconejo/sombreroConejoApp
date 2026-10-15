@@ -88,3 +88,58 @@ export async function vigentes(
 
   return filas.map(comoTasa);
 }
+
+/** Las ultimas tasas de una moneda, de la mas reciente a la mas vieja. */
+export async function recientes(
+  fuente: FuenteTasa,
+  moneda: string,
+  limite: number,
+  ejecutor: Ejecutor,
+): Promise<TasaDeCambio[]> {
+  const filas = await consultar<Parameters<typeof comoTasa>[0]>(
+    `SELECT ${COLUMNAS}
+     FROM finanzas.tasas_cambio
+     WHERE fuente = $1 AND moneda = $2
+     ORDER BY fecha_valor DESC
+     LIMIT $3`,
+    [fuente, moneda, limite],
+    ejecutor,
+  );
+
+  return filas.map(comoTasa);
+}
+
+/**
+ * Registra una tasa escrita a mano. Devuelve false si ya habia una para esa
+ * fecha: la tabla es un historico y no se pisa.
+ */
+export async function registrarManual(
+  datos: { fuente: FuenteTasa; moneda: string; fechaValor: string; valor: string },
+  usuarioId: number,
+  ejecutor: Ejecutor,
+): Promise<boolean> {
+  const filas = await ejecutar(
+    `INSERT INTO finanzas.tasas_cambio (fuente, moneda, fecha_valor, valor, origen, registrada_por)
+     VALUES ($1, $2, $3::date, $4::numeric, 'manual', $5)
+     ON CONFLICT (fuente, moneda, fecha_valor) DO NOTHING`,
+    [datos.fuente, datos.moneda, datos.fechaValor, datos.valor, usuarioId],
+    ejecutor,
+  );
+  return filas === 1;
+}
+
+/** Si ya hay tasa de una moneda para una fecha. */
+export async function hayTasaDel(
+  fuente: FuenteTasa,
+  moneda: string,
+  fechaValor: string,
+  ejecutor: Ejecutor,
+): Promise<boolean> {
+  const filas = await consultar<{ uno: number }>(
+    `SELECT 1 AS uno FROM finanzas.tasas_cambio
+     WHERE fuente = $1 AND moneda = $2 AND fecha_valor = $3::date`,
+    [fuente, moneda, fechaValor],
+    ejecutor,
+  );
+  return filas.length > 0;
+}

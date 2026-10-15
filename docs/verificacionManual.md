@@ -295,6 +295,16 @@ empresa de ejemplo con un pago reportado por confirmar.
 
 ### Sin hacer todavia
 
-Todo esta en `docs/pendientesIntegracion.md`. Lo mas importante: registrar la
-tasa a mano, aplicar ISLR e IGTF cuando el contador responda, y calibrar el
-talonario real.
+Todo esta en `docs/pendientesIntegracion.md`. Lo mas importante: aplicar ISLR
+e IGTF cuando el contador responda, y calibrar el talonario real.
+
+## Etapa 8 — Endurecimiento
+
+**Tasa del dolar (como `finanzas@conejo.test`)**
+
+1. Ajustes de finanzas → Tasa del dolar muestra la que se usa hoy y de donde
+   salio (BCV o a mano), y las ultimas.
+2. Registrar una tasa de una fecha pasada sin tasa: queda «a mano».
+3. Registrar otra un 50 % mas alta que la anterior: pide confirmarla con una
+   casilla.
+4. Registrar otra vez la misma fecha: dice que ya hay una y no la cambia.

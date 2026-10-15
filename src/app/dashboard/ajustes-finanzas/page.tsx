@@ -2,16 +2,24 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
-import { DatosFiscales, FormularioAjustes, FormularioNumeracion, MediosPago } from "@/components/ajustesFinanzas";
+import {
+  DatosFiscales,
+  FormularioAjustes,
+  FormularioNumeracion,
+  MediosPago,
+  TasaDolar,
+} from "@/components/ajustesFinanzas";
 import { SECCION_DOCUMENTO } from "@/components/finanzas";
 import { Wrapper } from "@/components/layout/Wrapper";
 import { Etiqueta } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { quedaPocoTalonario } from "@/lib/finanzas/ajustes";
 import { rutaFormatoImpresion } from "@/lib/finanzas/rutas";
+import { hoyEnCaracas } from "@/lib/portal/fases";
 import { requerirFinanzas } from "@/lib/sesion";
 import * as ajustesModelo from "@/models/ajustesFinanzas";
 import * as empresasModelo from "@/models/empresas";
+import * as tasasModelo from "@/models/tasas";
 
 export const metadata: Metadata = {
   title: "Ajustes de finanzas",
@@ -52,12 +60,13 @@ function Seccion({
 export default async function PaginaAjustesFinanzas() {
   const usuario = await requerirFinanzas();
 
-  const { ajustes, numeracion, medios, formatos, fiscales } = await conSesion(usuario, async (tx) => ({
+  const { ajustes, numeracion, medios, formatos, fiscales, tasas } = await conSesion(usuario, async (tx) => ({
     ajustes: await ajustesModelo.leer(tx),
     numeracion: await ajustesModelo.numeracion(tx),
     medios: await ajustesModelo.medios(tx),
     formatos: await ajustesModelo.formatos(tx),
     fiscales: await empresasModelo.datosFiscales(tx),
+    tasas: await tasasModelo.recientes("bcv", "USD", 8, tx),
   }));
 
   if (!ajustes || !numeracion) throw new Error("Faltan los ajustes de finanzas: aplica el esquema");
@@ -70,14 +79,25 @@ export default async function PaginaAjustesFinanzas() {
       descripcion="Lo que se configura una vez para facturar. Cambiarlo no toca las facturas ya emitidas: cada una guarda su copia."
     >
       <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-2">
-        <Seccion
-          id="titulo-emisor"
-          titulo="Emisor e impuestos"
-          descripcion="Lo que se imprime como datos de la agencia, y como se calculan los impuestos."
-          retraso="0.04s"
-        >
-          <FormularioAjustes ajustes={ajustes} />
-        </Seccion>
+        <div className="flex flex-col gap-8">
+          <Seccion
+            id="titulo-emisor"
+            titulo="Emisor e impuestos"
+            descripcion="Lo que se imprime como datos de la agencia, y como se calculan los impuestos."
+            retraso="0.04s"
+          >
+            <FormularioAjustes ajustes={ajustes} />
+          </Seccion>
+
+          <Seccion
+            id="titulo-tasa"
+            titulo="Tasa del dolar"
+            descripcion="La lee cada dia la tarea del BCV. Si falla, se registra aqui: sin tasa no se puede facturar."
+            retraso="0.1s"
+          >
+            <TasaDolar recientes={tasas} hoy={hoyEnCaracas()} />
+          </Seccion>
+        </div>
 
         <div className="flex flex-col gap-8">
           <Seccion

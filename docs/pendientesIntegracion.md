@@ -57,7 +57,6 @@ sigue.
 
 | Que | Por que | Cuando |
 | --- | --- | --- |
-| **Registrar la tasa del dolar a mano** | No hay pantalla. Hoy la tasa solo llega de la lectura diaria del BCV; **si un dia falla y no hay ninguna anterior, no se puede facturar**. La base ya admite tasas manuales (`origen = 'manual'`) | Antes de facturar en produccion |
 | ISLR e IGTF se aplican | Los ajustes existen y nacen apagados, pero encenderlos todavia no cambia ningun calculo: falta la regla del contador (F12). El operador ya puede registrar una retencion de ISLR; el cliente no la ve en su formulario | Cuando el contador responda |
 | PDF de presupuestos, proformas y de la copia del brief | La libreria ya esta (`pdf-lib`); falta el diseno con la marca | Cuando se pida |
 | Correo al cliente cuando se le emite una factura o se resuelve un pago | Hoy solo la campana. Se decide con el correo real | Con la cuenta de la empresa |
@@ -78,6 +77,7 @@ sigue.
 | Seguridad por fila de todas las tablas | Probada en local con `prueba:permisos`; sin probar contra Neon |
 | Subida y descarga en Drive en modo real (piezas y comprobantes) | Probada en modo simulado; `drive:probar` paso el 2026-10-13. Los comprobantes usan `DRIVE_CARPETA_COMPROBANTES_ID` |
 | Impresion sobre el talonario real | Sin probar: no hay hoja del talonario (F13). El PDF y la hoja de calibracion se revisaron en pantalla |
+| Corregir una tasa ya guardada | No se puede: la tabla es un historico y las facturas guardan la suya. Si se registro mal la de hoy y aun no se facturo, se avisa al responsable para borrarla en la base |
 | Correo real por Gmail | Simulado hasta tener la cuenta de la empresa |
 | Archivos `db/neon/` 01 a 16 | Ensayados en local; ninguno pegado en produccion todavia |
 

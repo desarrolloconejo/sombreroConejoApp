@@ -337,7 +337,7 @@ En la aplicacion publicada, con la cuenta de administrador.
 - [ ] En Finanzas → Ajustes de finanzas: llenar el emisor (razon social, RIF,
       domicilio fiscal) y revisar la numeracion. **Con datos reales, no de
       ejemplo**: lo que se emita queda con ellos.
-- [ ] Comprobar que hay tasa del dolar del dia (la lee la tarea programada).
+- [ ] En Ajustes de finanzas → Tasa del dolar, comprobar que hay tasa del dia (la lee la tarea programada). Si no la hay, registrarla a mano.
 - [ ] Con una proforma emitida de prueba: «Emitir la factura». Abre la
       factura con su numero y numero de control.
 - [ ] «Abrir el PDF para imprimir»: sale el PDF con el texto en su sitio.
@@ -562,7 +562,7 @@ resolver antes.
 | Seguridad por fila de facturas, pagos y ajustes | Probada con `prueba:permisos` en local. Sin probar contra Neon |
 | Valores de ejemplo | Emisor, numeracion, talonario, medios de pago e impuestos: ver `docs/pendientesIntegracion.md` |
 | Impresion sobre el talonario real | Sin probar: falta la hoja del talonario (F13) |
-| Registrar la tasa a mano | No hay pantalla todavia: si la lectura del BCV falla y no hay tasa anterior, no se factura |
+| Registrar la tasa a mano | Hecho en la etapa 8: Finanzas → Ajustes de finanzas → Tasa del dolar |
 | Comprobantes en Drive real | Sin probar desde Vercel: aqui en modo simulado |
 
 ## Registro por etapa
