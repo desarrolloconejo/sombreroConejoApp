@@ -298,3 +298,26 @@ const PATRON_CODIGO = /^ECS-\d{8}-[0-9A-F]{6}$/;
 export function codigoValido(codigo: string): boolean {
   return PATRON_CODIGO.test(codigo);
 }
+
+/**
+ * Las respuestas de una version, rearmadas desde lo congelado: lo que hace
+ * falta para contar sus «No lo se» o para mirarla con las reglas del formato.
+ * Las filas de la matriz («alcance.naming») vuelven a ser un objeto.
+ */
+export function respuestasDesdeContenido(contenido: RespuestaCongelada[]): Respuestas {
+  const respuestas: Respuestas = {};
+
+  for (const respuesta of contenido) {
+    if (respuesta.valor === null) continue;
+    const [clave, fila] = respuesta.clave.split(".");
+
+    if (fila) {
+      const actual = (respuestas[clave] as Record<string, string> | undefined) ?? {};
+      respuestas[clave] = { ...actual, [fila]: String(respuesta.valor) };
+    } else {
+      respuestas[clave] = respuesta.valor;
+    }
+  }
+
+  return respuestas;
+}

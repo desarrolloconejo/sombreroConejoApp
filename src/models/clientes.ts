@@ -79,6 +79,22 @@ export async function actualizar(
   return afectadas === 1;
 }
 
+/** Las personas activas de una empresa: a quienes se avisa de sus briefs. */
+export async function activosDe(
+  empresaId: number,
+  ejecutor?: Ejecutor,
+): Promise<{ id: number; nombre: string; email: string; empresaId: number }[]> {
+  return consultar(
+    `SELECT u.id, u.nombre, u.email, c.empresa_id AS "empresaId"
+     FROM clientes c
+     JOIN usuarios u ON u.id = c.usuario_id
+     WHERE c.empresa_id = $1 AND u.activo
+     ORDER BY u.id`,
+    [empresaId],
+    ejecutor,
+  );
+}
+
 /**
  * Quien ve las finanzas de una empresa: sus personas activas con el permiso.
  * Son a quienes se avisa de un presupuesto o una proforma.

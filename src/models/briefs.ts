@@ -49,7 +49,7 @@ const DESDE = `
   LEFT JOIN empresas e ON e.id = b.empresa_id
   LEFT JOIN portal.prospectos pr ON pr.id = b.prospecto_id
   LEFT JOIN LATERAL (
-    SELECT x.id, x.estado, x.valido_hasta FROM finanzas.presupuestos x
+    SELECT x.id, x.estado, x.valido_hasta, x.creado_en FROM finanzas.presupuestos x
     WHERE x.brief_id = b.id ORDER BY x.id DESC LIMIT 1
   ) p ON true
 `;
@@ -83,6 +83,21 @@ export async function listar(
      ORDER BY coalesce(b.enviado_en, b.actualizado_en) DESC, b.id DESC
      LIMIT 200`,
     valores,
+    ejecutor,
+  );
+}
+
+/**
+ * Los briefs que esperan su presupuesto: pasados a presupuesto y sin uno
+ * hecho despues de esa decision. Si el anterior se rechazo y el ejecutivo lo
+ * vuelve a pasar a presupuesto (S-09), reaparece. Lo que ve administracion.
+ */
+export async function esperandoPresupuesto(ejecutor: Ejecutor): Promise<Brief[]> {
+  return consultar<Brief>(
+    `SELECT ${COLUMNAS} ${DESDE}
+     WHERE b.estado = 'en_presupuesto' AND (p.id IS NULL OR p.creado_en < b.resuelto_en)
+     ORDER BY b.resuelto_en, b.id`,
+    [],
     ejecutor,
   );
 }
@@ -309,6 +324,36 @@ export async function convertirProspecto(id: number, ejecutor: Ejecutor): Promis
   );
   if (!fila) throw new Error("No se pudo convertir al prospecto");
   return fila.empresa;
+}
+
+/** Liga un proyecto al brief del que nace. */
+export async function ligarProyecto(proyectoId: number, briefId: number, ejecutor: Ejecutor): Promise<void> {
+  await ejecutar("UPDATE portal.proyectos SET brief_id = $2 WHERE id = $1", [proyectoId, briefId], ejecutor);
+}
+
+/** El prospecto de un brief, para convertirlo en cliente. */
+export async function prospectoDe(
+  id: number,
+  ejecutor: Ejecutor,
+): Promise<{ id: number; empresaNombre: string; contactoNombre: string; email: string; telefono: string | null } | null> {
+  return consultarUno(
+    `SELECT p.id, p.empresa_nombre AS "empresaNombre", p.contacto_nombre AS "contactoNombre",
+            p.email, p.telefono
+     FROM portal.briefs b JOIN portal.prospectos p ON p.id = b.prospecto_id
+     WHERE b.id = $1`,
+    [id],
+    ejecutor,
+  );
+}
+
+/** El enlace de un brief de prospecto, si lo tiene. */
+export async function enlaceDe(id: number, ejecutor: Ejecutor): Promise<number | null> {
+  const fila = await consultarUno<{ enlace: number | null }>(
+    "SELECT enlace_id AS enlace FROM portal.briefs WHERE id = $1",
+    [id],
+    ejecutor,
+  );
+  return fila?.enlace ?? null;
 }
 
 /** El brief del que nacio un proyecto, si lo hay. */
