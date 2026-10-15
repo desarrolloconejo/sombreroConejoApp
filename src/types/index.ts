@@ -175,3 +175,22 @@ export type {
   FiltrosPresupuestos,
   FiltrosProformas,
 } from "./finanzas";
+
+export { NOMBRES_DE_ESTADO_BRIEF } from "./brief";
+export type {
+  EstadoBrief,
+  TipoPregunta,
+  OpcionPregunta,
+  FilaMatriz,
+  Pregunta,
+  PasoBrief,
+  CondicionRegla,
+  ReglaBrief,
+  FormatoBrief,
+  ValorRespuesta,
+  Respuestas,
+  RespuestaCongelada,
+  Brief,
+  VersionBrief,
+  AclaracionBrief,
+} from "./brief";

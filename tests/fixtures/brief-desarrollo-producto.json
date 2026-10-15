@@ -1,0 +1,619 @@
+{
+  "$comentario": "Fixture 100 % FICTICIO (empresa inventada). Sirve para probar: (1) la regla ocultarEmpaque, (2) el congelado de contenido, (3) el hash canónico, (4) el cuerpo del correo y el PDF. La entrada es «respuestas»; la salida esperada es «contenidoCongelado» + «contenidoSha256».",
+  "formato": {
+    "clave": "desarrollo-producto",
+    "version": 1
+  },
+  "entrada": {
+    "solicitante": {
+      "nombre": "Mariana Pérez",
+      "email": "mariana@cacaolosroques.example"
+    },
+    "fechaEntregaAspirada": "2026-12-01",
+    "respuestas": {
+      "empresa": "Cacao Los Roques C.A.",
+      "marcaMadre": "",
+      "productoIdea": "Barra de cacao con papelón",
+      "responsableNombre": "Mariana Pérez",
+      "responsableCargo": "Gerente de mercadeo",
+      "responsableCorreo": "mariana@cacaolosroques.example",
+      "responsableTelefono": "+58 412 555 0100",
+      "q01Producto": "Una barra de chocolate oscuro endulzada con papelón, sin azúcar refinada.",
+      "q02Origen": "Un cliente nos la pidió; ya tenemos el cacao.",
+      "q03PorQueCompraria": "No lo sé",
+      "q04NivelDefinicion": "idea_clara",
+      "q05Nombre": "tentativo",
+      "alcance": {
+        "concepto": "agencia",
+        "naming": "agencia",
+        "formula": "cliente",
+        "estructuraEmpaque": "cliente",
+        "disenoEmpaque": "cliente",
+        "identidadMarca": "no_se",
+        "registroLegales": "cliente",
+        "fotografia": "agencia",
+        "estrategiaComunicacion": "agencia",
+        "planLanzamiento": "agencia",
+        "puntoVenta": "no_se",
+        "redesContenido": "agencia",
+        "publicidadPauta": "no_se"
+      },
+      "q06Presentaciones": "Barra de 50 g y caja de 12 unidades.",
+      "q07Variantes": "Natural y con nibs.",
+      "q08Produccion": "La fabricamos nosotros.",
+      "q09MateriaPrima": "Cacao de Chuao; el papelón es de un proveedor único.",
+      "q10Diferencial": "Sin azúcar refinada.",
+      "q11Pendientes": "Registro sanitario.",
+      "q12Consumidor": "Adultos de 30 a 50 años que cuidan lo que comen.",
+      "q13Comprador": "",
+      "q14Competencia": "Barras importadas en tiendas gourmet.",
+      "q15CanalesVenta": [
+        "especializadas",
+        "en_linea"
+      ],
+      "q16Precio": "Un poco más caro, pero mejor.",
+      "q17EstadoEmpaque": "existe_ajustar",
+      "q18Estilo": "Esta respuesta se descarta porque el paso está oculto.",
+      "q22ObjetivoLanzamiento": [
+        "prueba",
+        "conocimiento"
+      ],
+      "q23Escala": "mediano",
+      "q24Medios": [
+        "redes",
+        "influencers"
+      ],
+      "q25IdeaUnica": "Chocolate de verdad, endulzado con papelón.",
+      "q26Exito": "50 tiendas en 6 meses.",
+      "q27Presupuesto": "USD 5.000 a 8.000, incluye diseño y lanzamiento.",
+      "q28EstadoPresupuesto": "en_aprobacion",
+      "q29FechaLanzamiento": "Antes de diciembre.",
+      "q30Aportes": [
+        "muestras",
+        "formula"
+      ],
+      "q31Decisores": "La gerente y el socio fundador.",
+      "q32FueraAlcance": "",
+      "q33NoPreguntamos": "",
+      "q34MayorDuda": "No lo sé",
+      "q35Material": "https://drive.example/carpeta-referencias",
+      "confirmacion": true
+    }
+  },
+  "contexto": {
+    "reloj": "2026-10-06T14:32:10-04:00",
+    "codigoEsperado": "ECS-20261006-4C9E1A",
+    "nota": "El sufijo es aleatorio en producción; en la prueba se inyecta 4C9E1A (generador de números simulado)."
+  },
+  "salidaEsperada": {
+    "pasoEmpaqueOculto": true,
+    "preguntasCongeladas": 51,
+    "contenidoSha256": "7d18c6aa110524756c114f0d4c5e78da88408ddfa06700adf0a81964fd58d776",
+    "contenidoCongelado": [
+      {
+        "paso": "Datos del proyecto",
+        "clave": "empresa",
+        "numero": null,
+        "pregunta": "Empresa / fabricante",
+        "ayuda": null,
+        "tipo": "texto_corto",
+        "valor": "Cacao Los Roques C.A.",
+        "textoMostrado": "Cacao Los Roques C.A."
+      },
+      {
+        "paso": "Datos del proyecto",
+        "clave": "marcaMadre",
+        "numero": null,
+        "pregunta": "Marca madre",
+        "ayuda": "¿Bajo qué marca saldría el producto, si ya existe?",
+        "tipo": "texto_corto",
+        "valor": null,
+        "textoMostrado": "Sin respuesta"
+      },
+      {
+        "paso": "Datos del proyecto",
+        "clave": "productoIdea",
+        "numero": null,
+        "pregunta": "Producto (idea)",
+        "ayuda": "¿Cómo lo llamas por ahora?",
+        "tipo": "texto_corto",
+        "valor": "Barra de cacao con papelón",
+        "textoMostrado": "Barra de cacao con papelón"
+      },
+      {
+        "paso": "Datos del proyecto",
+        "clave": "responsableNombre",
+        "numero": null,
+        "pregunta": "Responsable: nombre",
+        "ayuda": null,
+        "tipo": "texto_corto",
+        "valor": "Mariana Pérez",
+        "textoMostrado": "Mariana Pérez"
+      },
+      {
+        "paso": "Datos del proyecto",
+        "clave": "responsableCargo",
+        "numero": null,
+        "pregunta": "Responsable: cargo",
+        "ayuda": null,
+        "tipo": "texto_corto",
+        "valor": "Gerente de mercadeo",
+        "textoMostrado": "Gerente de mercadeo"
+      },
+      {
+        "paso": "Datos del proyecto",
+        "clave": "responsableCorreo",
+        "numero": null,
+        "pregunta": "Responsable: correo",
+        "ayuda": null,
+        "tipo": "email",
+        "valor": "mariana@cacaolosroques.example",
+        "textoMostrado": "mariana@cacaolosroques.example"
+      },
+      {
+        "paso": "Datos del proyecto",
+        "clave": "responsableTelefono",
+        "numero": null,
+        "pregunta": "Responsable: teléfono",
+        "ayuda": null,
+        "tipo": "telefono",
+        "valor": "+58 412 555 0100",
+        "textoMostrado": "+58 412 555 0100"
+      },
+      {
+        "paso": "01 · La idea",
+        "clave": "q01Producto",
+        "numero": 1,
+        "pregunta": "¿Qué producto quieres desarrollar?",
+        "ayuda": "Descríbelo con tus palabras: qué es, qué hace y cómo te lo imaginas.",
+        "tipo": "texto_largo",
+        "valor": "Una barra de chocolate oscuro endulzada con papelón, sin azúcar refinada.",
+        "textoMostrado": "Una barra de chocolate oscuro endulzada con papelón, sin azúcar refinada."
+      },
+      {
+        "paso": "01 · La idea",
+        "clave": "q02Origen",
+        "numero": 2,
+        "pregunta": "¿De dónde salió la idea?",
+        "ayuda": "¿Viste un hueco en el mercado? ¿Un cliente te lo pidió? ¿Viste algo afuera? ¿Tienes la materia prima?",
+        "tipo": "texto_largo",
+        "valor": "Un cliente nos la pidió; ya tenemos el cacao.",
+        "textoMostrado": "Un cliente nos la pidió; ya tenemos el cacao."
+      },
+      {
+        "paso": "01 · La idea",
+        "clave": "q03PorQueCompraria",
+        "numero": 3,
+        "pregunta": "¿Por qué crees que la gente lo compraría?",
+        "ayuda": "¿Qué necesidad, antojo o problema resuelve que hoy no está bien resuelto?",
+        "tipo": "texto_largo",
+        "valor": "No lo sé",
+        "textoMostrado": "No lo sé"
+      },
+      {
+        "paso": "01 · La idea",
+        "clave": "q04NivelDefinicion",
+        "numero": 4,
+        "pregunta": "¿Qué tan definido está?",
+        "ayuda": null,
+        "tipo": "opcion_unica",
+        "valor": "idea_clara",
+        "textoMostrado": "Tengo la idea clara y algunos detalles."
+      },
+      {
+        "paso": "01 · La idea",
+        "clave": "q05Nombre",
+        "numero": 5,
+        "pregunta": "¿Ya tiene nombre?",
+        "ayuda": null,
+        "tipo": "opcion_unica",
+        "valor": "tentativo",
+        "textoMostrado": "Tengo uno tentativo, pero es negociable."
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.concepto",
+        "numero": null,
+        "pregunta": "Concepto y definición del producto",
+        "ayuda": "La idea afinada: qué es y para quién.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "agencia",
+        "textoMostrado": "Lo crea la agencia"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.naming",
+        "numero": null,
+        "pregunta": "Naming",
+        "ayuda": "Crear o validar el nombre.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "agencia",
+        "textoMostrado": "Lo crea la agencia"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.formula",
+        "numero": null,
+        "pregunta": "Fórmula o desarrollo del producto",
+        "ayuda": "Sabor, receta, materia prima, proveedor.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "cliente",
+        "textoMostrado": "Lo tengo yo"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.estructuraEmpaque",
+        "numero": null,
+        "pregunta": "Estructura del empaque",
+        "ayuda": "La forma física: envase, tapa, material.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "cliente",
+        "textoMostrado": "Lo tengo yo"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.disenoEmpaque",
+        "numero": null,
+        "pregunta": "Diseño gráfico del empaque",
+        "ayuda": "El arte, los colores, la etiqueta.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "cliente",
+        "textoMostrado": "Lo tengo yo"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.identidadMarca",
+        "numero": null,
+        "pregunta": "Identidad de marca del producto",
+        "ayuda": "Logo y sistema visual, si es marca propia.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "no_se",
+        "textoMostrado": "No sé"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.registroLegales",
+        "numero": null,
+        "pregunta": "Registro sanitario y legales",
+        "ayuda": "Permisos, tabla nutricional, sellos.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "cliente",
+        "textoMostrado": "Lo tengo yo"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.fotografia",
+        "numero": null,
+        "pregunta": "Fotografía del producto",
+        "ayuda": "Para empaque, catálogo y publicidad.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "agencia",
+        "textoMostrado": "Lo crea la agencia"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.estrategiaComunicacion",
+        "numero": null,
+        "pregunta": "Estrategia de comunicación",
+        "ayuda": "El plan: qué decir, a quién y dónde.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "agencia",
+        "textoMostrado": "Lo crea la agencia"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.planLanzamiento",
+        "numero": null,
+        "pregunta": "Plan de lanzamiento",
+        "ayuda": "Cómo y cuándo sale al mercado.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "agencia",
+        "textoMostrado": "Lo crea la agencia"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.puntoVenta",
+        "numero": null,
+        "pregunta": "Material de punto de venta",
+        "ayuda": "POP, exhibidores, sampling.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "no_se",
+        "textoMostrado": "No sé"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.redesContenido",
+        "numero": null,
+        "pregunta": "Manejo de redes y contenido",
+        "ayuda": "Community y contenido continuo.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "agencia",
+        "textoMostrado": "Lo crea la agencia"
+      },
+      {
+        "paso": "02 · Alcance: qué haces tú y qué hacemos nosotros",
+        "clave": "alcance.publicidadPauta",
+        "numero": null,
+        "pregunta": "Publicidad y pauta",
+        "ayuda": "Medios pagados.",
+        "tipo": "matriz_alcance_fila",
+        "valor": "no_se",
+        "textoMostrado": "No sé"
+      },
+      {
+        "paso": "03 · El producto por dentro",
+        "clave": "q06Presentaciones",
+        "numero": 6,
+        "pregunta": "Presentaciones y tamaños",
+        "ayuda": "¿En qué formatos lo imaginas? Tamaños, contenidos. Si no lo sabes, podemos recomendarte opciones.",
+        "tipo": "texto_largo",
+        "valor": "Barra de 50 g y caja de 12 unidades.",
+        "textoMostrado": "Barra de 50 g y caja de 12 unidades."
+      },
+      {
+        "paso": "03 · El producto por dentro",
+        "clave": "q07Variantes",
+        "numero": 7,
+        "pregunta": "Variantes",
+        "ayuda": "¿Habrá sabores, aromas o versiones? ¿Cuáles imaginas para empezar?",
+        "tipo": "texto_largo",
+        "valor": "Natural y con nibs.",
+        "textoMostrado": "Natural y con nibs."
+      },
+      {
+        "paso": "03 · El producto por dentro",
+        "clave": "q08Produccion",
+        "numero": 8,
+        "pregunta": "¿Cómo se produce?",
+        "ayuda": "¿Lo fabricas tú, lo maquila un tercero o lo importas? Esto ayuda a entender tiempos y costos.",
+        "tipo": "texto_largo",
+        "valor": "La fabricamos nosotros.",
+        "textoMostrado": "La fabricamos nosotros."
+      },
+      {
+        "paso": "03 · El producto por dentro",
+        "clave": "q09MateriaPrima",
+        "numero": 9,
+        "pregunta": "Materia prima o insumo clave",
+        "ayuda": "¿Hay algo especial de lo que depende el producto: un ingrediente, proveedor único o componente estacional?",
+        "tipo": "texto_largo",
+        "valor": "Cacao de Chuao; el papelón es de un proveedor único.",
+        "textoMostrado": "Cacao de Chuao; el papelón es de un proveedor único."
+      },
+      {
+        "paso": "03 · El producto por dentro",
+        "clave": "q10Diferencial",
+        "numero": 10,
+        "pregunta": "Lo que lo hace especial",
+        "ayuda": "¿Qué tiene este producto que la competencia no? Por ejemplo: natural, artesanal, más rendidor o con un sabor único.",
+        "tipo": "texto_largo",
+        "valor": "Sin azúcar refinada.",
+        "textoMostrado": "Sin azúcar refinada."
+      },
+      {
+        "paso": "03 · El producto por dentro",
+        "clave": "q11Pendientes",
+        "numero": 11,
+        "pregunta": "¿Qué le falta para estar listo?",
+        "ayuda": "Indica los pendientes que conoces: de producto, legales, producción u otros.",
+        "tipo": "texto_largo",
+        "valor": "Registro sanitario.",
+        "textoMostrado": "Registro sanitario."
+      },
+      {
+        "paso": "04 · El mercado",
+        "clave": "q12Consumidor",
+        "numero": 12,
+        "pregunta": "¿Quién lo va a consumir?",
+        "ayuda": "Descríbenos a la persona: edad, cómo es, cuándo y cómo usaría el producto.",
+        "tipo": "texto_largo",
+        "valor": "Adultos de 30 a 50 años que cuidan lo que comen.",
+        "textoMostrado": "Adultos de 30 a 50 años que cuidan lo que comen."
+      },
+      {
+        "paso": "04 · El mercado",
+        "clave": "q13Comprador",
+        "numero": 13,
+        "pregunta": "¿Quién lo va a comprar?",
+        "ayuda": "Si es distinto de quien lo consume —por ejemplo, la mamá compra y el niño come—, describe ambos perfiles.",
+        "tipo": "texto_largo",
+        "valor": null,
+        "textoMostrado": "Sin respuesta"
+      },
+      {
+        "paso": "04 · El mercado",
+        "clave": "q14Competencia",
+        "numero": 14,
+        "pregunta": "¿Contra qué compite?",
+        "ayuda": "Marcas o productos concretos que hacen algo parecido, o que las personas compran hoy en vez de este producto.",
+        "tipo": "texto_largo",
+        "valor": "Barras importadas en tiendas gourmet.",
+        "textoMostrado": "Barras importadas en tiendas gourmet."
+      },
+      {
+        "paso": "04 · El mercado",
+        "clave": "q15CanalesVenta",
+        "numero": 15,
+        "pregunta": "¿Dónde te gustaría venderlo?",
+        "ayuda": null,
+        "tipo": "opcion_multiple",
+        "valor": [
+          "especializadas",
+          "en_linea"
+        ],
+        "textoMostrado": "Tiendas especializadas.; En línea: web propia o aplicaciones."
+      },
+      {
+        "paso": "04 · El mercado",
+        "clave": "q16Precio",
+        "numero": 16,
+        "pregunta": "¿A qué precio lo imaginas?",
+        "ayuda": "Frente a lo que ya existe: ¿más barato, parecido o más caro pero mejor? Un estimado es suficiente.",
+        "tipo": "texto_largo",
+        "valor": "Un poco más caro, pero mejor.",
+        "textoMostrado": "Un poco más caro, pero mejor."
+      },
+      {
+        "paso": "06 · Lanzamiento y comunicación",
+        "clave": "q22ObjetivoLanzamiento",
+        "numero": 22,
+        "pregunta": "¿Qué quieres lograr con el lanzamiento?",
+        "ayuda": null,
+        "tipo": "opcion_multiple",
+        "valor": [
+          "prueba",
+          "conocimiento"
+        ],
+        "textoMostrado": "Que la gente lo pruebe por primera vez.; Que se sepa que existe."
+      },
+      {
+        "paso": "06 · Lanzamiento y comunicación",
+        "clave": "q23Escala",
+        "numero": 23,
+        "pregunta": "¿Qué tan grande lo imaginas?",
+        "ayuda": null,
+        "tipo": "opcion_unica",
+        "valor": "mediano",
+        "textoMostrado": "Mediano: una zona o canal, bien hecho."
+      },
+      {
+        "paso": "06 · Lanzamiento y comunicación",
+        "clave": "q24Medios",
+        "numero": 24,
+        "pregunta": "¿Dónde quieres comunicar?",
+        "ayuda": null,
+        "tipo": "opcion_multiple",
+        "valor": [
+          "redes",
+          "influencers"
+        ],
+        "textoMostrado": "Redes sociales.; Influencers."
+      },
+      {
+        "paso": "06 · Lanzamiento y comunicación",
+        "clave": "q25IdeaUnica",
+        "numero": 25,
+        "pregunta": "Lo único que la gente debe entender",
+        "ayuda": "Si las personas captaran una sola idea sobre el producto, ¿cuál debería ser?",
+        "tipo": "texto_largo",
+        "valor": "Chocolate de verdad, endulzado con papelón.",
+        "textoMostrado": "Chocolate de verdad, endulzado con papelón."
+      },
+      {
+        "paso": "06 · Lanzamiento y comunicación",
+        "clave": "q26Exito",
+        "numero": 26,
+        "pregunta": "¿Cómo sabrás que salió bien?",
+        "ayuda": "¿Qué tendría que pasar para que consideres exitoso el lanzamiento? Por ejemplo: ventas, número de tiendas, solicitudes o recompra.",
+        "tipo": "texto_largo",
+        "valor": "50 tiendas en 6 meses.",
+        "textoMostrado": "50 tiendas en 6 meses."
+      },
+      {
+        "paso": "07 · Recursos y tiempos",
+        "clave": "q27Presupuesto",
+        "numero": 27,
+        "pregunta": "Presupuesto del desarrollo",
+        "ayuda": "Indica un rango y la moneda. Aclara si contempla diseño, producción de piezas y lanzamiento.",
+        "tipo": "texto_largo",
+        "valor": "USD 5.000 a 8.000, incluye diseño y lanzamiento.",
+        "textoMostrado": "USD 5.000 a 8.000, incluye diseño y lanzamiento."
+      },
+      {
+        "paso": "07 · Recursos y tiempos",
+        "clave": "q28EstadoPresupuesto",
+        "numero": 28,
+        "pregunta": "Estado del presupuesto",
+        "ayuda": null,
+        "tipo": "opcion_unica",
+        "valor": "en_aprobacion",
+        "textoMostrado": "En aprobación."
+      },
+      {
+        "paso": "07 · Recursos y tiempos",
+        "clave": "q29FechaLanzamiento",
+        "numero": 29,
+        "pregunta": "¿Para cuándo quieres lanzar?",
+        "ayuda": "¿Existe una fecha objetivo? ¿La marca una temporada, una feria o algún compromiso?",
+        "tipo": "texto_largo",
+        "valor": "Antes de diciembre.",
+        "textoMostrado": "Antes de diciembre."
+      },
+      {
+        "paso": "07 · Recursos y tiempos",
+        "clave": "q30Aportes",
+        "numero": 30,
+        "pregunta": "¿Qué aportas tú al proyecto?",
+        "ayuda": null,
+        "tipo": "opcion_multiple",
+        "valor": [
+          "muestras",
+          "formula"
+        ],
+        "textoMostrado": "Producto o muestras físicas.; Fórmula o receta."
+      },
+      {
+        "paso": "07 · Recursos y tiempos",
+        "clave": "q31Decisores",
+        "numero": 31,
+        "pregunta": "¿Quién decide de tu lado?",
+        "ayuda": "Indica quién aprueba el nombre, el empaque y la estrategia. Si es un comité o hay socios involucrados, cuéntanos cómo funciona.",
+        "tipo": "texto_largo",
+        "valor": "La gerente y el socio fundador.",
+        "textoMostrado": "La gerente y el socio fundador."
+      },
+      {
+        "paso": "08 · Antes de enviarlo",
+        "clave": "q32FueraAlcance",
+        "numero": 32,
+        "pregunta": "Fuera de alcance",
+        "ayuda": "¿Hay algo ya resuelto o que no quieres que toquemos?",
+        "tipo": "texto_largo",
+        "valor": null,
+        "textoMostrado": "Sin respuesta"
+      },
+      {
+        "paso": "08 · Antes de enviarlo",
+        "clave": "q33NoPreguntamos",
+        "numero": 33,
+        "pregunta": "Lo que no te preguntamos",
+        "ayuda": "¿Qué debemos saber de esta idea o de tu negocio que no aparece en las preguntas anteriores?",
+        "tipo": "texto_largo",
+        "valor": null,
+        "textoMostrado": "Sin respuesta"
+      },
+      {
+        "paso": "08 · Antes de enviarlo",
+        "clave": "q34MayorDuda",
+        "numero": 34,
+        "pregunta": "Tu mayor duda o miedo",
+        "ayuda": "¿Qué es lo que más te preocupa de sacar este producto? Una respuesta honesta ayuda a que podamos cuidarte mejor en el proceso.",
+        "tipo": "texto_largo",
+        "valor": "No lo sé",
+        "textoMostrado": "No lo sé"
+      },
+      {
+        "paso": "08 · Antes de enviarlo",
+        "clave": "q35Material",
+        "numero": 35,
+        "pregunta": "Material que adjuntas",
+        "ayuda": "Incluye enlaces o describe bocetos, fotos, muestras, referencias, estudios y el logo de la marca madre.",
+        "tipo": "texto_largo",
+        "valor": "https://drive.example/carpeta-referencias",
+        "textoMostrado": "https://drive.example/carpeta-referencias"
+      },
+      {
+        "paso": "08 · Antes de enviarlo",
+        "clave": "confirmacion",
+        "numero": null,
+        "pregunta": "Confirmo que la información de este brief es correcta.",
+        "ayuda": "Reemplaza a la firma del formato en papel. Queda registrado quién confirma (usuario) y la fecha y hora reales del servidor.",
+        "tipo": "confirmacion",
+        "valor": true,
+        "textoMostrado": "Confirmado por Mariana Pérez"
+      }
+    ]
+  },
+  "implementacionReferencia": "const canon = (o) => Array.isArray(o) ? '[' + o.map(canon).join(',') + ']' : (o && typeof o === 'object') ? '{' + Object.keys(o).sort().map((k) => JSON.stringify(k) + ':' + canon(o[k])).join(',') + '}' : JSON.stringify(o);  const sha = createHash('sha256').update(canon(contenidoCongelado), 'utf8').digest('hex');",
+  "algoritmoHash": "sha256( UTF-8( JSON canónico( contenidoCongelado ) ) ). JSON canónico = claves de objetos ordenadas alfabéticamente en todos los niveles, sin espacios, sin escapar caracteres no ASCII, arrays en su orden."
+}

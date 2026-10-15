@@ -401,6 +401,33 @@ export async function conSistema<T>(
 }
 
 /**
+ * Una transaccion a nombre de un prospecto: quien llega por un enlace privado
+ * de brief, sin cuenta.
+ *
+ * Declara el rol `prospecto` y el id de su enlace, y ningun usuario. Las
+ * politicas de los briefs le dejan ver y llenar el suyo, y nada mas: el resto
+ * de tablas no nombran ese rol. El enlace ya tiene que estar comprobado
+ * (`portal.enlace_por_token`) antes de llegar aqui.
+ */
+export async function conEnlace<T>(
+  enlaceId: number,
+  operacion: (cliente: PoolClient) => Promise<T>,
+): Promise<T> {
+  return transaccion(async (cliente) => {
+    await cliente.query(
+      `SELECT set_config(app.usuario_id, , true),
+              set_config(app.rol,        prospecto, true),
+              set_config(app.cargo,      , true),
+              set_config(app.empresa_id, , true),
+              set_config(app.enlace_id,  $1, true)`,
+      [String(enlaceId)],
+    );
+
+    return operacion(cliente);
+  });
+}
+
+/**
  * Devuelve un identificador SQL solo si esta en la lista blanca.
  *
  * Los nombres de columna y las direcciones de ordenamiento no se pueden pasar

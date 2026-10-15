@@ -18,6 +18,7 @@ import { join } from "node:path";
 import { Client } from "pg";
 import bcrypt from "bcryptjs";
 import { APERTURAS } from "./datos/aperturas.mts";
+import { sembrarBriefs } from "./datos/briefs.mts";
 import { sembrarFinanzas } from "./datos/finanzas.mts";
 import { PROYECTO_ESPECIAL, sembrarProyectos } from "./datos/proyectos.mts";
 import {
@@ -303,6 +304,19 @@ async function principal(): Promise<void> {
       cliente: equipo.cliente,
     });
     console.log(`Finanzas de ejemplo listas (${documentos} documentos nuevos)`);
+
+    const { rows: personaCliente } = await cliente.query<{ nombre: string; empresa: string }>(
+      `SELECT u.nombre || ' ' || u.apellido AS nombre, e.nombre AS empresa
+       FROM usuarios u JOIN clientes c ON c.usuario_id = u.id JOIN empresas e ON e.id = c.empresa_id
+       WHERE u.id = $1`,
+      [equipo.cliente],
+    );
+    const briefsNuevos = await sembrarBriefs(cliente, empresaId, {
+      id: equipo.cliente,
+      nombre: personaCliente[0].nombre,
+      empresaNombre: personaCliente[0].empresa,
+    });
+    console.log(`Briefs de ejemplo listos (${briefsNuevos} nuevos)`);
 
     // -- Resumen ------------------------------------------------------------
     const { rows: resumen } = await cliente.query<{
