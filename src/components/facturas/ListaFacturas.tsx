@@ -30,18 +30,23 @@ export function ListaFacturas({
             className="suave -mx-2 flex items-center gap-3 rounded-xl px-2 py-3 hover:bg-acento-tenue"
           >
             <div className="min-w-0 flex-1">
-              <p className="text-[11.5px] font-semibold tabular-nums text-acento">
-                {numeroFactura(factura.serie, factura.numero)}
-              </p>
-              <p className="text-[12.5px] text-suave">
-                {factura.estado === "anulada" ? "Anulada" : `Vence el ${fechaDia(factura.venceEl)}`}
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <p className="text-[12px] font-semibold tabular-nums text-acento">
+                  {numeroFactura(factura.serie, factura.numero)}
+                </p>
+                <EtiquetaCobro cobro={factura.cobro} vencida={factura.vencida} />
+              </div>
+              <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3">
+                <p className="text-[12.5px] text-suave">
+                  {factura.estado === "anulada" ? "Anulada" : `Vence el ${fechaDia(factura.venceEl)}`}
+                </p>
+                {factura.estado === "emitida" && (
+                  <p className="text-[13.5px] font-bold tabular-nums">
+                    {bolivares(factura.saldo)} <span className="text-[11.5px] font-normal text-suave">por pagar</span>
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-[13.5px] font-bold tabular-nums">{bolivares(factura.saldo)}</p>
-              <p className="text-[11.5px] text-suave">por pagar</p>
-            </div>
-            <EtiquetaCobro cobro={factura.cobro} vencida={factura.vencida} />
             <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-suave" />
           </Link>
         </li>

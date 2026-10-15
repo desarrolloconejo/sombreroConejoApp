@@ -5,7 +5,7 @@ import { ListaFacturas } from "@/components/facturas";
 import { fechaDia, fechaHora, SECCION_DOCUMENTO } from "@/components/finanzas";
 import { Wrapper } from "@/components/layout/Wrapper";
 import { conSesion } from "@/lib/db";
-import { numeroDe, situacionDe } from "@/lib/finanzas/documentos";
+import { bolivares, numeroDe, situacionDe } from "@/lib/finanzas/documentos";
 import { rutaMiFactura, rutaMiPresupuesto, rutaMiProforma } from "@/lib/finanzas/rutas";
 import { requerirFinanzasDeEmpresa } from "@/lib/sesion";
 import * as facturasModelo from "@/models/facturas";
@@ -27,11 +27,12 @@ const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Facturacio
 export default async function PaginaFacturacion() {
   const { usuario, empresaId } = await requerirFinanzasDeEmpresa();
 
-  const { porAprobar, historial, proformas, facturas } = await conSesion(usuario, async (tx) => ({
+  const { porAprobar, historial, proformas, facturas, cuenta } = await conSesion(usuario, async (tx) => ({
     porAprobar: await presupuestosModelo.porAprobar(tx),
     historial: await presupuestosModelo.historial(tx),
     proformas: await proformasModelo.emitidas(tx),
     facturas: await facturasModelo.deEmpresa(empresaId, tx),
+    cuenta: await facturasModelo.estadoDeCuenta(empresaId, tx),
   }));
 
   return (
@@ -41,6 +42,27 @@ export default async function PaginaFacturacion() {
       titulo="Facturacion"
       descripcion="Los presupuestos que esperan tu aprobacion, las proformas y las facturas de tu empresa, y donde reportar lo que pagas."
     >
+      {cuenta.facturasAbiertas > 0 && (
+        <section aria-label="Estado de cuenta" className="surge mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className={SECCION_DOCUMENTO}>
+            <p className="text-[12px] font-semibold text-suave">Por pagar</p>
+            <p className="mt-1 text-[17px] font-extrabold tabular-nums tracking-[-0.02em] sm:text-[20px]">{bolivares(cuenta.saldo)}</p>
+            <p className="text-[12px] text-suave">
+              {cuenta.facturasAbiertas} {cuenta.facturasAbiertas === 1 ? "factura" : "facturas"}
+            </p>
+          </div>
+          <div className={SECCION_DOCUMENTO}>
+            <p className="text-[12px] font-semibold text-suave">Vencido</p>
+            <p className="mt-1 text-[17px] font-extrabold tabular-nums tracking-[-0.02em] sm:text-[20px]">{bolivares(cuenta.vencido)}</p>
+          </div>
+          <div className={`${SECCION_DOCUMENTO} col-span-2 sm:col-span-1`}>
+            <p className="text-[12px] font-semibold text-suave">Pagos en revision</p>
+            <p className="mt-1 text-[20px] font-extrabold tabular-nums tracking-[-0.02em]">{cuenta.pagosPorConfirmar}</p>
+            <p className="text-[12px] text-suave">Bajan el saldo al confirmarse</p>
+          </div>
+        </section>
+      )}
+
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <section aria-labelledby="titulo-por-aprobar" className="surge">
           <h2 id="titulo-por-aprobar" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">

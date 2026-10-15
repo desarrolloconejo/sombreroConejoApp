@@ -217,3 +217,22 @@ export async function cobranza(ejecutor: Ejecutor): Promise<CobranzaEmpresa[]> {
     ejecutor,
   );
 }
+
+/** El estado de cuenta de la empresa de quien pregunta: lo que debe y lo vencido. */
+export async function estadoDeCuenta(
+  empresaId: number,
+  ejecutor: Ejecutor,
+): Promise<{ saldo: string; vencido: string; facturasAbiertas: number; pagosPorConfirmar: number }> {
+  const fila = await consultarUno<{ saldo: string; vencido: string; facturasAbiertas: number; pagosPorConfirmar: number }>(
+    `SELECT coalesce(sum(c.saldo), 0)::text                                         AS saldo,
+            coalesce(sum(c.saldo) FILTER (WHERE f.vence_el < finanzas.hoy()), 0)::text AS vencido,
+            count(*) FILTER (WHERE c.saldo > 0)::int                                AS "facturasAbiertas",
+            coalesce(sum(c.por_confirmar), 0)::int                                  AS "pagosPorConfirmar"
+     FROM finanzas.facturas f
+     JOIN finanzas.v_estado_cobro_factura c ON c.factura_id = f.id
+     WHERE f.empresa_id = $1 AND f.estado = 'emitida'`,
+    [empresaId],
+    ejecutor,
+  );
+  return fila ?? { saldo: "0", vencido: "0", facturasAbiertas: 0, pagosPorConfirmar: 0 };
+}
