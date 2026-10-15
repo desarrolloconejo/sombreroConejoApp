@@ -24,9 +24,11 @@ tildes en el codigo**.
 
 Hoy existen: login, inicio, Mi perfil, Usuarios, Empresas (con sus ejecutivos
 asignados), Auditoria, Bandeja de salida, Tablero, Proyectos (piezas,
-bateria de fases y tareas), Mi trabajo, Presupuestos y Proformas (para el admin
-y administracion), para los clientes Mis proyectos (revision en la fase 5) y
-Facturacion (sus presupuestos y proformas), y el modulo de Hooks.
+bateria de fases y tareas), Mi trabajo, Briefs (la bandeja de cuentas, con los
+enlaces para prospectos), Presupuestos y Proformas (para el admin y
+administracion), para los clientes Mis proyectos (revision en la fase 5), Mis
+briefs y Facturacion (sus presupuestos y proformas), el brief de un prospecto
+por su enlace (`/brief/[token]`, sin cuenta), y el modulo de Hooks.
 Esta en marcha la integracion de un portal completo (briefs, proyectos con
 bateria de fases y tareas, revision del cliente, finanzas). **Antes de
 construir nada de eso, lee `docs/planIntegracionPortal.md`**: es el plan
@@ -60,7 +62,9 @@ src/types/        tipos, reexportados desde index.ts
 src/lib/          infraestructura: db, sesion, jwt, validaciones, navegacion,
                   redireccion
 src/lib/hooks/    criterio del modulo de hooks como funciones puras
-src/lib/portal/   catalogo de servicios y reglas de la bateria, como funciones puras
+src/lib/portal/   catalogo de servicios, reglas de la bateria y de los briefs, como
+                  funciones puras; llenadoBrief y enlaceBrief, lo comun a cliente
+                  y prospecto
 src/lib/externos/ adaptadores de servicios externos, con modo simulado y real
 src/lib/correos/  lo que dice cada correo, como funciones puras
 src/lib/finanzas/ criterio de finanzas como funciones puras, y sus tareas
@@ -136,9 +140,19 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - La autoridad de una sesion vive en la tabla `sesiones`, no en el token. Lo
   que cambie que puede ver o hacer alguien **revoca sus sesiones**
   (`src/models/sesiones.ts`); no basta con cambiar el dato.
-- `renovarSesion` y `verificarSegundoPaso` son las unicas actions sin guardia,
-  y es a proposito: atienden a quien aun no tiene sesion. Ninguna otra puede
-  saltarsela.
+- `renovarSesion` y `verificarSegundoPaso` son las unicas actions sin guardia
+  de sesion, junto con las de `src/actions/enlaceBrief.ts`, y es a proposito:
+  atienden a quien aun no tiene sesion. Las del enlace tienen por guardia el
+  token, que cada una comprueba antes de nada con `enlaceValido`
+  (`src/lib/portal/enlaceBrief.ts`). Ninguna otra puede saltarsela.
+- Un prospecto no tiene usuario: ante la base actua con `conEnlace`, que
+  declara el rol `prospecto` y su enlace (`app_enlace_id()`). Una tabla que
+  deba aceptarlo lo nombra en su politica, como la campana y la bandeja de
+  salida; las demas no lo dejan pasar. Sus correos llevan su `enlace_id` y se
+  entregan con `entregarCorreos({ enlaceId }, …)`.
+- El token de un enlace de brief **se muestra una vez** y no sale por correo:
+  la base guarda su hash. Un enlace vencido, revocado o inexistente responde
+  lo mismo.
 - La verificacion en dos pasos **se pide por defecto**: las guardias mandan a
   `/dos-pasos` a quien no la activo ni la omitio. Solo esa page y sus actions
   piden `requerirUsuario({ sinResolverDosPasos: true })`.
@@ -223,6 +237,9 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   formularios largos controlan sus valores con `useCampos`.
 - Los archivos `'use server'` solo exportan funciones asincronas; tipos y
   constantes de estado viven en `src/types`.
+- `src/lib/password.ts` llega al bundle de cliente a traves de
+  `validaciones`: no se le anade nada que use `node:crypto`. Por eso la
+  contrasena provisional se genera en `src/lib/claveProvisional.ts`.
 
 **Plataforma**
 

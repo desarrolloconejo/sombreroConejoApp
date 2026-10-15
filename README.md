@@ -4,8 +4,9 @@ Plataforma interna de **El Conejo del Sombrero** para centralizar y automatizar
 los procesos de la agencia, orientada a sus trabajadores y a sus clientes.
 
 Hoy cubre autenticacion, usuarios, empresas, perfil, auditoria, la bandeja de
-salida de correos, el modulo de Hooks y el de Proyectos (piezas, bateria de
-fases y tareas). Esta
+salida de correos, el modulo de Hooks, el de Proyectos (piezas, bateria de
+fases y tareas), presupuestos y proformas, y los briefs (del cliente, de la
+bandeja de cuentas y de prospectos por enlace privado). Esta
 en marcha la integracion de un portal completo —briefs, proyectos, revision del
 cliente y finanzas—, cuyo plan vive en
 [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md). La revision
@@ -591,6 +592,32 @@ seccion 7 del plan.
 - Las fichas guardan el estado de las actions que las cambian en un proveedor
   por encima del formulario (`ProveedorGuardado`, `ProveedorProforma`,
   `ProveedorDecision`), por la misma razon que en la bateria.
+
+### Briefs
+
+```
+/dashboard/mis-briefs          el cliente: empezar, llenar por pasos, enviar, versiones
+/dashboard/briefs              la bandeja de cuentas y los enlaces para prospectos
+/dashboard/briefs/[id]         el brief completo y las decisiones
+/brief/[token]                 el prospecto, sin cuenta, por su enlace privado
+```
+
+Las reglas son las de `appFacturas/docs/05-briefs.md` con los supuestos S-04 a
+S-09; el formato vive en `src/lib/portal/formatos/` y lo que decide que se
+muestra y que falta, en `src/lib/portal/briefs.ts`. Llenar y enviar es igual
+para el cliente y el prospecto (`src/lib/portal/llenadoBrief.ts`).
+
+- **La base pone fecha, codigo y version al enviar** (`portal.enviar_brief`):
+  `ECS-AAAAMMDD-XXXXXX` con la fecha de Caracas. Lo enviado se congela con su
+  hash y no cambia.
+- **El prospecto no tiene cuenta.** El ejecutivo genera su enlace en Briefs y
+  lo ve una sola vez: la base guarda el hash del token y ningun correo lo
+  lleva. Las actions de `/brief/[token]` comprueban el token
+  (`src/lib/portal/enlaceBrief.ts`) y actuan con `conEnlace`, el rol
+  `prospecto` ante la base.
+- Aceptar el brief de un prospecto lo convierte: nace su empresa, su cuenta
+  con contrasena provisional (se ve una vez) y el proyecto.
+- `BRIEFS_MAILBOX`, opcional, recibe copia de cada brief enviado.
 
 ## Pruebas
 
