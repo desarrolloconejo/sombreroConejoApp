@@ -31,7 +31,10 @@ export type TipoNotificacion =
   | "brief.descartado"
   | "brief.validado"
   | "brief.aclaracion"
-  | "brief.fecha_propuesta";
+  | "brief.fecha_propuesta"
+  | "factura.emitida"
+  | "pago.reportado"
+  | "pago.resuelto";
 
 /** Lo que hay que saber para notificar. Los destinatarios van aparte. */
 export type NuevaNotificacion = {

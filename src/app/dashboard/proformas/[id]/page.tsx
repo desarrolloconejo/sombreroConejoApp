@@ -18,13 +18,15 @@ import {
   ProveedorProforma,
   RecurrenciaProforma,
 } from "@/components/proformas";
+import { EmitirFactura } from "@/components/facturas";
 import { conSesion } from "@/lib/db";
-import { numeroDe, sumarUnMes } from "@/lib/finanzas/documentos";
-import { RUTA_PROFORMAS, rutaPresupuesto, rutaProforma } from "@/lib/finanzas/rutas";
+import { numeroDe, numeroFactura, sumarUnMes } from "@/lib/finanzas/documentos";
+import { RUTA_PROFORMAS, rutaFactura, rutaPresupuesto, rutaProforma } from "@/lib/finanzas/rutas";
 import { hoyEnCaracas } from "@/lib/portal/fases";
 import { rutaProyecto } from "@/lib/portal/rutas";
 import { requerirFinanzas } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
+import * as facturasModelo from "@/models/facturas";
 import * as proformasModelo from "@/models/proformas";
 import * as renglonesModelo from "@/models/renglones";
 
@@ -50,6 +52,7 @@ export default async function PaginaProforma(props: PageProps<"/dashboard/profor
       proforma,
       renglones: await renglonesModelo.deDocumento("proforma", id, tx),
       ligados: await proformasModelo.proyectosDe(id, tx),
+      factura: proforma.estado === "facturada" ? await facturasModelo.deProforma(id, tx) : null,
       ligables:
         proforma.estado === "borrador"
           ? await proformasModelo.proyectosLigables(proforma.empresaId, tx)
@@ -59,7 +62,7 @@ export default async function PaginaProforma(props: PageProps<"/dashboard/profor
 
   if (!datos) notFound();
 
-  const { proforma, renglones, ligados, ligables } = datos;
+  const { proforma, renglones, ligados, ligables, factura } = datos;
   const numero = numeroDe("proforma", proforma.numero);
   const hoy = hoyEnCaracas();
   const tocaLaSiguiente =
@@ -186,6 +189,25 @@ export default async function PaginaProforma(props: PageProps<"/dashboard/profor
                     </div>
                   )}
                   <RecurrenciaProforma proforma={proforma} sugerida={sumarUnMes(hoy)} />
+                </div>
+              )}
+
+              {proforma.estado === "emitida" && (
+                <div className={SECCION_DOCUMENTO}>
+                  <h3 className="mb-1 text-[14px] font-bold">Factura</h3>
+                  <p className="mb-3 text-[12.5px] leading-relaxed text-suave">
+                    Se emite en bolivares a la tasa del dia, con el siguiente numero y numero de control.
+                  </p>
+                  <EmitirFactura proformaId={proforma.id} etiqueta={`Emitir la factura de ${numero}`} />
+                </div>
+              )}
+
+              {factura && (
+                <div className={SECCION_DOCUMENTO}>
+                  <h3 className="mb-1 text-[14px] font-bold">Factura</h3>
+                  <Link href={rutaFactura(factura.id)} className="text-[13px] font-semibold text-acento hover:underline">
+                    {numeroFactura(factura.serie, factura.numero)} · control {factura.numeroControl}
+                  </Link>
                 </div>
               )}
 

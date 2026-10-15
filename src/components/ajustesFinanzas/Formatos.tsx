@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Copy, Save, Star } from "lucide-react";
+import { Copy, Grid3x3, Save, Star } from "lucide-react";
 
 import { duplicarFormato, guardarFormato, marcarFormatoHabitual } from "@/actions/ajustesFinanzas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
@@ -397,6 +397,15 @@ export function AccionesFormato({ id, habitual, activo }: { id: number; habitual
 
   return (
     <div className="flex flex-wrap gap-2.5">
+      <a
+        href={`/api/formatos/${id}/calibracion`}
+        target="_blank"
+        rel="noopener"
+        className="suave inline-flex min-h-9 items-center gap-2 rounded-xl border border-borde px-3.5 text-[13px] font-semibold hover:-translate-y-0.5 hover:border-acento [&>svg]:size-4"
+      >
+        <Grid3x3 aria-hidden="true" />
+        Hoja de calibracion
+      </a>
       {!habitual && activo && (
         <form action={marcar}>
           <input type="hidden" name="id" value={id} />

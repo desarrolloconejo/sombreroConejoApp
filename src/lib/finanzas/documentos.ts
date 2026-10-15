@@ -57,3 +57,26 @@ export function dolares(importe: string): string {
 
   return `${negativo ? "-" : ""}$${miles},${fraccion.padEnd(2, "0").slice(0, 2)}`;
 }
+
+/** Un importe en bolivares para mostrar: 1234.5 -> «Bs. 1.234,50». */
+export function bolivares(importe: string): string {
+  return dolares(importe).replace("$", "Bs. ");
+}
+
+/** El numero de una factura como se muestra: A-000012. */
+export function numeroFactura(serie: string, numero: number): string {
+  return `${serie}-${String(numero).padStart(6, "0")}`;
+}
+
+/** Una tasa para leer: «40,5» con al menos dos decimales y sin ceros de mas. */
+export function tasaLegible(tasa: string): string {
+  const [entera, fraccion = ""] = tasa.split(".");
+  const recortada = fraccion.replace(/0+$/, "").padEnd(2, "0");
+  return `${entera.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${recortada}`;
+}
+
+/** Una fecha AAAA-MM-DD como se imprime: 15/10/2026. */
+export function fechaImpresa(fecha: string): string {
+  const [ano, mes, dia] = fecha.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
