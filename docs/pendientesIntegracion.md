@@ -80,3 +80,20 @@ sigue.
 | Impresion sobre el talonario real | Sin probar: no hay hoja del talonario (F13). El PDF y la hoja de calibracion se revisaron en pantalla |
 | Correo real por Gmail | Simulado hasta tener la cuenta de la empresa |
 | Archivos `db/neon/` 01 a 16 | Ensayados en local; ninguno pegado en produccion todavia |
+
+## 5. Puntos a tener en cuenta
+
+Lo que no es un pendiente pero conviene saber antes del despliegue y del
+primer uso real.
+
+| Punto | Por que importa |
+| --- | --- |
+| **Antes de la primera factura real**: llenar el emisor, fijar la numeracion y el rango de control del talonario reales, y crear y calibrar su formato de impresion | Lo que se emite queda congelado con esos datos: una factura con datos de ejemplo hay que anularla |
+| **La numeracion solo sube** | Si se fija un numero por error demasiado alto, no se puede bajar: los numeros saltados quedan sin usar. Revisarlo dos veces antes de guardar |
+| El emisor de produccion nace vacio | Con el, no se puede facturar hasta llenarlo: es a proposito |
+| Los medios de pago de ejemplo no tienen datos bancarios | El cliente los ve tal cual: cargar los datos reales o desactivarlos antes de que un cliente reporte pagos |
+| El permiso de finanzas y el de aprobar piezas nacen apagados para todos los clientes | Hay que marcarlos en Usuarios a quien corresponda, o el cliente no vera Facturacion ni podra aprobar |
+| Las cuentas de prueba (`*@conejo.test`, `cliente@empresa.test`) son solo de desarrollo | `sql:produccion` no las lleva; si alguna existiera en produccion, se desactiva |
+| La pasada completa de pruebas del navegador falla de forma intermitente en desarrollo | El servidor de desarrollo de Next se carga con el uso y, al compilar una pagina por primera vez, a veces recarga y corta una navegacion. Las que fallan pasan solas tras reiniciar `app-dev`. En produccion no hay compilacion en caliente |
+| Los archivos de `db/neon/` se pegan **en orden** y antes de subir, salvo el 06 | Cada uno da por hecho los anteriores; el 06 va despues de publicar |
+| Los ensayos de `db/neon/` se hicieron sobre la base local, no sobre Neon | La primera vez contra Neon conviene hacerlo con calma y revisar cada comprobacion |
