@@ -96,7 +96,7 @@ export function correoDePresupuestoEnviado(
       `Hola, ${persona.nombre}:\n\n` +
       `Te enviamos el presupuesto ${presupuesto.numero}, «${presupuesto.titulo}». ` +
       `Vale hasta el ${presupuesto.validoHasta}.\n\n` +
-      "Puedes verlo y aprobarlo o rechazarlo desde Administracion" +
+      "Puedes verlo y aprobarlo o rechazarlo desde Facturacion" +
       (acceso ? `, entrando aqui: ${acceso}` : "") +
       ".\n" +
       despedida(),

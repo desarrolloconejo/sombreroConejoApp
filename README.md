@@ -572,7 +572,7 @@ aviso no llega a verse.
 
 Los operan el administrador y el cargo `administracion`
 (`finanzas@conejo.test` en la semilla); el cliente con la casilla «Puede ver
-las finanzas» los ve en Administracion. El ciclo y sus reglas estan en la
+las finanzas» los ve en Facturacion (`/dashboard/facturacion`). El ciclo y sus reglas estan en la
 seccion 7 del plan.
 
 - **Los importes los calcula la base.** El editor manda los renglones como

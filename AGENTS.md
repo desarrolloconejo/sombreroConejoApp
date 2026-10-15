@@ -26,7 +26,7 @@ Hoy existen: login, inicio, Mi perfil, Usuarios, Empresas (con sus ejecutivos
 asignados), Auditoria, Bandeja de salida, Tablero, Proyectos (piezas,
 bateria de fases y tareas), Mi trabajo, Presupuestos y Proformas (para el admin
 y administracion), para los clientes Mis proyectos (revision en la fase 5) y
-Administracion (sus presupuestos y proformas), y el modulo de Hooks.
+Facturacion (sus presupuestos y proformas), y el modulo de Hooks.
 Esta en marcha la integracion de un portal completo (briefs, proyectos con
 bateria de fases y tareas, revision del cliente, finanzas). **Antes de
 construir nada de eso, lee `docs/planIntegracionPortal.md`**: es el plan

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { DecisionPresupuesto, ProveedorDecision } from "@/components/administracion";
+import { DecisionPresupuesto, ProveedorDecision } from "@/components/facturacion";
 import {
   EtiquetaDocumento,
   fechaDia,
@@ -13,7 +13,7 @@ import {
 import { Wrapper } from "@/components/layout/Wrapper";
 import { conSesion } from "@/lib/db";
 import { numeroDe, situacionDe } from "@/lib/finanzas/documentos";
-import { RUTA_ADMINISTRACION } from "@/lib/finanzas/rutas";
+import { RUTA_FACTURACION } from "@/lib/finanzas/rutas";
 import { requerirFinanzasDeEmpresa } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
 import * as presupuestosModelo from "@/models/presupuestos";
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
  * devuelve y la page responde 404.
  */
 export default async function PaginaMiPresupuesto(
-  props: PageProps<"/dashboard/administracion/presupuestos/[id]">,
+  props: PageProps<"/dashboard/facturacion/presupuestos/[id]">,
 ) {
   const { usuario } = await requerirFinanzasDeEmpresa();
 
@@ -53,7 +53,7 @@ export default async function PaginaMiPresupuesto(
 
   const migas = [
     { texto: "Conejo App", href: "/dashboard" },
-    { texto: "Administracion", href: RUTA_ADMINISTRACION },
+    { texto: "Facturacion", href: RUTA_FACTURACION },
     { texto: numero },
   ];
 

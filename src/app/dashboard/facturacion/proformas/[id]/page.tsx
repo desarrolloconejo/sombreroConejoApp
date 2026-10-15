@@ -12,7 +12,7 @@ import {
 import { Wrapper } from "@/components/layout/Wrapper";
 import { conSesion } from "@/lib/db";
 import { numeroDe } from "@/lib/finanzas/documentos";
-import { RUTA_ADMINISTRACION, rutaMiPresupuesto } from "@/lib/finanzas/rutas";
+import { RUTA_FACTURACION, rutaMiPresupuesto } from "@/lib/finanzas/rutas";
 import { requerirFinanzasDeEmpresa } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
 import * as proformasModelo from "@/models/proformas";
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
  * a facturar, y a que proyectos corresponde.
  */
 export default async function PaginaMiProforma(
-  props: PageProps<"/dashboard/administracion/proformas/[id]">,
+  props: PageProps<"/dashboard/facturacion/proformas/[id]">,
 ) {
   const { usuario } = await requerirFinanzasDeEmpresa();
 
@@ -52,7 +52,7 @@ export default async function PaginaMiProforma(
 
   const migas = [
     { texto: "Conejo App", href: "/dashboard" },
-    { texto: "Administracion", href: RUTA_ADMINISTRACION },
+    { texto: "Facturacion", href: RUTA_FACTURACION },
     { texto: numero },
   ];
 

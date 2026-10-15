@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, FileSpreadsheet } from "lucide-react";
 
-import { RUTA_ADMINISTRACION } from "@/lib/finanzas/rutas";
+import { RUTA_FACTURACION } from "@/lib/finanzas/rutas";
 
 /**
  * El aviso del inicio del cliente con permiso de finanzas: presupuestos que
@@ -13,7 +13,7 @@ export function AvisoPresupuestos({ pendientes }: { pendientes: number }) {
 
   return (
     <Link
-      href={RUTA_ADMINISTRACION}
+      href={RUTA_FACTURACION}
       className="surge suave group flex items-center gap-4 rounded-[15px] bg-navy px-5 py-4 text-white shadow-[var(--sombra)] hover:-translate-y-0.5"
     >
       <span

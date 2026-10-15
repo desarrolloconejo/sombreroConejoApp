@@ -155,7 +155,7 @@ siguiente.
 **Cliente (como `cliente@empresa.test`)**
 
 6. El inicio avisa de los presupuestos que esperan su aprobacion.
-7. Administracion → abrir uno → los renglones y el total se leen bien en el
+7. Facturacion → abrir uno → los renglones y el total se leen bien en el
    telefono (390 px), sin desplazarse de lado.
 8. Rechazar pide el motivo; aprobar no. Tras decidir, los botones desaparecen.
 9. Un borrador no aparece, y su URL escrita a mano da «Esta pagina no existe».
@@ -165,7 +165,7 @@ siguiente.
 10. La campana avisa de lo que decidio el cliente. En el aprobado, «Generar la
     proforma» lleva a ella en borrador, con los renglones copiados.
 11. Ligarla a un proyecto, «Guardar y emitir». El cliente la ve en su
-    Administracion, con el proyecto.
+    Facturacion, con el proyecto.
 12. Marcarla «Se repite cada mes» con la fecha de hoy: aparece arriba en
     Proformas. «Preparar la siguiente» crea la copia en borrador y deja de
     pedirla (la fecha avanza un mes).
@@ -173,7 +173,7 @@ siguiente.
 
 **Permisos (como administrador)**
 
-14. En Usuarios, quitar «Puede ver las finanzas» al cliente: Administracion
+14. En Usuarios, quitar «Puede ver las finanzas» al cliente: Facturacion
     desaparece de su menu y la URL lo devuelve al inicio. Volver a marcarlo.
 15. Como `cuentas@conejo.test` o `redes@conejo.test`, `/dashboard/presupuestos`
     devuelve al inicio.

@@ -118,7 +118,7 @@ Lo que cada etapa exige en produccion se va anotando en
 | 4 | `feat/etapa4-cliente` | Lado del cliente: inicio con lo que espera su revision, Mis proyectos, revision con aprobar o pedir correccion, aprobacion en lote, historial de rondas | Ninguno | Hecha |
 | 5 | `feat/etapa5-modelo` | Seccion 7: presupuestos, proformas, renglones y contadores en `finanzas` con seguridad por fila; la base numera, calcula los importes al guardar los renglones (`finanzas.guardar_renglones`) y congela lo que deja de ser borrador; el cliente solo decide con `finanzas.cliente_resuelve_presupuesto`. Permiso de finanzas por persona. Quien opera finanzas lee los proyectos | `db/neon/14-presupuestos-y-proformas.sql` | Hecha |
 | 5 | `feat/etapa5-presupuestos` | Modulo Presupuestos para el admin y administracion: listado, alta, editor de renglones con vista previa calculada como la base, guardar y enviar en un paso, respuesta del cliente registrada a su nombre (F14), generar la proforma. Notificacion y correo al cliente | Ninguno | Hecha |
-| 5 | `feat/etapa5-cliente` | Administracion del cliente con permiso de finanzas: por aprobar, proformas e historial; aprobar o rechazar con motivo; aviso en el inicio; casilla «Puede ver las finanzas» en Usuarios; el menu admite un permiso por persona | Ninguno | Hecha |
+| 5 | `feat/etapa5-cliente` | Facturacion del cliente con permiso de finanzas (`/dashboard/facturacion`, el nombre que fija la seccion 9.1): por aprobar, proformas e historial; aprobar o rechazar con motivo; aviso en el inicio; casilla «Puede ver las finanzas» en Usuarios; el menu admite un permiso por persona | Ninguno | Hecha |
 | 5 | `feat/etapa5-proformas` | Modulo Proformas: editar el borrador (titulo, notas, proyectos, renglones), guardar y emitir, anular con motivo, recurrencia mensual y las recurrentes a las que les toca en la portada, con «Preparar la siguiente». Nada se emite solo | Ninguno | Hecha |
 
 **La etapa 5 esta completa**, con los valores por defecto del plan: precios sin IVA (F4), 15 dias de validez editables (F6) y el operador puede registrar la decision a nombre del cliente (F14). Lo que queda para la etapa 7: el PDF de presupuestos y proformas (va con la libreria de la factura), la factura y su numeracion. Lo que queda por probar a mano esta en `docs/verificacionManual.md`.
@@ -1053,6 +1053,11 @@ Tres decisiones de diseno del menu:
   la navegacion solo soporta uno. Cada herramienta nueva se suma al lado.
 - **La vista de finanzas del cliente se llama «Facturacion».** El paquete la
   llama «Administracion», nombre que aqui ya usa un cargo.
+- **Las finanzas del equipo son modulos de la seccion, no un desplegable**
+  (decidido al construir la etapa 5): Presupuestos y Proformas cuelgan de la
+  seccion Finanzas como Hooks de Herramientas, con sus rutas
+  `/dashboard/presupuestos` y `/dashboard/proformas` en lugar de
+  `/dashboard/finanzas/**`. Facturas, Pagos y Cobranza se sumaran igual.
 - **Hooks lo sigue viendo solo `redes`**, y el admin. Quien reciba una tarea de
   hook sin ser de redes llega a la herramienta desde la tarea.
 

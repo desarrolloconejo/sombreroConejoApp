@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { AvisoPresupuestos } from "@/components/administracion";
+import { AvisoPresupuestos } from "@/components/facturacion";
 import { InicioWrapper } from "@/components/inicio";
 import { AvisoRevision, TarjetaProyectoCliente } from "@/components/misProyectos";
 import { conSesion } from "@/lib/db";

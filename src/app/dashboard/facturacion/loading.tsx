@@ -1,5 +1,5 @@
 /**
- * Esqueleto de Administracion del cliente: la cabecera y las tres listas, con
+ * Esqueleto de Facturacion del cliente: la cabecera y las tres listas, con
  * la misma rejilla que la page.
  */
 
@@ -25,9 +25,9 @@ function Lista({ filas }: { filas: number }) {
   );
 }
 
-export default function CargandoAdministracion() {
+export default function CargandoFacturacion() {
   return (
-    <div role="status" aria-label="Cargando la administracion">
+    <div role="status" aria-label="Cargando la facturacion">
       <div aria-hidden="true">
         <div className="mb-3 flex items-center gap-[7px] lg:mb-[13px]">
           <div className="hueso h-3 w-[78px]" />

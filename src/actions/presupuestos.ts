@@ -9,7 +9,7 @@ import { conSesion, esErrorPostgres } from "@/lib/db";
 import { encolarCorreo, entregarCorreos } from "@/lib/externos/correo";
 import { numeroDe } from "@/lib/finanzas/documentos";
 import {
-  RUTA_ADMINISTRACION,
+  RUTA_FACTURACION,
   RUTA_PRESUPUESTOS,
   rutaMiPresupuesto,
   rutaPresupuesto,
@@ -38,7 +38,7 @@ import type { EstadoFormulario } from "@/types";
 function revalidar(id: number): void {
   revalidatePath(RUTA_PRESUPUESTOS);
   revalidatePath(rutaPresupuesto(id));
-  revalidatePath(RUTA_ADMINISTRACION);
+  revalidatePath(RUTA_FACTURACION);
 }
 
 /** El proyecto elegido, si es de esa empresa. Null si no se eligio ninguno. */
