@@ -134,6 +134,13 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 
 - Toda page y toda action que lea o modifique datos **empieza por su guardia**
   (`src/lib/sesion.ts`). El proxy filtra por ruta pero no es la proteccion real.
+  Lo vigila `tests/unitarias/guardias.spec.ts`: una action, page o ruta de la
+  API sin guardia lo hace fallar. Una excepcion nueva se anade alli con su
+  motivo, y las rutas publicas del proxy tambien estan fijadas en esa prueba.
+- `prueba:permisos` vigila ademas la estructura: toda tabla de `portal` y
+  `finanzas` con seguridad por fila, `DELETE` solo en la lista de
+  `probarEstructura` y toda funcion `SECURITY DEFINER` con su `search_path`.
+  Una tabla que necesite otra cosa se anade a esa lista, con su motivo.
 - El token sirve para enrutar; lo que decide que se muestra **y que se puede
   hacer** es el dato fresco de la base. Todas las guardias (`requerirUsuario`,
   `requerirRol`, `requerirAdmin`, `requerirCargo`) leen de ella.

@@ -532,6 +532,7 @@ async function principal(): Promise<void> {
   await probarFinanzas();
   await probarBriefs();
   await probarFacturas();
+  await probarEstructura();
 
   console.log(`\n${pasan}/${pasan + fallan.length} comprobaciones correctas`);
   if (fallan.length > 0) {
@@ -1949,5 +1950,73 @@ async function probarFacturas(): Promise<void> {
     "El pago confirmado baja el saldo, y con pagos no se anula",
     r.cobro === "parcial" && r.saldoBaja === true && r.anulaConPagos === "23514",
     `${r.cobro}; saldo ${r.saldoBaja}; anular ${r.anulaConPagos}`,
+  );
+}
+
+/**
+ * Lo que vale para todas las tablas a la vez, para que una tabla nueva no se
+ * cuele sin lo que tienen las demas: seguridad por fila en `portal` y
+ * `finanzas`, ningun DELETE fuera de la lista y ninguna funcion privilegiada
+ * sin su search_path fijo.
+ */
+async function probarEstructura(): Promise<void> {
+  // La unica tabla de portal y finanzas sin seguridad por fila: el almacen del
+  // modo simulado de archivos, que solo existe en desarrollo y solo lee el
+  // adaptador sin sesion (src/lib/externos/archivos.ts).
+  const SIN_SEGURIDAD_POR_FILA = ["portal.archivos_simulados"];
+
+  // Lo unico que la aplicacion puede borrar: filas que se rehacen enteras y
+  // no son historia (asignaciones y tareas sin empezar, codigos de respaldo,
+  // el modulo de hooks, que es anterior al portal).
+  const CON_DELETE = [
+    "portal.asignaciones",
+    "portal.tareas",
+    "public.codigos_respaldo",
+    "public.fichas_hook",
+    "public.referencias_hook",
+    "public.reglas_hook",
+  ];
+
+  const sinSeguridad = (
+    await consultar<{ tabla: string }>(
+      `SELECT schemaname || '.' || tablename AS tabla FROM pg_tables
+       WHERE schemaname IN ('portal', 'finanzas') AND NOT rowsecurity ORDER BY 1`,
+    )
+  ).map((fila) => fila.tabla);
+
+  const conDelete = (
+    await consultar<{ tabla: string }>(
+      `SELECT DISTINCT table_schema || '.' || table_name AS tabla
+       FROM information_schema.role_table_grants
+       WHERE grantee = 'conejo_app' AND privilege_type = 'DELETE' ORDER BY 1`,
+    )
+  ).map((fila) => fila.tabla);
+
+  const sinSearchPath = (
+    await consultar<{ funcion: string }>(
+      `SELECT n.nspname || '.' || p.proname AS funcion
+       FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+       WHERE p.prosecdef AND n.nspname IN ('public', 'portal', 'finanzas')
+         AND NOT coalesce(array_to_string(p.proconfig, ',') LIKE '%search_path=%', false)
+       ORDER BY 1`,
+    )
+  ).map((fila) => fila.funcion);
+
+  console.log("\nEstructura\n");
+
+  comprobar(
+    "Toda tabla de portal y finanzas tiene seguridad por fila",
+    JSON.stringify(sinSeguridad) === JSON.stringify(SIN_SEGURIDAD_POR_FILA),
+    sinSeguridad.join(", ") || "todas",
+  );
+  comprobar(
+    "La aplicacion solo borra en las tablas de la lista",
+    JSON.stringify(conDelete) === JSON.stringify(CON_DELETE),
+    conDelete.join(", "),
+  );
+  comprobar(
+    "Toda funcion SECURITY DEFINER fija su search_path",
+    sinSearchPath.length === 0,
+    sinSearchPath.join(", ") || "todas",
   );
 }
