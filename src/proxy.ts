@@ -63,6 +63,9 @@ const RUTAS_POR_CARGO: { prefijo: string; cargos: SlugCargo[] }[] = [
   // bandeja y las decisiones las guardan sus pages y actions (cuentas).
   { prefijo: "/dashboard/briefs", cargos: ["cuentas", "administracion"] },
   { prefijo: "/dashboard/proformas", cargos: ["administracion"] },
+  { prefijo: "/dashboard/ajustes-finanzas", cargos: ["administracion"] },
+  { prefijo: "/dashboard/facturas", cargos: ["administracion"] },
+  { prefijo: "/dashboard/cobranza", cargos: ["administracion"] },
 ];
 
 /**

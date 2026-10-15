@@ -174,6 +174,14 @@ export async function editarFormato(id: number, datos: DatosFormatoImpresion, ej
 
 /** Lo deja como el habitual. Tiene que estar activo. */
 export async function marcarHabitual(id: number, ejecutor: Ejecutor): Promise<boolean> {
+  const activo = await consultarUno<{ id: number }>(
+    "SELECT id FROM finanzas.formatos_impresion WHERE id = $1 AND activo FOR UPDATE",
+    [id],
+    ejecutor,
+  );
+  if (!activo) return false;
+
+  // Primero se quita el anterior: el indice no admite dos habituales.
   await ejecutar("UPDATE finanzas.formatos_impresion SET habitual = FALSE WHERE habitual AND id <> $1", [id], ejecutor);
   const filas = await ejecutar(
     "UPDATE finanzas.formatos_impresion SET habitual = TRUE, actualizado_en = now() WHERE id = $1 AND activo",
@@ -229,4 +237,10 @@ export async function editarMedio(id: number, datos: DatosMedioPago, ejecutor: E
     ejecutor,
   );
   return filas === 1;
+}
+
+/** Los nombres de formato que ya existen y empiezan igual, para no repetir uno. */
+export async function nombresDeFormato(ejecutor: Ejecutor): Promise<string[]> {
+  const filas = await consultar<{ nombre: string }>("SELECT nombre FROM finanzas.formatos_impresion", [], ejecutor);
+  return filas.map((fila) => fila.nombre);
 }

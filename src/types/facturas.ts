@@ -214,6 +214,17 @@ export type FiltrosFacturas = {
   porPagina: number;
 };
 
+/** Lo que la factura necesita de una empresa: retencion de IVA y credito. */
+export type DatosFiscalesEmpresa = {
+  id: number;
+  nombre: string;
+  rif: string | null;
+  agenteRetencion: boolean;
+  retencionIvaPct: 75 | 100 | null;
+  /** Sin valor: los de los ajustes de finanzas. */
+  diasCredito: number | null;
+};
+
 /** La deuda de una empresa por antiguedad, en bolivares. */
 export type CobranzaEmpresa = {
   empresaId: number;

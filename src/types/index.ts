@@ -227,4 +227,5 @@ export type {
   DatosFormatoImpresion,
   FiltrosFacturas,
   CobranzaEmpresa,
+  DatosFiscalesEmpresa,
 } from "./facturas";

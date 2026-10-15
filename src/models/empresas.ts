@@ -7,6 +7,7 @@ import {
   type Ejecutor,
 } from "@/lib/db";
 import type {
+  DatosFiscalesEmpresa,
   DatosNuevaEmpresa,
   Empresa,
   FiltrosEmpresas,
@@ -264,6 +265,39 @@ export async function cambiarEstado(
   const afectadas = await ejecutar(
     "UPDATE empresas SET activo = $2 WHERE id = $1",
     [id, activo],
+    ejecutor,
+  );
+
+  return afectadas === 1;
+}
+
+/**
+ * Lo que la factura necesita de cada empresa activa: si retiene IVA y cuanto,
+ * y sus dias de credito (sin valor, los de los ajustes de finanzas).
+ */
+export async function datosFiscales(ejecutor?: Ejecutor): Promise<DatosFiscalesEmpresa[]> {
+  return consultar<DatosFiscalesEmpresa>(
+    `SELECT id, nombre, rif,
+            agente_retencion          AS "agenteRetencion",
+            retencion_iva_pct::int    AS "retencionIvaPct",
+            dias_credito              AS "diasCredito"
+     FROM empresas WHERE activo ORDER BY lower(nombre)`,
+    [],
+    ejecutor,
+  );
+}
+
+export async function cambiarDatosFiscales(
+  id: number,
+  datos: { retencionIvaPct: 75 | 100 | null; diasCredito: number | null },
+  ejecutor?: Ejecutor,
+): Promise<boolean> {
+  const afectadas = await ejecutar(
+    `UPDATE empresas SET
+       agente_retencion = $2::int IS NOT NULL, retencion_iva_pct = $2, dias_credito = $3,
+       actualizado_en = now()
+     WHERE id = $1`,
+    [id, datos.retencionIvaPct, datos.diasCredito],
     ejecutor,
   );
 
