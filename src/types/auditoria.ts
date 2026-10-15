@@ -73,7 +73,20 @@ export type AccionAuditoria =
   | "brief.aclaracion"
   | "brief.fecha_propuesta"
   | "enlace_brief.creado"
-  | "enlace_brief.revocado";
+  | "enlace_brief.revocado"
+  | "ajustes_finanzas.editados"
+  | "ajustes_finanzas.numeracion"
+  | "medio_pago.creado"
+  | "medio_pago.editado"
+  | "formato_impresion.creado"
+  | "formato_impresion.editado"
+  | "formato_impresion.habitual"
+  | "factura.emitida"
+  | "factura.anulada"
+  | "factura.impresa"
+  | "pago.reportado"
+  | "pago.confirmado"
+  | "pago.rechazado";
 
 /** Como se lee cada accion en pantalla. */
 export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
@@ -145,6 +158,19 @@ export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
   "brief.fecha_propuesta": "Fecha de entrega propuesta",
   "enlace_brief.creado": "Enlace de brief para un prospecto",
   "enlace_brief.revocado": "Enlace de brief revocado",
+  "ajustes_finanzas.editados": "Ajustes de finanzas cambiados",
+  "ajustes_finanzas.numeracion": "Numeracion de facturas cambiada",
+  "medio_pago.creado": "Medio de pago creado",
+  "medio_pago.editado": "Medio de pago cambiado",
+  "formato_impresion.creado": "Formato de impresion creado",
+  "formato_impresion.editado": "Formato de impresion cambiado",
+  "formato_impresion.habitual": "Formato de impresion habitual cambiado",
+  "factura.emitida": "Factura emitida",
+  "factura.anulada": "Factura anulada",
+  "factura.impresa": "Factura impresa",
+  "pago.reportado": "Pago reportado",
+  "pago.confirmado": "Pago confirmado",
+  "pago.rechazado": "Pago rechazado",
 };
 
 /**
@@ -166,6 +192,11 @@ export const MODULOS_DE_AUDITORIA = {
   proforma: "Proformas",
   brief: "Briefs",
   enlace_brief: "Enlaces de brief",
+  ajustes_finanzas: "Ajustes de finanzas",
+  medio_pago: "Medios de pago",
+  formato_impresion: "Formatos de impresion",
+  factura: "Facturas",
+  pago: "Pagos",
 } as const;
 
 export type ModuloAuditoria = keyof typeof MODULOS_DE_AUDITORIA;

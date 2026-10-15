@@ -17,6 +17,7 @@ import {
   ReceiptText,
   ScrollText,
   Send,
+  Settings2,
   ShieldCheck,
   User,
   Users,
@@ -316,6 +317,16 @@ const MODULOS: readonly Modulo[] = [
     roles: ["admin", "trabajador"],
     cargos: ["administracion"],
     alias: ["prefactura", "recurrente", "mensual", "contrato", "finanzas", "cobro"],
+  },
+  {
+    titulo: "Ajustes de finanzas",
+    seccion: "finanzas",
+    subtitulo: "Emisor, impuestos, numeracion, medios de pago e impresion",
+    href: "/dashboard/ajustes-finanzas",
+    icono: Settings2,
+    roles: ["admin", "trabajador"],
+    cargos: ["administracion"],
+    alias: ["emisor", "rif", "iva", "talonario", "numeracion", "medios de pago", "impresion", "retenciones"],
   },
 
   {
