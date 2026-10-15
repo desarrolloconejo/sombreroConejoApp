@@ -1,4 +1,6 @@
-import { conSesion, type ActorDeBase, type Ejecutor } from "@/lib/db";
+import type { PoolClient } from "pg";
+
+import { conEnlace, conSesion, type ActorDeBase, type Ejecutor } from "@/lib/db";
 import { notificarAAdministradores } from "@/lib/notificaciones";
 import * as correos from "@/models/correos";
 import type { ModoExterno, NuevoCorreo } from "@/types";
@@ -125,6 +127,16 @@ async function enviarPorGmail(para: string, asunto: string, cuerpo: string): Pro
 }
 
 /**
+ * Quien provoco los correos: una persona con sesion o un prospecto por su
+ * enlace. Con esa misma identidad se leen y se anotan al entregarlos.
+ */
+export type Remitente = ActorDeBase | { enlaceId: number };
+
+function conRemitente<T>(remitente: Remitente, operacion: (cliente: PoolClient) => Promise<T>): Promise<T> {
+  return "enlaceId" in remitente ? conEnlace(remitente.enlaceId, operacion) : conSesion(remitente, operacion);
+}
+
+/**
  * Entrega los correos pendientes de la lista. Se llama DESPUES de confirmar
  * la transaccion que los encolo.
  *
@@ -136,7 +148,7 @@ async function enviarPorGmail(para: string, asunto: string, cuerpo: string): Pro
  * Devuelve cuantos se enviaron.
  */
 export async function entregarCorreos(
-  actor: ActorDeBase,
+  actor: Remitente,
   ids: readonly number[],
 ): Promise<number> {
   if (modoDeCorreo() === "simulado" || ids.length === 0) return 0;
@@ -148,7 +160,7 @@ export async function entregarCorreos(
       // La lectura y la anotacion van en transacciones cortas, y la llamada a
       // Gmail queda FUERA de las dos: no se espera a un servicio ajeno con
       // una conexion a la base tomada.
-      const correo = await conSesion(actor, (tx) => correos.paraEntregar(id, tx));
+      const correo = await conRemitente(actor, (tx) => correos.paraEntregar(id, tx));
 
       if (!correo || (correo.estado !== "pendiente" && correo.estado !== "fallido")) {
         continue;
@@ -167,7 +179,7 @@ export async function entregarCorreos(
         };
       }
 
-      await conSesion(actor, async (tx) => {
+      await conRemitente(actor, async (tx) => {
         await correos.anotarEntrega(id, resultado, tx);
 
         // Un correo que no salio no se arregla solo: alguien tiene que

@@ -100,6 +100,13 @@ export type EstadoFormulario = {
    * muestra UNA vez: en la base solo queda su hash.
    */
   credencial?: { email: string; password: string };
+
+  /**
+   * La ruta de un enlace privado recien generado (/brief/<token>), para
+   * copiarla. Como la credencial, se muestra UNA vez: la base solo guarda el
+   * hash del token, y ningun correo lo lleva.
+   */
+  enlace?: string;
 };
 
 /**

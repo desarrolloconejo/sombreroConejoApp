@@ -2,14 +2,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
-import { cuandoBrief, diaBrief, EtiquetaBrief, SECCION_BRIEF } from "@/components/briefs";
+import {
+  cuandoBrief,
+  diaBrief,
+  EnlacesProspectos,
+  EtiquetaBrief,
+  SECCION_BRIEF,
+  type FilaEnlace,
+} from "@/components/briefs";
 import { Wrapper } from "@/components/layout/Wrapper";
 import { conSesion } from "@/lib/db";
-import { formatoPor } from "@/lib/portal/briefs";
+import { ZONA_HORARIA } from "@/lib/fechas";
+import { formatoPor, formatosVigentes } from "@/lib/portal/briefs";
 import { rutaBrief } from "@/lib/portal/rutas";
 import { requerirCargo } from "@/lib/sesion";
 import * as briefsModelo from "@/models/briefs";
-import type { Brief } from "@/types";
+import * as enlacesModelo from "@/models/enlacesBrief";
+import { NOMBRES_DE_ESTADO_BRIEF, type Brief, type EnlaceBrief } from "@/types";
 
 export const metadata: Metadata = {
   title: "Briefs",
@@ -46,6 +55,29 @@ function detalleDe(brief: Brief): string {
   if (brief.estado === "descartado") return "Descartado";
   if (brief.estado === "aceptado") return "Validado";
   return `Aspira al ${diaBrief(brief.fechaAspirada)}`;
+}
+
+const DIA = new Intl.DateTimeFormat("es-VE", {
+  timeZone: ZONA_HORARIA,
+  day: "numeric",
+  month: "short",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+function comoFila(enlace: EnlaceBrief): FilaEnlace {
+  return {
+    id: enlace.id,
+    empresaNombre: enlace.empresaNombre,
+    contactoNombre: enlace.contactoNombre,
+    email: enlace.email,
+    formatoNombre: formatoPor(enlace.formato, enlace.formatoVersion)?.nombre ?? enlace.formato,
+    estado: enlace.revocadoEn ? "revocado" : enlace.vigente ? "vigente" : "vencido",
+    vence: DIA.format(enlace.venceEn),
+    briefId: enlace.briefId,
+    briefRuta: enlace.briefId !== null && enlace.briefEstado !== "borrador" ? rutaBrief(enlace.briefId) : null,
+    briefEstado: enlace.briefEstado ? NOMBRES_DE_ESTADO_BRIEF[enlace.briefEstado] : null,
+  };
 }
 
 function Grupo({ titulo, briefs, vacio }: { titulo: string; briefs: Brief[]; vacio: string }) {
@@ -94,7 +126,10 @@ function Grupo({ titulo, briefs, vacio }: { titulo: string; briefs: Brief[]; vac
 export default async function PaginaBriefs() {
   const usuario = await requerirCargo("cuentas");
 
-  const lista = await conSesion(usuario, (tx) => briefsModelo.listar({ sinBorradores: true }, tx));
+  const [lista, enlaces] = await conSesion(usuario, async (tx) => [
+    await briefsModelo.listar({ sinBorradores: true }, tx),
+    await enlacesModelo.listar(tx),
+  ] as const);
 
   const decidir = lista.filter(porDecidir);
   const enCurso = lista.filter((b) => !porDecidir(b) && (b.estado === "en_validacion" || b.estado === "en_presupuesto"));
@@ -114,6 +149,22 @@ export default async function PaginaBriefs() {
           <Grupo titulo="Cerrados" briefs={cerrados} vacio="Aqui quedan los validados y los descartados." />
         </div>
       </div>
+
+      <section aria-labelledby="titulo-enlaces" className="surge mt-6 [--retraso:0.08s]">
+        <h2 id="titulo-enlaces" className="mb-1 text-[19px] font-extrabold tracking-[-0.02em]">
+          Enlaces para prospectos
+        </h2>
+        <p className="mb-3 text-[13px] text-suave">
+          Para quien aun no es cliente: llena su brief por un enlace privado, sin cuenta. Al aceptarlo se convierte en
+          cliente.
+        </p>
+        <div className={SECCION_BRIEF}>
+          <EnlacesProspectos
+            enlaces={enlaces.map(comoFila)}
+            formatos={formatosVigentes().map((f) => ({ clave: f.clave, nombre: f.nombre }))}
+          />
+        </div>
+      </section>
     </Wrapper>
   );
 }

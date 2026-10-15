@@ -415,11 +415,11 @@ export async function conEnlace<T>(
 ): Promise<T> {
   return transaccion(async (cliente) => {
     await cliente.query(
-      `SELECT set_config(app.usuario_id, , true),
-              set_config(app.rol,        prospecto, true),
-              set_config(app.cargo,      , true),
-              set_config(app.empresa_id, , true),
-              set_config(app.enlace_id,  $1, true)`,
+      `SELECT set_config('app.usuario_id', '', true),
+              set_config('app.rol',        'prospecto', true),
+              set_config('app.cargo',      '', true),
+              set_config('app.empresa_id', '', true),
+              set_config('app.enlace_id',  $1, true)`,
       [String(enlaceId)],
     );
 

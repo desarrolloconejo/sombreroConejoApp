@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { EMAIL_EJECUTIVO, USUARIOS } from "../../db/datos/semilla.mts";
+import { elegirEmpresa } from "./ayudas/formularios";
 
 /**
  * La revision del cliente, de punta a punta: dos rondas de una pieza.
@@ -61,6 +62,7 @@ test("dos rondas: el cliente corrige la redaccion y despues aprueba", async ({ p
   // ---- El ejecutivo crea la pieza, sin tareas, y la lleva a la fase 4.
   await entrar(page, EMAIL_EJECUTIVO);
   await page.goto("/dashboard/proyectos?panel=nuevo", { waitUntil: "networkidle" });
+  await elegirEmpresa(page);
   await page.getByLabel("Nombre", { exact: true }).fill(nombre);
   await page.getByLabel("Titulo de la pieza 1").fill("Pieza para revisar");
   await page.getByLabel(/Crear las tareas sugeridas/).uncheck();

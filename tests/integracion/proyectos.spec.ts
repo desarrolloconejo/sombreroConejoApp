@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { EMAIL_EJECUTIVO, USUARIOS } from "../../db/datos/semilla.mts";
+import { elegirEmpresa } from "./ayudas/formularios";
 
 /**
  * Proyectos, de punta a punta, como ejecutivo de cuentas.
@@ -34,6 +35,7 @@ test("el ejecutivo crea un proyecto, cumple una tarea y completa la fase", async
     timeout: 60_000,
   });
 
+  await elegirEmpresa(page);
   await page.getByLabel("Nombre", { exact: true }).fill(nombre);
   await page.getByLabel("Titulo de la pieza 1").fill("Pieza de la prueba");
   await page.getByRole("button", { name: "Crear proyecto" }).click();

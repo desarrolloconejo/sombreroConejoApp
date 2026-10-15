@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { USUARIOS } from "../../db/datos/semilla.mts";
+import { elegirEmpresa } from "./ayudas/formularios";
 
 /**
  * Presupuestos, del lado de administracion, de punta a punta.
@@ -43,6 +44,7 @@ test("administracion crea un presupuesto, lo envia y registra la respuesta del c
     timeout: 60_000,
   });
 
+  await elegirEmpresa(page);
   await page.getByLabel("Titulo").fill(titulo);
   await page.getByRole("button", { name: "Crear y anadir renglones" }).click();
 

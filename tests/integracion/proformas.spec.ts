@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { USUARIOS } from "../../db/datos/semilla.mts";
+import { elegirEmpresa } from "./ayudas/formularios";
 
 /**
  * Proformas, de punta a punta.
@@ -47,6 +48,7 @@ test("del presupuesto aprobado a la proforma emitida, recurrente y su copia", as
 
   // ---- Un presupuesto enviado y aprobado a nombre del cliente.
   await page.goto("/dashboard/presupuestos?panel=nuevo", { waitUntil: "networkidle" });
+  await elegirEmpresa(page);
   await page.getByLabel("Titulo").fill(titulo);
   await page.getByRole("button", { name: "Crear y anadir renglones" }).click();
   await expect(page).toHaveURL(/\/dashboard\/presupuestos\/\d+$/, { timeout: 60_000 });

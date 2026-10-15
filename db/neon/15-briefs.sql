@@ -5,10 +5,13 @@
 -- prospectos y sus enlaces privados, las versiones congeladas al enviar, el
 -- hilo de aclaraciones, la columna brief_id en proyectos y presupuestos, y
 -- las funciones que guardan, envian y convierten. Tambien la funcion
--- app_enlace_id(), con la que la base reconoce a un prospecto.
+-- app_enlace_id(), con la que la base reconoce a un prospecto, y las
+-- politicas de la campana y de la bandeja de salida ampliadas para que un
+-- prospecto avise y encole la copia de su brief.
 --
--- Idempotente. Solo anade: tablas y funciones nuevas, y dos columnas que
--- nacen vacias y la version publicada ignora.
+-- Idempotente. Solo anade: tablas y funciones nuevas, tres columnas que
+-- nacen vacias y la version publicada ignora, y politicas que dejan pasar
+-- lo mismo que antes mas el rol prospecto.
 --
 -- ORDEN: antes de subir la aplicacion, despues del 14.
 -- ===========================================================================
@@ -686,6 +689,75 @@ GRANT EXECUTE ON FUNCTION
   portal.convertir_prospecto(integer)
   TO conejo_app;
 
+-- ---------------------------------------------------------------------------
+-- Quien atiende un brief: los ejecutivos asignados a su empresa o, si es de
+-- un prospecto sin convertir, quien genero su enlace. Activos. Es a quienes
+-- se avisa cuando se envia o se escribe en el hilo; el cliente no ve las
+-- asignaciones, por eso se pregunta aqui. Solo a quien ve el brief.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION portal.atienden_brief(p_brief integer)
+  RETURNS TABLE (id integer, nombre text, email text)
+  LANGUAGE sql STABLE SECURITY DEFINER
+  SET search_path = public, pg_temp
+  AS $fn$
+    SELECT DISTINCT u.id, u.nombre, u.email
+    FROM portal.briefs b
+    LEFT JOIN portal.asignaciones a ON a.empresa_id = b.empresa_id
+    LEFT JOIN portal.enlaces_brief e ON e.id = b.enlace_id
+    JOIN usuarios u ON u.id = coalesce(a.usuario_id, e.creado_por)
+    WHERE b.id = p_brief AND u.activo AND portal.ve_brief(p_brief)
+  $fn$;
+
+REVOKE ALL ON FUNCTION portal.atienden_brief(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION portal.atienden_brief(integer) TO conejo_app;
+
+-- ---------------------------------------------------------------------------
+-- El prospecto deja rastro sin usuario: al enviar su brief avisa a quien lo
+-- atiende y encola la copia por correo. Las politicas de la campana y de la
+-- bandeja de salida exigen un usuario; aqui se amplian para su rol. Sus
+-- correos llevan el enlace que los provoco (lo pone la base), y solo esos
+-- puede leer y anotar al entregarlos.
+-- ---------------------------------------------------------------------------
+ALTER TABLE portal.correos_salida
+  ADD COLUMN IF NOT EXISTS enlace_id INTEGER REFERENCES portal.enlaces_brief(id);
+ALTER TABLE portal.correos_salida ALTER COLUMN enlace_id SET DEFAULT app_enlace_id();
+
+DROP POLICY IF EXISTS notificaciones_escribe ON portal.notificaciones;
+CREATE POLICY notificaciones_escribe ON portal.notificaciones
+  FOR INSERT TO conejo_app
+  WITH CHECK (
+    app_usuario_id() IS NOT NULL OR app_rol() = 'sistema'
+    OR (app_rol() = 'prospecto' AND app_enlace_id() IS NOT NULL)
+  );
+
+DROP POLICY IF EXISTS correos_salida_lee ON portal.correos_salida;
+CREATE POLICY correos_salida_lee ON portal.correos_salida
+  FOR SELECT TO conejo_app
+  USING (
+    app_rol() = 'admin' OR creado_por = app_usuario_id()
+    OR (app_rol() = 'prospecto' AND enlace_id = app_enlace_id())
+  );
+
+DROP POLICY IF EXISTS correos_salida_escribe ON portal.correos_salida;
+CREATE POLICY correos_salida_escribe ON portal.correos_salida
+  FOR INSERT TO conejo_app
+  WITH CHECK (
+    creado_por = app_usuario_id()
+    OR (app_rol() = 'prospecto' AND creado_por IS NULL AND enlace_id = app_enlace_id())
+  );
+
+DROP POLICY IF EXISTS correos_salida_actualiza ON portal.correos_salida;
+CREATE POLICY correos_salida_actualiza ON portal.correos_salida
+  FOR UPDATE TO conejo_app
+  USING (
+    app_rol() = 'admin' OR creado_por = app_usuario_id()
+    OR (app_rol() = 'prospecto' AND enlace_id = app_enlace_id())
+  )
+  WITH CHECK (
+    app_rol() = 'admin' OR creado_por = app_usuario_id()
+    OR (app_rol() = 'prospecto' AND enlace_id = app_enlace_id())
+  );
+
 COMMIT;
 
 -- ---------------------------------------------------------------------------
@@ -697,7 +769,7 @@ FROM pg_tables
 WHERE schemaname = 'portal'
   AND tablename IN ('prospectos', 'enlaces_brief', 'briefs', 'brief_versiones', 'brief_aclaraciones');
 
--- Comprobacion 2. Debe devolver politicas = 12, funciones = 11 y columnas = 2.
+-- Comprobacion 2. Debe devolver politicas = 12, funciones = 12 y columnas = 3.
 SELECT (SELECT count(*) FROM pg_policies
         WHERE schemaname = 'portal'
           AND tablename IN ('prospectos', 'enlaces_brief', 'briefs', 'brief_versiones', 'brief_aclaraciones')) AS politicas,
@@ -706,11 +778,12 @@ SELECT (SELECT count(*) FROM pg_policies
           AND p.proname IN ('versiones_brief_inmutables', 'briefs_coherentes', 'creo_el_enlace',
                             'gestiona_brief', 'llena_brief', 've_brief', 'enlace_por_token',
                             'guardar_borrador_brief', 'abrir_version_brief', 'enviar_brief',
-                            'convertir_prospecto')) AS funciones,
+                            'convertir_prospecto', 'atienden_brief')) AS funciones,
        (SELECT count(*) FROM information_schema.columns
-        WHERE column_name = 'brief_id'
-          AND ((table_schema = 'portal' AND table_name = 'proyectos')
-            OR (table_schema = 'finanzas' AND table_name = 'presupuestos'))) AS columnas;
+        WHERE (column_name = 'brief_id'
+               AND ((table_schema = 'portal' AND table_name = 'proyectos')
+                 OR (table_schema = 'finanzas' AND table_name = 'presupuestos')))
+           OR (column_name = 'enlace_id' AND table_schema = 'portal' AND table_name = 'correos_salida')) AS columnas;
 
 -- Comprobacion 3. Todavia no hay ningun brief: debe devolver 0.
 SELECT count(*) AS briefs FROM portal.briefs;

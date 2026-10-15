@@ -193,4 +193,5 @@ export type {
   Brief,
   VersionBrief,
   AclaracionBrief,
+  EnlaceBrief,
 } from "./brief";

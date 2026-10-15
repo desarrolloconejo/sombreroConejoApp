@@ -356,6 +356,16 @@ export async function enlaceDe(id: number, ejecutor: Ejecutor): Promise<number |
   return fila?.enlace ?? null;
 }
 
+/** El brief de un enlace de prospecto, si ya se empezo. */
+export async function deEnlace(enlaceId: number, ejecutor: Ejecutor): Promise<number | null> {
+  const fila = await consultarUno<{ id: number }>(
+    "SELECT id FROM portal.briefs WHERE enlace_id = $1",
+    [enlaceId],
+    ejecutor,
+  );
+  return fila?.id ?? null;
+}
+
 /** El brief del que nacio un proyecto, si lo hay. */
 export async function deProyecto(proyectoId: number, ejecutor: Ejecutor): Promise<number | null> {
   const fila = await consultarUno<{ id: number }>(

@@ -10,7 +10,8 @@ import { RUTA_PRESUPUESTOS } from "@/lib/finanzas/rutas";
 import { notificarA } from "@/lib/notificaciones";
 import { generarPasswordProvisional } from "@/lib/claveProvisional";
 import { hashear } from "@/lib/password";
-import { formatoPor } from "@/lib/portal/briefs";
+import { formatoPor, formatosVigentes } from "@/lib/portal/briefs";
+import { rutaDelEnlace } from "@/lib/portal/enlaceBrief";
 import { servicioPorSlug } from "@/lib/portal/catalogo";
 import { leerFecha } from "@/lib/portal/llenadoBrief";
 import {
@@ -21,7 +22,8 @@ import {
   rutaProyecto,
 } from "@/lib/portal/rutas";
 import { requerirCargo } from "@/lib/sesion";
-import { comoIdentificador, limpiarTexto } from "@/lib/validaciones";
+import { generarToken, hashDeToken } from "@/lib/tokens";
+import { comoIdentificador, esEmail, limpiarOpcional, limpiarTexto } from "@/lib/validaciones";
 import * as briefs from "@/models/briefs";
 import * as clientes from "@/models/clientes";
 import * as enlaces from "@/models/enlacesBrief";
@@ -360,4 +362,87 @@ export async function aclararBrief(_estadoPrevio: EstadoFormulario, datos: FormD
 
   revalidar(id);
   return { ok: true, mensaje: "Mensaje enviado" };
+}
+
+/** Dias que vale un enlace nuevo; cada mensaje del ejecutivo lo renueva (S-06). */
+const DIAS_DEL_ENLACE = 7;
+
+/**
+ * Genera el enlace privado de un prospecto para un formato (S-05).
+ *
+ * La ruta se devuelve UNA vez, para copiarla y hacersela llegar: la base solo
+ * guarda el hash del token, y no sale por correo porque ningun correo lleva
+ * tokens.
+ */
+export async function crearEnlace(_estadoPrevio: EstadoFormulario, datos: FormData): Promise<EstadoFormulario> {
+  const usuario = await requerirCargo("cuentas");
+
+  const empresaNombre = limpiarTexto(datos.get("empresaNombre"), 150);
+  const contactoNombre = limpiarTexto(datos.get("contactoNombre"), 150);
+  const email = limpiarTexto(datos.get("email"), 254).toLowerCase();
+  const telefono = limpiarOpcional(datos.get("telefono"), 40);
+  const formato = formatosVigentes().find((f) => f.clave === datos.get("formato"));
+
+  const errores: Record<string, string> = {};
+  if (!empresaNombre) errores.empresaNombre = "Indica la empresa";
+  if (!contactoNombre) errores.contactoNombre = "Indica la persona de contacto";
+  if (!esEmail(email)) errores.email = "Indica un correo valido";
+  if (!formato) errores.formato = "Elige el tipo de brief";
+  if (Object.keys(errores).length > 0 || !formato) {
+    return { ok: false, errores, mensaje: "Revisa los datos del prospecto" };
+  }
+
+  const token = generarToken();
+
+  await conSesion(usuario, async (tx) => {
+    const prospectoId = await enlaces.crearProspecto({ empresaNombre, contactoNombre, email, telefono }, usuario.id, tx);
+    const id = await enlaces.crear(
+      {
+        tokenHash: hashDeToken(token),
+        prospectoId,
+        formato: formato.clave,
+        formatoVersion: formato.version,
+        dias: DIAS_DEL_ENLACE,
+      },
+      usuario.id,
+      tx,
+    );
+
+    // El correo del prospecto no se anota: basta con su ficha.
+    await anotar(tx, usuario, "enlace_brief.creado", {
+      entidadId: id,
+      despues: { prospecto: prospectoId, empresa: empresaNombre, formato: formato.clave, dias: DIAS_DEL_ENLACE },
+    });
+  });
+
+  revalidatePath(RUTA_BRIEFS);
+  return {
+    ok: true,
+    mensaje: `Enlace creado para ${empresaNombre}. Copialo ahora: no se vuelve a mostrar`,
+    enlace: rutaDelEnlace(token),
+  };
+}
+
+/** Deja sin efecto un enlace: quien lo abra vera que ya no es valido. */
+export async function revocarEnlace(_estadoPrevio: EstadoFormulario, datos: FormData): Promise<EstadoFormulario> {
+  const usuario = await requerirCargo("cuentas");
+
+  const id = comoIdentificador(datos.get("id"));
+  if (id === null) return { ok: false, mensaje: "No se encontro el enlace" };
+
+  const revocado = await conSesion(usuario, async (tx) => {
+    const enlace = await enlaces.buscarPorId(id, tx);
+    if (!enlace || !(await enlaces.revocar(id, tx))) return false;
+
+    await anotar(tx, usuario, "enlace_brief.revocado", {
+      entidadId: id,
+      antes: { empresa: enlace.empresaNombre },
+    });
+    return true;
+  });
+
+  if (!revocado) return { ok: false, mensaje: "Ese enlace ya estaba revocado" };
+
+  revalidatePath(RUTA_BRIEFS);
+  return { ok: true, mensaje: "Enlace revocado" };
 }
