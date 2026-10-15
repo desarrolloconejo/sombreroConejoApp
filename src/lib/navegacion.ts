@@ -3,6 +3,7 @@ import {
   BookOpen,
   Building2,
   ChartNoAxesColumn,
+  ClipboardList,
   FileSpreadsheet,
   FileText,
   FolderKanban,
@@ -391,6 +392,15 @@ const MODULOS: readonly Modulo[] = [
     alias: ["proyectos", "revision", "aprobar", "piezas", "avance", "correccion"],
   },
 
+  {
+    titulo: "Mis briefs",
+    seccion: "mi_espacio",
+    subtitulo: "Pedir un trabajo nuevo",
+    href: "/dashboard/mis-briefs",
+    icono: ClipboardList,
+    roles: ["cliente"],
+    alias: ["brief", "pedido", "solicitud", "encargo", "nuevo trabajo", "producto"],
+  },
   {
     titulo: "Facturacion",
     seccion: "mi_espacio",

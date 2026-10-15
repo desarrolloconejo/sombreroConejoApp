@@ -81,11 +81,12 @@ test("nadie mas del equipo ve Finanzas", () => {
 test("el cliente con permiso de finanzas ve Facturacion; sin el, no", () => {
   expect(menuDe({ ...CLIENTE, cargoSlug: null, puedeVerFinanzas: true })).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
-    { seccion: "Mi espacio", modulos: ["Mis proyectos", "Facturacion"] },
+    { seccion: "Mi espacio", modulos: ["Mis proyectos", "Mis briefs", "Facturacion"] },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
   expect(menuDe({ ...CLIENTE, cargoSlug: null, puedeVerFinanzas: false })[1].modulos).toEqual([
     "Mis proyectos",
+    "Mis briefs",
   ]);
 });
 
