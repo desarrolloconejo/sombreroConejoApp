@@ -925,13 +925,31 @@ subidos no se mueven solos**, asi que el cambio va antes de recibir comprobantes
 reales. Mientras la pantalla de consentimiento de GCP este en «Testing», el
 acceso caduca a los 7 dias.
 
-### 7.11 Fuera del alcance
+### 7.11 La etapa 7 con datos de ejemplo
+
+Decidido por el responsable el 2026-10-15: la etapa 7 se construye sin esperar
+al negocio, con valores de ejemplo que se sustituyen al final sin tocar codigo.
+Cada uno queda en `docs/pendientesIntegracion.md`.
+
+| Pieza | Como queda |
+| --- | --- |
+| Emisor | Razon social, RIF y domicilio fiscal en Finanzas → Ajustes. En produccion nacen vacios y no se emite hasta llenarlos |
+| Numeracion | Serie, proximo numero de factura y rango de numeros de control del talonario, en ajustes. El proximo numero **solo sube**: nunca se reutiliza uno. Avisa al acercarse al final del rango de control |
+| Formatos de impresion | Varios, cada uno con su nombre, tamano de hoja y posicion de cada dato en milimetros; uno es el habitual. Se crean, se copian y se desactivan desde ajustes. Al imprimir se puede elegir otro. Cada uno tiene su hoja de calibracion. El de ejemplo es tamano carta. La numeracion no depende del formato |
+| Medios de pago | Gestionables: nombre, monedas que acepta, si pide referencia, datos para pagar, activo. Vienen cuatro de ejemplo sin datos bancarios. Se desactivan, no se borran |
+| Impuestos | IVA (16 %) en ajustes. Retencion de IVA por empresa: si es agente y su porcentaje (75 o 100). ISLR e IGTF preparados en ajustes y **apagados** hasta que el contador responda |
+
+La factura guarda una copia congelada de todo lo que imprime (emisor, cliente,
+renglones, importes, tasa, numero de control), asi que cambiar un ajuste nunca
+altera una factura emitida, y se reimprime igual en cualquier formato.
+
+### 7.12 Fuera del alcance
 
 Proveedores y cuentas por pagar, notas de credito y debito, descuentos, varias
 alicuotas de IVA en un documento, anticipos y saldos a favor, libro de ventas,
 facturacion electronica, pasarela de pago y contabilidad.
 
-### 7.12 Reglas de negocio de los otros bloques
+### 7.13 Reglas de negocio de los otros bloques
 
 El detalle de fases, correcciones, briefs y pantallas esta en el paquete
 original, en la carpeta hermana `appFacturas`:
