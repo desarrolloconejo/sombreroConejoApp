@@ -124,6 +124,20 @@ Lo que cada etapa exige en produccion se va anotando en
 | 6 | `feat/etapa6-mis-briefs` | Mis briefs del cliente: empezar, formulario por pasos con guardado solo, «No lo se», enviar, version nueva (S-08), aclaraciones. Aviso y copia por correo a quien lo atiende | Ninguno | Hecha |
 | 6 | `feat/etapa6-bandeja` | Bandeja de briefs para cuentas: proponer otra fecha, aceptar (nace el proyecto y completar su fase 1 lo valida), pasar a presupuesto (administracion lo arma desde Presupuestos), descartar con motivo | Ninguno | Hecha |
 | 6 | `feat/etapa6-enlace` | Enlace privado de prospecto: el ejecutivo lo genera y lo ve una vez, el prospecto llena y envia sin cuenta en `/brief/[token]`, aceptarlo lo convierte en cliente con contrasena provisional; revocar. El prospecto avisa y encola su copia | El mismo 15 | Hecha |
+| 7 | `feat/etapa7-modelo` | Ajustes de finanzas, formatos de impresion, medios de pago, facturas y renglones (solo por `finanzas.emitir_factura`), pagos y retenciones, numeracion que solo sube, `v_estado_cobro_factura`; retencion y credito por empresa | `db/neon/16-facturas-y-pagos.sql` | Hecha, con datos de ejemplo |
+| 7 | `feat/etapa7-ajustes` | Ajustes de finanzas: emisor, impuestos, numeracion, medios de pago, datos de facturacion de cada empresa y editor de formatos de impresion con la hoja a escala | Ninguno | Hecha |
+| 7 | `feat/etapa7-facturas` | `pdf-lib`. Emitir desde la proforma, listado y ficha, PDF del talonario en el formato elegido, hoja de calibracion, marcar impresa, anular con motivo | Ninguno | Hecha |
+| 7 | `feat/etapa7-pagos` | El cliente reporta pagos y retenciones con comprobante (Drive o simulado); el operador confirma con el monto aplicado o rechaza con motivo, y registra a nombre del cliente | Ninguno | Hecha |
+| 7 | `feat/etapa7-cobranza` | Cobranza por empresa y antiguedad; estado de cuenta del cliente en Facturacion | Ninguno | Hecha |
+
+**La etapa 7 esta construida con datos de ejemplo** (seccion 7.11, decidido el 2026-10-15). Funciona de punta a punta; para usarla de verdad hay que sustituir lo provisional, que esta en `docs/pendientesIntegracion.md` (emisor, numeracion, talonario, medios de pago, impuestos). Decisiones tomadas por el camino:
+
+- Varios **formatos de impresion**, uno habitual; el de ejemplo es tamano carta. La numeracion no depende del formato.
+- El PDF del talonario y los comprobantes solo los entrega el servidor por rutas que deciden con la sesion; lo que no se ve responde 404.
+- La retencion de IVA y los dias de credito de cada empresa se editan en Ajustes de finanzas, porque administracion no entra en Empresas.
+- Un pago en dolares se confirma con la tasa que se uso; el monto aplicado se sugiere con la tasa de la factura.
+- No se puede anular una factura con pagos sin rechazar.
+- Quedan para despues, anotados en el registro de pendientes: registrar la tasa a mano, el PDF de presupuestos, proformas y briefs, el correo de factura emitida (hoy solo campana) y aplicar ISLR e IGTF si el contador los confirma.
 
 **La etapa 6 esta completa**, con los supuestos S-04 a S-09 del paquete. Decisiones tomadas por el camino:
 

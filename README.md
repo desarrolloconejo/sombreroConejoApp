@@ -26,6 +26,7 @@ mejora del diseno.
 | Sesiones | JWT con `jose` sobre cookies `HttpOnly` |
 | Contrasenas | `bcryptjs` |
 | Codigo QR | `qrcode-generator`, solo en el servidor |
+| PDF | `pdf-lib`, solo en el servidor: talonario y hoja de calibracion |
 | Pruebas | Playwright, mas dos baterias propias en `db/pruebas` |
 | Desarrollo | Docker Compose (app, base y pgAdmin) |
 | Produccion | Vercel, con la base en Neon |
@@ -568,6 +569,35 @@ Un componente que lanza una action cuyo resultado lo hace desaparecer
 de esa action: lo guarda un componente que sigue en pantalla
 (`MovimientosDeFase`, `TareasFase`). Si no, la revalidacion lo desmonta y el
 aviso no llega a verse.
+
+### Facturas, pagos y cobranza
+
+```
+/dashboard/facturas                      proformas por facturar, pagos por confirmar y el listado
+/dashboard/facturas/[id]                 lo facturado, el cobro, imprimir, pagos y anular
+/dashboard/cobranza                      lo que debe cada empresa, por antiguedad
+/dashboard/ajustes-finanzas              emisor, impuestos, numeracion, medios de pago, empresas
+/dashboard/ajustes-finanzas/formatos/[id] editor de un formato de impresion
+/dashboard/facturacion/facturas/[id]     el cliente: su factura y reportar un pago
+/api/facturas/[id]/pdf                   PDF para el talonario (?formato=)
+/api/formatos/[id]/calibracion           hoja de calibracion de un formato
+/api/pagos/[id]/comprobante              el comprobante de un pago
+```
+
+Se construyo con **valores de ejemplo** (emisor, numeracion, talonario,
+medios de pago, impuestos) que se cambian en Ajustes de finanzas; la lista
+esta en [docs/pendientesIntegracion.md](docs/pendientesIntegracion.md).
+
+- **La factura la emite la base** (`finanzas.emitir_factura`), en bolivares a
+  la ultima tasa del BCV, con copia congelada del emisor y del cliente.
+  Corregirla es anularla y emitir otra.
+- **El talonario se calibra**: cada formato de impresion guarda el tamano de
+  la hoja y la posicion de cada dato en milimetros. Se imprime la hoja de
+  calibracion sobre el papel real, se mide y se ajusta.
+- **Un pago reportado no baja el saldo** hasta que lo confirma administracion
+  con el monto aplicado. Lo reportado no se edita: se rechaza y se reporta otro.
+- En desarrollo, la semilla llena el emisor con datos ficticios y deja una
+  factura con un pago por confirmar.
 
 ### Presupuestos y proformas
 
