@@ -43,15 +43,21 @@ async function primeraOpcionDeCadaGrupo(page: Page) {
 }
 
 /**
- * Empieza un brief como el cliente en sesion, responde lo obligatorio (el
- * empaque, como propio: su paso se oculta) y lo deja en el ultimo paso, sin
- * enviar. `producto` distingue un brief de otro.
+ * Empieza un brief como el cliente en sesion, responde lo obligatorio y lo
+ * deja en el ultimo paso, sin enviar. `producto` distingue un brief de otro.
  */
 export async function llenarBrief(page: Page, producto: string) {
   await page.goto("/dashboard/mis-briefs", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: /Empezar un Brief de Desarrollo de Producto/ }).click();
   await expect(page).toHaveURL(/\/dashboard\/mis-briefs\/\d+$/, { timeout: 60_000 });
+  await responderBrief(page, producto);
+}
 
+/**
+ * Con el formulario abierto en su primer paso, responde lo obligatorio (el
+ * empaque, como propio: su paso se oculta) y lo deja en el ultimo paso.
+ */
+export async function responderBrief(page: Page, producto: string) {
   await expect(page.getByLabel(/Empresa \/ fabricante/)).not.toHaveValue("", { timeout: 60_000 });
   await page.getByLabel(/Producto \(idea\)/).fill(producto);
   await page.getByLabel(/Responsable: cargo/).fill("Gerente de mercadeo");
@@ -82,12 +88,17 @@ export async function llenarBrief(page: Page, producto: string) {
 /** Llena y envia un brief. Devuelve su codigo. */
 export async function enviarBrief(page: Page, producto: string): Promise<string> {
   await llenarBrief(page, producto);
+  return enviarAbierto(page);
+}
+
+/** Envia el brief que ya esta respondido en pantalla. Devuelve su codigo. */
+export async function enviarAbierto(page: Page): Promise<string> {
   await page.getByLabel("Fecha de entrega que aspiras").fill(dentroDe(30));
   await page.getByRole("button", { name: "Enviar brief" }).click();
   await avisado(page, /Brief enviado. Su codigo es ECS-/);
   await expect(page.getByRole("heading", { name: "Lo que enviaste" })).toBeVisible({ timeout: 60_000 });
 
-  const kicker = await page.getByText(/^Brief ECS-/).first().textContent();
+  const kicker = await page.getByText(/Brief ECS-\d{8}-/).first().textContent();
   const codigo = kicker?.match(/ECS-\d{8}-[0-9A-F]{6}/)?.[0];
   if (!codigo) throw new Error("El brief enviado no muestra su codigo");
   return codigo;
