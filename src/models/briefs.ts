@@ -320,3 +320,11 @@ export async function deProyecto(proyectoId: number, ejecutor: Ejecutor): Promis
   );
   return fila?.id ?? null;
 }
+
+/** Quien atiende un brief: a quienes se avisa. */
+export async function atienden(
+  id: number,
+  ejecutor: Ejecutor,
+): Promise<{ id: number; nombre: string; email: string }[]> {
+  return consultar("SELECT id, nombre, email FROM portal.atienden_brief($1)", [id], ejecutor);
+}

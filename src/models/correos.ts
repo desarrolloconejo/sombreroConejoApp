@@ -69,7 +69,7 @@ function comoCorreo(fila: Omit<CorreoSalida, "id"> & { id: string }): CorreoSali
  */
 export async function registrar(
   correo: NuevoCorreo,
-  datos: { modo: ModoExterno; estado: EstadoCorreo; creadoPor: number },
+  datos: { modo: ModoExterno; estado: EstadoCorreo; creadoPor: number | null },
   ejecutor: Ejecutor,
 ): Promise<number> {
   const fila = await consultarUno<{ id: string }>(

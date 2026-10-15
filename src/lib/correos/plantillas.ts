@@ -74,6 +74,55 @@ export function correoDeClaveRestablecida(persona: Destinatario): NuevoCorreo {
 }
 
 /**
+ * La copia exacta de un brief enviado: todas las respuestas, con el texto de
+ * su pregunta, tal como quedaron congeladas. Sale del contenido congelado,
+ * nunca del borrador.
+ *
+ * Va a quien lo envio, a los ejecutivos que lo atienden y al buzon del
+ * estudio. El destinatario puede no tener cuenta (un prospecto, el buzon).
+ */
+export function correoDeBriefEnviado(
+  destino: { email: string; usuarioId: number | null; empresaId: number | null; saludo: string },
+  brief: {
+    codigo: string;
+    formato: string;
+    version: number;
+    solicitante: string;
+    fechaAspirada: string;
+    contenido: { paso: string; numero: number | null; pregunta: string; textoMostrado: string }[];
+  },
+): NuevoCorreo {
+  const lineas: string[] = [];
+  let pasoActual = "";
+
+  for (const respuesta of brief.contenido) {
+    if (respuesta.paso !== pasoActual) {
+      pasoActual = respuesta.paso;
+      lineas.push("", respuesta.paso.toUpperCase(), "");
+    }
+    const numero = respuesta.numero === null ? "" : `${respuesta.numero}. `;
+    lineas.push(`${numero}${respuesta.pregunta}`, `   ${respuesta.textoMostrado}`);
+  }
+
+  const version = brief.version > 1 ? ` (version ${brief.version})` : "";
+
+  return {
+    para: destino.email,
+    paraUsuarioId: destino.usuarioId,
+    empresaId: destino.empresaId,
+    tipo: "brief_enviado",
+    asunto: `Brief ${brief.codigo}${version}: ${brief.formato}`,
+    cuerpo:
+      `Hola, ${destino.saludo}:\n\n` +
+      `Esta es la copia del brief ${brief.codigo}${version} de ${brief.solicitante}, ` +
+      `tal como se envio. Fecha de entrega que se aspira: ${brief.fechaAspirada}.\n` +
+      lineas.join("\n") +
+      "\n" +
+      despedida(),
+  };
+}
+
+/**
  * El aviso a quien ve las finanzas de una empresa: tiene un presupuesto para
  * aprobar.
  *

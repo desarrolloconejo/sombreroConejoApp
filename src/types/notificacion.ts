@@ -24,7 +24,14 @@ export type TipoNotificacion =
   | "tasa.rechazada"
   | "presupuesto.enviado"
   | "presupuesto.resuelto"
-  | "proforma.emitida";
+  | "proforma.emitida"
+  | "brief.enviado"
+  | "brief.aceptado"
+  | "brief.a_presupuesto"
+  | "brief.descartado"
+  | "brief.validado"
+  | "brief.aclaracion"
+  | "brief.fecha_propuesta";
 
 /** Lo que hay que saber para notificar. Los destinatarios van aparte. */
 export type NuevaNotificacion = {

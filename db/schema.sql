@@ -3562,3 +3562,25 @@ GRANT EXECUTE ON FUNCTION
   portal.enviar_brief(integer, jsonb, text, jsonb, date, text),
   portal.convertir_prospecto(integer)
   TO conejo_app;
+
+-- ---------------------------------------------------------------------------
+-- Quien atiende un brief: los ejecutivos asignados a su empresa o, si es de
+-- un prospecto sin convertir, quien genero su enlace. Activos. Es a quienes
+-- se avisa cuando se envia o se escribe en el hilo; el cliente no ve las
+-- asignaciones, por eso se pregunta aqui. Solo a quien ve el brief.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION portal.atienden_brief(p_brief integer)
+  RETURNS TABLE (id integer, nombre text, email text)
+  LANGUAGE sql STABLE SECURITY DEFINER
+  SET search_path = public, pg_temp
+  AS $fn$
+    SELECT DISTINCT u.id, u.nombre, u.email
+    FROM portal.briefs b
+    LEFT JOIN portal.asignaciones a ON a.empresa_id = b.empresa_id
+    LEFT JOIN portal.enlaces_brief e ON e.id = b.enlace_id
+    JOIN usuarios u ON u.id = coalesce(a.usuario_id, e.creado_por)
+    WHERE b.id = p_brief AND u.activo AND portal.ve_brief(p_brief)
+  $fn$;
+
+REVOKE ALL ON FUNCTION portal.atienden_brief(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION portal.atienden_brief(integer) TO conejo_app;

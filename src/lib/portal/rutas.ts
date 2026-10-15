@@ -24,3 +24,20 @@ export function rutaMiProyecto(proyectoId: number): string {
 export function rutaMiPieza(proyectoId: number, piezaId: number): string {
   return `${rutaMiProyecto(proyectoId)}/piezas/${piezaId}`;
 }
+
+/** La bandeja de briefs del equipo, y lo que pide el cliente. */
+export const RUTA_BRIEFS = "/dashboard/briefs";
+export const RUTA_MIS_BRIEFS = "/dashboard/mis-briefs";
+
+export function rutaBrief(id: number): string {
+  return `${RUTA_BRIEFS}/${id}`;
+}
+
+export function rutaMiBrief(id: number): string {
+  return `${RUTA_MIS_BRIEFS}/${id}`;
+}
+
+/** La unica ruta publica del portal: el brief de un prospecto. */
+export function rutaBriefPorEnlace(token: string): string {
+  return `/brief/${token}`;
+}
