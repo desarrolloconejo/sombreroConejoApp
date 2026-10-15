@@ -37,11 +37,12 @@ export function modoDeCorreo(): ModoExterno {
  * `entregarCorreos`.
  *
  * El ejecutor tiene que venir de `conSesion`: la bandeja tiene seguridad por
- * fila y exige que el correo vaya a nombre de quien declaro la sesion.
+ * fila y exige que el correo vaya a nombre de quien declaro la sesion. Sin
+ * actor es un prospecto, que escribe por su enlace (`conEnlace`) sin usuario.
  */
 export async function encolarCorreo(
   ejecutor: Ejecutor,
-  actor: Pick<ActorDeBase, "id">,
+  actor: Pick<ActorDeBase, "id"> | null,
   correo: NuevoCorreo,
 ): Promise<number> {
   const modo = modoDeCorreo();
@@ -52,7 +53,7 @@ export async function encolarCorreo(
       modo,
       // El simulado ya esta en su estado final; el real espera su entrega.
       estado: modo === "simulado" ? "simulado" : "pendiente",
-      creadoPor: actor.id,
+      creadoPor: actor?.id ?? null,
     },
     ejecutor,
   );

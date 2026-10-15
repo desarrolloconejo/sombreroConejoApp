@@ -62,7 +62,18 @@ export type AccionAuditoria =
   | "proforma.editada"
   | "proforma.emitida"
   | "proforma.anulada"
-  | "proforma.recurrencia_cambiada";
+  | "proforma.recurrencia_cambiada"
+  | "brief.creado"
+  | "brief.enviado"
+  | "brief.version_enviada"
+  | "brief.aceptado"
+  | "brief.a_presupuesto"
+  | "brief.descartado"
+  | "brief.validado"
+  | "brief.aclaracion"
+  | "brief.fecha_propuesta"
+  | "enlace_brief.creado"
+  | "enlace_brief.revocado";
 
 /** Como se lee cada accion en pantalla. */
 export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
@@ -123,6 +134,17 @@ export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
   "proforma.emitida": "Proforma emitida",
   "proforma.anulada": "Proforma anulada",
   "proforma.recurrencia_cambiada": "Recurrencia de una proforma cambiada",
+  "brief.creado": "Brief empezado",
+  "brief.enviado": "Brief enviado",
+  "brief.version_enviada": "Version nueva de un brief enviada",
+  "brief.aceptado": "Brief aceptado: proyecto abierto",
+  "brief.a_presupuesto": "Brief pasado a presupuesto",
+  "brief.descartado": "Brief descartado",
+  "brief.validado": "Brief validado",
+  "brief.aclaracion": "Aclaracion en un brief",
+  "brief.fecha_propuesta": "Fecha de entrega propuesta",
+  "enlace_brief.creado": "Enlace de brief para un prospecto",
+  "enlace_brief.revocado": "Enlace de brief revocado",
 };
 
 /**
@@ -142,6 +164,8 @@ export const MODULOS_DE_AUDITORIA = {
   version: "Versiones",
   presupuesto: "Presupuestos",
   proforma: "Proformas",
+  brief: "Briefs",
+  enlace_brief: "Enlaces de brief",
 } as const;
 
 export type ModuloAuditoria = keyof typeof MODULOS_DE_AUDITORIA;

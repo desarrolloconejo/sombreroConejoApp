@@ -19,7 +19,8 @@ export type TipoCorreo =
   | "bienvenida"
   | "clave_restablecida"
   | "pieza_en_revision"
-  | "presupuesto_enviado";
+  | "presupuesto_enviado"
+  | "brief_enviado";
 
 /** Como se lee cada tipo en pantalla. */
 export const NOMBRES_DE_CORREO: Record<TipoCorreo, string> = {
@@ -27,6 +28,7 @@ export const NOMBRES_DE_CORREO: Record<TipoCorreo, string> = {
   clave_restablecida: "Contrasena restablecida",
   pieza_en_revision: "Pieza lista para revisar",
   presupuesto_enviado: "Presupuesto para aprobar",
+  brief_enviado: "Copia de un brief",
 };
 
 /**
