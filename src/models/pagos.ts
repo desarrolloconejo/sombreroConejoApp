@@ -145,3 +145,13 @@ export async function rechazar(id: number, motivo: string, usuarioId: number, ej
   );
   return filas === 1;
 }
+
+/** Quien reporto un pago, salvo que lo registrara un operador a nombre del cliente. */
+export async function reportadoPor(id: number, ejecutor: Ejecutor): Promise<number | null> {
+  const fila = await consultarUno<{ id: number }>(
+    "SELECT reportado_por AS id FROM finanzas.pagos WHERE id = $1 AND NOT a_nombre_del_cliente",
+    [id],
+    ejecutor,
+  );
+  return fila?.id ?? null;
+}

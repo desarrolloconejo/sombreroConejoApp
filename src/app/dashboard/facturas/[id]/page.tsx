@@ -5,13 +5,17 @@ import { notFound } from "next/navigation";
 import { AnularFactura, EtiquetaCobro, ImprimirFactura, ProveedorFactura, ResumenCobro } from "@/components/facturas";
 import { fechaDia, fechaHora, ResumenImportes, SECCION_DOCUMENTO, TablaRenglones } from "@/components/finanzas";
 import { Wrapper } from "@/components/layout/Wrapper";
+import { FormularioPago, ListaPagos } from "@/components/pagos";
+import { registrarPago } from "@/actions/pagos";
 import { conSesion } from "@/lib/db";
 import { dolares, numeroDe, numeroFactura, tasaLegible } from "@/lib/finanzas/documentos";
 import { RUTA_FACTURAS, rutaProforma } from "@/lib/finanzas/rutas";
+import { hoyEnCaracas } from "@/lib/portal/fases";
 import { requerirFinanzas } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
 import * as ajustesModelo from "@/models/ajustesFinanzas";
 import * as facturasModelo from "@/models/facturas";
+import * as pagosModelo from "@/models/pagos";
 import type { ParteFactura } from "@/types";
 
 export const metadata: Metadata = {
@@ -47,11 +51,14 @@ export default async function PaginaFactura(props: PageProps<"/dashboard/factura
       factura,
       renglones: await facturasModelo.renglones(id, tx),
       formatos: (await ajustesModelo.formatos(tx)).filter((f) => f.activo),
+      pagos: await pagosModelo.deFactura(id, tx),
+      medios: (await ajustesModelo.medios(tx)).filter((m) => m.activo),
+      islr: (await ajustesModelo.leer(tx))?.islrActivo ?? false,
     };
   });
   if (!datos) notFound();
 
-  const { factura, renglones, formatos } = datos;
+  const { factura, renglones, formatos, pagos, medios, islr } = datos;
   const numero = numeroFactura(factura.serie, factura.numero);
   const migas = [
     { texto: "Conejo App", href: "/dashboard" },
@@ -105,6 +112,32 @@ export default async function PaginaFactura(props: PageProps<"/dashboard/factura
             <div className={SECCION_DOCUMENTO}>
               <ResumenCobro factura={factura} />
             </div>
+
+            <div className={SECCION_DOCUMENTO}>
+              <h3 className="mb-2 text-[14px] font-bold">Pagos y retenciones</h3>
+              <ListaPagos
+                pagos={pagos}
+                operador
+                tasaSugerida={factura.tasa}
+                vacio="El cliente aun no ha reportado pagos."
+              />
+            </div>
+
+            {factura.estado === "emitida" && (
+              <details className={SECCION_DOCUMENTO}>
+                <summary className="cursor-pointer text-[14px] font-bold">Registrar un pago a nombre del cliente</summary>
+                <div className="mt-4">
+                  <FormularioPago
+                    accion={registrarPago}
+                    facturaId={factura.id}
+                    medios={medios}
+                    hoy={hoyEnCaracas()}
+                    conRetencionIslr={islr}
+                    comprobanteObligatorio={false}
+                  />
+                </div>
+              </details>
+            )}
 
             {factura.estado === "emitida" && (
               <div className={SECCION_DOCUMENTO}>
