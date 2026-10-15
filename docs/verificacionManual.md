@@ -240,3 +240,61 @@ salida.
 | PDF del brief adjunto a la copia por correo | Etapa 7, con la libreria del PDF |
 | Brief de Diagnostico | Cuando se tengan sus preguntas (B4) |
 | Enlace al prospecto por correo | No se hara: el enlace es un token, y ningun correo lleva tokens |
+
+## Etapa 7 — Facturas, pagos y cobranza
+
+Se construyo con **datos de ejemplo** (emisor ficticio, numeracion, talonario
+tamano carta, cuatro medios de pago). La semilla deja una factura de la
+empresa de ejemplo con un pago reportado por confirmar.
+
+**Ajustes (como `finanzas@conejo.test`)**
+
+1. Finanzas muestra Presupuestos, Proformas, Facturas, Cobranza y Ajustes de
+   finanzas.
+2. Ajustes de finanzas → escribir un RIF mal (`12345`): no se guarda y dice
+   como escribirlo.
+3. Numeracion: bajar el proximo numero de factura no se puede; subirlo si.
+4. Medios de pago: anadir uno, editarlo y desactivarlo. El cliente deja de
+   verlo.
+5. Datos de facturacion: marcar la empresa de ejemplo como «Retiene el 75 %».
+   La proxima factura que se le emita dice cuanto se espera de retencion.
+6. Formatos de impresion → «Carta (ejemplo)» → «Hoja de calibracion»: sale un
+   PDF con cuadricula y cada dato recuadrado. «Duplicar» crea «Copia de
+   Carta (ejemplo)»; cambiar una medida y ver la hoja a escala moverse.
+
+**Facturar**
+
+7. Proformas → abrir una emitida → «Emitir la factura»: lleva a la factura,
+   con numero `A-…`, numero de control y la tasa del BCV.
+8. «Abrir el PDF para imprimir»: el texto cae en las posiciones del formato.
+   Imprimirlo en papel carta y compararlo con la hoja de calibracion.
+9. «Marcar como impresa» queda anotado con la fecha.
+10. Anular pide el motivo; anulada, la proforma vuelve a ofrecer «Emitir la
+    factura».
+
+**Pagos**
+
+11. Como `cliente@empresa.test`: Facturacion muestra «Por pagar», «Vencido»
+    y la lista de facturas. Abrir una y reportar un pago sin comprobante: lo
+    pide. Con una imagen o un PDF, queda «Por confirmar».
+12. En el telefono (390 px) la factura y el formulario se leen sin
+    desplazarse de lado.
+13. Como administracion: Facturas muestra «Pagos por confirmar». En la ficha,
+    «Confirmar» sugiere el monto (en dolares, convertido con la tasa);
+    confirmarlo baja el saldo y la factura pasa a «Pago parcial».
+14. «Registrar un pago a nombre del cliente» y rechazarlo con motivo: el
+    cliente ve el motivo.
+15. Una factura con pagos sin rechazar no se puede anular.
+
+**Cobranza**
+
+16. Cobranza muestra lo que debe cada empresa por antiguedad, con el total.
+    Pulsar una empresa lleva a sus facturas abiertas.
+17. Como `cuentas@conejo.test`, `/dashboard/cobranza` y `/dashboard/facturas`
+    devuelven al inicio.
+
+### Sin hacer todavia
+
+Todo esta en `docs/pendientesIntegracion.md`. Lo mas importante: registrar la
+tasa a mano, aplicar ISLR e IGTF cuando el contador responda, y calibrar el
+talonario real.

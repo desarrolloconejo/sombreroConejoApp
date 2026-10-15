@@ -49,6 +49,7 @@ sigue.
 | F11 | Campos obligatorios de la factura y vigencia del talonario | Los del paquete | Facturas validas ante el SENIAT |
 | F12 | IGTF y retenciones de ISLR | Apagados (V7, V8) | — |
 | F13 | Hoja escaneada del talonario | Formato de ejemplo (V4) | Imprimir sobre el papel real |
+| F15 | ¿Que formato de impresion se usa: carta, media carta u otro? | Carta de ejemplo; se pueden tener varios | Calibrar el definitivo |
 | B4 | Preguntas del brief de Diagnostico | Ese formato no se publica | El brief de Diagnostico |
 | B5 | Servicios que vende la agencia y sus tareas tipicas | Dos servicios definidos | Ampliar el catalogo |
 
@@ -56,6 +57,11 @@ sigue.
 
 | Que | Por que | Cuando |
 | --- | --- | --- |
+| **Registrar la tasa del dolar a mano** | No hay pantalla. Hoy la tasa solo llega de la lectura diaria del BCV; **si un dia falla y no hay ninguna anterior, no se puede facturar**. La base ya admite tasas manuales (`origen = 'manual'`) | Antes de facturar en produccion |
+| ISLR e IGTF se aplican | Los ajustes existen y nacen apagados, pero encenderlos todavia no cambia ningun calculo: falta la regla del contador (F12). El operador ya puede registrar una retencion de ISLR; el cliente no la ve en su formulario | Cuando el contador responda |
+| PDF de presupuestos, proformas y de la copia del brief | La libreria ya esta (`pdf-lib`); falta el diseno con la marca | Cuando se pida |
+| Correo al cliente cuando se le emite una factura o se resuelve un pago | Hoy solo la campana. Se decide con el correo real | Con la cuenta de la empresa |
+| Una factura solo admite los renglones que caben en el formato habitual (F8) | Una proforma mas larga se factura en dos, a mano | Decision tomada; confirmar con el contador |
 | Tiempo real (la bateria y la campana se actualizan al recargar) | No cabe en Vercel | Mudanza al VPS (etapa 9) |
 | Video por el servidor (hoy va por enlace) y archivos de mas de 4 MB | Limite de peticion de Vercel | Etapa 9 |
 | Foto de perfil | El disco de Vercel es de solo lectura | Etapa 9 |
@@ -70,6 +76,7 @@ sigue.
 | --- | --- |
 | La aplicacion conectada como `conejo_app` a traves de la cadena agrupada de Neon | Sin probar contra Neon |
 | Seguridad por fila de todas las tablas | Probada en local con `prueba:permisos`; sin probar contra Neon |
-| Subida y descarga en Drive en modo real (piezas y comprobantes) | Probada en modo simulado; `drive:probar` paso el 2026-10-13 |
+| Subida y descarga en Drive en modo real (piezas y comprobantes) | Probada en modo simulado; `drive:probar` paso el 2026-10-13. Los comprobantes usan `DRIVE_CARPETA_COMPROBANTES_ID` |
+| Impresion sobre el talonario real | Sin probar: no hay hoja del talonario (F13). El PDF y la hoja de calibracion se revisaron en pantalla |
 | Correo real por Gmail | Simulado hasta tener la cuenta de la empresa |
-| Archivos `db/neon/` 01 a 15 | Ensayados en local; ninguno pegado en produccion todavia |
+| Archivos `db/neon/` 01 a 16 | Ensayados en local; ninguno pegado en produccion todavia |

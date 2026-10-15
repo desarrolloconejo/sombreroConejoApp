@@ -27,7 +27,9 @@ asignados), Auditoria, Bandeja de salida, Tablero, Proyectos (piezas,
 bateria de fases y tareas), Mi trabajo, Briefs (la bandeja de cuentas, con los
 enlaces para prospectos), Presupuestos y Proformas (para el admin y
 administracion), para los clientes Mis proyectos (revision en la fase 5), Mis
-briefs y Facturacion (sus presupuestos y proformas), el brief de un prospecto
+briefs y Facturacion (sus presupuestos, proformas y facturas, el estado de
+cuenta y el reporte de pagos), Facturas, Cobranza y Ajustes de finanzas para
+el admin y administracion, el brief de un prospecto
 por su enlace (`/brief/[token]`, sin cuenta), y el modulo de Hooks.
 Esta en marcha la integracion de un portal completo (briefs, proyectos con
 bateria de fases y tareas, revision del cliente, finanzas). **Antes de
@@ -203,6 +205,17 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   totales ni renglones por su cuenta: no tiene permiso. La vista previa del
   editor (`src/lib/finanzas/calculo.ts`) sigue las mismas reglas con enteros
   escalados, y `prueba:permisos` compara las dos.
+- Una factura **solo nace con `finanzas.emitir_factura`**: numero, control,
+  tasa, importes en bolivares y copias congeladas del emisor y del cliente.
+  La aplicacion no inserta facturas ni sus renglones, y una emitida solo se
+  anula (`finanzas.anular_factura`) o se marca impresa. Los proximos numeros
+  se cambian con `finanzas.fijar_numeracion`, que solo deja subir.
+- Lo que ve quien imprime y quien paga sale por rutas del servidor que deciden
+  con la sesion: `/api/facturas/[id]/pdf`, `/api/formatos/[id]/calibracion` y
+  `/api/pagos/[id]/comprobante`. Lo que no se ve responde 404.
+- Un comprobante de pago se sube con `subirArchivo({ carpeta: "comprobantes" })`
+  antes de la transaccion, como las versiones de las piezas.
+- Lo que nace con valores de ejemplo se anota en `docs/pendientesIntegracion.md`.
 - Finanzas lo opera `requerirFinanzas` (admin o cargo `administracion`). El
   cliente entra con `requerirFinanzasDeEmpresa`, que exige su casilla
   `puede_ver_finanzas`. Un modulo del menu que dependa de esa casilla declara
@@ -260,12 +273,12 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 
 ## Dependencias
 
-No se anaden librerias sin aprobacion expresa. Las de ejecucion son ocho:
-`next`, `react`, `react-dom`, `pg`, `jose`, `bcryptjs`, `lucide-react` y
+No se anaden librerias sin aprobacion expresa. Las de ejecucion son nueve:
+`next`, `react`, `react-dom`, `pg`, `jose`, `bcryptjs`, `lucide-react`,
 `qrcode-generator` (solo para el QR de los dos pasos, en `src/lib/qr.ts`; se
-usa en el servidor y no entra en el bundle de cliente). Esta
-aprobada una mas para generar el PDF de la factura, pendiente de instalar
-cuando llegue esa etapa. De desarrollo: `@playwright/test`.
+usa en el servidor y no entra en el bundle de cliente) y `pdf-lib` (el PDF del
+talonario y la hoja de calibracion, en `src/lib/finanzas/pdfFactura.ts`, solo
+en el servidor). De desarrollo: `@playwright/test`.
 
 No hay libreria de validacion, de estado, de componentes ni de fechas: se
 valida a mano en `src/lib/validaciones.ts`.

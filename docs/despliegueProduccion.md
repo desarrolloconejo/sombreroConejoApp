@@ -150,6 +150,17 @@ No inserta datos. Los formatos de brief van en el codigo, no en la base.
 Solo anade: las politicas ampliadas dejan pasar lo mismo que antes, mas el
 rol `prospecto`, que la version publicada no usa.
 
+### Etapa 7 — Facturas, pagos y cobranza
+
+| # | Archivo | Que hace | Resultado esperado |
+| --- | --- | --- | --- |
+| 16 | `db/neon/16-facturas-y-pagos.sql` | Ajustes de finanzas, formatos de impresion, medios de pago, facturas y renglones, pagos y retenciones, la vista del estado de cobro, y en empresas la retencion de IVA y los dias de credito | `tablas = 6` y `con_seguridad_por_fila = 6`; `funciones = 9`, `columnas_empresa = 3` y `vista = 1`; `formatos = 1`, `medios = 4`, `facturas = 0` y `emisor_vacio = true` |
+
+Trae un formato de impresion de ejemplo (carta) y cuatro medios de pago de
+ejemplo sin datos bancarios. **El emisor nace vacio: no se puede emitir
+ninguna factura hasta llenarlo** en Finanzas → Ajustes de finanzas. Todo lo
+provisional esta en `docs/pendientesIntegracion.md`.
+
 ---
 
 ## 3. Variables de entorno en Vercel
@@ -202,6 +213,12 @@ publicada sigue con la conexion anterior hasta que se suba.
 | Variable | Accion | Valor |
 | --- | --- | --- |
 | `BRIEFS_MAILBOX` | Opcional | Un buzon del estudio que recibe copia de cada brief enviado. Sin el, la copia va a quien lo envia y a quien lo atiende |
+
+### Etapa 7
+
+| Variable | Accion | Valor |
+| --- | --- | --- |
+| `DRIVE_CARPETA_COMPROBANTES_ID` | **Anadir** si no esta | El id de `ConejoApp/Comprobantes`, que deja `npm run drive:probar` en el `.env` local. Sin ella, reportar un pago con comprobante falla con un mensaje claro |
 
 ---
 
@@ -314,6 +331,22 @@ En la aplicacion publicada, con la cuenta de administrador.
       propio y abrirlo en una ventana privada: se llena y se envia sin cuenta.
       Aceptarlo muestra la contrasena provisional del nuevo cliente.
 - [ ] Revocar ese enlace y volver a abrirlo: dice que ya no es valido.
+
+### Etapa 7
+
+- [ ] En Finanzas → Ajustes de finanzas: llenar el emisor (razon social, RIF,
+      domicilio fiscal) y revisar la numeracion. **Con datos reales, no de
+      ejemplo**: lo que se emita queda con ellos.
+- [ ] Comprobar que hay tasa del dolar del dia (la lee la tarea programada).
+- [ ] Con una proforma emitida de prueba: «Emitir la factura». Abre la
+      factura con su numero y numero de control.
+- [ ] «Abrir el PDF para imprimir»: sale el PDF con el texto en su sitio.
+- [ ] Anular esa factura de prueba con motivo: la proforma vuelve a poder
+      facturarse.
+- [ ] Con un cliente con permiso de finanzas: Facturacion muestra la factura;
+      reportar un pago con un comprobante de prueba. Aparece en Drive, en
+      `ConejoApp/Comprobantes`.
+- [ ] Rechazarlo con motivo desde la ficha: el cliente ve el motivo.
 
 ---
 
@@ -442,6 +475,17 @@ anterior lo ignora.
   en Briefs. El enlace se ve una sola vez y **no sale por correo**: el
   ejecutivo lo copia y se lo hace llegar. Vale 7 dias.
 
+### Etapa 7
+
+- **Administracion factura desde la aplicacion**: Facturas, Cobranza y Ajustes
+  de finanzas aparecen en Finanzas. La factura sale de la proforma emitida, en
+  bolivares a la tasa del BCV, y se imprime sobre el talonario.
+- **Los clientes con «Puede ver las finanzas»** ven sus facturas y lo que
+  deben, y **reportan sus pagos** con el comprobante. Un pago reportado no
+  baja la deuda hasta que administracion lo confirma.
+- Lo que hoy es de ejemplo (talonario, medios de pago, impuestos) se ajusta
+  en Ajustes de finanzas. No hace falta tocar codigo.
+
 ---
 
 ## 9. Pendientes y cosas sin probar
@@ -510,6 +554,17 @@ resolver antes.
 | Brief de Diagnostico | No se publica hasta tener sus preguntas (B4) |
 | Limite de intentos en `/brief` | No hay: el token tiene 256 bits de azar. Se reconsidera en el VPS |
 
+### Etapa 7
+
+| Tema | Estado |
+| --- | --- |
+| `db/neon/16-facturas-y-pagos.sql` | Ensayado dos veces sobre una base con el esquema del cierre de la etapa 6: aplica limpio y las politicas quedan identicas a las de una base nueva |
+| Seguridad por fila de facturas, pagos y ajustes | Probada con `prueba:permisos` en local. Sin probar contra Neon |
+| Valores de ejemplo | Emisor, numeracion, talonario, medios de pago e impuestos: ver `docs/pendientesIntegracion.md` |
+| Impresion sobre el talonario real | Sin probar: falta la hoja del talonario (F13) |
+| Registrar la tasa a mano | No hay pantalla todavia: si la lectura del BCV falla y no hay tasa anterior, no se factura |
+| Comprobantes en Drive real | Sin probar desde Vercel: aqui en modo simulado |
+
 ## Registro por etapa
 
 | Etapa | SQL antes | Variables | SQL despues | Anotada |
@@ -521,5 +576,5 @@ resolver antes.
 | 4. Vista del cliente y revision | 13 | `DRIVE_*`, `DRIVE_CARPETA_PIEZAS_ID` | — | Si |
 | 5. Presupuestos y proformas | 14 | — | — | Si |
 | 6. Briefs | 15 | `BRIEFS_MAILBOX` (opcional) | — | Si |
-| 7. Facturas, pagos y cobranza | — | — | — | Pendiente |
+| 7. Facturas, pagos y cobranza | 16 | `DRIVE_CARPETA_COMPROBANTES_ID` | — | Si, con datos de ejemplo |
 | 8. Endurecimiento y piloto | — | — | — | Pendiente |
