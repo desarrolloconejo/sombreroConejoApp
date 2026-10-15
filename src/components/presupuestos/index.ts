@@ -7,4 +7,4 @@ export {
 export { FormularioPresupuesto } from "./FormularioPresupuesto";
 export { EditorPresupuesto } from "./EditorPresupuesto";
 export { ProveedorGuardado } from "./ProveedorGuardado";
-export { DecisionANombre, GenerarProforma } from "./AccionesPresupuesto";
+export { DecisionANombre, GenerarProforma, PresupuestarBrief } from "./AccionesPresupuesto";

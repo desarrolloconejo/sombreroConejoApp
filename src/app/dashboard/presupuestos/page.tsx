@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { FilePlus2 } from "lucide-react";
 
 import { Wrapper } from "@/components/layout/Wrapper";
 import { Listado, ListadoVacio, PanelLateral } from "@/components/listado";
+import { SECCION_DOCUMENTO } from "@/components/finanzas";
 import {
   columnasPresupuestos,
   filtrosPresupuestos,
   FormularioPresupuesto,
+  PresupuestarBrief,
 } from "@/components/presupuestos";
 import { BotonEnlace } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { DIAS_DE_VALIDEZ, sumarDias } from "@/lib/finanzas/documentos";
 import { RUTA_PRESUPUESTOS } from "@/lib/finanzas/rutas";
 import { leerEstadoListado } from "@/lib/parametros";
+import { formatoPor } from "@/lib/portal/briefs";
+import { rutaBrief } from "@/lib/portal/rutas";
 import { hoyEnCaracas } from "@/lib/portal/fases";
 import { requerirFinanzas } from "@/lib/sesion";
 import { conPanel } from "@/lib/urlListado";
 import { comoIdentificador } from "@/lib/validaciones";
+import * as briefsModelo from "@/models/briefs";
 import * as empresasModelo from "@/models/empresas";
 import * as presupuestosModelo from "@/models/presupuestos";
 import * as proformasModelo from "@/models/proformas";
@@ -92,7 +98,10 @@ export default async function PaginaPresupuestos(props: PageProps<"/dashboard/pr
       alta = { empresas: activas.map((e) => ({ id: e.id, nombre: e.nombre })), proyectos };
     }
 
-    return { pagina, alta };
+    // Los briefs que el ejecutivo paso a presupuesto y aun no lo tienen.
+    const briefsPendientes = await briefsModelo.esperandoPresupuesto(tx);
+
+    return { pagina, alta, briefsPendientes };
   });
 
   const hrefCerrar = conPanel(RUTA_PRESUPUESTOS, estado, null);
@@ -105,6 +114,32 @@ export default async function PaginaPresupuestos(props: PageProps<"/dashboard/pr
       titulo="Presupuestos"
       descripcion="Lo que se ofrece a cada cliente. Se envia, el cliente lo aprueba, y de ahi sale la proforma."
     >
+      {datos.briefsPendientes.length > 0 && (
+        <section aria-labelledby="titulo-briefs" className={`surge mb-6 ${SECCION_DOCUMENTO}`}>
+          <h2 id="titulo-briefs" className="text-[15px] font-bold">
+            Briefs que esperan su presupuesto
+          </h2>
+          <p className="mt-1 text-[12.5px] text-suave">
+            Los paso a presupuesto su ejecutivo. Leelos y arma el presupuesto: nace en borrador, ligado al brief.
+          </p>
+          <ul className="mt-3 flex flex-col">
+            {datos.briefsPendientes.map((brief) => (
+              <li key={brief.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-borde py-3">
+                <div className="min-w-0">
+                  <Link href={rutaBrief(brief.id)} className="text-[13.5px] font-semibold hover:underline">
+                    {brief.solicitante} · {brief.codigo}
+                  </Link>
+                  <p className="text-[12px] text-suave">
+                    {formatoPor(brief.formato, brief.formatoVersion)?.nombre ?? brief.formato}
+                  </p>
+                </div>
+                <PresupuestarBrief briefId={brief.id} codigo={brief.codigo ?? ""} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <Listado
         ruta={RUTA_PRESUPUESTOS}
         estado={estado}

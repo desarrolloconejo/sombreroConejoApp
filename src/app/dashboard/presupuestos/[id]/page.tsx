@@ -21,7 +21,7 @@ import { Alerta } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { numeroDe, situacionDe } from "@/lib/finanzas/documentos";
 import { RUTA_PRESUPUESTOS, rutaProforma } from "@/lib/finanzas/rutas";
-import { rutaProyecto } from "@/lib/portal/rutas";
+import { rutaBrief, rutaProyecto } from "@/lib/portal/rutas";
 import { requerirFinanzas } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
 import * as clientesModelo from "@/models/clientes";
@@ -82,6 +82,14 @@ export default async function PaginaPresupuesto(props: PageProps<"/dashboard/pre
             Proyecto:{" "}
             <Link href={rutaProyecto(presupuesto.proyectoId)} className="font-semibold text-acento hover:underline">
               {presupuesto.proyectoNombre}
+            </Link>
+          </span>
+        )}
+        {presupuesto.briefId !== null && (
+          <span>
+            Del brief{" "}
+            <Link href={rutaBrief(presupuesto.briefId)} className="font-semibold text-acento hover:underline">
+              {presupuesto.briefCodigo}
             </Link>
           </span>
         )}
