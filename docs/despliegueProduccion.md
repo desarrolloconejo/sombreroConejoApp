@@ -137,6 +137,14 @@ El permiso de finanzas nace apagado para todos: tras publicar, el
 administrador lo marca en Usuarios a quien deba ver los presupuestos de cada
 empresa. La numeracion empieza en 1 para presupuestos y proformas.
 
+### Etapa 6 — Briefs
+
+| # | Archivo | Que hace | Resultado esperado |
+| --- | --- | --- | --- |
+| 15 | `db/neon/15-briefs.sql` | Prospectos y enlaces privados, briefs, versiones congeladas, aclaraciones, `brief_id` en proyectos y presupuestos, y sus funciones | `tablas = 5` y `con_seguridad_por_fila = 5`; `politicas = 12`, `funciones = 11` y `columnas = 2`; `briefs = 0` |
+
+No inserta datos. Los formatos de brief van en el codigo, no en la base.
+
 No inserta datos. Tras publicar, el administrador asigna a cada ejecutivo
 (cargo `cuentas`) sus empresas desde Empresas: sin asignaciones, un ejecutivo
 no ve ningun proyecto.
@@ -453,6 +461,6 @@ resolver antes.
 | 3. Proyectos, bateria y tareas | 11, 12 | — | — | Si |
 | 4. Vista del cliente y revision | 13 | `DRIVE_*`, `DRIVE_CARPETA_PIEZAS_ID` | — | Si |
 | 5. Presupuestos y proformas | 14 | — | — | Si |
-| 6. Briefs | — | — | — | Pendiente |
+| 6. Briefs | 15 | — | — | En curso |
 | 7. Facturas, pagos y cobranza | — | — | — | Pendiente |
 | 8. Endurecimiento y piloto | — | — | — | Pendiente |

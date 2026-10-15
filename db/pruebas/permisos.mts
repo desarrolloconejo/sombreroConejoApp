@@ -14,6 +14,10 @@ import { conSesion, consultar, consultarUno, obtenerPool, transaccion } from "@/
 import * as asignaciones from "@/models/asignaciones";
 import * as comentarios from "@/models/comentariosPieza";
 import { importesDe } from "@/lib/finanzas/calculo";
+import { codigoValido, congelar, formatoPor } from "@/lib/portal/briefs";
+import { hashDelContenido } from "@/lib/portal/briefsHash";
+import * as briefs from "@/models/briefs";
+import * as enlaces from "@/models/enlacesBrief";
 import * as piezas from "@/models/piezas";
 import * as presupuestos from "@/models/presupuestos";
 import * as proformas from "@/models/proformas";
@@ -22,7 +26,8 @@ import * as renglones from "@/models/renglones";
 import * as revisiones from "@/models/revisiones";
 import * as tareas from "@/models/tareas";
 import * as versiones from "@/models/versiones";
-import type { RenglonNuevo } from "@/types";
+import type { RenglonNuevo, Respuestas } from "@/types";
+import fixtureBrief from "../../tests/fixtures/brief-desarrollo-producto.json" with { type: "json" };
 
 let pasan = 0;
 const fallan: string[] = [];
@@ -521,6 +526,7 @@ async function principal(): Promise<void> {
   await probarProyectos();
   await probarRevision();
   await probarFinanzas();
+  await probarBriefs();
 
   console.log(`\n${pasan}/${pasan + fallan.length} comprobaciones correctas`);
   if (fallan.length > 0) {
@@ -1390,6 +1396,273 @@ async function probarFinanzas(): Promise<void> {
     r.anulaSinMotivo === "23514" && r.anula === true && r.reactiva === "23514",
     `sin motivo: ${r.anulaSinMotivo}; reactiva: ${r.reactiva}`,
   );
+}
+
+/**
+ * Briefs (etapa 6): quien llena, quien ve y quien decide; la version enviada
+ * inmutable, el codigo que no cambia, la fecha aspirada y el prospecto
+ * encerrado en su enlace.
+ */
+async function probarBriefs(): Promise<void> {
+  const fila = async (email: string) => {
+    const persona = await consultarUno<{ id: number; empresaId: number | null }>(
+      `SELECT id, empresa_id AS "empresaId" FROM vw_usuarios_completos
+       WHERE lower(email) = lower($1)`,
+      [email],
+    );
+    if (!persona) throw new Error(`Falta ${email}: ejecuta npm run seed`);
+    return persona;
+  };
+
+  const admin = await fila("juanvivas043@gmail.com");
+  const cuentas = await fila("cuentas@conejo.test");
+  const produccion = await fila("pruebas@conejo.test");
+  const operador = await fila("finanzas@conejo.test");
+  const cliente = await fila("cliente@empresa.test");
+  const empresaA = cliente.empresaId as number;
+
+  const r: Record<string, unknown> = {};
+  const formato = formatoPor("desarrollo-producto", 1)!;
+  const respuestas = fixtureBrief.entrada.respuestas as Respuestas;
+
+  try {
+    await transaccion(async (tx) => {
+      const como = (id: number | null, rol: string, cargo = "", empresa: number | null = null, enlace: number | null = null) =>
+        tx.query(
+          `SELECT set_config('app.usuario_id', $1, true), set_config('app.rol', $2, true),
+                  set_config('app.cargo', $3, true), set_config('app.empresa_id', $4, true),
+                  set_config('app.enlace_id', $5, true)`,
+          [id === null ? "" : String(id), rol, cargo, empresa === null ? "" : String(empresa), enlace === null ? "" : String(enlace)],
+        );
+      const intentarDentro = async (accion: () => Promise<unknown>) => {
+        await tx.query("SAVEPOINT intento");
+        try {
+          await accion();
+          await tx.query("RELEASE SAVEPOINT intento");
+          return null;
+        } catch (error) {
+          await tx.query("ROLLBACK TO SAVEPOINT intento");
+          return (error as { code?: string }).code ?? "desconocido";
+        }
+      };
+      const cuantos = async () =>
+        Number((await tx.query<{ n: string }>("SELECT count(*)::text AS n FROM portal.briefs")).rows[0].n);
+      const comoCliente = (empresa = empresaA) => como(cliente.id, "cliente", "", empresa);
+      const contenido = congelar(formato, respuestas, "Maria Gomez");
+      const datosEnvio = (fecha: string) => ({
+        contenido,
+        sha256: hashDelContenido(contenido),
+        respuestas,
+        fechaAspirada: fecha,
+        nombre: "Maria Gomez",
+      });
+
+      // ---- El cliente abre un brief de su empresa y lo envia.
+      await comoCliente();
+      const id = await briefs.crear(
+        {
+          formato: "desarrollo-producto",
+          formatoVersion: 1,
+          empresaId: empresaA,
+          prospectoId: null,
+          enlaceId: null,
+          creadoPor: cliente.id,
+          respuestas: {},
+        },
+        tx,
+      );
+      await briefs.guardarBorrador(id, { respuestas, fechaAspirada: "2099-01-01", autores: {} }, tx);
+      r.otraEmpresaCrea = await intentarDentro(() =>
+        briefs.crear(
+          { formato: "desarrollo-producto", formatoVersion: 1, empresaId: empresaA + 100000, prospectoId: null, enlaceId: null, creadoPor: cliente.id, respuestas: {} },
+          tx,
+        ),
+      );
+
+      // Un ejecutivo de la empresa no ve el borrador en su bandeja, pero la
+      // politica si lo deja ver; produccion no ve nada.
+      await como(produccion.id, "trabajador", "produccion");
+      r.produccionVe = await cuantos();
+      await como(operador.id, "trabajador", "administracion");
+      r.operadorVeBorrador = await cuantos();
+
+      // Fecha aspirada en el pasado: no se envia.
+      await comoCliente();
+      r.fechaPasada = await intentarDentro(() => briefs.enviar(id, datosEnvio("2020-01-01"), tx));
+      const envio = await briefs.enviar(id, datosEnvio("2099-01-01"), tx);
+      r.codigo = envio.codigo;
+      r.numero = envio.numero;
+      const enviado = await briefs.buscarPorId(id, tx);
+      r.estado = enviado?.estado;
+
+      // El cliente no decide ni toca la version enviada.
+      r.clienteDecide = (
+        await tx.query("UPDATE portal.briefs SET estado = 'descartado', motivo_descarte = 'x' WHERE id = $1", [id])
+      ).rowCount;
+      r.editaVersion = await intentarDentro(() =>
+        tx.query("UPDATE portal.brief_versiones SET contenido_sha256 = repeat('0', 64) WHERE brief_id = $1", [id]),
+      );
+      r.borraVersion = await intentarDentro(() =>
+        tx.query("DELETE FROM portal.brief_versiones WHERE brief_id = $1", [id]),
+      );
+      r.reenviaSinAbrir = await intentarDentro(() => briefs.enviar(id, datosEnvio("2099-01-01"), tx));
+
+      // Otra empresa no lo ve.
+      await comoCliente(empresaA + 100000);
+      r.otraEmpresaVe = await cuantos();
+
+      // Quien opera finanzas lo ve una vez enviado; el ejecutivo de la
+      // empresa tambien, y decide.
+      await como(operador.id, "trabajador", "administracion");
+      r.operadorVeEnviado = (await briefs.buscarPorId(id, tx)) !== null;
+      await como(cuentas.id, "trabajador", "cuentas");
+      r.ejecutivoVe = (await briefs.buscarPorId(id, tx)) !== null;
+      r.descartaSinMotivo = await intentarDentro(() =>
+        tx.query("UPDATE portal.briefs SET estado = 'descartado' WHERE id = $1", [id]),
+      );
+      r.cambiaCodigo = await intentarDentro(() =>
+        tx.query("UPDATE portal.briefs SET codigo = 'ECS-20200101-AAAAAA' WHERE id = $1", [id]),
+      );
+
+      // ---- Version 2: mismo codigo, otro numero, la fecha de envio no cambia.
+      await comoCliente();
+      await briefs.abrirVersion(id, tx);
+      const v2 = await briefs.enviar(id, datosEnvio("2099-02-01"), tx);
+      const tras = await briefs.buscarPorId(id, tx);
+      r.version2 =
+        v2.codigo === envio.codigo &&
+        v2.numero === 2 &&
+        tras?.enviadoEn?.getTime() === enviado?.enviadoEn?.getTime() &&
+        tras?.fechaAspirada === "2099-02-01";
+
+      // Aclaraciones: el cliente escribe a su nombre, no como equipo.
+      r.aclaraCliente = await intentarDentro(() =>
+        briefs.aclarar(id, { autorId: cliente.id, autorNombre: "Maria", delEquipo: false, texto: "Hola" }, tx),
+      );
+      r.aclaraComoEquipo = await intentarDentro(() =>
+        briefs.aclarar(id, { autorId: cliente.id, autorNombre: "Maria", delEquipo: true, texto: "Hola" }, tx),
+      );
+
+      // ---- Un prospecto: solo su brief, por su enlace.
+      await como(cuentas.id, "trabajador", "cuentas");
+      const prospecto = await enlaces.crearProspecto(
+        { empresaNombre: "Prospecto de prueba", contactoNombre: "Pedro", email: "pedro@prospecto.test", telefono: null },
+        cuentas.id,
+        tx,
+      );
+      const hash = "a".repeat(64);
+      const enlace = await enlaces.crear(
+        { tokenHash: hash, prospectoId: prospecto, formato: "desarrollo-producto", formatoVersion: 1, dias: 7 },
+        cuentas.id,
+        tx,
+      );
+      await como(null, "");
+      r.porToken = (await enlaces.porToken(hash, tx))?.id === enlace;
+      r.porTokenFalso = await enlaces.porToken("b".repeat(64), tx);
+
+      await como(null, "prospecto", "", null, enlace);
+      const deProspecto = await briefs.crear(
+        { formato: "desarrollo-producto", formatoVersion: 1, empresaId: null, prospectoId: prospecto, enlaceId: enlace, creadoPor: null, respuestas: {} },
+        tx,
+      );
+      r.prospectoVe = await cuantos();
+      r.prospectoOtroEnlace = await intentarDentro(() =>
+        briefs.crear(
+          { formato: "desarrollo-producto", formatoVersion: 1, empresaId: null, prospectoId: prospecto, enlaceId: enlace + 1000, creadoPor: null, respuestas: {} },
+          tx,
+        ),
+      );
+      await briefs.guardarBorrador(deProspecto, { respuestas, fechaAspirada: "2099-01-01", autores: {} }, tx);
+      const envioProspecto = await briefs.enviar(deProspecto, datosEnvio("2099-01-01"), tx);
+      r.prospectoEnvia = codigoValido(envioProspecto.codigo);
+
+      // Quien genero el enlace lo ve y lo convierte: nace la empresa y queda asignado.
+      await como(cuentas.id, "trabajador", "cuentas");
+      r.creadorVe = (await briefs.buscarPorId(deProspecto, tx)) !== null;
+      const nuevaEmpresa = await briefs.convertirProspecto(deProspecto, tx);
+      r.convertido =
+        (await briefs.buscarPorId(deProspecto, tx))?.empresaId === nuevaEmpresa &&
+        (await tx.query("SELECT 1 FROM portal.asignaciones WHERE usuario_id = $1 AND empresa_id = $2", [cuentas.id, nuevaEmpresa])).rowCount === 1;
+
+      // Un enlace vencido ya no sirve.
+      await como(admin.id, "admin", "direccion");
+      await tx.query("UPDATE portal.enlaces_brief SET vence_en = now() - interval '1 minute' WHERE id = $1", [enlace]);
+      await como(null, "");
+      r.vencido = await enlaces.porToken(hash, tx);
+
+      throw new Deshacer();
+    });
+  } catch (error) {
+    if (!(error instanceof Deshacer)) throw error;
+  }
+
+  console.log("\nBriefs\n");
+
+  comprobar(
+    "El cliente abre briefs de su empresa, no de otra",
+    r.otraEmpresaCrea === DENEGADO,
+    String(r.otraEmpresaCrea),
+  );
+  comprobar(
+    "Produccion no ve briefs; finanzas no ve borradores",
+    r.produccionVe === 0 && r.operadorVeBorrador === 0,
+    `produccion ${r.produccionVe}; finanzas ${r.operadorVeBorrador}`,
+  );
+  comprobar("No se envia con la fecha aspirada en el pasado", r.fechaPasada === "23514", String(r.fechaPasada));
+  comprobar(
+    "Al enviar, la base pone el codigo y la version 1",
+    codigoValido(String(r.codigo)) && r.numero === 1 && r.estado === "enviado",
+    `${r.codigo}; version ${r.numero}; ${r.estado}`,
+  );
+  comprobar(
+    "El cliente no decide sobre su brief",
+    r.clienteDecide === 0,
+    `${r.clienteDecide} filas`,
+  );
+  comprobar(
+    "Una version enviada no se modifica ni se borra",
+    r.editaVersion === DENEGADO && r.borraVersion === DENEGADO,
+    `UPDATE: ${r.editaVersion}; DELETE: ${r.borraVersion}`,
+  );
+  comprobar("No se reenvia sin abrir una version nueva", r.reenviaSinAbrir === "23514", String(r.reenviaSinAbrir));
+  comprobar("Otra empresa no ve el brief", r.otraEmpresaVe === 0, `${r.otraEmpresaVe}`);
+  comprobar(
+    "El ejecutivo de la empresa y finanzas lo ven una vez enviado",
+    r.ejecutivoVe === true && r.operadorVeEnviado === true,
+    `ejecutivo ${r.ejecutivoVe}; finanzas ${r.operadorVeEnviado}`,
+  );
+  comprobar(
+    "Descartar exige motivo y el codigo no cambia",
+    r.descartaSinMotivo === "23514" && r.cambiaCodigo === "23514",
+    `descartar: ${r.descartaSinMotivo}; codigo: ${r.cambiaCodigo}`,
+  );
+  comprobar(
+    "La version 2 conserva el codigo y la fecha del primer envio",
+    r.version2 === true,
+    String(r.version2),
+  );
+  comprobar(
+    "En las aclaraciones el cliente escribe a su nombre, no como equipo",
+    r.aclaraCliente === null && r.aclaraComoEquipo === DENEGADO,
+    `cliente: ${r.aclaraCliente}; como equipo: ${r.aclaraComoEquipo}`,
+  );
+  comprobar(
+    "El token lleva a su enlace; uno falso, a nada",
+    r.porToken === true && r.porTokenFalso === null,
+    `${r.porToken}; falso: ${r.porTokenFalso}`,
+  );
+  comprobar(
+    "El prospecto solo ve y abre el brief de su enlace",
+    r.prospectoVe === 1 && r.prospectoOtroEnlace === DENEGADO,
+    `ve ${r.prospectoVe}; otro enlace: ${r.prospectoOtroEnlace}`,
+  );
+  comprobar("El prospecto envia su brief", r.prospectoEnvia === true, String(r.prospectoEnvia));
+  comprobar(
+    "Quien genero el enlace lo ve y al convertirlo nace la empresa, asignada a el",
+    r.creadorVe === true && r.convertido === true,
+    `ve ${r.creadorVe}; convertido ${r.convertido}`,
+  );
+  comprobar("Un enlace vencido ya no sirve", r.vencido === null, String(r.vencido));
 }
 
 principal()
