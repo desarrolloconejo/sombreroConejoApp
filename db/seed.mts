@@ -19,6 +19,7 @@ import { Client } from "pg";
 import bcrypt from "bcryptjs";
 import { APERTURAS } from "./datos/aperturas.mts";
 import { sembrarBriefs } from "./datos/briefs.mts";
+import { sembrarFacturas } from "./datos/facturas.mts";
 import { sembrarFinanzas } from "./datos/finanzas.mts";
 import { PROYECTO_ESPECIAL, sembrarProyectos } from "./datos/proyectos.mts";
 import {
@@ -304,6 +305,12 @@ async function principal(): Promise<void> {
       cliente: equipo.cliente,
     });
     console.log(`Finanzas de ejemplo listas (${documentos} documentos nuevos)`);
+
+    const facturasNuevas = await sembrarFacturas(cliente, empresaId, {
+      admin: equipo.admin,
+      cliente: equipo.cliente,
+    });
+    console.log(`Facturas de ejemplo listas (${facturasNuevas} nuevas)`);
 
     const { rows: personaCliente } = await cliente.query<{ nombre: string; empresa: string }>(
       `SELECT u.nombre || ' ' || u.apellido AS nombre, e.nombre AS empresa
