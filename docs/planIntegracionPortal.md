@@ -129,6 +129,11 @@ Lo que cada etapa exige en produccion se va anotando en
 | 7 | `feat/etapa7-facturas` | `pdf-lib`. Emitir desde la proforma, listado y ficha, PDF del talonario en el formato elegido, hoja de calibracion, marcar impresa, anular con motivo | Ninguno | Hecha |
 | 7 | `feat/etapa7-pagos` | El cliente reporta pagos y retenciones con comprobante (Drive o simulado); el operador confirma con el monto aplicado o rechaza con motivo, y registra a nombre del cliente | Ninguno | Hecha |
 | 7 | `feat/etapa7-cobranza` | Cobranza por empresa y antiguedad; estado de cuenta del cliente en Facturacion | Ninguno | Hecha |
+| 8 | `feat/etapa8-tasa` | Registrar la tasa del dolar a mano, con las ultimas a la vista y confirmacion de saltos de mas del 25 % | Ninguno | Hecha |
+| 8 | `feat/etapa8-guardias` | Pruebas automaticas: toda action, page y ruta de la API con su guardia; seguridad por fila, DELETE y search_path vigilados en toda la base | Ninguno | Hecha |
+| 8 | `docs/etapa8-piloto` | `docs/planPiloto.md`: el piloto con un cliente real | Ninguno | Preparado. Falta elegir cliente y fecha |
+
+**La etapa 8 esta hecha en lo que no depende del negocio**: la tasa a mano, las pruebas de guardias y estructura, y el plan del piloto. El piloto en si espera a que se publique la integracion y a que el responsable elija cliente y fecha. Los dos pasos se habian adelantado.
 
 **La etapa 7 esta construida con datos de ejemplo** (seccion 7.11, decidido el 2026-10-15). Funciona de punta a punta; para usarla de verdad hay que sustituir lo provisional, que esta en `docs/pendientesIntegracion.md` (emisor, numeracion, talonario, medios de pago, impuestos). Decisiones tomadas por el camino:
 
