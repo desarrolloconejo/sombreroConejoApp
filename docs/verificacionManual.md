@@ -308,3 +308,10 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
 3. Registrar otra un 50 % mas alta que la anterior: pide confirmarla con una
    casilla.
 4. Registrar otra vez la misma fecha: dice que ya hay una y no la cambia.
+
+**Pruebas automaticas nuevas**
+
+5. `npm run test:unitarias` incluye `guardias.spec.ts` (toda action, page y
+   ruta con su guardia) y `prueba:permisos` la seccion «Estructura».
+
+**Piloto**: se sigue `docs/planPiloto.md` cuando se elija cliente y fecha.

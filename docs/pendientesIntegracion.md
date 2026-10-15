@@ -52,6 +52,7 @@ sigue.
 | F15 | ¿Que formato de impresion se usa: carta, media carta u otro? | Carta de ejemplo; se pueden tener varios | Calibrar el definitivo |
 | B4 | Preguntas del brief de Diagnostico | Ese formato no se publica | El brief de Diagnostico |
 | B5 | Servicios que vende la agencia y sus tareas tipicas | Dos servicios definidos | Ampliar el catalogo |
+| P10 | Cliente, fecha y alcance del piloto (`docs/planPiloto.md`) | Uno de confianza, cuatro semanas, sin facturas reales al principio | Cerrar la etapa 8 |
 
 ## 3. Lo que no se hizo y queda pendiente
 

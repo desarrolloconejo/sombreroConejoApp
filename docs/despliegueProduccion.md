@@ -577,4 +577,4 @@ resolver antes.
 | 5. Presupuestos y proformas | 14 | — | — | Si |
 | 6. Briefs | 15 | `BRIEFS_MAILBOX` (opcional) | — | Si |
 | 7. Facturas, pagos y cobranza | 16 | `DRIVE_CARPETA_COMPROBANTES_ID` | — | Si, con datos de ejemplo |
-| 8. Endurecimiento y piloto | — | — | — | Pendiente |
+| 8. Endurecimiento y piloto | — | — | — | Si. El piloto, despues de publicar: `docs/planPiloto.md` |

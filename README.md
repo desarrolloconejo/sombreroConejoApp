@@ -720,6 +720,7 @@ servidor propio. La base esta en **Neon**.
 | [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md) | Plan de la integracion del portal |
 | [docs/reglasBateria.md](docs/reglasBateria.md) | Reglas de proyectos, piezas, fases y tareas: avance, correcciones, alertas y quien ve que |
 | [docs/despliegueProduccion.md](docs/despliegueProduccion.md) | Guia del despliegue: SQL, variables y pasos, etapa a etapa |
+| [docs/planPiloto.md](docs/planPiloto.md) | La prueba con un cliente real, semana a semana |
 | [docs/pendientesIntegracion.md](docs/pendientesIntegracion.md) | Valores de ejemplo por sustituir, decisiones del negocio que faltan y lo que queda sin hacer |
 | [docs/verificacionManual.md](docs/verificacionManual.md) | Lo que hay que probar a mano antes de publicar, etapa por etapa |
 | [docs/planAuditoriaRepositorio.md](docs/planAuditoriaRepositorio.md) | Plan de revision y actualizacion del repositorio. Ejecutado |
