@@ -69,7 +69,10 @@ ejecutivo: una parrilla de redes de diez piezas que suma el 60 % y ensena las
 cuatro alertas, y un proyecto especial recien empezado (`db/datos/proyectos.mts`).
 Y finanzas de ejemplo: un presupuesto por aprobar, uno aprobado con su
 proforma emitida, un borrador y una proforma recurrente a la que ya le toca la
-siguiente (`db/datos/finanzas.mts`).
+siguiente (`db/datos/finanzas.mts`). Briefs de ejemplo: uno enviado y un
+borrador (`db/datos/briefs.mts`). Y facturacion de ejemplo: un emisor
+**ficticio**, una factura de la proforma aprobada y un pago del cliente por
+confirmar (`db/datos/facturas.mts`).
 Es idempotente. Las cuentas que crea y sus claves estan en
 `db/datos/semilla.mts`.
 
@@ -680,6 +683,10 @@ Dos cosas que ahorran una tarde:
 
 - **Con el servicio de desarrollo detenido.** Los dos escriben en `.next` y
   juntos pueden agotar la memoria de Docker.
+- **Tras instalar una dependencia, reconstruir la imagen.** El servicio guarda
+  sus `node_modules` en un volumen propio y el build usa los de la imagen:
+  `docker compose build app-dev` y despues `docker compose up -d -V app-dev`.
+  Sin eso, el build no encuentra la libreria nueva (paso con `pdf-lib`).
 - **`NODE_ENV=production` no es opcional.** Sin el, el build muere al
   prerenderizar `/_global-error` con un error de `useContext` que no tiene nada
   que ver con el codigo.
@@ -720,6 +727,8 @@ servidor propio. La base esta en **Neon**.
 | [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md) | Plan de la integracion del portal |
 | [docs/reglasBateria.md](docs/reglasBateria.md) | Reglas de proyectos, piezas, fases y tareas: avance, correcciones, alertas y quien ve que |
 | [docs/despliegueProduccion.md](docs/despliegueProduccion.md) | Guia del despliegue: SQL, variables y pasos, etapa a etapa |
+| [docs/informeIntegracion.md](docs/informeIntegracion.md) | Que hace hoy la aplicacion y como probarla |
+| [docs/informePendientes.md](docs/informePendientes.md) | Lo que falta para usarla de verdad, por momento |
 | [docs/planPiloto.md](docs/planPiloto.md) | La prueba con un cliente real, semana a semana |
 | [docs/pendientesIntegracion.md](docs/pendientesIntegracion.md) | Valores de ejemplo por sustituir, decisiones del negocio que faltan y lo que queda sin hacer |
 | [docs/verificacionManual.md](docs/verificacionManual.md) | Lo que hay que probar a mano antes de publicar, etapa por etapa |

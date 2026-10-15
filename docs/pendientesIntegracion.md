@@ -1,5 +1,8 @@
 # Pendientes de la integracion
 
+El informe para leer es `docs/informePendientes.md`; este es el registro
+detallado del que sale.
+
 Registro vivo de todo lo que se construyo con valores de ejemplo, lo que se
 dejo sin hacer y lo que espera una respuesta del negocio. Cada etapa lo
 actualiza al cerrarse. **Al terminar la integracion, de aqui sale el informe
@@ -29,7 +32,7 @@ diga lo contrario.
 | V6 | Porcentaje de IVA | 16 % | Finanzas → Ajustes → Impuestos | Contador | 7 |
 | V7 | Retencion de ISLR | Preparada y **apagada** | Finanzas → Ajustes → Impuestos | Contador (F12) | 7 |
 | V8 | IGTF en pagos en divisas | Preparado y **apagado** | Finanzas → Ajustes → Impuestos | Contador (F12) | 7 |
-| V9 | Agente de retencion de IVA de cada empresa (75 % o 100 %) | Ninguna empresa lo es | Ficha de cada empresa | Administracion, con el RIF de cada cliente | 7 |
+| V9 | Agente de retencion de IVA de cada empresa (75 % o 100 %) | Ninguna empresa lo es | Finanzas → Ajustes de finanzas → Datos de facturacion de las empresas | Administracion, con el RIF de cada cliente | 7 |
 | V10 | Cuenta de Google de la aplicacion (remitente del correo y duena de los archivos de Drive) | La personal del responsable; correo simulado | Variables `DRIVE_*` y de correo en Vercel, tras `npm run drive:probar` | Responsable, cuando haya tarjeta para GCP | 2, 4 |
 
 ## 2. Decisiones del negocio que faltan
@@ -66,6 +69,7 @@ sigue.
 | Video por el servidor (hoy va por enlace) y archivos de mas de 4 MB | Limite de peticion de Vercel | Etapa 9 |
 | Foto de perfil | El disco de Vercel es de solo lectura | Etapa 9 |
 | Tareas programadas cada hora (solo existe la de la tasa, diaria) | Plan de Vercel | Etapa 9 |
+| Corregir una tasa ya guardada | No hay pantalla: la tabla es un historico y las facturas guardan la suya. Si se registro mal la de hoy y aun no se facturo, se avisa al responsable para borrarla en la base | Si hace falta |
 | Boveda de marca e historial del cliente sacado de la auditoria | No se pidieron con prioridad | Cuando se pidan |
 | Limite de intentos por IP en `/brief/[token]` | El token tiene 256 bits de azar | Reconsiderar en el VPS |
 | El enlace del prospecto no se manda por correo | Ningun correo lleva tokens. El ejecutivo lo entrega a mano | Decision tomada |
@@ -78,7 +82,6 @@ sigue.
 | Seguridad por fila de todas las tablas | Probada en local con `prueba:permisos`; sin probar contra Neon |
 | Subida y descarga en Drive en modo real (piezas y comprobantes) | Probada en modo simulado; `drive:probar` paso el 2026-10-13. Los comprobantes usan `DRIVE_CARPETA_COMPROBANTES_ID` |
 | Impresion sobre el talonario real | Sin probar: no hay hoja del talonario (F13). El PDF y la hoja de calibracion se revisaron en pantalla |
-| Corregir una tasa ya guardada | No se puede: la tabla es un historico y las facturas guardan la suya. Si se registro mal la de hoy y aun no se facturo, se avisa al responsable para borrarla en la base |
 | Correo real por Gmail | Simulado hasta tener la cuenta de la empresa |
 | Archivos `db/neon/` 01 a 16 | Ensayados en local; ninguno pegado en produccion todavia |
 

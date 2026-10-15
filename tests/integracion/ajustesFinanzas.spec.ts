@@ -98,8 +98,7 @@ test("quien no opera finanzas no entra en los ajustes", async ({ page }) => {
 test("la tasa del dolar se registra a mano, un salto grande se confirma y una fecha no se pisa", async ({ page }) => {
   test.setTimeout(200_000);
   // Fechas viejas que no estorban a la tasa vigente; distintas en cada corrida.
-  const marca = Date.now();
-  const ano = 1990 + (marca % 25);
+  const ano = 1900 + (Math.floor(Date.now() / 1000) % 89);
   const enero = `${ano}-01-15`;
   const febrero = `${ano}-02-15`;
 
@@ -110,7 +109,17 @@ test("la tasa del dolar se registra a mano, un salto grande se confirma y una fe
   await page.getByLabel("Fecha de la tasa").fill(enero);
   await page.getByLabel("Bolivares por dolar").fill("40,5");
   await page.getByRole("button", { name: "Registrar la tasa" }).click();
-  await avisado(page, "Tasa registrada");
+
+  // Otras corridas dejaron tasas de anos anteriores: contra ellas esta puede
+  // parecer un salto. Si lo pide, se confirma.
+  const confirmar = page.getByRole("checkbox", { name: /Revisala/ });
+  await expect(page.getByText("Tasa registrada").or(confirmar).first()).toBeVisible({ timeout: 60_000 });
+  if (await confirmar.isVisible()) {
+    await confirmar.check();
+    await page.getByRole("button", { name: "Registrar la tasa" }).click();
+    await expect(confirmar).toHaveCount(0, { timeout: 60_000 });
+  }
+  await expect(page.getByLabel("Bolivares por dolar")).toHaveValue("", { timeout: 60_000 });
 
   // Diez veces mas al mes siguiente: pide confirmarlo.
   await page.getByLabel("Fecha de la tasa").fill(febrero);
