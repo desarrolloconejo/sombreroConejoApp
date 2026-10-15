@@ -18,8 +18,11 @@ test("administracion ve lo que debe cada empresa y llega a sus facturas", async 
   if (CAPTURAS) await page.screenshot({ path: `${CAPTURAS}/cobranza-escritorio.png`, fullPage: true });
 
   const tabla = page.getByRole("table", { name: "Deuda por empresa y antiguedad" });
-  await tabla.getByRole("link", { name: "Distribuidora Ejemplo, C.A." }).click();
-  await expect(page).toHaveURL(/\/dashboard\/facturas\?empresa=\d+/, { timeout: 60_000 });
+  // Se comprueba a donde lleva y se abre: el servidor de desarrollo, al
+  // compilar Facturas la primera vez, a veces recarga y corta el clic.
+  const destino = await tabla.getByRole("link", { name: "Distribuidora Ejemplo, C.A." }).getAttribute("href");
+  expect(destino).toMatch(/^\/dashboard\/facturas\?empresa=\d+&cobro=pendiente&cobro=parcial$/);
+  await page.goto(destino ?? "/", { waitUntil: "networkidle" });
   await expect(page.getByRole("link", { name: /Abrir la factura/ }).first()).toBeVisible({ timeout: 60_000 });
 });
 
