@@ -29,7 +29,10 @@ test("el administrador ve todas las secciones que tienen algo, en su orden", () 
     { seccion: "General", modulos: ["Inicio"] },
     { seccion: "Trabajo", modulos: ["Tablero", "Proyectos", "Briefs", "Mi trabajo"] },
     { seccion: "Herramientas", modulos: ["Hooks"] },
-    { seccion: "Finanzas", modulos: ["Presupuestos", "Proformas"] },
+    {
+      seccion: "Finanzas",
+      modulos: ["Presupuestos", "Proformas", "Facturas", "Cobranza", "Ajustes de finanzas"],
+    },
     {
       seccion: "Sistema",
       modulos: ["Usuarios", "Empresas", "Auditoria", "Bandeja de salida"],
@@ -67,7 +70,10 @@ test("administracion ve Finanzas, y una seccion sin modulos no deja su rotulo", 
   // No ve nada de Trabajo: su seccion no aparece, ni vacia.
   expect(menuDe(ADMINISTRACION)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
-    { seccion: "Finanzas", modulos: ["Presupuestos", "Proformas"] },
+    {
+      seccion: "Finanzas",
+      modulos: ["Presupuestos", "Proformas", "Facturas", "Cobranza", "Ajustes de finanzas"],
+    },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
 });
