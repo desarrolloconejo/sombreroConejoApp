@@ -392,10 +392,10 @@ const MODULOS: readonly Modulo[] = [
   },
 
   {
-    titulo: "Administracion",
+    titulo: "Facturacion",
     seccion: "mi_espacio",
     subtitulo: "Presupuestos para aprobar y proformas",
-    href: "/dashboard/administracion",
+    href: "/dashboard/facturacion",
     icono: Wallet,
     roles: ["cliente"],
     permiso: "finanzas",

@@ -105,7 +105,7 @@ export default async function PaginaProforma(props: PageProps<"/dashboard/profor
                 <h2 className="mb-1 text-[14px] font-bold">Antes de emitirla</h2>
                 <p className="text-[12.5px] leading-relaxed text-suave">
                   Revisa los renglones y a que proyectos corresponde. Al emitirla, el
-                  cliente la ve en su Administracion y ya no se puede editar.
+                  cliente la ve en su Facturacion y ya no se puede editar.
                 </p>
               </div>
               <div className={SECCION_DOCUMENTO}>

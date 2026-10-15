@@ -7,7 +7,7 @@ import { anotar } from "@/lib/auditoria";
 import { conSesion, esErrorPostgres } from "@/lib/db";
 import { numeroDe } from "@/lib/finanzas/documentos";
 import {
-  RUTA_ADMINISTRACION,
+  RUTA_FACTURACION,
   RUTA_PROFORMAS,
   rutaMiProforma,
   rutaProforma,
@@ -33,7 +33,7 @@ import type { EstadoFormulario } from "@/types";
 function revalidar(id: number): void {
   revalidatePath(RUTA_PROFORMAS);
   revalidatePath(rutaProforma(id));
-  revalidatePath(RUTA_ADMINISTRACION);
+  revalidatePath(RUTA_FACTURACION);
 }
 
 /**

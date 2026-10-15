@@ -16,12 +16,12 @@ export function rutaProforma(id: number): string {
 }
 
 /** Lo que ve el cliente con permiso de finanzas: lo de su empresa. */
-export const RUTA_ADMINISTRACION = "/dashboard/administracion";
+export const RUTA_FACTURACION = "/dashboard/facturacion";
 
 export function rutaMiPresupuesto(id: number): string {
-  return `${RUTA_ADMINISTRACION}/presupuestos/${id}`;
+  return `${RUTA_FACTURACION}/presupuestos/${id}`;
 }
 
 export function rutaMiProforma(id: number): string {
-  return `${RUTA_ADMINISTRACION}/proformas/${id}`;
+  return `${RUTA_FACTURACION}/proformas/${id}`;
 }

@@ -6,7 +6,7 @@ import { anotar } from "@/lib/auditoria";
 import { conSesion, esErrorPostgres } from "@/lib/db";
 import { numeroDe } from "@/lib/finanzas/documentos";
 import {
-  RUTA_ADMINISTRACION,
+  RUTA_FACTURACION,
   RUTA_PRESUPUESTOS,
   rutaMiPresupuesto,
   rutaPresupuesto,
@@ -20,7 +20,7 @@ import * as usuarios from "@/models/usuarios";
 import type { EstadoFormulario } from "@/types";
 
 /**
- * Lo que el cliente hace en Administracion: aprobar o rechazar un presupuesto.
+ * Lo que el cliente hace en Facturacion: aprobar o rechazar un presupuesto.
  *
  * Solo quien tiene el permiso de finanzas de su empresa. No hay UPDATE del
  * cliente sobre presupuestos: la decision pasa por
@@ -85,7 +85,7 @@ export async function resolverPresupuesto(
 
   if ("error" in resultado) return { ok: false, mensaje: resultado.error };
 
-  revalidatePath(RUTA_ADMINISTRACION);
+  revalidatePath(RUTA_FACTURACION);
   revalidatePath(rutaMiPresupuesto(id));
   revalidatePath(RUTA_PRESUPUESTOS);
 

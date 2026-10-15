@@ -3,7 +3,7 @@
 import { createContext, useActionState, useContext, useState, type ReactNode } from "react";
 import { Check, X } from "lucide-react";
 
-import { resolverPresupuesto } from "@/actions/administracion";
+import { resolverPresupuesto } from "@/actions/facturacion";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { Boton, CLASE_CONTROL } from "@/components/ui";
 import { ESTADO_INICIAL, type EstadoFormulario } from "@/types";

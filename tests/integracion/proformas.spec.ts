@@ -8,7 +8,7 @@ import { USUARIOS } from "../../db/datos/semilla.mts";
  * cliente y genera la proforma; la liga a un proyecto, la emite y la marca
  * como recurrente con la fecha de hoy. Prepara la siguiente, que nace en
  * borrador como copia, y la anula. El cliente ve la emitida en su
- * Administracion.
+ * Facturacion.
  */
 
 test.describe.configure({ mode: "serial" });
@@ -110,7 +110,7 @@ test("del presupuesto aprobado a la proforma emitida, recurrente y su copia", as
 
   // ---- El cliente ve la emitida, con su proyecto.
   await entrar(page, "cliente@empresa.test");
-  await page.goto("/dashboard/administracion", { waitUntil: "networkidle" });
+  await page.goto("/dashboard/facturacion", { waitUntil: "networkidle" });
   await page
     .getByRole("list", { name: "Proformas" })
     .getByRole("link", { name: new RegExp(titulo) })

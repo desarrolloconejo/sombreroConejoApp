@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { USUARIOS } from "../../db/datos/semilla.mts";
 
 /**
- * Administracion, del lado del cliente: aprobar y rechazar presupuestos.
+ * Facturacion, del lado del cliente: aprobar y rechazar presupuestos.
  *
  * Administracion (`finanzas@conejo.test`) prepara y envia dos presupuestos; el
  * cliente de la semilla, que ve las finanzas de su empresa, rechaza uno con su
@@ -53,11 +53,11 @@ test("el cliente rechaza un presupuesto con su motivo y aprueba otro", async ({ 
   await enviarPresupuesto(page, rechazable);
   const urlAprobable = await enviarPresupuesto(page, aprobable);
 
-  // ---- El cliente: el inicio le avisa, y Administracion los lista.
+  // ---- El cliente: el inicio le avisa, y Facturacion los lista.
   await entrar(page, "cliente@empresa.test");
   await avisado(page, /presupuestos? esperan? tu aprobacion/);
 
-  await page.goto("/dashboard/administracion", { waitUntil: "networkidle" });
+  await page.goto("/dashboard/facturacion", { waitUntil: "networkidle" });
   const porAprobar = page.getByRole("list", { name: "Presupuestos por aprobar" });
   await expect(porAprobar.getByText(rechazable)).toBeVisible({ timeout: 60_000 });
 
@@ -75,7 +75,7 @@ test("el cliente rechaza un presupuesto con su motivo y aprueba otro", async ({ 
   await expect(page.getByText("Necesitamos menos publicaciones")).toBeVisible();
 
   // Aprobar el otro.
-  await page.goto("/dashboard/administracion", { waitUntil: "networkidle" });
+  await page.goto("/dashboard/facturacion", { waitUntil: "networkidle" });
   await page
     .getByRole("list", { name: "Presupuestos por aprobar" })
     .getByRole("link", { name: new RegExp(aprobable) })
@@ -103,14 +103,14 @@ test("el cliente no abre un borrador, ni lo ve en su lista", async ({ page }) =>
   const id = ((await enlace.getAttribute("href")) ?? "").split("/").pop();
 
   await entrar(page, "cliente@empresa.test");
-  await page.goto(`/dashboard/administracion/presupuestos/${id}`, { waitUntil: "networkidle" });
+  await page.goto(`/dashboard/facturacion/presupuestos/${id}`, { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Esta pagina no existe" })).toBeVisible({
     timeout: 60_000,
   });
 });
 
-test("quien no es cliente no entra en Administracion", async ({ page }) => {
+test("quien no es cliente no entra en Facturacion", async ({ page }) => {
   await entrar(page, "finanzas@conejo.test");
-  await page.goto("/dashboard/administracion");
+  await page.goto("/dashboard/facturacion");
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 60_000 });
 });

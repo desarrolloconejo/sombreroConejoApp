@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ListaDocumentos } from "@/components/administracion";
+import { ListaDocumentos } from "@/components/facturacion";
 import { fechaDia, fechaHora, SECCION_DOCUMENTO } from "@/components/finanzas";
 import { Wrapper } from "@/components/layout/Wrapper";
 import { conSesion } from "@/lib/db";
@@ -11,10 +11,10 @@ import * as presupuestosModelo from "@/models/presupuestos";
 import * as proformasModelo from "@/models/proformas";
 
 export const metadata: Metadata = {
-  title: "Administracion",
+  title: "Facturacion",
 };
 
-const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Administracion" }];
+const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Facturacion" }];
 
 /**
  * Las finanzas de la empresa, para quien tiene el permiso: lo que espera su
@@ -22,7 +22,7 @@ const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Administra
  *
  * Las consultas no filtran por empresa: lo hace la base, con la sesion.
  */
-export default async function PaginaAdministracion() {
+export default async function PaginaFacturacion() {
   const { usuario } = await requerirFinanzasDeEmpresa();
 
   const { porAprobar, historial, proformas } = await conSesion(usuario, async (tx) => ({
@@ -35,7 +35,7 @@ export default async function PaginaAdministracion() {
     <Wrapper
       migas={MIGAS}
       kicker={usuario.empresaNombre ?? "Tu empresa"}
-      titulo="Administracion"
+      titulo="Facturacion"
       descripcion="Los presupuestos que esperan tu aprobacion y las proformas de tu empresa."
     >
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
