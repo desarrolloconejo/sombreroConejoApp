@@ -27,8 +27,17 @@ import type { SlugCargo } from "@/types";
  * `/api/cron` son las tareas programadas: las llama la plataforma, no una
  * persona, asi que no traen cookie. No quedan abiertas: cada una exige su
  * secreto en la cabecera, y sin el responde 401.
+ *
+ * `/brief` es el brief de un prospecto por su enlace privado. Su guardia es
+ * el token de la ruta, que comprueban la page y cada una de sus actions.
  */
-const RUTAS_PUBLICAS = ["/login", "/verificar", "/api/cron"];
+const RUTAS_PUBLICAS = ["/login", "/verificar", "/api/cron", "/brief"];
+
+/**
+ * Publicas que tambien abre quien tiene sesion: no son la puerta de entrada,
+ * y mandarlo al panel le impediria ver el enlace (un ejecutivo que lo prueba).
+ */
+const RUTAS_ABIERTAS = ["/brief"];
 
 /** Prefijos de ruta reservados al rol admin. */
 const RUTAS_SOLO_ADMIN = [
@@ -98,6 +107,10 @@ function esRutaPublica(ruta: string): boolean {
   return RUTAS_PUBLICAS.some(
     (publica) => ruta === publica || ruta.startsWith(`${publica}/`),
   );
+}
+
+function esRutaAbierta(ruta: string): boolean {
+  return RUTAS_ABIERTAS.some((abierta) => ruta === abierta || ruta.startsWith(`${abierta}/`));
 }
 
 function esRutaDeAdmin(ruta: string): boolean {
@@ -228,7 +241,7 @@ export async function proxy(request: NextRequest) {
   // Con sesion iniciada, el login no tiene sentido. Las tareas programadas
   // no entran aqui: no son pantallas, y quien tenga sesion no las convierte
   // en una redireccion.
-  if (sesion && esRutaPublica(pathname) && !pathname.startsWith("/api/")) {
+  if (sesion && esRutaPublica(pathname) && !pathname.startsWith("/api/") && !esRutaAbierta(pathname)) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

@@ -146,6 +146,25 @@ export type AclaracionBrief = {
   creadoEn: Date;
 };
 
+/** Un enlace privado de prospecto, como lo ve quien lo genero. */
+export type EnlaceBrief = {
+  id: number;
+  prospectoId: number;
+  empresaNombre: string;
+  contactoNombre: string;
+  email: string;
+  formato: string;
+  formatoVersion: number;
+  venceEn: Date;
+  revocadoEn: Date | null;
+  /** Ni revocado ni vencido, segun el reloj de la base. */
+  vigente: boolean;
+  creadoEn: Date;
+  /** El brief que se empezo por el, si ya se empezo. */
+  briefId: number | null;
+  briefEstado: EstadoBrief | null;
+};
+
 export const NOMBRES_DE_ESTADO_BRIEF: Record<EstadoBrief, string> = {
   borrador: "Borrador",
   enviado: "Recibido",

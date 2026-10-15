@@ -8,4 +8,8 @@ export {
   EtiquetaBrief,
   SECCION_BRIEF,
 } from "./LecturaBrief";
+export { EnlacesProspectos } from "./EnlacesProspectos";
+export type { FilaEnlace } from "./EnlacesProspectos";
+export { AbrirVersion, EmpezarPorEnlace } from "./AccionesMisBriefs";
+export { BriefEnviado } from "./BriefEnviado";
 export { BotonesDecision, FechaViable, ProveedorDecisiones } from "./DecisionesBrief";

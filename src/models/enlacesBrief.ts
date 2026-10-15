@@ -1,4 +1,5 @@
 import { consultar, consultarUno, ejecutar, type Ejecutor } from "@/lib/db";
+import type { EnlaceBrief } from "@/types";
 
 /**
  * Prospectos y sus enlaces privados de brief (portal.prospectos y
@@ -8,20 +9,6 @@ import { consultar, consultarUno, ejecutar, type Ejecutor } from "@/lib/db";
  * viaja una vez, en el enlace; quien lo tiene llena ese brief y nada mas.
  */
 
-export type EnlaceBrief = {
-  id: number;
-  prospectoId: number;
-  empresaNombre: string;
-  contactoNombre: string;
-  email: string;
-  formato: string;
-  formatoVersion: number;
-  venceEn: Date;
-  revocadoEn: Date | null;
-  creadoEn: Date;
-  briefId: number | null;
-  briefEstado: string | null;
-};
 
 /** Da de alta un prospecto. Devuelve su id. */
 export async function crearProspecto(
@@ -73,6 +60,20 @@ export async function porToken(
   );
 }
 
+/** El prospecto de un enlace: lo que se precarga en su brief y firma lo que envia. */
+export async function prospectoDe(
+  enlaceId: number,
+  ejecutor: Ejecutor,
+): Promise<{ id: number; empresaNombre: string; contactoNombre: string; email: string } | null> {
+  return consultarUno(
+    `SELECT p.id, p.empresa_nombre AS "empresaNombre", p.contacto_nombre AS "contactoNombre", p.email
+     FROM portal.enlaces_brief e JOIN portal.prospectos p ON p.id = e.prospecto_id
+     WHERE e.id = $1`,
+    [enlaceId],
+    ejecutor,
+  );
+}
+
 const COLUMNAS = `
   e.id,
   e.prospecto_id      AS "prospectoId",
@@ -83,6 +84,7 @@ const COLUMNAS = `
   e.formato_version   AS "formatoVersion",
   e.vence_en          AS "venceEn",
   e.revocado_en       AS "revocadoEn",
+  (e.revocado_en IS NULL AND e.vence_en > now()) AS vigente,
   e.creado_en         AS "creadoEn",
   b.id                AS "briefId",
   b.estado            AS "briefEstado"
