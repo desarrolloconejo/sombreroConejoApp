@@ -276,3 +276,15 @@ export async function anular(
 
   return filas === 1;
 }
+
+/** Las emitidas sin factura vigente: lo que queda por facturar. */
+export async function porFacturar(ejecutor: Ejecutor, limite = 50): Promise<Proforma[]> {
+  return consultar<Proforma>(
+    `SELECT ${COLUMNAS} ${DESDE}
+     WHERE f.estado = 'emitida'
+     ORDER BY f.emitida_en, f.id
+     LIMIT $1`,
+    [limite],
+    ejecutor,
+  );
+}

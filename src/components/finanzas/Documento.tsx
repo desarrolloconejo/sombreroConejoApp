@@ -1,4 +1,4 @@
-import { dolares } from "@/lib/finanzas/documentos";
+import { bolivares, dolares } from "@/lib/finanzas/documentos";
 import { ZONA_HORARIA } from "@/lib/fechas";
 import {
   NOMBRES_DE_ESTADO_PROFORMA,
@@ -102,7 +102,8 @@ export function EtiquetaDocumento({
  * desplazarse de lado, y el cliente lo lee sobre todo en el telefono. Desde
  * tablet, la tabla.
  */
-export function TablaRenglones({ renglones }: { renglones: Renglon[] }) {
+export function TablaRenglones({ renglones, moneda = "USD" }: { renglones: Renglon[]; moneda?: Moneda }) {
+  const importe = formateador(moneda);
   if (renglones.length === 0) {
     return (
       <p className="text-[13px] text-suave">
@@ -133,9 +134,9 @@ export function TablaRenglones({ renglones }: { renglones: Renglon[] }) {
             <p className="mt-1 flex justify-between gap-3 text-[12.5px] tabular-nums">
               <span className="text-suave">
                 {cantidadLegible(renglon.cantidad)} x{" "}
-                {dolares(renglon.precioUnitario)}
+                {importe(renglon.precioUnitario)}
               </span>
-              <span className="font-semibold">{dolares(renglon.subtotal)}</span>
+              <span className="font-semibold">{importe(renglon.subtotal)}</span>
             </p>
           </li>
         ))}
@@ -178,10 +179,10 @@ export function TablaRenglones({ renglones }: { renglones: Renglon[] }) {
                   {cantidadLegible(renglon.cantidad)}
                 </td>
                 <td className="px-2 py-2.5 text-right tabular-nums">
-                  {dolares(renglon.precioUnitario)}
+                  {importe(renglon.precioUnitario)}
                 </td>
                 <td className="py-2.5 pl-2 text-right font-semibold tabular-nums">
-                  {dolares(renglon.subtotal)}
+                  {importe(renglon.subtotal)}
                 </td>
               </tr>
             ))}
@@ -192,6 +193,13 @@ export function TablaRenglones({ renglones }: { renglones: Renglon[] }) {
   );
 }
 
+/** Presupuestos y proformas van en dolares; las facturas, en bolivares. */
+type Moneda = "USD" | "VES";
+
+function formateador(moneda: Moneda): (importe: string) => string {
+  return moneda === "VES" ? bolivares : dolares;
+}
+
 /** 2.500 -> «2,5»; 1.000 -> «1». Sin ceros que no dicen nada. */
 export function cantidadLegible(cantidad: string): string {
   const [entera, fraccion = ""] = cantidad.split(".");
@@ -200,7 +208,8 @@ export function cantidadLegible(cantidad: string): string {
 }
 
 /** Base, exento, IVA y total. El total, destacado. */
-export function ResumenImportes({ importes }: { importes: Importes }) {
+export function ResumenImportes({ importes, moneda = "USD" }: { importes: Importes; moneda?: Moneda }) {
+  const importe = formateador(moneda);
   const iva = importes.ivaPct.replace(/\.00$/, "");
   const filas = [
     { texto: "Base imponible", valor: importes.baseImponible },
@@ -213,13 +222,13 @@ export function ResumenImportes({ importes }: { importes: Importes }) {
       {filas.map((fila) => (
         <div key={fila.texto} className="flex justify-between gap-4 py-1">
           <dt className="text-suave">{fila.texto}</dt>
-          <dd className="tabular-nums">{dolares(fila.valor)}</dd>
+          <dd className="tabular-nums">{importe(fila.valor)}</dd>
         </div>
       ))}
       <div className="mt-1.5 flex justify-between gap-4 border-t border-borde pt-2.5">
         <dt className="font-bold">Total</dt>
         <dd className="text-[17px] font-extrabold tabular-nums tracking-[-0.01em]">
-          {dolares(importes.total)}
+          {importe(importes.total)}
         </dd>
       </div>
     </dl>
