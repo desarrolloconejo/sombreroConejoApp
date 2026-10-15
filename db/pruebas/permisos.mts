@@ -13,6 +13,7 @@
 import { conSesion, consultar, consultarUno, obtenerPool, transaccion } from "@/lib/db";
 import * as asignaciones from "@/models/asignaciones";
 import * as comentarios from "@/models/comentariosPieza";
+import * as correos from "@/models/correos";
 import { importesDe } from "@/lib/finanzas/calculo";
 import { codigoValido, congelar, formatoPor } from "@/lib/portal/briefs";
 import { hashDelContenido } from "@/lib/portal/briefsHash";
@@ -1484,7 +1485,7 @@ async function probarBriefs(): Promise<void> {
       await como(produccion.id, "trabajador", "produccion");
       r.produccionVe = await cuantos();
       await como(operador.id, "trabajador", "administracion");
-      r.operadorVeBorrador = await cuantos();
+      r.operadorVeBorrador = (await briefs.buscarPorId(id, tx)) !== null;
 
       // Fecha aspirada en el pasado: no se envia.
       await comoCliente();
@@ -1576,6 +1577,34 @@ async function probarBriefs(): Promise<void> {
       const envioProspecto = await briefs.enviar(deProspecto, datosEnvio("2099-01-01"), tx);
       r.prospectoEnvia = codigoValido(envioProspecto.codigo);
 
+      // Deja su rastro sin usuario: la campana de quien lo atiende y su copia
+      // por correo, que lleva su enlace y solo el puede leer y anotar.
+      r.prospectoNotifica = await intentarDentro(() =>
+        tx.query(
+          "INSERT INTO portal.notificaciones (usuario_id, tipo, titulo) VALUES ($1, 'brief.enviado', 'Brief nuevo')",
+          [cuentas.id],
+        ),
+      );
+      const copia = await correos.registrar(
+        { para: "pedro@prospecto.test", tipo: "brief_enviado", asunto: "Tu brief", cuerpo: "Copia" },
+        { modo: "simulado", estado: "simulado", creadoPor: null },
+        tx,
+      );
+      r.prospectoLeeSuCorreo = (await correos.paraEntregar(copia, tx)) !== null;
+      r.prospectoCorreoAjeno = await intentarDentro(() =>
+        tx.query(
+          `INSERT INTO portal.correos_salida (para, tipo, asunto, cuerpo, modo, estado, enlace_id)
+           VALUES ('x@y.test', 'brief_enviado', 'x', 'x', 'simulado', 'simulado', $1)`,
+          [enlace + 1000],
+        ),
+      );
+      r.prospectoNoLeeNotificaciones = Number(
+        (await tx.query<{ n: string }>("SELECT count(*)::text AS n FROM portal.notificaciones")).rows[0].n,
+      );
+      await como(null, "prospecto", "", null, enlace + 1000);
+      r.otroEnlaceLeeCorreo = await correos.paraEntregar(copia, tx);
+      r.otroEnlaceVe = await cuantos();
+
       // Quien genero el enlace lo ve y lo convierte: nace la empresa y queda asignado.
       await como(cuentas.id, "trabajador", "cuentas");
       r.creadorVe = (await briefs.buscarPorId(deProspecto, tx)) !== null;
@@ -1599,13 +1628,23 @@ async function probarBriefs(): Promise<void> {
   console.log("\nBriefs\n");
 
   comprobar(
+    "El prospecto avisa y encola su copia; no lee la campana ni correos ajenos",
+    r.prospectoNotifica === null &&
+      r.prospectoLeeSuCorreo === true &&
+      r.prospectoCorreoAjeno === DENEGADO &&
+      r.prospectoNoLeeNotificaciones === 0 &&
+      r.otroEnlaceLeeCorreo === null &&
+      r.otroEnlaceVe === 0,
+    `avisa: ${r.prospectoNotifica}; lee su correo: ${r.prospectoLeeSuCorreo}; correo ajeno: ${r.prospectoCorreoAjeno}; campana: ${r.prospectoNoLeeNotificaciones}; otro enlace: ${r.otroEnlaceLeeCorreo}/${r.otroEnlaceVe}`,
+  );
+  comprobar(
     "El cliente abre briefs de su empresa, no de otra",
     r.otraEmpresaCrea === DENEGADO,
     String(r.otraEmpresaCrea),
   );
   comprobar(
     "Produccion no ve briefs; finanzas no ve borradores",
-    r.produccionVe === 0 && r.operadorVeBorrador === 0,
+    r.produccionVe === 0 && r.operadorVeBorrador === false,
     `produccion ${r.produccionVe}; finanzas ${r.operadorVeBorrador}`,
   );
   comprobar("No se envia con la fecha aspirada en el pasado", r.fechaPasada === "23514", String(r.fechaPasada));

@@ -3584,3 +3584,50 @@ CREATE OR REPLACE FUNCTION portal.atienden_brief(p_brief integer)
 
 REVOKE ALL ON FUNCTION portal.atienden_brief(integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION portal.atienden_brief(integer) TO conejo_app;
+
+-- ---------------------------------------------------------------------------
+-- El prospecto deja rastro sin usuario: al enviar su brief avisa a quien lo
+-- atiende y encola la copia por correo. Las politicas de la campana y de la
+-- bandeja de salida exigen un usuario; aqui se amplian para su rol. Sus
+-- correos llevan el enlace que los provoco (lo pone la base), y solo esos
+-- puede leer y anotar al entregarlos.
+-- ---------------------------------------------------------------------------
+ALTER TABLE portal.correos_salida
+  ADD COLUMN IF NOT EXISTS enlace_id INTEGER REFERENCES portal.enlaces_brief(id);
+ALTER TABLE portal.correos_salida ALTER COLUMN enlace_id SET DEFAULT app_enlace_id();
+
+DROP POLICY IF EXISTS notificaciones_escribe ON portal.notificaciones;
+CREATE POLICY notificaciones_escribe ON portal.notificaciones
+  FOR INSERT TO conejo_app
+  WITH CHECK (
+    app_usuario_id() IS NOT NULL OR app_rol() = 'sistema'
+    OR (app_rol() = 'prospecto' AND app_enlace_id() IS NOT NULL)
+  );
+
+DROP POLICY IF EXISTS correos_salida_lee ON portal.correos_salida;
+CREATE POLICY correos_salida_lee ON portal.correos_salida
+  FOR SELECT TO conejo_app
+  USING (
+    app_rol() = 'admin' OR creado_por = app_usuario_id()
+    OR (app_rol() = 'prospecto' AND enlace_id = app_enlace_id())
+  );
+
+DROP POLICY IF EXISTS correos_salida_escribe ON portal.correos_salida;
+CREATE POLICY correos_salida_escribe ON portal.correos_salida
+  FOR INSERT TO conejo_app
+  WITH CHECK (
+    creado_por = app_usuario_id()
+    OR (app_rol() = 'prospecto' AND creado_por IS NULL AND enlace_id = app_enlace_id())
+  );
+
+DROP POLICY IF EXISTS correos_salida_actualiza ON portal.correos_salida;
+CREATE POLICY correos_salida_actualiza ON portal.correos_salida
+  FOR UPDATE TO conejo_app
+  USING (
+    app_rol() = 'admin' OR creado_por = app_usuario_id()
+    OR (app_rol() = 'prospecto' AND enlace_id = app_enlace_id())
+  )
+  WITH CHECK (
+    app_rol() = 'admin' OR creado_por = app_usuario_id()
+    OR (app_rol() = 'prospecto' AND enlace_id = app_enlace_id())
+  );

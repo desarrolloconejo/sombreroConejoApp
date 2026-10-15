@@ -45,8 +45,9 @@ type Objeto = {
 /**
  * Anota una accion dentro de la transaccion en curso.
  *
- * `actor` es nulo solo cuando no hay nadie identificado, que hoy es un unico
- * caso: un intento de entrar con un correo que no existe.
+ * `actor` es nulo solo cuando no hay nadie identificado: un intento de entrar
+ * con un correo que no existe, o un prospecto que llena su brief por su
+ * enlace (su rastro es el enlace y el brief, en `despues` y `entidadId`).
  */
 export async function anotar(
   ejecutor: Ejecutor,
