@@ -1153,6 +1153,15 @@ Tres decisiones de diseno del menu:
 Las etapas 1 a 6 se pueden construir sin esperar al negocio. Cada una termina
 en algo utilizable.
 
+**La etapa 8, en concreto** (decidido el 2026-10-15). La verificacion en dos
+pasos ya se adelanto; lo que queda se reparte asi:
+
+| Rama | Que |
+| --- | --- |
+| `feat/etapa8-tasa` | Registrar la tasa del dolar a mano y ver las ultimas, para no quedarse sin poder facturar si falla la lectura del BCV |
+| `feat/etapa8-guardias` | Pruebas automaticas de lo que hoy se revisa a ojo: que toda action, page y ruta de descarga empiece por su guardia, y que toda tabla de `portal` y `finanzas` tenga seguridad por fila y ningun `DELETE` que no este en la lista |
+| `docs/etapa8-piloto` | El plan del piloto con un cliente real: preparacion, pasos, que observar y como volver atras. El cliente y la fecha los decide el responsable |
+
 ### 10.1 Ramas y publicacion
 
 | Regla | Detalle |
