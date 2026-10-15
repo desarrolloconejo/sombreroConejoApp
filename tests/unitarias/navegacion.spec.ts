@@ -93,7 +93,7 @@ test("el cliente con permiso de finanzas ve Facturacion; sin el, no", () => {
 test("un cliente ve su espacio y nada de la agencia", () => {
   expect(menuDe(CLIENTE)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
-    { seccion: "Mi espacio", modulos: ["Mis proyectos"] },
+    { seccion: "Mi espacio", modulos: ["Mis proyectos", "Mis briefs"] },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
 });
