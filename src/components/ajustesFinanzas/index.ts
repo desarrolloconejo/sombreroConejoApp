@@ -2,3 +2,4 @@
 export { FormularioAjustes, FormularioNumeracion, MediosPago } from "./FormulariosAjustes";
 export { AccionesFormato, EditorFormato } from "./Formatos";
 export { DatosFiscales } from "./DatosFiscales";
+export { TasaDolar } from "./TasaDolar";

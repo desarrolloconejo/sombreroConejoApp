@@ -94,3 +94,39 @@ test("quien no opera finanzas no entra en los ajustes", async ({ page }) => {
   await page.goto("/dashboard/ajustes-finanzas");
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 60_000 });
 });
+
+test("la tasa del dolar se registra a mano, un salto grande se confirma y una fecha no se pisa", async ({ page }) => {
+  test.setTimeout(200_000);
+  // Fechas viejas que no estorban a la tasa vigente; distintas en cada corrida.
+  const marca = Date.now();
+  const ano = 1990 + (marca % 25);
+  const enero = `${ano}-01-15`;
+  const febrero = `${ano}-02-15`;
+
+  await entrar(page, "finanzas@conejo.test");
+  await page.goto("/dashboard/ajustes-finanzas", { waitUntil: "networkidle" });
+  await expect(page.getByText("La que se usa al facturar hoy")).toBeVisible({ timeout: 60_000 });
+
+  await page.getByLabel("Fecha de la tasa").fill(enero);
+  await page.getByLabel("Bolivares por dolar").fill("40,5");
+  await page.getByRole("button", { name: "Registrar la tasa" }).click();
+  await avisado(page, "Tasa registrada");
+
+  // Diez veces mas al mes siguiente: pide confirmarlo.
+  await page.getByLabel("Fecha de la tasa").fill(febrero);
+  await page.getByLabel("Bolivares por dolar").fill("405");
+  await page.getByRole("button", { name: "Registrar la tasa" }).click();
+  await avisado(page, /Revisala: USD pasaria de/);
+  await page.getByRole("checkbox", { name: /Revisala/ }).check();
+  await page.getByRole("button", { name: "Registrar la tasa" }).click();
+  // El aviso del primer registro sigue a la vista: se espera a que el
+  // formulario quede limpio, que es cuando termino el segundo.
+  await expect(page.getByRole("checkbox", { name: /Revisala/ })).toHaveCount(0, { timeout: 60_000 });
+  await expect(page.getByLabel("Bolivares por dolar")).toHaveValue("");
+
+  // La misma fecha otra vez no se pisa.
+  await page.getByLabel("Fecha de la tasa").fill(enero);
+  await page.getByLabel("Bolivares por dolar").fill("41");
+  await page.getByRole("button", { name: "Registrar la tasa" }).click();
+  await avisado(page, "Ya hay una tasa para ese dia: no se pisa");
+});
