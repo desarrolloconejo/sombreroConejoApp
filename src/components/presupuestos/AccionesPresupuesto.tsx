@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { Check, FileOutput, X } from "lucide-react";
 
-import { generarProforma } from "@/actions/presupuestos";
+import { generarProforma, presupuestarDesdeBrief } from "@/actions/presupuestos";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { Boton, CLASE_CONTROL } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
@@ -87,6 +87,22 @@ export function DecisionANombre({ presupuestoId }: { presupuestoId: number }) {
           {enviando ? "Registrando..." : "Registrar a nombre del cliente"}
         </Boton>
       </div>
+    </form>
+  );
+}
+
+/** Arma el presupuesto de un brief y lleva a su editor. */
+export function PresupuestarBrief({ briefId, codigo }: { briefId: number; codigo: string }) {
+  const [estado, enviar, enviando] = useActionState(presupuestarDesdeBrief, ESTADO_INICIAL);
+  useAvisoDeAccion(estado);
+
+  return (
+    <form action={enviar}>
+      <input type="hidden" name="briefId" value={briefId} />
+      <Boton type="submit" tamano="chico" disabled={enviando} aria-label={`Armar el presupuesto del brief ${codigo}`}>
+        <FileOutput aria-hidden="true" />
+        {enviando ? "Abriendo..." : "Armar el presupuesto"}
+      </Boton>
     </form>
   );
 }

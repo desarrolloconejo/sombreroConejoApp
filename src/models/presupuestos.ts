@@ -48,6 +48,8 @@ const COLUMNAS = `
   r.nombre || ' ' || r.apellido                  AS "resueltoPorNombre",
   p.a_nombre_del_cliente                         AS "aNombreDelCliente",
   p.motivo_rechazo                               AS "motivoRechazo",
+  p.brief_id                                     AS "briefId",
+  b.codigo                                       AS "briefCodigo",
   pf.id                                          AS "proformaId",
   pf.numero                                      AS "proformaNumero"
 `;
@@ -58,6 +60,7 @@ const DESDE = `
   JOIN usuarios c ON c.id = p.creado_por
   LEFT JOIN usuarios r ON r.id = p.resuelto_por
   LEFT JOIN portal.proyectos pr ON pr.id = p.proyecto_id
+  LEFT JOIN portal.briefs b ON b.id = p.brief_id
   LEFT JOIN LATERAL (
     SELECT f.id, f.numero FROM finanzas.proformas f
     WHERE f.presupuesto_id = p.id AND f.origen_id IS NULL AND f.estado <> 'anulada'
@@ -195,10 +198,10 @@ export async function crear(
 ): Promise<number> {
   const fila = await consultarUno<{ id: number }>(
     `INSERT INTO finanzas.presupuestos
-       (numero, empresa_id, proyecto_id, titulo, valido_hasta, notas, creado_por)
-     VALUES (finanzas.siguiente_numero('PRESUPUESTO'), $1, $2, $3, $4, $5, $6)
+       (numero, empresa_id, proyecto_id, titulo, valido_hasta, notas, creado_por, brief_id)
+     VALUES (finanzas.siguiente_numero('PRESUPUESTO'), $1, $2, $3, $4, $5, $6, $7)
      RETURNING id`,
-    [datos.empresaId, datos.proyectoId, datos.titulo, datos.validoHasta, datos.notas, creadoPor],
+    [datos.empresaId, datos.proyectoId, datos.titulo, datos.validoHasta, datos.notas, creadoPor, datos.briefId ?? null],
     ejecutor,
   );
 

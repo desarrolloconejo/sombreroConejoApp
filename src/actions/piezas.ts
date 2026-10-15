@@ -17,7 +17,7 @@ import {
   faseQueSePuedeRegresar,
   motivoParaNoCompletar,
 } from "@/lib/portal/fases";
-import { RUTA_PROYECTOS, rutaMiPieza, rutaPieza, rutaProyecto } from "@/lib/portal/rutas";
+import { RUTA_PROYECTOS, rutaMiBrief, rutaMiPieza, rutaPieza, rutaProyecto } from "@/lib/portal/rutas";
 import { requerirCargo, requerirRol } from "@/lib/sesion";
 import {
   comoFecha,
@@ -25,6 +25,7 @@ import {
   LIMITES,
   limpiarTexto,
 } from "@/lib/validaciones";
+import * as briefs from "@/models/briefs";
 import * as clientes from "@/models/clientes";
 import * as comentarios from "@/models/comentariosPieza";
 import * as piezas from "@/models/piezas";
@@ -240,6 +241,29 @@ export async function completarFase(
       antes: { fase, estado: "en_curso" },
       despues: { fase, estado: "completada", siguiente: fase + 1 },
     });
+
+    // Completar la fase 1 de un proyecto que nacio de un brief es validar el
+    // brief (S-07): se cierra su ciclo y el cliente se entera.
+    if (fase === 1) {
+      const briefId = await briefs.deProyecto(proyecto.id, tx);
+
+      if (briefId !== null && (await briefs.validar(briefId, tx))) {
+        await anotar(tx, usuario, "brief.validado", { entidadId: briefId, empresaId: proyecto.empresaId });
+
+        const personas = await clientes.activosDe(proyecto.empresaId, tx);
+        await notificarA(
+          tx,
+          personas.map((persona) => persona.id),
+          {
+            tipo: "brief.validado",
+            titulo: `Validamos tu brief: ${proyecto.nombre} avanza`,
+            cuerpo: "La primera fase del proyecto esta completa.",
+            href: rutaMiBrief(briefId),
+            empresaId: proyecto.empresaId,
+          },
+        );
+      }
+    }
 
     // Si lo siguiente es una fase de trabajo, quien tiene tareas en ella ya
     // puede empezar: se le dice.

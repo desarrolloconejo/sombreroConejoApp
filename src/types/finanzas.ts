@@ -77,6 +77,10 @@ export type Presupuesto = Importes & {
   aNombreDelCliente: boolean;
   motivoRechazo: string | null;
 
+  /** El brief del que nace, si nace de uno. */
+  briefId: number | null;
+  briefCodigo: string | null;
+
   /** La proforma que salio de el, si ya se genero. */
   proformaId: number | null;
   proformaNumero: number | null;
@@ -114,6 +118,7 @@ export type ProyectoDeProforma = {
 
 export type DatosNuevoPresupuesto = {
   empresaId: number;
+  briefId?: number | null;
   proyectoId: number | null;
   titulo: string;
   validoHasta: string;

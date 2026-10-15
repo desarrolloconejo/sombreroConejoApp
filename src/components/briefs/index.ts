@@ -8,3 +8,4 @@ export {
   EtiquetaBrief,
   SECCION_BRIEF,
 } from "./LecturaBrief";
+export { BotonesDecision, FechaViable, ProveedorDecisiones } from "./DecisionesBrief";

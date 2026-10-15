@@ -7,7 +7,7 @@ import { anotar } from "@/lib/auditoria";
 import { correoDePresupuestoEnviado } from "@/lib/correos/plantillas";
 import { conSesion, esErrorPostgres } from "@/lib/db";
 import { encolarCorreo, entregarCorreos } from "@/lib/externos/correo";
-import { numeroDe } from "@/lib/finanzas/documentos";
+import { DIAS_DE_VALIDEZ, numeroDe, sumarDias } from "@/lib/finanzas/documentos";
 import {
   RUTA_FACTURACION,
   RUTA_PRESUPUESTOS,
@@ -17,8 +17,11 @@ import {
 } from "@/lib/finanzas/rutas";
 import { leerCabecera, leerMotivo, leerRenglones } from "@/lib/finanzas/validar";
 import { notificarA } from "@/lib/notificaciones";
+import { formatoPor } from "@/lib/portal/briefs";
+import { hoyEnCaracas } from "@/lib/portal/fases";
 import { requerirFinanzas } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
+import * as briefs from "@/models/briefs";
 import * as clientes from "@/models/clientes";
 import * as empresas from "@/models/empresas";
 import * as presupuestos from "@/models/presupuestos";
@@ -94,6 +97,54 @@ export async function crearPresupuesto(
           : { proyectoId: "Ese proyecto no es de la empresa" },
     };
   }
+
+  revalidatePath(RUTA_PRESUPUESTOS);
+  redirect(rutaPresupuesto(resultado.id));
+}
+
+/**
+ * Arma el presupuesto de un brief que el ejecutivo paso a presupuesto: un
+ * borrador para su empresa, ligado al brief y a su proyecto si ya lo tiene.
+ * Lleva a su editor.
+ */
+export async function presupuestarDesdeBrief(
+  _estadoPrevio: EstadoFormulario,
+  datos: FormData,
+): Promise<EstadoFormulario> {
+  const usuario = await requerirFinanzas();
+
+  const briefId = comoIdentificador(datos.get("briefId"));
+  if (briefId === null) return { ok: false, mensaje: "No se encontro el brief" };
+
+  const resultado = await conSesion(usuario, async (tx) => {
+    const pendientes = await briefs.esperandoPresupuesto(tx);
+    const brief = pendientes.find((candidato) => candidato.id === briefId);
+    if (!brief || brief.empresaId === null) return { error: "Ese brief ya no espera presupuesto" };
+
+    const formato = formatoPor(brief.formato, brief.formatoVersion);
+    const id = await presupuestos.crear(
+      {
+        empresaId: brief.empresaId,
+        briefId,
+        proyectoId: brief.proyectoId,
+        titulo: `${formato?.nombre ?? "Brief"} ${brief.codigo}`,
+        validoHasta: sumarDias(hoyEnCaracas(), DIAS_DE_VALIDEZ),
+        notas: null,
+      },
+      usuario.id,
+      tx,
+    );
+
+    await anotar(tx, usuario, "presupuesto.creado", {
+      entidadId: id,
+      empresaId: brief.empresaId,
+      despues: { brief: brief.codigo },
+    });
+
+    return { id };
+  });
+
+  if ("error" in resultado) return { ok: false, mensaje: resultado.error };
 
   revalidatePath(RUTA_PRESUPUESTOS);
   redirect(rutaPresupuesto(resultado.id));

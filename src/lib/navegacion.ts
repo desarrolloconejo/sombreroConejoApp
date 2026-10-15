@@ -8,6 +8,7 @@ import {
   FileText,
   FolderKanban,
   History,
+  Inbox,
   House,
   Layers,
   ListChecks,
@@ -188,6 +189,16 @@ const MODULOS: readonly Modulo[] = [
     roles: ["admin", "trabajador"],
     cargos: ["cuentas"],
     alias: ["bateria", "piezas", "fases", "parrilla", "matriz", "entregables", "clientes"],
+  },
+  {
+    titulo: "Briefs",
+    seccion: "trabajo",
+    subtitulo: "Lo que piden los clientes, por decidir",
+    href: "/dashboard/briefs",
+    icono: Inbox,
+    roles: ["admin", "trabajador"],
+    cargos: ["cuentas"],
+    alias: ["bandeja", "solicitudes", "pedidos", "prospectos", "brief", "fase 0"],
   },
 
   /*

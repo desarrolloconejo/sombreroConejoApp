@@ -9,6 +9,7 @@ import {
   formatoPor,
   formatosVigentes,
   pasosVisibles,
+  respuestasDesdeContenido,
 } from "@/lib/portal/briefs";
 import { hashDelContenido } from "@/lib/portal/briefsHash";
 import type { Respuestas } from "@/types";
@@ -105,4 +106,10 @@ test("el codigo tiene la forma ECS-AAAAMMDD-XXXXXX", () => {
   expect(codigoValido(fixture.contexto.codigoEsperado)).toBe(true);
   expect(codigoValido("ECS-20261006-4c9e1a")).toBe(false);
   expect(codigoValido("ECS-2026106-4C9E1A")).toBe(false);
+});
+
+test("las respuestas se rearman desde lo congelado y cuentan igual", () => {
+  const rearmadas = respuestasDesdeContenido(congelar(formato, respuestas, quien));
+  expect(contarNoSe(formato, rearmadas)).toBe(contarNoSe(formato, respuestas));
+  expect((rearmadas.alcance as Record<string, string>).naming).toBe("agencia");
 });

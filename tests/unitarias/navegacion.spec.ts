@@ -27,7 +27,7 @@ function menuDe(quien: Parameters<typeof modulosDe>[0]) {
 test("el administrador ve todas las secciones que tienen algo, en su orden", () => {
   expect(menuDe(ADMIN)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
-    { seccion: "Trabajo", modulos: ["Tablero", "Proyectos", "Mi trabajo"] },
+    { seccion: "Trabajo", modulos: ["Tablero", "Proyectos", "Briefs", "Mi trabajo"] },
     { seccion: "Herramientas", modulos: ["Hooks"] },
     { seccion: "Finanzas", modulos: ["Presupuestos", "Proformas"] },
     {
@@ -47,10 +47,10 @@ test("redes ve Herramientas y no ve Sistema", () => {
   ]);
 });
 
-test("un ejecutivo de cuentas ve Tablero y Proyectos en Trabajo, y no ve Hooks", () => {
+test("un ejecutivo de cuentas ve Tablero, Proyectos y Briefs en Trabajo, y no ve Hooks", () => {
   expect(menuDe(CUENTAS)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
-    { seccion: "Trabajo", modulos: ["Tablero", "Proyectos", "Mi trabajo"] },
+    { seccion: "Trabajo", modulos: ["Tablero", "Proyectos", "Briefs", "Mi trabajo"] },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
 });
