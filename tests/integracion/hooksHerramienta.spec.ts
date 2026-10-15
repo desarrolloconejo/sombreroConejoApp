@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { EMAIL_EJECUTIVO, USUARIOS } from "../../db/datos/semilla.mts";
+import { elegirEmpresa } from "./ayudas/formularios";
 
 /**
  * Hooks como herramienta, de punta a punta.
@@ -34,6 +35,7 @@ test("una tarea de hook la cumple quien la tiene, aunque no sea de redes", async
   // ---- El ejecutivo crea el reel y asigna la tarea de hook a diseno.
   await entrar(page, EMAIL_EJECUTIVO);
   await page.goto("/dashboard/proyectos?panel=nuevo", { waitUntil: "networkidle" });
+  await elegirEmpresa(page);
   await page.getByLabel("Nombre", { exact: true }).fill(nombre);
   await page.getByLabel("Tipo de la pieza 1").selectOption("reel");
   await page.getByLabel("Titulo de la pieza 1").fill("Reel de la herramienta");

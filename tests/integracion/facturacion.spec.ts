@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { USUARIOS } from "../../db/datos/semilla.mts";
+import { elegirEmpresa } from "./ayudas/formularios";
 
 /**
  * Facturacion, del lado del cliente: aprobar y rechazar presupuestos.
@@ -31,6 +32,7 @@ async function avisado(page: Page, texto: string | RegExp) {
 /** Crea y envia un presupuesto de un renglon. Devuelve su URL. */
 async function enviarPresupuesto(page: Page, titulo: string): Promise<string> {
   await page.goto("/dashboard/presupuestos?panel=nuevo", { waitUntil: "networkidle" });
+  await elegirEmpresa(page);
   await page.getByLabel("Titulo").fill(titulo);
   await page.getByRole("button", { name: "Crear y anadir renglones" }).click();
   await expect(page).toHaveURL(/\/dashboard\/presupuestos\/\d+$/, { timeout: 60_000 });
