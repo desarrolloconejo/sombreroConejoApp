@@ -115,8 +115,11 @@ Necesita el esquema `portal` y las funciones de sesion del 07.
 | # | Archivo | Que hace | Resultado esperado |
 | --- | --- | --- | --- |
 | 11 | `db/neon/11-proyectos.sql` | Crea asignaciones, proyectos, piezas, su copy, sus fases, tareas y comentarios internos, con sus politicas y las vistas del avance | `tablas = 7` y `con_seguridad_por_fila = 7`; `politicas = 22`; `vistas = 2` |
-
 | 12 | `db/neon/12-hooks-herramienta.sql` | Anade `fichas_hook.tarea_id`: la ficha que cumple una tarea | `columna = 1` e `indice = 1` |
+
+No inserta datos. Tras publicar, el administrador asigna a cada ejecutivo
+(cargo `cuentas`) sus empresas desde Empresas: sin asignaciones, un ejecutivo
+no ve ningun proyecto.
 
 ### Etapa 4 — Vista del cliente y revision
 
@@ -141,13 +144,11 @@ empresa. La numeracion empieza en 1 para presupuestos y proformas.
 
 | # | Archivo | Que hace | Resultado esperado |
 | --- | --- | --- | --- |
-| 15 | `db/neon/15-briefs.sql` | Prospectos y enlaces privados, briefs, versiones congeladas, aclaraciones, `brief_id` en proyectos y presupuestos, y sus funciones | `tablas = 5` y `con_seguridad_por_fila = 5`; `politicas = 12`, `funciones = 11` y `columnas = 2`; `briefs = 0` |
+| 15 | `db/neon/15-briefs.sql` | Prospectos y enlaces privados, briefs, versiones congeladas, aclaraciones, `brief_id` en proyectos y presupuestos, y sus funciones. Amplia la campana y la bandeja de salida para que un prospecto avise y encole la copia de su brief (`correos_salida.enlace_id`) | `tablas = 5` y `con_seguridad_por_fila = 5`; `politicas = 12`, `funciones = 12` y `columnas = 3`; `briefs = 0` |
 
 No inserta datos. Los formatos de brief van en el codigo, no en la base.
-
-No inserta datos. Tras publicar, el administrador asigna a cada ejecutivo
-(cargo `cuentas`) sus empresas desde Empresas: sin asignaciones, un ejecutivo
-no ve ningun proyecto.
+Solo anade: las politicas ampliadas dejan pasar lo mismo que antes, mas el
+rol `prospecto`, que la version publicada no usa.
 
 ---
 
@@ -195,6 +196,12 @@ vuelta atras de la seccion 7 y deja de estar en Vercel.
 
 Un cambio de variable solo afecta a los despliegues nuevos: la version
 publicada sigue con la conexion anterior hasta que se suba.
+
+### Etapa 6
+
+| Variable | Accion | Valor |
+| --- | --- | --- |
+| `BRIEFS_MAILBOX` | Opcional | Un buzon del estudio que recibe copia de cada brief enviado. Sin el, la copia va a quien lo envia y a quien lo atiende |
 
 ---
 
@@ -285,6 +292,28 @@ En la aplicacion publicada, con la cuenta de administrador.
 - [ ] Cerrar sesion y volver a entrar: tras la contrasena pide el codigo.
 - [ ] Con el usuario de prueba, pulsar «Ahora no, entrar sin ella» y comprobar
       que no se le vuelve a preguntar.
+
+### Etapa 5
+
+- [ ] En Usuarios, marcar «Puede ver las finanzas» en la persona de contacto
+      de una empresa de prueba.
+- [ ] Con una cuenta de administracion: crear un presupuesto para esa
+      empresa, anadir renglones y enviarlo. El numero es el siguiente y los
+      importes coinciden con la vista previa.
+- [ ] Con la cuenta del cliente: Facturacion muestra el presupuesto por
+      aprobar; aprobarlo. Administracion genera la proforma y la emite.
+
+### Etapa 6
+
+- [ ] Con la cuenta del cliente de prueba: Mis briefs → empezar un Brief de
+      Desarrollo de Producto, llenarlo, cerrar la pestana a medias y volver:
+      sigue donde lo dejo. Enviarlo: muestra su codigo `ECS-…`.
+- [ ] Con su ejecutivo: el brief aparece en Briefs → Por decidir, y en la
+      campana. Aceptarlo abre el proyecto.
+- [ ] En Briefs → Enlaces para prospectos, generar un enlace con un correo
+      propio y abrirlo en una ventana privada: se llena y se envia sin cuenta.
+      Aceptarlo muestra la contrasena provisional del nuevo cliente.
+- [ ] Revocar ese enlace y volver a abrirlo: dice que ya no es valido.
 
 ---
 
@@ -393,6 +422,26 @@ anterior lo ignora.
   la retira desde la ficha de esa persona en Usuarios.
 - Conviene avisar antes de publicar, para que tengan la app instalada.
 
+### Etapa 5
+
+- **Presupuestos** y **Proformas** aparecen para el administrador y
+  administracion. La base numera y calcula los importes: no se escriben a
+  mano.
+- **Los clientes con «Puede ver las finanzas»** ven Facturacion: aprueban o
+  rechazan presupuestos y ven sus proformas. El permiso nace apagado.
+
+### Etapa 6
+
+- **Los clientes envian briefs** desde «Mi espacio → Mis briefs». Pueden
+  llenarlo entre varios, guardar a medias y enviar una version nueva mientras
+  no este validado.
+- **Los ejecutivos de cuentas deciden** en Trabajo → Briefs: proponer otra
+  fecha, aceptar (abre el proyecto), pasar a presupuesto o descartar con
+  motivo, que el cliente ve.
+- **Quien aun no es cliente** recibe un enlace privado que el ejecutivo genera
+  en Briefs. El enlace se ve una sola vez y **no sale por correo**: el
+  ejecutivo lo copia y se lo hace llegar. Vale 7 dias.
+
 ---
 
 ## 9. Pendientes y cosas sin probar
@@ -451,6 +500,16 @@ resolver antes.
 | Boveda de marca e historial del cliente desde la auditoria | No se hicieron: el historial de cada pieza sale de sus decisiones. Quedan para cuando se pidan |
 | Correo de «pieza lista para revisar» | En modo simulado queda en la bandeja de salida |
 
+### Etapa 6
+
+| Tema | Estado |
+| --- | --- |
+| `db/neon/15-briefs.sql` | Ensayado dos veces sobre una base con el esquema del cierre de la etapa 5: aplica limpio, deja las comprobaciones en su valor y las politicas quedan identicas a las de una base nueva |
+| Seguridad por fila de briefs, enlaces y el rastro del prospecto | Probada con `prueba:permisos` en local, con el rol `conejo_app`. Sin probar contra Neon |
+| PDF del brief en el correo | No va todavia: llega con la libreria de la factura, en la etapa 7 |
+| Brief de Diagnostico | No se publica hasta tener sus preguntas (B4) |
+| Limite de intentos en `/brief` | No hay: el token tiene 256 bits de azar. Se reconsidera en el VPS |
+
 ## Registro por etapa
 
 | Etapa | SQL antes | Variables | SQL despues | Anotada |
@@ -461,6 +520,6 @@ resolver antes.
 | 3. Proyectos, bateria y tareas | 11, 12 | — | — | Si |
 | 4. Vista del cliente y revision | 13 | `DRIVE_*`, `DRIVE_CARPETA_PIEZAS_ID` | — | Si |
 | 5. Presupuestos y proformas | 14 | — | — | Si |
-| 6. Briefs | 15 | — | — | En curso |
+| 6. Briefs | 15 | `BRIEFS_MAILBOX` (opcional) | — | Si |
 | 7. Facturas, pagos y cobranza | — | — | — | Pendiente |
 | 8. Endurecimiento y piloto | — | — | — | Pendiente |

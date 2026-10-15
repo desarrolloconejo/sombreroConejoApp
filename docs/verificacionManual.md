@@ -184,3 +184,59 @@ siguiente.
 | --- | --- |
 | PDF de presupuestos y proformas | Etapa 7, con la libreria del PDF de la factura |
 | Correo al cliente cuando se emite una proforma | Solo campana por ahora; se decide con el correo real |
+
+## Etapa 6 — Briefs
+
+La semilla deja un brief enviado de la empresa del cliente de prueba y un
+borrador a medias. El correo va simulado: las copias quedan en la Bandeja de
+salida.
+
+**Cliente (como `cliente@empresa.test`)**
+
+1. Mi espacio → Mis briefs → empezar un Brief de Desarrollo de Producto. La
+   empresa, el nombre y el correo vienen precargados.
+2. Llenar dos pasos, cerrar la pestana y volver: lo escrito sigue ahi (se
+   guarda solo cada pocos segundos).
+3. En «Alcance», marcar el empaque como «Lo tengo yo»: el paso del empaque
+   desaparece del recorrido. Probar «No lo se» en alguna pregunta.
+4. Enviar sin la fecha de entrega: la pide. Con ella, muestra el codigo
+   `ECS-…` y la pantalla pasa a «Lo que enviaste».
+5. «Cambiar algo: enviar una version nueva»: se abre con lo enviado; al
+   reenviar, el codigo es el mismo y dice «version 2».
+6. En el telefono (390 px), los pasos y los botones se leen sin desplazarse de
+   lado.
+
+**Ejecutivo (como `cuentas@conejo.test`)**
+
+7. La campana avisa del brief nuevo. Trabajo → Briefs → «Por decidir» lo
+   muestra.
+8. Proponer otra fecha pide la fecha y el motivo; el cliente los ve en su
+   brief.
+9. Escribir en las aclaraciones: el cliente lo ve y puede responder.
+10. «Aceptar y abrir proyecto»: nace el proyecto. Completar su fase 1 deja el
+    brief «Validado» para el cliente.
+11. En otro brief, «Convertir en presupuesto»: como `finanzas@conejo.test`,
+    Presupuestos lo muestra en «Briefs que esperan su presupuesto».
+12. «Descartar» pide el motivo, y el cliente lo ve.
+
+**Prospecto (enlace privado)**
+
+13. Como ejecutivo, en Briefs → Enlaces para prospectos, generar un enlace con
+    un correo inventado. Aparece una vez, con «Copiar el enlace». Al recargar
+    ya no se ve: solo queda la fila con su estado.
+14. Abrir el enlace en una ventana privada: saluda al contacto, «Empezar el
+    brief», llenarlo y enviarlo. El panel (`/dashboard`) sigue pidiendo
+    iniciar sesion.
+15. De vuelta como ejecutivo: el brief esta en «Por decidir» marcado
+    «prospecto». Aceptarlo muestra la contrasena provisional del nuevo
+    cliente; con ella se entra y se pide cambiarla.
+16. Generar otro enlace y revocarlo: abrirlo dice «Este enlace ya no es
+    valido». Lo mismo con una direccion inventada `/brief/loquesea`.
+
+### Sin hacer todavia
+
+| Que | Cuando |
+| --- | --- |
+| PDF del brief adjunto a la copia por correo | Etapa 7, con la libreria del PDF |
+| Brief de Diagnostico | Cuando se tengan sus preguntas (B4) |
+| Enlace al prospecto por correo | No se hara: el enlace es un token, y ningun correo lleva tokens |

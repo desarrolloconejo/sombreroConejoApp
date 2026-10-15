@@ -120,6 +120,19 @@ Lo que cada etapa exige en produccion se va anotando en
 | 5 | `feat/etapa5-presupuestos` | Modulo Presupuestos para el admin y administracion: listado, alta, editor de renglones con vista previa calculada como la base, guardar y enviar en un paso, respuesta del cliente registrada a su nombre (F14), generar la proforma. Notificacion y correo al cliente | Ninguno | Hecha |
 | 5 | `feat/etapa5-cliente` | Facturacion del cliente con permiso de finanzas (`/dashboard/facturacion`, el nombre que fija la seccion 9.1): por aprobar, proformas e historial; aprobar o rechazar con motivo; aviso en el inicio; casilla «Puede ver las finanzas» en Usuarios; el menu admite un permiso por persona | Ninguno | Hecha |
 | 5 | `feat/etapa5-proformas` | Modulo Proformas: editar el borrador (titulo, notas, proyectos, renglones), guardar y emitir, anular con motivo, recurrencia mensual y las recurrentes a las que les toca en la portada, con «Preparar la siguiente». Nada se emite solo | Ninguno | Hecha |
+| 6 | `feat/etapa6-modelo` | Briefs con seguridad por fila: prospectos, enlaces (solo el hash del token), briefs con su borrador, versiones congeladas con su hash e inmutables, aclaraciones. La base pone fecha, codigo `ECS-AAAAMMDD-XXXXXX` y numero de version al enviar. Formato de desarrollo de producto y sus reglas como funciones puras | `db/neon/15-briefs.sql` | Hecha |
+| 6 | `feat/etapa6-mis-briefs` | Mis briefs del cliente: empezar, formulario por pasos con guardado solo, «No lo se», enviar, version nueva (S-08), aclaraciones. Aviso y copia por correo a quien lo atiende | Ninguno | Hecha |
+| 6 | `feat/etapa6-bandeja` | Bandeja de briefs para cuentas: proponer otra fecha, aceptar (nace el proyecto y completar su fase 1 lo valida), pasar a presupuesto (administracion lo arma desde Presupuestos), descartar con motivo | Ninguno | Hecha |
+| 6 | `feat/etapa6-enlace` | Enlace privado de prospecto: el ejecutivo lo genera y lo ve una vez, el prospecto llena y envia sin cuenta en `/brief/[token]`, aceptarlo lo convierte en cliente con contrasena provisional; revocar. El prospecto avisa y encola su copia | El mismo 15 | Hecha |
+
+**La etapa 6 esta completa**, con los supuestos S-04 a S-09 del paquete. Decisiones tomadas por el camino:
+
+- **El enlace del prospecto no se envia por correo.** Ningun correo lleva tokens: el ejecutivo lo ve una sola vez al generarlo, lo copia y se lo hace llegar por su canal. La base solo guarda el hash; vale 7 dias y cada mensaje del ejecutivo en el hilo lo renueva (S-06).
+- Las actions de `/brief/[token]` no tienen guardia de sesion: su guardia es el token, que cada una comprueba, y ante la base actuan como el rol `prospecto` con su enlace (`conEnlace`). Un enlace vencido, revocado o inexistente da el mismo mensaje.
+- Pasar a presupuesto el brief de un prospecto lo convierte antes: nace su empresa, porque un presupuesto es siempre de una empresa. La empresa nace con nombre y telefono; el RIF se completa despues (B1).
+- La copia del brief enviado no lleva aun el PDF: la libreria llega con la factura, en la etapa 7.
+- El formato de Diagnostico no se publica hasta tener sus preguntas (B4).
+- Sin limite de intentos por IP en `/brief`: el token tiene 256 bits de azar y adivinarlo es inviable; se reconsidera en el VPS.
 
 **La etapa 5 esta completa**, con los valores por defecto del plan: precios sin IVA (F4), 15 dias de validez editables (F6) y el operador puede registrar la decision a nombre del cliente (F14). Lo que queda para la etapa 7: el PDF de presupuestos y proformas (va con la libreria de la factura), la factura y su numeracion. Lo que queda por probar a mano esta en `docs/verificacionManual.md`.
 
