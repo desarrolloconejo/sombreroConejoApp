@@ -195,3 +195,36 @@ export type {
   AclaracionBrief,
   EnlaceBrief,
 } from "./brief";
+
+export {
+  NOMBRES_DE_ESTADO_COBRO,
+  NOMBRES_DE_TIPO_PAGO,
+  NOMBRES_DE_ESTADO_PAGO,
+  CAMPOS_FACTURA,
+  COLUMNAS_FACTURA,
+  NOMBRES_DE_CAMPO_FACTURA,
+} from "./facturas";
+export type {
+  EstadoFactura,
+  EstadoCobro,
+  TipoPago,
+  EstadoPago,
+  MonedaPago,
+  ParteFactura,
+  Factura,
+  RenglonFactura,
+  Pago,
+  DatosNuevoPago,
+  MedioPago,
+  DatosMedioPago,
+  AjustesFinanzas,
+  Numeracion,
+  PosicionCampo,
+  ColumnaRenglon,
+  CampoFactura,
+  ColumnaFactura,
+  FormatoImpresion,
+  DatosFormatoImpresion,
+  FiltrosFacturas,
+  CobranzaEmpresa,
+} from "./facturas";

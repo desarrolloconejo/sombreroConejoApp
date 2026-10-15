@@ -12,6 +12,7 @@
  */
 import { conSesion, consultar, consultarUno, obtenerPool, transaccion } from "@/lib/db";
 import * as asignaciones from "@/models/asignaciones";
+import * as ajustes from "@/models/ajustesFinanzas";
 import * as comentarios from "@/models/comentariosPieza";
 import * as correos from "@/models/correos";
 import { importesDe } from "@/lib/finanzas/calculo";
@@ -19,6 +20,8 @@ import { codigoValido, congelar, formatoPor } from "@/lib/portal/briefs";
 import { hashDelContenido } from "@/lib/portal/briefsHash";
 import * as briefs from "@/models/briefs";
 import * as enlaces from "@/models/enlacesBrief";
+import * as facturas from "@/models/facturas";
+import * as pagos from "@/models/pagos";
 import * as piezas from "@/models/piezas";
 import * as presupuestos from "@/models/presupuestos";
 import * as proformas from "@/models/proformas";
@@ -528,6 +531,7 @@ async function principal(): Promise<void> {
   await probarRevision();
   await probarFinanzas();
   await probarBriefs();
+  await probarFacturas();
 
   console.log(`\n${pasan}/${pasan + fallan.length} comprobaciones correctas`);
   if (fallan.length > 0) {
@@ -1712,3 +1716,238 @@ principal()
   .finally(async () => {
     await obtenerPool().end();
   });
+
+async function probarFacturas(): Promise<void> {
+  const fila = async (email: string) => {
+    const persona = await consultarUno<{ id: number; empresaId: number | null }>(
+      `SELECT id, empresa_id AS "empresaId" FROM vw_usuarios_completos
+       WHERE lower(email) = lower($1)`,
+      [email],
+    );
+    if (!persona) throw new Error(`Falta ${email}: ejecuta npm run seed`);
+    return persona;
+  };
+
+  const operador = await fila("finanzas@conejo.test");
+  const cuentas = await fila("cuentas@conejo.test");
+  const cliente = await fila("cliente@empresa.test");
+  const empresaA = cliente.empresaId as number;
+
+  const r: Record<string, unknown> = {};
+
+  try {
+    await transaccion(async (tx) => {
+      const como = (id: number, rol: string, cargo = "", empresa: number | null = null) =>
+        tx.query(
+          `SELECT set_config('app.usuario_id', $1, true), set_config('app.rol', $2, true),
+                  set_config('app.cargo', $3, true), set_config('app.empresa_id', $4, true)`,
+          [String(id), rol, cargo, empresa === null ? "" : String(empresa)],
+        );
+      const intentarDentro = async (accion: () => Promise<unknown>) => {
+        await tx.query("SAVEPOINT intento");
+        try {
+          await accion();
+          await tx.query("RELEASE SAVEPOINT intento");
+          return null;
+        } catch (error) {
+          await tx.query("ROLLBACK TO SAVEPOINT intento");
+          return (error as { code?: string }).code ?? "desconocido";
+        }
+      };
+      const comoOperador = () => como(operador.id, "trabajador", "administracion");
+      const comoCliente = (empresa = empresaA) => como(cliente.id, "cliente", "", empresa);
+      const cuantas = async () =>
+        Number((await tx.query<{ n: string }>("SELECT count(*)::text AS n FROM finanzas.facturas")).rows[0].n);
+
+      // ---- El operador prepara: emisor, tasa del dia y una proforma emitida.
+      await comoOperador();
+      const proforma = (
+        await tx.query<{ id: number }>(
+          `SELECT p.id FROM finanzas.proformas p
+           WHERE p.estado = 'emitida' AND p.empresa_id = $1
+             AND EXISTS (SELECT 1 FROM finanzas.documento_items i WHERE i.proforma_id = p.id)
+           ORDER BY p.id LIMIT 1`,
+          [empresaA],
+        )
+      ).rows[0]?.id;
+      if (!proforma) throw new Error("La semilla no trae una proforma emitida: ejecuta npm run seed");
+
+      await tx.query("UPDATE finanzas.ajustes SET emisor_razon_social = NULL WHERE id = 1");
+      r.sinEmisor = await intentarDentro(() => facturas.emitir(proforma, tx));
+      await tx.query(
+        `UPDATE finanzas.ajustes SET emisor_razon_social = 'Emisor de prueba, C.A.',
+           emisor_rif = 'J-00000000-0', emisor_domicilio = 'Caracas' WHERE id = 1`,
+      );
+      await tx.query(
+        `INSERT INTO finanzas.tasas_cambio (fuente, moneda, fecha_valor, valor, origen, registrada_por)
+         VALUES ('bcv', 'USD', finanzas.hoy(), 40.5, 'manual', $1)
+         ON CONFLICT (fuente, moneda, fecha_valor) DO NOTHING`,
+        [operador.id],
+      );
+
+      // La numeracion solo sube.
+      const antes = await ajustes.numeracion(tx);
+      if (!antes) throw new Error("El operador no lee la numeracion");
+      r.numeracionBaja = await intentarDentro(() =>
+        ajustes.fijarNumeracion({ ...antes, proximaFactura: antes.proximaFactura - 1 }, tx),
+      );
+      await ajustes.fijarNumeracion({ ...antes, proximaFactura: antes.proximaFactura + 10 }, tx);
+
+      // ---- Emitir.
+      const id = await facturas.emitir(proforma, tx);
+      const factura = await facturas.buscarPorId(id, tx);
+      const renglones = await facturas.renglones(id, tx);
+      r.numero = factura?.numero === antes.proximaFactura + 10;
+      r.control = /^00-\d{6}$/.test(factura?.numeroControl ?? "");
+      r.cuadra =
+        factura !== null &&
+        renglones.length > 0 &&
+        (await tx.query<{ ok: boolean }>(
+          "SELECT $1::numeric + $2::numeric + $3::numeric = $4::numeric AS ok",
+          [factura.baseImponible, factura.montoExento, factura.ivaMonto, factura.total],
+        )).rows[0].ok;
+      r.emisorCongelado = factura?.emisor.razonSocial === "Emisor de prueba, C.A.";
+      r.proformaFacturada = (
+        await tx.query<{ estado: string }>("SELECT estado FROM finanzas.proformas WHERE id = $1", [proforma])
+      ).rows[0].estado;
+      r.dosVeces = await intentarDentro(() => facturas.emitir(proforma, tx));
+
+      // Lo emitido no cambia, y la aplicacion no escribe facturas.
+      r.cambiaTotal = await intentarDentro(() =>
+        tx.query("UPDATE finanzas.facturas SET total = total + 1 WHERE id = $1", [id]),
+      );
+      r.cambiaRenglon = await intentarDentro(() =>
+        tx.query("UPDATE finanzas.factura_items SET descripcion = 'x' WHERE factura_id = $1", [id]),
+      );
+      r.insertaFactura = await intentarDentro(() => tx.query("INSERT INTO finanzas.facturas (serie) VALUES ('Z')"));
+      r.borraFactura = await intentarDentro(() => tx.query("DELETE FROM finanzas.facturas WHERE id = $1", [id]));
+      r.marcaImpresa = await facturas.marcarImpresa(id, operador.id, tx);
+      r.reimpresa = await facturas.marcarImpresa(id, operador.id, tx);
+
+      // ---- El cliente con permiso: ve su factura, reporta, no decide.
+      await comoCliente();
+      r.clienteVe = (await facturas.buscarPorId(id, tx)) !== null;
+      r.clienteEmite = await intentarDentro(() => facturas.emitir(proforma, tx));
+      r.clienteAnula = (await tx.query("UPDATE finanzas.facturas SET estado = 'anulada' WHERE id = $1", [id])).rowCount;
+      r.clienteLeeAjustes = (await tx.query("SELECT 1 FROM finanzas.ajustes")).rowCount;
+      r.clienteLeeFormatos = (await tx.query("SELECT 1 FROM finanzas.formatos_impresion")).rowCount;
+      const mediosCliente = await ajustes.medios(tx);
+      r.clienteMediosActivos = mediosCliente.length > 0 && mediosCliente.every((m) => m.activo);
+
+      const zelle = mediosCliente.find((m) => m.nombre === "Zelle");
+      const pagoMovil = mediosCliente.find((m) => m.nombre === "Pago movil");
+      if (!zelle || !pagoMovil) throw new Error("Faltan los medios de pago de ejemplo");
+      const base = {
+        facturaId: id,
+        tipo: "pago" as const,
+        referencia: "123",
+        fechaPago: "2026-10-15",
+        comprobanteArchivo: null,
+        comprobanteMime: null,
+        aNombreDelCliente: false,
+      };
+      const pago = await pagos.reportar({ ...base, medioId: zelle.id, monto: "10.00", moneda: "USD" }, cliente.id, tx);
+      r.monedaNoAceptada = await intentarDentro(() =>
+        pagos.reportar({ ...base, medioId: pagoMovil.id, monto: "10.00", moneda: "USD" }, cliente.id, tx),
+      );
+      r.clienteANombre = await intentarDentro(() =>
+        pagos.reportar(
+          { ...base, medioId: zelle.id, monto: "10.00", moneda: "USD", aNombreDelCliente: true },
+          cliente.id,
+          tx,
+        ),
+      );
+      r.clienteConfirma = (
+        await tx.query("UPDATE finanzas.pagos SET estado = 'rechazado', motivo_rechazo = 'x' WHERE id = $1", [pago])
+      ).rowCount;
+
+      // Otra empresa y un ejecutivo de cuentas no ven nada.
+      await comoCliente(empresaA + 100000);
+      r.otraEmpresaVe = await cuantas();
+      await como(cuentas.id, "trabajador", "cuentas");
+      r.cuentasVe = await cuantas();
+      r.cuentasLeePagos = (await tx.query("SELECT 1 FROM finanzas.pagos")).rowCount;
+
+      // ---- El operador confirma: en dolares exige la tasa.
+      await comoOperador();
+      r.sinTasa = await intentarDentro(() =>
+        pagos.confirmar(pago, { montoAplicado: "405.00", tasaAplicada: null }, operador.id, tx),
+      );
+      r.confirma = await pagos.confirmar(pago, { montoAplicado: "405.00", tasaAplicada: "40.5" }, operador.id, tx);
+      r.cambiaConfirmado = await intentarDentro(() =>
+        tx.query("UPDATE finanzas.pagos SET monto_aplicado = 1 WHERE id = $1", [pago]),
+      );
+      const conPago = await facturas.buscarPorId(id, tx);
+      r.cobro = conPago?.cobro;
+      r.saldoBaja =
+        conPago !== null &&
+        (await tx.query<{ ok: boolean }>("SELECT $1::numeric = $2::numeric - 405 AS ok", [
+          conPago.saldo,
+          conPago.total,
+        ])).rows[0].ok;
+      r.anulaConPagos = await intentarDentro(() => facturas.anular(id, "Error de prueba", tx));
+
+      throw new Deshacer();
+    });
+  } catch (error) {
+    if (!(error instanceof Deshacer)) throw error;
+  }
+
+  console.log("\nFacturas y pagos\n");
+
+  comprobar("Sin los datos del emisor no se emite", r.sinEmisor === "23514", String(r.sinEmisor));
+  comprobar("Los proximos numeros solo suben", r.numeracionBaja === "23514", String(r.numeracionBaja));
+  comprobar(
+    "Emitir pone el numero fijado, el control y los importes cuadran",
+    r.numero === true && r.control === true && r.cuadra === true,
+    `numero ${r.numero}; control ${r.control}; cuadra ${r.cuadra}`,
+  );
+  comprobar(
+    "La factura congela el emisor y la proforma queda facturada, una vez",
+    r.emisorCongelado === true && r.proformaFacturada === "facturada" && r.dosVeces === "23514",
+    `emisor ${r.emisorCongelado}; proforma ${r.proformaFacturada}; otra vez ${r.dosVeces}`,
+  );
+  comprobar(
+    "Una factura emitida y sus renglones no cambian; la app no las escribe ni las borra",
+    r.cambiaTotal === "23514" &&
+      r.cambiaRenglon === DENEGADO &&
+      r.insertaFactura === DENEGADO &&
+      r.borraFactura === DENEGADO,
+    `total ${r.cambiaTotal}; renglon ${r.cambiaRenglon}; insertar ${r.insertaFactura}; borrar ${r.borraFactura}`,
+  );
+  comprobar(
+    "Se marca impresa una sola vez",
+    r.marcaImpresa === true && r.reimpresa === false,
+    `primera ${r.marcaImpresa}; segunda ${r.reimpresa}`,
+  );
+  comprobar(
+    "El cliente ve su factura pero no emite, no anula ni lee los ajustes",
+    r.clienteVe === true &&
+      r.clienteEmite === DENEGADO &&
+      r.clienteAnula === 0 &&
+      r.clienteLeeAjustes === 0 &&
+      r.clienteLeeFormatos === 0 &&
+      r.clienteMediosActivos === true,
+    `ve ${r.clienteVe}; emite ${r.clienteEmite}; anula ${r.clienteAnula}; ajustes ${r.clienteLeeAjustes}; formatos ${r.clienteLeeFormatos}; medios activos ${r.clienteMediosActivos}`,
+  );
+  comprobar(
+    "El cliente reporta a su nombre, con un medio que acepte la moneda, y no confirma",
+    r.monedaNoAceptada === "23514" && r.clienteANombre === DENEGADO && r.clienteConfirma === 0,
+    `moneda ${r.monedaNoAceptada}; a nombre ${r.clienteANombre}; confirma ${r.clienteConfirma}`,
+  );
+  comprobar(
+    "Otra empresa y cuentas no ven facturas ni pagos",
+    r.otraEmpresaVe === 0 && r.cuentasVe === 0 && r.cuentasLeePagos === 0,
+    `otra ${r.otraEmpresaVe}; cuentas ${r.cuentasVe}/${r.cuentasLeePagos}`,
+  );
+  comprobar(
+    "Confirmar en dolares pide la tasa, y lo confirmado no cambia",
+    r.sinTasa === "23514" && r.confirma === true && r.cambiaConfirmado === "23514",
+    `sin tasa ${r.sinTasa}; confirma ${r.confirma}; cambia ${r.cambiaConfirmado}`,
+  );
+  comprobar(
+    "El pago confirmado baja el saldo, y con pagos no se anula",
+    r.cobro === "parcial" && r.saldoBaja === true && r.anulaConPagos === "23514",
+    `${r.cobro}; saldo ${r.saldoBaja}; anular ${r.anulaConPagos}`,
+  );
+}
