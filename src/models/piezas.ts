@@ -3,6 +3,7 @@ import type {
   AlertaPieza,
   DatosNuevaPieza,
   EstadoPieza,
+  FaseACargo,
   FasePieza,
   NumeroFase,
   Pieza,
@@ -436,4 +437,58 @@ export async function puedeTrabajar(id: number, ejecutor: Ejecutor): Promise<boo
   );
 
   return fila?.puede ?? false;
+}
+
+/**
+ * Las fases de las que una persona es responsable, en curso o por venir, de
+ * piezas activas y proyectos vivos. Cada una con sus tareas pendientes, de
+ * quien sean: quien lleva la fase tiene que estar pendiente de todas.
+ *
+ * Primero las de fecha mas cercana; las que no tienen fecha, al final. Lo
+ * puede leer quien es responsable de la fase: `portal.trabaja_en_pieza` ya
+ * le abre la pieza y sus tareas.
+ */
+export async function fasesACargoDe(usuarioId: number, ejecutor: Ejecutor): Promise<FaseACargo[]> {
+  return consultar<FaseACargo>(
+    `SELECT f.id,
+            f.pieza_id                    AS "piezaId",
+            f.fase,
+            f.estado,
+            f.fecha_estimada::text        AS "fechaEstimada",
+            pr.id                         AS "proyectoId",
+            pr.nombre                     AS "proyectoNombre",
+            pr.tipo                       AS "proyectoTipo",
+            e.nombre                      AS "empresaNombre",
+            p.titulo                      AS "piezaTitulo",
+            p.tipo                        AS "piezaTipo",
+            coalesce((
+              SELECT json_agg(json_build_object(
+                       'id', t.id,
+                       'piezaId', t.pieza_id,
+                       'fase', t.fase,
+                       'orden', t.orden,
+                       'titulo', t.titulo,
+                       'responsableId', t.responsable_id,
+                       'responsableNombre', r.nombre || ' ' || r.apellido,
+                       'herramienta', t.herramienta,
+                       'fechaEstimada', t.fecha_estimada::text,
+                       'estado', t.estado,
+                       'listaEn', t.lista_en
+                     ) ORDER BY t.orden)
+              FROM portal.tareas t
+              LEFT JOIN usuarios r ON r.id = t.responsable_id
+              WHERE t.pieza_id = f.pieza_id AND t.fase = f.fase AND t.estado = 'pendiente'
+            ), '[]'::json)                AS tareas
+     FROM portal.pieza_fases f
+     JOIN portal.piezas p     ON p.id = f.pieza_id
+     JOIN portal.proyectos pr ON pr.id = p.proyecto_id
+     JOIN empresas e          ON e.id = pr.empresa_id
+     WHERE f.responsable_id = $1
+       AND f.estado IN ('en_curso', 'pendiente')
+       AND p.estado = 'activa'
+       AND pr.estado IN ('activo', 'pausado')
+     ORDER BY f.fecha_estimada NULLS LAST, (f.estado = 'en_curso') DESC, pr.nombre, p.orden, f.fase`,
+    [usuarioId],
+    ejecutor,
+  );
 }

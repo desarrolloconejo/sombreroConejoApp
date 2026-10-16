@@ -5,6 +5,7 @@ import { ListaMiTrabajo } from "@/components/miTrabajo";
 import { conSesion } from "@/lib/db";
 import { hoyEnCaracas } from "@/lib/portal/fases";
 import { requerirCargo } from "@/lib/sesion";
+import * as piezasModelo from "@/models/piezas";
 import * as tareasModelo from "@/models/tareas";
 
 /**
@@ -28,18 +29,19 @@ const CARGOS = ["direccion", "cuentas", "redes", "diseno", "produccion", "tecnol
 export default async function PaginaMiTrabajo() {
   const usuario = await requerirCargo(...CARGOS);
 
-  const tareas = await conSesion(usuario, (tx) =>
-    tareasModelo.asignadasA(usuario.id, { incluirListas: true }, tx),
-  );
+  const { tareas, fases } = await conSesion(usuario, async (tx) => ({
+    tareas: await tareasModelo.asignadasA(usuario.id, { incluirListas: true }, tx),
+    fases: await piezasModelo.fasesACargoDe(usuario.id, tx),
+  }));
 
   return (
     <Wrapper
       migas={MIGAS}
       kicker="Trabajo"
       titulo="Mi trabajo"
-      descripcion="Las tareas que tienes asignadas, de todos los proyectos. Marcalas al terminarlas: el ejecutivo sabra que puede seguir."
+      descripcion="Las fases que llevas y las tareas que tienes asignadas, de todos los proyectos. Marcalas al terminarlas: el ejecutivo sabra que puede seguir."
     >
-      <ListaMiTrabajo tareas={tareas} hoy={hoyEnCaracas()} />
+      <ListaMiTrabajo tareas={tareas} fases={fases} usuarioId={usuario.id} hoy={hoyEnCaracas()} />
     </Wrapper>
   );
 }
