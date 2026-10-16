@@ -176,3 +176,11 @@ export function useAvisos(): ContextoAvisos {
 
   return contexto;
 }
+
+/**
+ * Los avisos si la pantalla los tiene, o null. Para las piezas de `ui`, que
+ * pueden aparecer fuera de un ProveedorAvisos y no deben romperse por ello.
+ */
+export function useAvisosSiHay(): ContextoAvisos | null {
+  return useContext(Contexto);
+}

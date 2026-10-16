@@ -3,7 +3,7 @@ import { ArrowRight, Filter, X } from "lucide-react";
 
 import { EtiquetaAlerta, ORDEN_DE_ALERTAS } from "@/components/proyectos/EtiquetaAlerta";
 import { fechaCorta } from "@/components/proyectos/ColumnasProyectos";
-import { Bateria, Boton, BotonEnlace, CLASE_CONTROL, segmentosDeProyecto } from "@/components/ui";
+import { Bateria, Boton, BotonEnlace, segmentosDeProyecto, Selector } from "@/components/ui";
 import { nombreDeFase } from "@/lib/portal/catalogo";
 import { rutaProyecto } from "@/lib/portal/rutas";
 import {
@@ -38,6 +38,12 @@ const PUNTO: Record<AlertaPieza, string> = {
   esperando_cliente: "bg-gold ring-2 ring-navy dark-tema:ring-gold/40",
   en_correccion: "bg-violet dark-tema:bg-white/50",
 };
+
+const OPCIONES_TIPO = [
+  { valor: "", texto: "Redes y otros proyectos" },
+  { valor: "redes_sociales", texto: "Redes sociales" },
+  { valor: "especial", texto: "Otros proyectos" },
+];
 
 /** La URL del tablero con unos filtros. */
 export function urlTablero(ruta: string, filtros: FiltrosTablero): string {
@@ -113,57 +119,54 @@ export function FiltrosDelTablero({
       {filtros.alerta && <input type="hidden" name="alerta" value={filtros.alerta} />}
 
       <div className="min-w-[180px] flex-1 sm:flex-none">
-        <label htmlFor="tablero-ejecutivo" className="mb-1 block text-[11px] font-semibold text-suave">
+        <span aria-hidden="true" className="mb-1 block text-[11px] font-semibold text-suave">
           Ejecutivo
-        </label>
-        <select
+        </span>
+        {/* La key lo reinicia cuando cambia el filtro de la URL (al quitarlo). */}
+        <Selector
+          key={String(filtros.ejecutivo ?? "")}
           id="tablero-ejecutivo"
-          name="ejecutivo"
-          defaultValue={filtros.ejecutivo ?? ""}
-          className={`${CLASE_CONTROL} min-h-10 cursor-pointer py-2`}
-        >
-          <option value="">Todos</option>
-          {ejecutivos.map((persona) => (
-            <option key={persona.id} value={persona.id}>
-              {persona.nombre}
-            </option>
-          ))}
-        </select>
+          nombre="ejecutivo"
+          etiqueta="Ejecutivo"
+          etiquetaOculta
+          compacto
+          valorInicial={String(filtros.ejecutivo ?? "")}
+          opciones={[{ valor: "", texto: "Todos" }, ...ejecutivos.map((p) => ({ valor: String(p.id), texto: p.nombre }))]}
+        />
       </div>
 
       <div className="min-w-[180px] flex-1 sm:flex-none">
-        <label htmlFor="tablero-empresa" className="mb-1 block text-[11px] font-semibold text-suave">
+        <span aria-hidden="true" className="mb-1 block text-[11px] font-semibold text-suave">
           Cliente
-        </label>
-        <select
+        </span>
+        {/* La key lo reinicia cuando cambia el filtro de la URL (al quitarlo). */}
+        <Selector
+          key={String(filtros.empresa ?? "")}
           id="tablero-empresa"
-          name="empresa"
-          defaultValue={filtros.empresa ?? ""}
-          className={`${CLASE_CONTROL} min-h-10 cursor-pointer py-2`}
-        >
-          <option value="">Todos</option>
-          {empresas.map((empresa) => (
-            <option key={empresa.id} value={empresa.id}>
-              {empresa.nombre}
-            </option>
-          ))}
-        </select>
+          nombre="empresa"
+          etiqueta="Cliente"
+          etiquetaOculta
+          compacto
+          valorInicial={String(filtros.empresa ?? "")}
+          opciones={[{ valor: "", texto: "Todos" }, ...empresas.map((e) => ({ valor: String(e.id), texto: e.nombre }))]}
+        />
       </div>
 
       <div className="min-w-[180px] flex-1 sm:flex-none">
-        <label htmlFor="tablero-tipo" className="mb-1 block text-[11px] font-semibold text-suave">
+        <span aria-hidden="true" className="mb-1 block text-[11px] font-semibold text-suave">
           Tipo
-        </label>
-        <select
+        </span>
+        {/* La key lo reinicia cuando cambia el filtro de la URL (al quitarlo). */}
+        <Selector
+          key={String(filtros.tipo ?? "")}
           id="tablero-tipo"
-          name="tipo"
-          defaultValue={filtros.tipo ?? ""}
-          className={`${CLASE_CONTROL} min-h-10 cursor-pointer py-2`}
-        >
-          <option value="">Redes y otros proyectos</option>
-          <option value="redes_sociales">Redes sociales</option>
-          <option value="especial">Otros proyectos</option>
-        </select>
+          nombre="tipo"
+          etiqueta="Tipo"
+          etiquetaOculta
+          compacto
+          valorInicial={String(filtros.tipo ?? "")}
+          opciones={OPCIONES_TIPO}
+        />
       </div>
 
       <Boton type="submit" variante="fantasma" tamano="chico">

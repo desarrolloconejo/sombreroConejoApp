@@ -5,8 +5,14 @@ import { Save } from "lucide-react";
 
 import { guardarDatosFiscales } from "@/actions/ajustesFinanzas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CLASE_CONTROL } from "@/components/ui";
+import { Boton, CLASE_CONTROL, Selector } from "@/components/ui";
 import { ESTADO_INICIAL, type DatosFiscalesEmpresa } from "@/types";
+
+const OPCIONES_RETENCION = [
+  { valor: "no", texto: "No retiene" },
+  { valor: "75", texto: "Retiene el 75 %" },
+  { valor: "100", texto: "Retiene el 100 %" },
+];
 
 /**
  * Por empresa: si es agente de retencion de IVA (y cuanto retiene) y sus dias
@@ -28,20 +34,18 @@ function FilaFiscal({ empresa, diasPorDefecto }: { empresa: DatosFiscalesEmpresa
           <p className="truncate text-[14px] font-bold">{empresa.nombre}</p>
           <p className="text-[12px] text-suave">{empresa.rif ?? "Sin RIF en su ficha"}</p>
         </div>
-        <label>
-          <span className="mb-1.5 block text-xs font-semibold">Retencion de IVA</span>
-          <select
-            name="retencion"
-            value={retencion}
-            onChange={(e) => setRetencion(e.target.value)}
-            aria-label={`Retencion de IVA de ${empresa.nombre}`}
-            className={CLASE_CONTROL}
-          >
-            <option value="no">No retiene</option>
-            <option value="75">Retiene el 75 %</option>
-            <option value="100">Retiene el 100 %</option>
-          </select>
-        </label>
+        <div>
+          <span aria-hidden="true" className="mb-1.5 block text-xs font-semibold">Retencion de IVA</span>
+          <Selector
+            id={`retencion-${empresa.id}`}
+            nombre="retencion"
+            etiqueta={`Retencion de IVA de ${empresa.nombre}`}
+            etiquetaOculta
+            valor={retencion}
+            onCambio={setRetencion}
+            opciones={OPCIONES_RETENCION}
+          />
+        </div>
         <label>
           <span className="mb-1.5 block text-xs font-semibold">Dias de credito</span>
           <input

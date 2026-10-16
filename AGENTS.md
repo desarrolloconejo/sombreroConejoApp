@@ -248,6 +248,15 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Un limite de error (`error.tsx`) reintenta con `retry`, no con `reset`:
   `reset` repinta sin volver a pedir los datos al servidor.
 - Los listados usan el componente `Listado`, con el estado en la URL.
+- **Ningun `<select>` nativo**: su lista la pinta el sistema operativo y no
+  sigue el tema. Los desplegables son `Selector` (`src/components/ui`),
+  controlado con `valor` + `onCambio` o no con `valorInicial`; `etiquetaOculta`
+  y `compacto` para celdas y filtros. El lint lo impone. En las pruebas se
+  elige con `elegirOpcion` (`tests/integracion/ayudas/formularios.ts`), no con
+  `selectOption`.
+- Un dato que se pasa a otro sitio (RIF, telefono, direccion, numero de
+  factura) lleva al lado `BotonCopiar`. La logica de copiar es `useCopiar`;
+  no se vuelve a escribir `navigator.clipboard` en un componente.
 - Un modulo nuevo declara su `seccion` en `src/lib/navegacion.ts`. El menu se
   agrupa con `porSecciones`; ni el sidebar ni el menu movil llevan rotulos
   escritos a mano.

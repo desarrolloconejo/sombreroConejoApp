@@ -5,7 +5,7 @@ import { Copy, Grid3x3, Save, Star } from "lucide-react";
 
 import { duplicarFormato, guardarFormato, marcarFormatoHabitual } from "@/actions/ajustesFinanzas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CLASE_CONTROL, Campo } from "@/components/ui";
+import { Boton, CLASE_CONTROL, Campo, Selector } from "@/components/ui";
 import {
   CAMPOS_FACTURA,
   COLUMNAS_FACTURA,
@@ -23,6 +23,11 @@ import {
  * pisa o se sale. Calibrar de verdad es imprimir la hoja de calibracion,
  * medir y ajustar.
  */
+
+const OPCIONES_ALINEAR = [
+  { valor: "izquierda", texto: "Izquierda" },
+  { valor: "derecha", texto: "Derecha" },
+];
 
 type Fila = { usar: boolean; x: string; y: string; ancho: string; alinear: string };
 type Columna = { x: string; ancho: string; alinear: string };
@@ -254,17 +259,17 @@ export function EditorFormato({ formato }: { formato: FormatoImpresion }) {
                         </td>
                       ))}
                       <td className="py-1.5 pl-1">
-                        <select
-                          name={`c_${clave}_alinear`}
-                          aria-label={`${etiqueta}: alineacion`}
-                          value={fila.alinear}
-                          disabled={!fila.usar}
-                          onChange={(e) => cambiarFila(clave, { alinear: e.target.value })}
-                          className={CELDA}
-                        >
-                          <option value="izquierda">Izquierda</option>
-                          <option value="derecha">Derecha</option>
-                        </select>
+                        <Selector
+                          id={`c_${clave}_alinear`}
+                          nombre={`c_${clave}_alinear`}
+                          etiqueta={`${etiqueta}: alineacion`}
+                          etiquetaOculta
+                          compacto
+                          valor={fila.alinear}
+                          deshabilitado={!fila.usar}
+                          onCambio={(valor) => cambiarFila(clave, { alinear: valor })}
+                          opciones={OPCIONES_ALINEAR}
+                        />
                       </td>
                     </tr>
                   );
@@ -344,16 +349,16 @@ export function EditorFormato({ formato }: { formato: FormatoImpresion }) {
                         </td>
                       ))}
                       <td className="py-1.5 pl-1">
-                        <select
-                          name={`k_${clave}_alinear`}
-                          aria-label={`${etiqueta}: alineacion`}
-                          value={columna.alinear}
-                          onChange={(e) => cambiarColumna(clave, { alinear: e.target.value })}
-                          className={CELDA}
-                        >
-                          <option value="izquierda">Izquierda</option>
-                          <option value="derecha">Derecha</option>
-                        </select>
+                        <Selector
+                          id={`k_${clave}_alinear`}
+                          nombre={`k_${clave}_alinear`}
+                          etiqueta={`${etiqueta}: alineacion`}
+                          etiquetaOculta
+                          compacto
+                          valor={columna.alinear}
+                          onCambio={(valor) => cambiarColumna(clave, { alinear: valor })}
+                          opciones={OPCIONES_ALINEAR}
+                        />
                       </td>
                     </tr>
                   );

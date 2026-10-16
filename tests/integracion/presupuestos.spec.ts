@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { USUARIOS } from "../../db/datos/semilla.mts";
-import { elegirEmpresa } from "./ayudas/formularios";
+import { elegirEmpresa, elegirOpcion } from "./ayudas/formularios";
 
 /**
  * Presupuestos, del lado de administracion, de punta a punta.
@@ -60,7 +60,7 @@ test("administracion crea un presupuesto, lo envia y registra la respuesta del c
   await page.getByLabel("Descripcion del renglon 2").fill("Pauta (gestion)");
   await page.getByLabel("Cantidad del renglon 2").fill("2,5");
   await page.getByLabel("Precio del renglon 2").fill("19.99");
-  await page.getByLabel("IVA del renglon 2").selectOption("si");
+  await elegirOpcion(page, "IVA del renglon 2", "Exento");
 
   const previa = page.getByLabel("Vista previa de los importes");
   // 3 x 33,33 = 99,99; IVA 16 % = 16,00 (15,9984); exento 2,5 x 19,99 = 49,98.

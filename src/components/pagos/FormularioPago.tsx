@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { Send } from "lucide-react";
 
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, Campo, CLASE_CONTROL } from "@/components/ui";
+import { Boton, Campo, CLASE_CONTROL, Selector } from "@/components/ui";
 import { ESTADO_INICIAL, type EstadoFormulario, type MedioPago, type MonedaPago, type TipoPago } from "@/types";
 
 /**
@@ -87,48 +87,24 @@ function Formulario({
 
       {tipo === "pago" ? (
         <>
-          <label>
-            <span className="mb-2 block text-xs font-semibold">Como pagaste</span>
-            <select
-              name="medioId"
-              value={medioId}
-              onChange={(e) => elegirMedio(e.target.value)}
-              aria-invalid={errores.medioId ? true : undefined}
-              className={CLASE_CONTROL}
-            >
-              {medios.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nombre}
-                </option>
-              ))}
-            </select>
-            {errores.medioId && (
-              <span role="alert" className="mt-1.5 block text-[12px] text-blackberry dark-tema:text-acento">
-                {errores.medioId}
-              </span>
-            )}
-          </label>
-          <label>
-            <span className="mb-2 block text-xs font-semibold">Moneda</span>
-            <select
-              name="moneda"
-              value={moneda}
-              onChange={(e) => setMoneda(e.target.value as MonedaPago)}
-              aria-invalid={errores.moneda ? true : undefined}
-              className={CLASE_CONTROL}
-            >
-              {(medio?.monedas ?? ["VES"]).map((m) => (
-                <option key={m} value={m}>
-                  {MONEDAS[m]}
-                </option>
-              ))}
-            </select>
-            {errores.moneda && (
-              <span role="alert" className="mt-1.5 block text-[12px] text-blackberry dark-tema:text-acento">
-                {errores.moneda}
-              </span>
-            )}
-          </label>
+          <Selector
+            id="pago-medio"
+            nombre="medioId"
+            etiqueta="Como pagaste"
+            valor={medioId}
+            onCambio={elegirMedio}
+            error={errores.medioId}
+            opciones={medios.map((m) => ({ valor: String(m.id), texto: m.nombre }))}
+          />
+          <Selector
+            id="pago-moneda"
+            nombre="moneda"
+            etiqueta="Moneda"
+            valor={moneda}
+            onCambio={(valor) => setMoneda(valor as MonedaPago)}
+            error={errores.moneda}
+            opciones={(medio?.monedas ?? ["VES"]).map((m) => ({ valor: m, texto: MONEDAS[m] }))}
+          />
           {medio?.datosParaPagar && (
             <p className="whitespace-pre-line rounded-xl bg-acento-tenue px-3.5 py-3 text-[12.5px] leading-relaxed sm:col-span-2">
               <span className="mb-1 block font-semibold">Datos para pagar con {medio.nombre}</span>

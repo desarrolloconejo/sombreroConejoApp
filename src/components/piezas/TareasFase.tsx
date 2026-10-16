@@ -13,7 +13,7 @@ import {
 } from "@/actions/tareas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { fechaCorta } from "@/components/proyectos/ColumnasProyectos";
-import { Boton, CLASE_CONTROL } from "@/components/ui";
+import { Boton, CLASE_CONTROL, Selector } from "@/components/ui";
 import { herramientaPorSlug } from "@/lib/herramientas";
 import {
   ESTADO_INICIAL,
@@ -22,6 +22,8 @@ import {
   type PersonaDeEquipo,
   type Tarea,
 } from "@/types";
+
+import { opcionesDeEquipo } from "./opcionesEquipo";
 
 /**
  * Las tareas de una fase de trabajo.
@@ -71,24 +73,16 @@ function CamposTarea({
       </div>
 
       <div className="min-w-0">
-        <label htmlFor={`${prefijo}-responsable`} className="sr-only">
-          Quien la hace
-        </label>
-        <select
+        <Selector
           id={`${prefijo}-responsable`}
-          name="responsableId"
-          value={responsable}
-          onChange={(e) => setResponsable(e.target.value)}
-          className={`${CLASE_CONTROL} min-h-10 cursor-pointer py-2`}
-        >
-          <option value="">Sin asignar</option>
-          {equipo.map((persona) => (
-            <option key={persona.id} value={persona.id}>
-              {persona.nombre}
-              {persona.cargo ? ` · ${persona.cargo}` : ""}
-            </option>
-          ))}
-        </select>
+          nombre="responsableId"
+          etiqueta="Quien la hace"
+          etiquetaOculta
+          compacto
+          valor={responsable}
+          onCambio={setResponsable}
+          opciones={opcionesDeEquipo(equipo)}
+        />
       </div>
 
       <div>

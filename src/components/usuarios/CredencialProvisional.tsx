@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { Check, Copy, KeyRound, TriangleAlert } from "lucide-react";
+
+import { useCopiar } from "@/components/ui";
 
 /**
  * La contrasena provisional recien generada, para entregarla en mano.
@@ -31,23 +32,12 @@ export function CredencialProvisional({
   titulo: string;
   descripcion: string;
 }) {
-  const [copiado, setCopiado] = useState(false);
-  const [fallo, setFallo] = useState(false);
+  // Si el portapapeles esta denegado, la clave sigue en pantalla y se avisa
+  // de que hay que copiarla a mano: no es motivo para dejar a nadie sin ella.
+  const { copiado, fallo, copiar: copiarTexto } = useCopiar(2500);
 
   async function copiar() {
-    try {
-      await navigator.clipboard.writeText(password);
-      setFallo(false);
-      setCopiado(true);
-      // Vuelve a su estado normal para que se pueda copiar otra vez sin
-      // tener que recargar nada.
-      window.setTimeout(() => setCopiado(false), 2500);
-    } catch {
-      // El portapapeles puede estar denegado por permisos o por un contexto
-      // no seguro. No es motivo para dejar a nadie sin la clave: sigue en
-      // pantalla, y se avisa de que hay que copiarla a mano.
-      setFallo(true);
-    }
+    await copiarTexto(password);
   }
 
   return (

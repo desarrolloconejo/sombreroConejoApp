@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { EMAIL_EJECUTIVO, USUARIOS } from "../../db/datos/semilla.mts";
-import { elegirEmpresa } from "./ayudas/formularios";
+import { elegirEmpresa, elegirOpcion } from "./ayudas/formularios";
 
 /**
  * Hooks como herramienta, de punta a punta.
@@ -37,7 +37,7 @@ test("una tarea de hook la cumple quien la tiene, aunque no sea de redes", async
   await page.goto("/dashboard/proyectos?panel=nuevo", { waitUntil: "networkidle" });
   await elegirEmpresa(page);
   await page.getByLabel("Nombre", { exact: true }).fill(nombre);
-  await page.getByLabel("Tipo de la pieza 1").selectOption("reel");
+  await elegirOpcion(page, "Tipo de la pieza 1", /^Reel/);
   await page.getByLabel("Titulo de la pieza 1").fill("Reel de la herramienta");
   await page.getByRole("button", { name: "Crear proyecto" }).click();
   await expect(page).toHaveURL(/\/dashboard\/proyectos\/\d+$/, { timeout: 60_000 });
@@ -51,8 +51,8 @@ test("una tarea de hook la cumple quien la tiene, aunque no sea de redes", async
   const edicion = page
     .locator("form")
     .filter({ has: page.locator("input[name=tareaId]") })
-    .filter({ has: page.locator("select[name=responsableId]") });
-  await edicion.locator("select[name=responsableId]").selectOption({ label: "Luis Perez · Diseno" });
+    .filter({ has: page.locator("input[name=responsableId]") });
+  await elegirOpcion(page, "Quien la hace", /Luis Perez/, edicion);
   await edicion.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(page.getByText("Tarea actualizada").first()).toBeVisible({ timeout: 30_000 });
 

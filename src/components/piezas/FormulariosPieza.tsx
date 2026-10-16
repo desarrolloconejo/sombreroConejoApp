@@ -15,6 +15,8 @@ import {
   type TipoPieza,
 } from "@/types";
 
+import { opcionesDeEquipo } from "./opcionesEquipo";
+
 /** Los paneles de una pieza: editarla y cancelarla. */
 
 export function EditarPieza({
@@ -59,14 +61,7 @@ export function EditarPieza({
             nombre="responsableId"
             etiqueta="A cargo de la pieza"
             marcador="Sin asignar"
-            opciones={[
-              { valor: "", texto: "Sin asignar" },
-              ...equipo.map((persona) => ({
-                valor: String(persona.id),
-                texto: persona.nombre,
-                detalle: persona.cargo ?? undefined,
-              })),
-            ]}
+            opciones={opcionesDeEquipo(equipo)}
             valorInicial={pieza.responsableId === null ? "" : String(pieza.responsableId)}
             error={errores.responsableId}
             ayuda="Ve la pieza aunque no tenga tareas en ella."

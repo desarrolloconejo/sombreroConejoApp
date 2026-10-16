@@ -5,7 +5,7 @@ import { Ban, FileText, Printer, ReceiptText } from "lucide-react";
 
 import { anularFactura, emitirFactura, marcarFacturaImpresa } from "@/actions/facturas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CLASE_CONTROL } from "@/components/ui";
+import { Boton, CLASE_CONTROL, Selector } from "@/components/ui";
 import { ESTADO_INICIAL, type EstadoFormulario } from "@/types";
 
 /**
@@ -66,17 +66,17 @@ export function ImprimirFactura({
 
   return (
     <div className="flex flex-col gap-3">
-      <label>
-        <span className="mb-1.5 block text-xs font-semibold">Formato de impresion</span>
-        <select value={formato} onChange={(e) => setFormato(e.target.value)} className={CLASE_CONTROL}>
-          {formatos.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.nombre}
-              {f.habitual ? " (habitual)" : ""}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Selector
+        id={`formato-factura-${facturaId}`}
+        etiqueta="Formato de impresion"
+        valor={formato}
+        onCambio={setFormato}
+        opciones={formatos.map((f) => ({
+          valor: String(f.id),
+          texto: f.nombre,
+          detalle: f.habitual ? "El habitual" : undefined,
+        }))}
+      />
       <div className="flex flex-wrap gap-2.5">
         <a
           href={`/api/facturas/${facturaId}/pdf?formato=${formato}`}

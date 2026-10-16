@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { PanelCuerpo, PanelPie } from "@/components/listado";
 
 import { RetirarDosPasos } from "./RetirarDosPasos";
-import { Avatar, BotonEnlace, Estado, Etiqueta } from "@/components/ui";
+import { Avatar, BotonCopiar, BotonEnlace, Estado, Etiqueta } from "@/components/ui";
 import type { NombreRol, UsuarioCompleto } from "@/types";
 import { ZONA_HORARIA } from "@/lib/fechas";
 
@@ -76,8 +76,9 @@ export function DetalleUsuario({
             <p className="truncate text-[15px] font-bold">
               {usuario.nombre} {usuario.apellido}
             </p>
-            <p className="mt-0.5 truncate text-[12px] text-suave">
-              {usuario.email}
+            <p className="mt-0.5 flex items-center gap-1 text-[12px] text-suave">
+              <span className="min-w-0 truncate">{usuario.email}</span>
+              <BotonCopiar texto={usuario.email} que="el correo" className="-my-1" />
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <Etiqueta variante={usuario.rol === "admin" ? "solida" : "contorno"}>
@@ -123,7 +124,14 @@ export function DetalleUsuario({
             </>
           )}
 
-          <Dato rotulo="Telefono">{usuario.telefono}</Dato>
+          <Dato rotulo="Telefono">
+            {usuario.telefono && (
+              <span className="inline-flex items-start gap-1.5">
+                {usuario.telefono}
+                <BotonCopiar texto={usuario.telefono} que="el telefono" className="-my-1" />
+              </span>
+            )}
+          </Dato>
 
           {esTrabajador && usuario.fechaIngreso && (
             <Dato rotulo="Ingreso">
