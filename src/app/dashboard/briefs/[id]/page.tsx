@@ -12,9 +12,9 @@ import {
   FechaViable,
   HiloAclaraciones,
   ProveedorDecisiones,
-  TarjetaBrief,
 } from "@/components/briefs";
 import { Wrapper } from "@/components/layout/Wrapper";
+import { Tarjeta } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { rutaPresupuesto } from "@/lib/finanzas/rutas";
 import { cambiosEntre, contarNoSe, formatoPor, respuestasDesdeContenido } from "@/lib/portal/briefs";
@@ -86,7 +86,7 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
         <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <div className="flex flex-col gap-6">
             {cambios.length > 0 && (
-              <TarjetaBrief id="titulo-cambios" titulo={`Que cambio en la version ${ultima?.numero}`} className="surge">
+              <Tarjeta id="titulo-cambios" titulo={`Que cambio en la version ${ultima?.numero}`} className="surge">
                   <ul aria-label="Cambios entre versiones" className="flex flex-col">
                     {cambios.map((cambio) => (
                       <li key={cambio.clave} className="border-b border-borde/70 py-2.5 last:border-0">
@@ -96,16 +96,16 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
                       </li>
                     ))}
                   </ul>
-              </TarjetaBrief>
+              </Tarjeta>
             )}
 
-            <TarjetaBrief id="titulo-contenido" titulo="Brief completo" className="surge [--retraso:0.04s]">
+            <Tarjeta id="titulo-contenido" titulo="Brief completo" className="surge [--retraso:0.04s]">
               {ultima ? <ContenidoBrief contenido={ultima.contenido} /> : null}
-            </TarjetaBrief>
+            </Tarjeta>
           </div>
 
           <div className="surge flex flex-col gap-4 [--retraso:0.08s]">
-            <TarjetaBrief id="titulo-estado" titulo="Estado" extra={<EtiquetaBrief estado={brief.estado} />}>
+            <Tarjeta id="titulo-estado" titulo="Estado" extra={<EtiquetaBrief estado={brief.estado} />}>
               {brief.estado === "enviado" && (
                 <p className="-mt-2 mb-3 text-[12px] text-suave">Fase 0 · brief recibido</p>
               )}
@@ -150,10 +150,10 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
                   </Link>
                 </p>
               )}
-            </TarjetaBrief>
+            </Tarjeta>
 
             {decide && VIVOS.has(brief.estado) && brief.fechaAspirada && (
-              <TarjetaBrief id="titulo-fecha" titulo="Fecha de entrega">
+              <Tarjeta id="titulo-fecha" titulo="Fecha de entrega">
                 <FechaViable
                   briefId={brief.id}
                   fechaAspirada={diaBrief(brief.fechaAspirada)}
@@ -161,11 +161,11 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
                   motivo={brief.motivoFechaPropuesta}
                   hoy={hoyEnCaracas()}
                 />
-              </TarjetaBrief>
+              </Tarjeta>
             )}
 
             {decide && (puedeAceptar || puedePresupuestar || puedeDescartar) && (
-              <TarjetaBrief id="titulo-decision" titulo="Decision">
+              <Tarjeta id="titulo-decision" titulo="Decision">
                 <BotonesDecision
                   briefId={brief.id}
                   aceptar={puedeAceptar}
@@ -176,10 +176,10 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
                   Convertir en presupuesto lo pasa a la cola de administracion. Al descartar, el
                   cliente recibe el motivo y el brief queda archivado.
                 </p>
-              </TarjetaBrief>
+              </Tarjeta>
             )}
 
-            <TarjetaBrief id="titulo-aclaraciones" titulo="Aclaraciones">
+            <Tarjeta id="titulo-aclaraciones" titulo="Aclaraciones">
               <HiloAclaraciones
                 briefId={brief.id}
                 mensajes={aclaraciones}
@@ -187,7 +187,7 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
                 abierto={VIVOS.has(brief.estado)}
                 vacio="Pide aqui lo que falte. El cliente lo responde desde su cuenta."
               />
-            </TarjetaBrief>
+            </Tarjeta>
           </div>
         </div>
       </ProveedorDecisiones>

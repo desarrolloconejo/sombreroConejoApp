@@ -14,7 +14,7 @@ import {
   RevisionesPieza,
   VersionesPieza,
 } from "@/components/piezas";
-import { Alerta, BotonEnlace } from "@/components/ui";
+import { Alerta, BotonEnlace, Tarjeta } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { leerEstadoListado } from "@/lib/parametros";
 import { servicioPorSlug } from "@/lib/portal/catalogo";
@@ -45,8 +45,8 @@ export const metadata: Metadata = {
   title: "Pieza",
 };
 
-const SECCION =
-  "rounded-[15px] border border-borde bg-superficie p-4 shadow-[var(--sombra)] sm:p-5";
+/** El titulo de cada columna: los dos iguales, para que arranquen a la par. */
+const TITULO_COLUMNA = "mb-4 text-[19px] font-extrabold tracking-[-0.02em]";
 
 export default async function PaginaPieza(
   props: PageProps<"/dashboard/proyectos/[id]/piezas/[piezaId]">,
@@ -146,9 +146,9 @@ export default async function PaginaPieza(
         }
       />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <section aria-labelledby="titulo-fases" className="surge [--retraso:0.14s]">
-          <h2 id="titulo-fases" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
+          <h2 id="titulo-fases" className={TITULO_COLUMNA}>
             Fases y tareas
           </h2>
           <FasesPieza
@@ -162,6 +162,9 @@ export default async function PaginaPieza(
         </section>
 
         <div className="surge flex flex-col gap-6 [--retraso:0.18s]">
+          <p aria-hidden="true" className={`${TITULO_COLUMNA} -mb-2`}>
+            Entrega
+          </p>
           {gestiona && aprobadores === 0 && (pieza.avance.faseActual ?? 0) >= 4 && (
             <Alerta>
               <b className="font-semibold">Nadie de {proyecto.empresaNombre} puede aprobar.</b>{" "}
@@ -170,56 +173,36 @@ export default async function PaginaPieza(
             </Alerta>
           )}
 
-          <section aria-labelledby="titulo-versiones">
-            <h2 id="titulo-versiones" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
-              Versiones
-            </h2>
-            <div className={SECCION}>
-              <VersionesPieza
-                piezaId={piezaId}
-                versiones={versiones}
-                puedeSubir={puedeTrabajar && activa}
-                gestiona={gestiona}
-                faseActual={pieza.avance.faseActual}
-                ronda={pieza.ronda}
-              />
-            </div>
-          </section>
+          <Tarjeta id="titulo-versiones" titulo="Versiones">
+            <VersionesPieza
+              piezaId={piezaId}
+              versiones={versiones}
+              puedeSubir={puedeTrabajar && activa}
+              gestiona={gestiona}
+              faseActual={pieza.avance.faseActual}
+              ronda={pieza.ronda}
+            />
+          </Tarjeta>
 
-          <section aria-labelledby="titulo-copy">
-            <h2 id="titulo-copy" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
-              Copy
-            </h2>
-            <div className={SECCION}>
-              <CopyPieza piezaId={piezaId} copy={copy} editable={activa} />
-              <p className="mt-3 text-[11.5px] leading-relaxed text-suave">
-                El cliente lo ve cuando la pieza llega a la fase 5.
-              </p>
-            </div>
-          </section>
+          <Tarjeta id="titulo-copy" titulo="Copy">
+            <CopyPieza piezaId={piezaId} copy={copy} editable={activa} />
+            <p className="mt-3 text-[11.5px] leading-relaxed text-suave">
+              El cliente lo ve cuando la pieza llega a la fase 5.
+            </p>
+          </Tarjeta>
 
-          <section aria-labelledby="titulo-revisiones">
-            <h2 id="titulo-revisiones" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
-              Decisiones del cliente
-            </h2>
-            <div className={SECCION}>
-              <RevisionesPieza
-                piezaId={piezaId}
-                tipo={proyecto.tipo}
-                revisiones={revisiones}
-                ajustable={gestiona && activa && rutaAjustable(pieza.fases, pieza.ronda)}
-              />
-            </div>
-          </section>
+          <Tarjeta id="titulo-revisiones" titulo="Decisiones del cliente">
+            <RevisionesPieza
+              piezaId={piezaId}
+              tipo={proyecto.tipo}
+              revisiones={revisiones}
+              ajustable={gestiona && activa && rutaAjustable(pieza.fases, pieza.ronda)}
+            />
+          </Tarjeta>
 
-          <section aria-labelledby="titulo-comentarios">
-            <h2 id="titulo-comentarios" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
-              Comentarios internos
-            </h2>
-            <div className={SECCION}>
-              <ComentariosPieza piezaId={piezaId} comentarios={comentarios} />
-            </div>
-          </section>
+          <Tarjeta id="titulo-comentarios" titulo="Comentarios internos">
+            <ComentariosPieza piezaId={piezaId} comentarios={comentarios} />
+          </Tarjeta>
         </div>
       </div>
 

@@ -48,7 +48,7 @@ export function FasesPieza({
 
   return (
     <MovimientosDeFase>
-      <ol className="flex flex-col gap-3">
+      <ol className="flex flex-col gap-4">
         {pieza.fases.map((fase) => {
           const enCurso = fase.estado === "en_curso";
           const deTrabajo = esFaseDeTrabajo(fase.fase);
@@ -60,11 +60,11 @@ export function FasesPieza({
               key={fase.id}
               aria-current={enCurso ? "step" : undefined}
               className={[
-                "rounded-[15px] border bg-superficie p-4 shadow-[var(--sombra)] sm:p-5",
+                "rounded-[15px] border bg-superficie p-5 shadow-[var(--sombra)] sm:p-6",
                 enCurso ? "border-acento" : "border-borde",
               ].join(" ")}
             >
-              <div className="flex items-start gap-3.5">
+              <div className="flex items-start gap-4">
                 <span
                   aria-hidden="true"
                   className={[
@@ -88,7 +88,7 @@ export function FasesPieza({
                     </span>
                   </div>
 
-                  <p className="mt-0.5 text-[12px] text-suave">
+                  <p className="mt-1 text-[12px] text-suave">
                     {fase.fechaEstimada ? `Para el ${fechaCorta(fase.fechaEstimada)}` : "Sin fecha"}
                     {" · "}
                     {fase.responsableNombre ?? "Sin responsable"}
@@ -110,13 +110,13 @@ export function FasesPieza({
 
                   {!deTrabajo && fase.fase === 5 && enCurso && (
                     <p className="mt-3 text-[12px] leading-relaxed text-suave">
-                      La decide el cliente: aprueba la pieza o pide una correccion.
-                      La revision desde su portal llega en la etapa 4.
+                      La decide el cliente desde su portal: aprueba la pieza o pide una
+                      correccion.
                     </p>
                   )}
 
                   {gestiona && activa && (
-                    <div className="mt-4 flex flex-col gap-3 border-t border-borde pt-3">
+                    <div className="mt-5 flex flex-col gap-4 border-t border-borde pt-4">
                       {enCurso && fase.fase !== 5 && (
                         <CompletarFase piezaId={pieza.id} fase={fase.fase} pendientes={deTrabajo ? pendientes : 0} />
                       )}
@@ -128,7 +128,7 @@ export function FasesPieza({
                           <summary className="cursor-pointer text-[12px] font-semibold text-acento select-none">
                             Planificar fecha y responsable
                           </summary>
-                          <div className="mt-2.5">
+                          <div className="mt-3.5">
                             <PlanificarFase piezaId={pieza.id} fase={fase} equipo={equipo} />
                           </div>
                         </details>

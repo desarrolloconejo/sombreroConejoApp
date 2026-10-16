@@ -55,6 +55,8 @@ const TAMANOS = {
   chico: { caja: "h-3.5 w-[92px] p-[2px] gap-[2px]", punta: "h-1.5 w-[3px]" },
   normal: { caja: "h-5 w-[132px] p-[3px] gap-[3px]", punta: "h-2.5 w-1" },
   grande: { caja: "h-7 w-[184px] p-1 gap-1", punta: "h-3.5 w-[5px]" },
+  // Ocupa el ancho de quien la contiene: la tarjeta de un proyecto.
+  ancho: { caja: "h-8 min-w-0 flex-1 p-1 gap-1", punta: "h-4 w-[5px]" },
 } as const;
 
 export function Bateria({
@@ -78,7 +80,12 @@ export function Bateria({
     <span
       role="img"
       aria-label={`${etiqueta}: ${redondeado} por ciento`}
-      className={["inline-flex shrink-0 items-center", className].filter(Boolean).join(" ")}
+      className={[
+        tamano === "ancho" ? "flex w-full items-center" : "inline-flex shrink-0 items-center",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       <span
         className={[

@@ -1,21 +1,18 @@
-import { REJILLA_PROYECTOS } from "@/components/proyectos";
-
 /**
- * Esqueleto del listado de proyectos. Copia la geometria real: la misma
- * rejilla que la tabla, importada de sus columnas, y la bateria en su sitio.
+ * Esqueleto del listado de proyectos. Copia la geometria real: el control de
+ * orden y la rejilla de tarjetas, con la bateria a lo ancho arriba.
  */
 
 const FILTROS = ["112px", "104px", "124px"];
 
-const FILAS = [
-  { empresa: 138, proyecto: 176, ejecutivo: 84, alertas: [104, 88] },
-  { empresa: 116, proyecto: 150, ejecutivo: 96, alertas: [96] },
-  { empresa: 152, proyecto: 188, ejecutivo: 78, alertas: [] },
-  { empresa: 124, proyecto: 140, ejecutivo: 90, alertas: [112] },
-  { empresa: 146, proyecto: 166, ejecutivo: 86, alertas: [88, 104] },
+const TARJETAS = [
+  { empresa: 170, proyecto: 210 },
+  { empresa: 150, proyecto: 180 },
+  { empresa: 190, proyecto: 200 },
+  { empresa: 140, proyecto: 170 },
+  { empresa: 180, proyecto: 220 },
+  { empresa: 160, proyecto: 190 },
 ];
-
-const REJILLA = "grid items-center gap-3.5 px-5";
 
 export default function CargandoProyectos() {
   return (
@@ -45,49 +42,29 @@ export default function CargandoProyectos() {
             ))}
           </div>
 
-          <div className="overflow-x-auto">
-            <div className="min-w-[860px]">
-              <div
-                style={{ gridTemplateColumns: REJILLA_PROYECTOS }}
-                className={`${REJILLA} h-11 border-b border-borde bg-campo`}
-              >
-                <div className="hueso h-[11px] w-[110px]" />
-                <div className="hueso h-[11px] w-[64px]" />
-                <div className="hueso h-[11px] w-[52px]" />
-                <div className="hueso h-[11px] w-[44px]" />
-                <div className="hueso h-[11px] w-[52px]" />
-                <div />
-              </div>
+          <div className="flex items-center gap-1.5 border-b border-borde px-5 py-3">
+            <div className="hueso mr-1 h-3 w-[52px]" />
+            <div className="hueso h-9 w-[84px] rounded-[10px]" />
+            <div className="hueso h-9 w-[72px] rounded-[10px]" />
+          </div>
 
-              {FILAS.map((fila, indice) => (
-                <div
-                  key={`fila-${indice}`}
-                  style={{ gridTemplateColumns: REJILLA_PROYECTOS }}
-                  className={`${REJILLA} min-h-[64px] border-b border-borde py-3 last:border-b-0`}
-                >
-                  <div className="min-w-0">
-                    <div className="hueso h-3 max-w-full" style={{ width: fila.empresa }} />
-                    <div className="hueso mt-[7px] h-[11px] max-w-full" style={{ width: fila.proyecto }} />
-                  </div>
-                  <div className="hueso h-3 max-w-full" style={{ width: fila.ejecutivo }} />
-                  <div className="flex items-center gap-2.5">
-                    <div className="hueso h-3.5 w-[96px] rounded-[5px]" />
-                    <div className="hueso h-3 w-[30px]" />
-                  </div>
-                  <div className="hueso h-3 w-[48px]" />
-                  <div className="flex gap-1.5">
-                    {fila.alertas.length === 0 ? (
-                      <div className="hueso h-3 w-[40px]" />
-                    ) : (
-                      fila.alertas.map((ancho, a) => (
-                        <div key={a} className="hueso h-[24px] rounded-full" style={{ width: ancho }} />
-                      ))
-                    )}
-                  </div>
-                  <div className="hueso ml-auto size-9 rounded-[10px]" />
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+            {TARJETAS.map((tarjeta, indice) => (
+              <div key={`tarjeta-${indice}`} className="rounded-[15px] border border-borde p-5">
+                <div className="flex items-center gap-3">
+                  <div className="hueso h-8 min-w-0 flex-1 rounded-[5px]" />
+                  <div className="hueso h-[22px] w-[48px]" />
                 </div>
-              ))}
-            </div>
+                <div className="hueso mt-2 h-3 w-[140px]" />
+                <div className="hueso mt-4 h-4 max-w-full" style={{ width: tarjeta.empresa }} />
+                <div className="hueso mt-2 h-3 max-w-full" style={{ width: tarjeta.proyecto }} />
+                <div className="mt-4 flex gap-4 border-t border-borde pt-3.5">
+                  <div className="hueso h-3 w-[90px]" />
+                  <div className="hueso h-3 w-[86px]" />
+                </div>
+                <div className="hueso mt-3 h-3 w-[48px]" />
+              </div>
+            ))}
           </div>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-borde px-5 py-[13px]">

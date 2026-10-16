@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { Wrapper } from "@/components/layout/Wrapper";
 import { DecisionCliente, VisorVersion } from "@/components/misProyectos";
 import { CopyPieza } from "@/components/piezas";
-import { Alerta, Bateria, segmentosDePieza } from "@/components/ui";
+import { Alerta, Bateria, CLASE_TARJETA, segmentosDePieza, Tarjeta } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { RUTA_MIS_PROYECTOS, rutaMiProyecto } from "@/lib/portal/rutas";
 import { requerirEmpresa } from "@/lib/sesion";
@@ -93,7 +93,7 @@ export default async function PaginaRevision(
         </Alerta>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <section aria-label="La pieza" className="surge [--retraso:0.1s]">
           {enCorreccion ? (
             <p className="rounded-[15px] border border-borde bg-superficie px-5 py-8 text-center text-[13px] text-suave">
@@ -110,7 +110,7 @@ export default async function PaginaRevision(
         </section>
 
         <div className="surge flex flex-col gap-6 [--retraso:0.16s]">
-          <section className="flex items-center gap-4 rounded-[15px] border border-borde bg-superficie p-4 shadow-[var(--sombra)]">
+          <section aria-label="Avance de la pieza" className={`${CLASE_TARJETA} flex flex-wrap items-center gap-x-5 gap-y-3`}>
             <Bateria
               segmentos={segmentosDePieza(pieza.fases)}
               porcentaje={pieza.avance.porcentaje}
@@ -126,10 +126,7 @@ export default async function PaginaRevision(
           </section>
 
           {enRevision && (
-            <section aria-labelledby="titulo-decision" className="rounded-[15px] border border-acento bg-superficie p-4 shadow-[var(--sombra)] sm:p-5">
-              <h2 id="titulo-decision" className="mb-3 text-[17px] font-extrabold tracking-[-0.02em]">
-                Tu decision
-              </h2>
+            <Tarjeta id="titulo-decision" titulo="Tu decision" className="border-acento!">
               {usuario.puedeAprobar ? (
                 <DecisionCliente piezaId={piezaId} tipo={proyecto.tipo} />
               ) : (
@@ -138,28 +135,20 @@ export default async function PaginaRevision(
                   y copiar su texto; para aprobar, pidelo a la agencia.
                 </Alerta>
               )}
-            </section>
+            </Tarjeta>
           )}
 
           {copy !== null && (
-            <section aria-labelledby="titulo-copy-cliente">
-              <h2 id="titulo-copy-cliente" className="mb-3 text-[17px] font-extrabold tracking-[-0.02em]">
-                Texto de la publicacion
-              </h2>
-              <div className="rounded-[15px] border border-borde bg-superficie p-4 shadow-[var(--sombra)]">
-                <CopyPieza piezaId={piezaId} copy={copy} editable={false} />
-              </div>
-            </section>
+            <Tarjeta id="titulo-copy-cliente" titulo="Texto de la publicacion">
+              <CopyPieza piezaId={piezaId} copy={copy} editable={false} />
+            </Tarjeta>
           )}
 
           {revisiones.length > 0 && (
-            <section aria-labelledby="titulo-historial">
-              <h2 id="titulo-historial" className="mb-3 text-[17px] font-extrabold tracking-[-0.02em]">
-                Historial
-              </h2>
-              <ul className="flex flex-col gap-2">
+            <Tarjeta id="titulo-historial" titulo="Historial">
+              <ul className="flex flex-col gap-2.5">
                 {revisiones.map((revision) => (
-                  <li key={revision.id} className="rounded-xl bg-campo px-3.5 py-2.5 text-[12.5px]">
+                  <li key={revision.id} className="rounded-xl bg-campo px-4 py-3 text-[12.5px] leading-relaxed">
                     <b className="font-semibold">Ronda {revision.ronda}:</b>{" "}
                     {revision.decision === "aprobada"
                       ? "aprobada"
@@ -171,7 +160,7 @@ export default async function PaginaRevision(
                   </li>
                 ))}
               </ul>
-            </section>
+            </Tarjeta>
           )}
         </div>
       </div>

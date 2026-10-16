@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { Send } from "lucide-react";
 
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, Campo, CampoFecha, CLASE_CONTROL, Selector } from "@/components/ui";
+import { Boton, Campo, CampoArchivo, CampoFecha, Selector } from "@/components/ui";
 import { ESTADO_INICIAL, type EstadoFormulario, type MedioPago, type MonedaPago, type TipoPago } from "@/types";
 
 /**
@@ -146,24 +146,14 @@ function Formulario({
         onChange={(e) => setReferencia(e.target.value)}
         error={errores.referencia}
       />
-      <label>
-        <span className="mb-2 block text-xs font-semibold">
-          Comprobante {!comprobanteObligatorio && <span className="font-normal text-suave">(opcional)</span>}
-        </span>
-        <input
-          type="file"
-          name="comprobante"
-          accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
-          aria-invalid={errores.comprobante ? true : undefined}
-          className={`${CLASE_CONTROL} py-2.5 file:mr-3 file:rounded-lg file:border-0 file:bg-acento-tenue file:px-3 file:py-1 file:text-[12px] file:font-semibold`}
-        />
-        <span className="mt-1.5 block text-[11.5px] text-suave">Imagen o PDF, hasta 4 MB.</span>
-        {errores.comprobante && (
-          <span role="alert" className="mt-1 block text-[12px] text-blackberry dark-tema:text-acento">
-            {errores.comprobante}
-          </span>
-        )}
-      </label>
+      <CampoArchivo
+        id={`pago-${facturaId}-comprobante`}
+        nombre="comprobante"
+        etiqueta={comprobanteObligatorio ? "Comprobante" : "Comprobante (opcional)"}
+        ayuda="Imagen o PDF, hasta 4 MB"
+        accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
+        error={errores.comprobante}
+      />
 
       <div className="flex justify-end sm:col-span-2">
         <Boton type="submit" disabled={enviando}>

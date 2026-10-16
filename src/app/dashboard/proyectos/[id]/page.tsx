@@ -147,7 +147,13 @@ export default async function PaginaProyecto(props: PageProps<"/dashboard/proyec
       )}
 
       {gestiona && estado.panel === "estado" && (
-        <ModalConfirmacion hrefCerrar={hrefCerrar} tono="normal" kicker="Estado" titulo="Cambiar el estado del proyecto">
+        <ModalConfirmacion
+          hrefCerrar={hrefCerrar}
+          tono="normal"
+          ancho="amplio"
+          kicker="Estado"
+          titulo="Cambiar el estado del proyecto"
+        >
           <CambiarEstadoProyecto proyecto={proyecto} hrefCerrar={hrefCerrar} />
         </ModalConfirmacion>
       )}

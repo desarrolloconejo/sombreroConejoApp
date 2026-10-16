@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Check, Pause, Play, Plus, Power, XCircle } from "lucide-react";
+import { Check, ChevronRight, Pause, Play, Plus, Power, XCircle } from "lucide-react";
 
 import { cambiarEstadoProyecto, editarProyecto } from "@/actions/proyectos";
 import { crearPieza } from "@/actions/piezas";
@@ -156,43 +156,83 @@ export function CambiarEstadoProyecto({
     <form action={enviar}>
       <input type="hidden" name="id" value={proyecto.id} />
 
-      <p>
+      <p className="text-[13.5px]">
         Ahora esta{" "}
         <strong className="font-semibold text-texto">
           {NOMBRES_DE_ESTADO_PROYECTO[proyecto.estado].toLowerCase()}
         </strong>
-        .
+        . Elige a que estado pasa.
       </p>
 
+      {/*
+        Cada destino es una opcion entera: se pulsa la fila, con su nombre y
+        lo que significa debajo. Sigue siendo un submit con name="estado".
+      */}
       {!estado.ok && (
-        <ul className="mt-4 flex flex-col gap-2">
+        <ul className="mt-5 flex flex-col gap-3">
           {DESTINOS[proyecto.estado].map((destino) => {
             const { boton, explica, icono: Icono } = CAMBIOS[destino];
+            const peligro = destino === "cancelado";
 
             return (
-              <li
-                key={destino}
-                className="flex items-center justify-between gap-3 rounded-xl border border-borde px-3.5 py-2.5"
-              >
-                <span className="text-[12.5px] text-suave">{explica}</span>
-                <Boton
+              <li key={destino}>
+                <button
                   type="submit"
                   name="estado"
                   value={destino}
-                  tamano="chico"
-                  variante={destino === "cancelado" ? "peligro" : "fantasma"}
                   disabled={enviando}
+                  className={[
+                    "suave group flex w-full cursor-pointer items-center gap-4 rounded-[14px] border px-4 py-4 text-left",
+                    "hover:-translate-y-0.5 focus-visible:outline-none focus-visible:shadow-[var(--foco)]",
+                    "disabled:pointer-events-none disabled:opacity-55",
+                    peligro
+                      ? "border-blackberry/35 hover:border-blackberry hover:bg-blackberry hover:text-white dark-tema:border-[#e9a9cd]/40 dark-tema:hover:border-[#e9a9cd] dark-tema:hover:bg-blackberry"
+                      : "border-borde hover:border-acento hover:bg-acento-tenue",
+                  ].join(" ")}
                 >
-                  <Icono aria-hidden="true" />
-                  {boton}
-                </Boton>
+                  <span
+                    aria-hidden="true"
+                    className={[
+                      "grid size-10 shrink-0 place-items-center rounded-full [&>svg]:size-[18px]",
+                      peligro
+                        ? "bg-blackberry/10 text-blackberry group-hover:bg-white/15 group-hover:text-white dark-tema:text-[#e9a9cd]"
+                        : "bg-acento-tenue text-acento",
+                    ].join(" ")}
+                  >
+                    <Icono />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={[
+                        "block text-[14px] font-bold",
+                        peligro
+                          ? "text-blackberry group-hover:text-white dark-tema:text-[#e9a9cd]"
+                          : "text-texto",
+                      ].join(" ")}
+                    >
+                      {boton}
+                    </span>
+                    <span
+                      className={[
+                        "mt-0.5 block text-[12.5px] leading-relaxed",
+                        peligro ? "text-suave group-hover:text-white/80" : "text-suave",
+                      ].join(" ")}
+                    >
+                      {explica}
+                    </span>
+                  </span>
+                  <ChevronRight
+                    aria-hidden="true"
+                    className="size-4 shrink-0 opacity-50 group-hover:translate-x-0.5 group-hover:opacity-100"
+                  />
+                </button>
               </li>
             );
           })}
         </ul>
       )}
 
-      <div className="mt-5 flex justify-end">
+      <div className="mt-6 flex justify-end border-t border-borde pt-4">
         <BotonEnlace href={hrefCerrar} variante="fantasma" tamano="chico">
           {estado.ok ? "Cerrar" : "Volver"}
         </BotonEnlace>

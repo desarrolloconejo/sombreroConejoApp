@@ -379,3 +379,25 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
     y Escape cierra.
 16. Se puede escribir la fecha a mano: `14/11/2026` vale; `31/02/2026` se
     marca en rojo y pide escribirla asi: dd/mm/aaaa.
+
+**Proyectos y piezas (como `cuentas@conejo.test`)**
+
+17. Proyectos se ve en tarjetas: la bateria arriba a lo ancho con el
+    porcentaje grande y «N de M piezas aprobadas», debajo la empresa (con su
+    estado si no esta activo) y el proyecto, y al pie el ejecutivo, el cierre
+    y las alertas. Nada se monta sobre nada. Los pausados, cerrados y
+    cancelados se ven atenuados.
+18. «Ordenar» (Cliente o Cierre) reordena las tarjetas; pulsar otra vez el
+    mismo invierte el orden. Buscar y filtrar funcionan como antes.
+19. En un proyecto, «Cambiar el estado»: cada opcion es una fila entera con
+    su icono, su nombre y lo que significa; ningun texto se parte. Cancelar
+    va en el tono de peligro.
+20. En una pieza, las dos columnas arrancan a la misma altura, las fases y
+    las tareas tienen mas aire, y Versiones, Copy, Decisiones del cliente y
+    Comentarios llevan su titulo dentro de la tarjeta.
+21. En Versiones, cambiar entre «Archivo» y «Enlace» no cambia el alto de la
+    tarjeta. El archivo se elige pulsando la zona o arrastrandolo encima;
+    dice su nombre y peso y se puede quitar. Nada sale en ingles.
+22. Lo mismo con el comprobante al reportar un pago.
+23. Como `cliente@empresa.test`, la pieza en revision (Mis proyectos) tiene
+    sus tarjetas con titulo y el mismo aire.
