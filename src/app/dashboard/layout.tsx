@@ -2,6 +2,7 @@ import { BuscadorGlobal } from "@/components/layout/BuscadorGlobal";
 import { Campana } from "@/components/layout/Campana";
 import { GuardianSesion } from "@/components/layout/GuardianSesion";
 import { HeaderMovil } from "@/components/layout/HeaderMovil";
+import { IndicePagina } from "@/components/layout/IndicePagina";
 import { ProveedorAvisos } from "@/components/layout/ProveedorAvisos";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { RastroNavegacion } from "@/components/layout/Volver";
@@ -82,6 +83,7 @@ export default async function LayoutDashboard({
           <main className="mx-auto w-full max-w-[1240px] flex-1 px-4 pt-5 pb-4 lg:px-[34px] lg:py-7">
             {children}
           </main>
+          <IndicePagina />
         </div>
       </div>
     </ProveedorAvisos>

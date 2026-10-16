@@ -473,6 +473,14 @@ select:autofill {
   }
 }
 
+/*
+ * Al ir a una seccion desde el indice, el titulo no queda bajo la cabecera
+ * fija del escritorio (68 px) ni pegado al borde.
+ */
+main h2 {
+  scroll-margin-top: 88px;
+}
+
 /* Quien pidio menos movimiento no recibe ninguno */
 @media (prefers-reduced-motion: reduce) {
   *,
