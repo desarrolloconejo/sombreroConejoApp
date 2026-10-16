@@ -87,6 +87,17 @@ test("presupuestar lo pasa a administracion, y descartar exige motivo", async ({
   await page.getByRole("button", { name: "Descartar el brief" }).click();
   await avisado(page, "Brief descartado");
 
+  // ---- Cada uno queda en su pestana de la bandeja.
+  await page.goto("/dashboard/briefs?ver=curso", { waitUntil: "networkidle" });
+  await expect(page.getByRole("link", { name: "En curso", exact: false }).first()).toHaveAttribute("aria-current", "page");
+  await expect(
+    page.getByRole("region", { name: "En curso" }).getByRole("link", { name: new RegExp(aPresupuesto) }),
+  ).toBeVisible({ timeout: 60_000 });
+  await page.goto("/dashboard/briefs?ver=cerrados", { waitUntil: "networkidle" });
+  await expect(
+    page.getByRole("region", { name: "Cerrados" }).getByRole("link", { name: new RegExp(aDescartar) }),
+  ).toBeVisible({ timeout: 60_000 });
+
   // ---- Administracion arma el presupuesto desde el brief.
   await entrar(page, "finanzas@conejo.test");
   await page.goto("/dashboard/presupuestos", { waitUntil: "networkidle" });

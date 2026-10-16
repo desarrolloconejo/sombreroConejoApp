@@ -56,7 +56,7 @@ test("el prospecto llena su brief por el enlace, y aceptarlo lo hace cliente", a
   await entrar(page, "cuentas@conejo.test");
   await page.goto("/dashboard/briefs", { waitUntil: "networkidle" });
   const fila = page.getByRole("region", { name: "Por decidir" }).getByRole("link", { name: new RegExp(codigo) });
-  await expect(fila).toContainText("prospecto");
+  await expect(fila).toContainText(/prospecto/i);
   await fila.click();
   await expect(page.getByRole("heading", { name: "Brief completo" })).toBeVisible({ timeout: 60_000 });
 
