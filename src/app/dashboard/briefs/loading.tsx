@@ -1,6 +1,6 @@
 /**
- * Esqueleto de la bandeja de briefs: la cabecera, «Por decidir» a la izquierda
- * y «En curso» a la derecha, con la misma rejilla que la page.
+ * Esqueleto de la bandeja de briefs: la cabecera, las tres pestanas y la
+ * lista, con la misma geometria que la page.
  */
 
 const SECCION = "rounded-[15px] border border-borde bg-superficie p-4 shadow-[var(--sombra)] sm:p-5";
@@ -20,30 +20,24 @@ export default function CargandoBriefs() {
           <div className="hueso mt-2.5 h-3.5 w-full max-w-[520px] lg:mt-[11px]" />
         </div>
 
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
-          <div>
-            <div className="hueso mb-3 h-[22px] w-[110px]" />
-            <div className={SECCION}>
-              {[0, 1, 2].map((fila) => (
-                <div key={fila} className="flex items-center gap-3 border-b border-borde py-3 last:border-0">
-                  <div className="min-w-0 flex-1">
-                    <div className="hueso h-[10px] w-[150px]" />
-                    <div className="hueso mt-2 h-3.5 w-[60%]" />
-                    <div className="hueso mt-2 h-3 w-[40%]" />
-                  </div>
-                  <div className="hueso h-[22px] w-[88px] rounded-full" />
-                </div>
-              ))}
+        <div className="mb-4 grid grid-cols-3 gap-1 rounded-[14px] border border-borde bg-campo p-1 sm:inline-grid sm:w-[360px]">
+          {[0, 1, 2].map((pestana) => (
+            <div key={pestana} className="hueso h-10 rounded-[10px]" />
+          ))}
+        </div>
+
+        <div className={SECCION}>
+          <div className="hueso mb-2 h-3 w-[200px]" />
+          {[0, 1, 2, 3].map((fila) => (
+            <div key={fila} className="flex items-center gap-3 border-b border-borde py-3.5 last:border-0">
+              <div className="min-w-0 flex-1">
+                <div className="hueso h-4 w-[45%]" />
+                <div className="hueso mt-2 h-3.5 w-[60%]" />
+                <div className="hueso mt-2 h-3 w-[50%]" />
+              </div>
+              <div className="hueso hidden h-3 w-[70px] sm:block" />
             </div>
-          </div>
-          <div>
-            <div className="hueso mb-3 h-[22px] w-[150px]" />
-            <div className={SECCION}>
-              <div className="hueso h-4 w-[70%]" />
-              <div className="hueso mt-2 h-3 w-[50%]" />
-              <div className="hueso mt-4 h-11 w-[120px] rounded-xl" />
-            </div>
-          </div>
+          ))}
         </div>
       </div>
       <span className="sr-only">Cargando</span>

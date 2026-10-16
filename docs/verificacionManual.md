@@ -346,3 +346,15 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
    del cliente y del emisor.
 7. Cobranza: el RIF y el telefono de cada empresa con deuda, tambien en el
    telefono.
+
+**Bandeja de briefs (como `cuentas@conejo.test`)**
+
+8. Briefs abre en la pestana «Por decidir», con el numero de cada bandeja en
+   su pestana. Las otras dos se abren al pulsarlas y la URL cambia
+   (`?ver=curso`, `?ver=cerrados`), asi que se pueden compartir o recargar.
+9. Cada fila se lee de arriba abajo: quien lo pide, que hay que hacer, y en
+   pequeno el tipo de brief, la fecha aspirada y el codigo. A la derecha,
+   cuanto hace que llego («hace 2 dias»).
+10. «Por decidir» va del que mas lleva esperando al mas nuevo.
+11. En el telefono las tres pestanas caben a lo ancho y el nombre no se
+    corta: la hora y la etiqueta van debajo.
