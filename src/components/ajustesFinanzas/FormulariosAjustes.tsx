@@ -323,7 +323,7 @@ function FormularioMedio({
           rows={3}
           maxLength={1000}
           placeholder="Banco, titular, numero de cuenta, telefono…"
-          className={`${CLASE_CONTROL} min-h-[84px] py-2.5`}
+          className={`${CLASE_CONTROL} min-h-[84px]`}
           {...campo("datosParaPagar")}
         />
       </label>

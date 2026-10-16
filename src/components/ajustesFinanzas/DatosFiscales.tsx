@@ -5,7 +5,7 @@ import { Save } from "lucide-react";
 
 import { guardarDatosFiscales } from "@/actions/ajustesFinanzas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CLASE_CONTROL, Selector } from "@/components/ui";
+import { Boton, claseLinea, Selector } from "@/components/ui";
 import { ESTADO_INICIAL, type DatosFiscalesEmpresa } from "@/types";
 
 const OPCIONES_RETENCION = [
@@ -56,7 +56,7 @@ function FilaFiscal({ empresa, diasPorDefecto }: { empresa: DatosFiscalesEmpresa
             onChange={(e) => setDias(e.target.value)}
             aria-label={`Dias de credito de ${empresa.nombre}`}
             aria-invalid={error ? true : undefined}
-            className={CLASE_CONTROL}
+            className={claseLinea()}
           />
         </label>
         <Boton

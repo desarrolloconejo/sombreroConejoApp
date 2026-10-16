@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
 
+import { ALTO_CONTROL } from "./Campo";
 import { useFlotante } from "./useFlotante";
 
 /**
@@ -43,16 +44,14 @@ export type OpcionSelector = {
 
 const DISPARADOR =
   "flex w-full cursor-pointer items-center gap-2.5 rounded-xl " +
-  "border-[1.5px] border-borde bg-campo text-left text-[13.5px] " +
+  "border-[1.5px] border-borde bg-campo text-left " +
 
   "focus:outline-none focus:border-acento focus:bg-superficie focus:shadow-[var(--foco)] " +
   "disabled:cursor-not-allowed disabled:opacity-60 " +
   "aria-[invalid=true]:border-blackberry";
 
-const TAMANO = {
-  normal: "min-h-11 px-3.5 py-3",
-  compacto: "min-h-9 px-3 py-2",
-} as const;
+// Los mismos altos que cualquier control de una linea (ALTO_CONTROL).
+const TAMANO = ALTO_CONTROL;
 
 const ALTO_LISTA = 256;
 

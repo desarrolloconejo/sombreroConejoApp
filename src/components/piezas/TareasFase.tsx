@@ -13,7 +13,7 @@ import {
 } from "@/actions/tareas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { fechaCorta } from "@/components/proyectos/ColumnasProyectos";
-import { Boton, CampoFecha, CLASE_CONTROL, Selector } from "@/components/ui";
+import { Boton, CampoFecha, claseLinea, Selector } from "@/components/ui";
 import { herramientaPorSlug } from "@/lib/herramientas";
 import {
   ESTADO_INICIAL,
@@ -68,7 +68,7 @@ function CamposTarea({
           placeholder="Que hay que hacer"
           maxLength={160}
           aria-invalid={errores?.titulo ? true : undefined}
-          className={`${CLASE_CONTROL} min-h-10 py-2`}
+          className={claseLinea("compacto")}
         />
       </div>
 

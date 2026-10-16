@@ -126,7 +126,7 @@ export function FasesPieza({
                       {fase.estado !== "completada" && (
                         <details className="group">
                           <summary className="cursor-pointer text-[12px] font-semibold text-acento select-none">
-                            Planificar fecha y responsable
+                            Fecha y responsable de la fase
                           </summary>
                           <div className="mt-3.5">
                             <PlanificarFase piezaId={pieza.id} fase={fase} equipo={equipo} />
