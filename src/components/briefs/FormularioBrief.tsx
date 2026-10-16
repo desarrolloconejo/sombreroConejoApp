@@ -14,7 +14,7 @@ import {
 import { ArrowLeft, ArrowRight, Check, Save, Send } from "lucide-react";
 
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Alerta, Boton, CLASE_CONTROL } from "@/components/ui";
+import { Alerta, Boton, CampoFecha, CLASE_CONTROL } from "@/components/ui";
 import { ZONA_HORARIA } from "@/lib/fechas";
 import { avisosDeReglas, contarNoSe, pasosVisibles, respondida } from "@/lib/portal/briefs";
 import {
@@ -284,30 +284,20 @@ export function FormularioBrief({
               {version > 1 ? `Enviar la version ${version}` : "Al enviar"}
             </h2>
 
-            <label className="mt-3 block">
-              <span className="mb-1.5 block text-xs font-semibold">Fecha de entrega que aspiras</span>
-              <input
-                type="date"
-                name="fechaAspirada"
-                min={hoy}
-                value={fecha}
-                onChange={(evento) => {
-                  sucio.current = true;
-                  setFecha(evento.target.value);
-                }}
-                aria-invalid={errores.fechaAspirada ? true : undefined}
-                className={CLASE_CONTROL}
-              />
-              {errores.fechaAspirada ? (
-                <span role="alert" className="mt-1.5 block text-[12px] font-medium text-blackberry dark-tema:text-acento">
-                  {errores.fechaAspirada}
-                </span>
-              ) : (
-                <span className="mt-1.5 block text-[11.5px] leading-relaxed text-suave">
-                  El equipo confirma si es viable o te propone otra.
-                </span>
-              )}
-            </label>
+            <CampoFecha
+              id="brief-fecha-aspirada"
+              nombre="fechaAspirada"
+              etiqueta="Fecha de entrega que aspiras"
+              min={hoy}
+              valor={fecha}
+              onCambio={(valor) => {
+                sucio.current = true;
+                setFecha(valor);
+              }}
+              error={errores.fechaAspirada}
+              ayuda="El equipo confirma si es viable o te propone otra."
+              className="mt-3"
+            />
 
             <dl className="mt-4 flex flex-col gap-2 border-t border-borde pt-3.5 text-[12px] leading-relaxed">
               <div>

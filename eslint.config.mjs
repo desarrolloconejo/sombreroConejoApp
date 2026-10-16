@@ -31,8 +31,8 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // La lista de un <select> la pinta el sistema operativo, con sus colores
-    // y no con los del tema. Los desplegables son Selector.
+    // La lista de un <select> y el calendario de un <input type="date"> los
+    // pinta el sistema operativo, con sus colores y no con los del tema.
     files: ["src/**/*.tsx"],
     rules: {
       "no-restricted-syntax": [
@@ -40,6 +40,10 @@ const eslintConfig = defineConfig([
         {
           selector: "JSXOpeningElement[name.name='select']",
           message: "Nada de <select> nativo: usa Selector de @/components/ui.",
+        },
+        {
+          selector: "JSXAttribute[name.name='type'][value.value='date']",
+          message: "Nada de fecha nativa: usa CampoFecha de @/components/ui.",
         },
       ],
     },

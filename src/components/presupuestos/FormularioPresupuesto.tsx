@@ -6,7 +6,7 @@ import { FilePlus2 } from "lucide-react";
 import { crearPresupuesto } from "@/actions/presupuestos";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, Selector, useCampos } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, CampoFecha, Selector, useCampos } from "@/components/ui";
 import { ESTADO_INICIAL, type NombreEmpresa, type ProyectoDeProforma } from "@/types";
 
 /**
@@ -38,7 +38,7 @@ export function FormularioPresupuesto({
   const errores = estado.errores ?? {};
 
   const [empresaId, setEmpresaId] = useState(empresas.length === 1 ? String(empresas[0].id) : "");
-  const { campo } = useCampos({ titulo: "", validoHasta, notas: "" });
+  const { campo, fecha } = useCampos({ titulo: "", validoHasta, notas: "" });
 
   const deLaEmpresa = empresaId ? (proyectos[Number(empresaId)] ?? []) : [];
 
@@ -89,13 +89,12 @@ export function FormularioPresupuesto({
             {...campo("titulo")}
           />
 
-          <Campo
+          <CampoFecha
             id="presupuesto-validez"
             etiqueta="Vale hasta"
-            type="date"
             ayuda="Quince dias por defecto. Pasada la fecha, el cliente ya no puede aprobarlo."
             error={errores.validoHasta}
-            {...campo("validoHasta")}
+            {...fecha("validoHasta")}
           />
 
           <Campo

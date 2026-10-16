@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { Send } from "lucide-react";
 
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, Campo, CLASE_CONTROL, Selector } from "@/components/ui";
+import { Boton, Campo, CampoFecha, CLASE_CONTROL, Selector } from "@/components/ui";
 import { ESTADO_INICIAL, type EstadoFormulario, type MedioPago, type MonedaPago, type TipoPago } from "@/types";
 
 /**
@@ -127,14 +127,13 @@ function Formulario({
         onChange={(e) => setMonto(e.target.value)}
         error={errores.monto}
       />
-      <Campo
+      <CampoFecha
         id={`pago-${facturaId}-fecha`}
         etiqueta="Fecha"
-        name="fechaPago"
-        type="date"
+        nombre="fechaPago"
         max={hoy}
-        value={fecha}
-        onChange={(e) => setFecha(e.target.value)}
+        valor={fecha}
+        onCambio={setFecha}
         error={errores.fechaPago}
       />
       <Campo

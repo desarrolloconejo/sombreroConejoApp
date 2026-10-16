@@ -27,6 +27,9 @@ import { useState, type ChangeEvent } from "react";
  * inicial ES el nombre con el que el dato llega a la action. Si hay que
  * enviarlo con otro nombre, se pasa `name` despues del spread.
  *
+ * Para un `CampoFecha`, `fecha(...)` da lo mismo con sus nombres:
+ * `<CampoFecha id="x" etiqueta="Inicio" {...fecha("inicio")} />`.
+ *
  * Lo que NO necesita esto: los `Selector`, las casillas y los grupos de radio
  * del proyecto ya guardan su valor en estado de React y sobreviven solos.
  */
@@ -45,5 +48,14 @@ export function useCampos<C extends Record<string, string>>(iniciales: C) {
     };
   }
 
-  return { valores, campo, setValores };
+  /** Lo mismo para un CampoFecha: `nombre`, `valor` y `onCambio`. */
+  function fecha<K extends keyof C & string>(nombre: K) {
+    return {
+      nombre,
+      valor: valores[nombre],
+      onCambio: (valor: string) => setValores((previos) => ({ ...previos, [nombre]: valor })),
+    };
+  }
+
+  return { valores, campo, fecha, setValores };
 }

@@ -10,9 +10,11 @@ import {
   presupuestarBrief,
 } from "@/actions/briefs";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CLASE_CONTROL } from "@/components/ui";
+import { Boton, CampoFecha, CLASE_CONTROL } from "@/components/ui";
 import { CredencialProvisional } from "@/components/usuarios/CredencialProvisional";
 import { ESTADO_INICIAL, type EstadoFormulario } from "@/types";
+
+import { PIE_TARJETA_BRIEF } from "./LecturaBrief";
 
 /**
  * Las decisiones de la bandeja sobre un brief.
@@ -61,6 +63,12 @@ function useDecisiones() {
   return decisiones;
 }
 
+/** Los botones de decision ocupan el ancho que les toca, todos del mismo alto. */
+const ANCHO = "w-full justify-center whitespace-nowrap";
+
+/** Crece desde su contenido: reparten la fila sin partir el texto. */
+const EN_FILA = "grow basis-auto";
+
 /** Las tres decisiones: aceptar y abrir proyecto, presupuestar o descartar. */
 export function BotonesDecision({
   briefId,
@@ -102,11 +110,11 @@ export function BotonesDecision({
         <p className="text-[12px] leading-relaxed text-suave">
           El cliente recibe el motivo. El brief queda archivado: no se borra.
         </p>
-        <div className="flex flex-wrap justify-end gap-2.5">
-          <Boton type="button" variante="fantasma" tamano="chico" onClick={() => setDescartando(false)}>
+        <div className="grid grid-cols-2 gap-2.5">
+          <Boton type="button" variante="fantasma" className={ANCHO} onClick={() => setDescartando(false)}>
             Volver
           </Boton>
-          <Boton type="submit" variante="peligro" tamano="chico" disabled={ocupado}>
+          <Boton type="submit" variante="peligro" className={ANCHO} disabled={ocupado}>
             <Ban aria-hidden="true" />
             Descartar el brief
           </Boton>
@@ -115,31 +123,43 @@ export function BotonesDecision({
     );
   }
 
+  // Presupuesto y descarte comparten fila y la llenan entre los dos. Si no
+  // caben sin partir el texto, bajan uno bajo el otro, cada uno a todo el ancho.
+
   return (
-    <div className="flex flex-wrap items-center gap-2.5">
+    <div className="flex flex-col gap-2.5">
       {puedeAceptar && (
         <form action={aceptar[1]}>
           <input type="hidden" name="id" value={briefId} />
-          <Boton type="submit" disabled={ocupado}>
+          <Boton type="submit" className={ANCHO} disabled={ocupado}>
             <FolderPlus aria-hidden="true" />
             {aceptar[2] ? "Abriendo..." : "Aceptar y abrir proyecto"}
           </Boton>
         </form>
       )}
-      {puedePresupuestar && (
-        <form action={presupuestar[1]}>
-          <input type="hidden" name="id" value={briefId} />
-          <Boton type="submit" variante="fantasma" disabled={ocupado}>
-            <FileSpreadsheet aria-hidden="true" />
-            Convertir en presupuesto
-          </Boton>
-        </form>
-      )}
-      {puedeDescartar && (
-        <Boton type="button" variante="fantasma" tamano="chico" onClick={() => setDescartando(true)}>
-          <Ban aria-hidden="true" />
-          Descartar
-        </Boton>
+      {(puedePresupuestar || puedeDescartar) && (
+        <div className="flex flex-wrap gap-2.5">
+          {puedePresupuestar && (
+            <form action={presupuestar[1]} className={EN_FILA}>
+              <input type="hidden" name="id" value={briefId} />
+              <Boton type="submit" variante="fantasma" className={ANCHO} disabled={ocupado}>
+                <FileSpreadsheet aria-hidden="true" />
+                Convertir en presupuesto
+              </Boton>
+            </form>
+          )}
+          {puedeDescartar && (
+            <Boton
+              type="button"
+              variante="fantasma"
+              className={`justify-center whitespace-nowrap ${EN_FILA}`}
+              onClick={() => setDescartando(true)}
+            >
+              <Ban aria-hidden="true" />
+              Descartar
+            </Boton>
+          )}
+        </div>
       )}
     </div>
   );
@@ -170,7 +190,7 @@ export function FechaViable({
     <form action={enviar} noValidate className="flex flex-col gap-3">
       <input type="hidden" name="id" value={briefId} />
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-[13px] font-bold">¿Es viable la fecha que aspira el cliente?</legend>
+        <legend className="mb-2 text-[13px] text-suave">¿Es viable la fecha que aspira el cliente?</legend>
         {[
           { valor: true, texto: `Si, es viable: ${fechaAspirada}` },
           { valor: false, texto: "No, proponer otra fecha" },
@@ -196,24 +216,16 @@ export function FechaViable({
       </fieldset>
 
       {!viable && (
-        <div className="grid gap-3 sm:grid-cols-[180px_minmax(0,1fr)]">
-          <label>
-            <span className="mb-1.5 block text-xs font-semibold">Fecha que propones</span>
-            <input
-              type="date"
-              name="fechaPropuesta"
-              min={hoy}
-              value={fecha}
-              onChange={(evento) => setFecha(evento.target.value)}
-              aria-invalid={errores.fechaPropuesta ? true : undefined}
-              className={CLASE_CONTROL}
-            />
-            {errores.fechaPropuesta && (
-              <span role="alert" className="mt-1 block text-[12px] text-blackberry dark-tema:text-acento">
-                {errores.fechaPropuesta}
-              </span>
-            )}
-          </label>
+        <div className="flex flex-col gap-3">
+          <CampoFecha
+            id={`brief-${briefId}-fecha-propuesta`}
+            nombre="fechaPropuesta"
+            etiqueta="Fecha que propones"
+            min={hoy}
+            valor={fecha}
+            onCambio={setFecha}
+            error={errores.fechaPropuesta}
+          />
           <label>
             <span className="mb-1.5 block text-xs font-semibold">Por que</span>
             <input
@@ -233,7 +245,7 @@ export function FechaViable({
         </div>
       )}
 
-      <div className="flex justify-end">
+      <div className={PIE_TARJETA_BRIEF}>
         <Boton type="submit" variante="fantasma" tamano="chico" disabled={enviando}>
           <CalendarCheck aria-hidden="true" />
           {enviando ? "Guardando..." : "Guardar la fecha"}

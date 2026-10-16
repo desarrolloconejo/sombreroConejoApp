@@ -358,3 +358,24 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
 10. «Por decidir» va del que mas lleva esperando al mas nuevo.
 11. En el telefono las tres pestanas caben a lo ancho y el nombre no se
     corta: la hora y la etiqueta van debajo.
+
+**Ficha de un brief y fechas (como `cuentas@conejo.test`)**
+
+12. En la ficha de un brief, la columna del brief y la de la derecha
+    arrancan a la misma altura, y todas las tarjetas (Brief completo,
+    Estado, Fecha de entrega, Decision, Aclaraciones) llevan su titulo dentro.
+13. En Decision, «Aceptar y abrir proyecto» ocupa todo el ancho. Debajo,
+    «Convertir en presupuesto» y «Descartar» comparten la fila; si la
+    columna es estrecha, bajan uno bajo el otro, del mismo ancho y sin
+    partir el texto. Al descartar, «Volver» y «Descartar el brief» van en dos
+    mitades.
+14. Ninguna fecha abre el calendario del sistema: todas abren el de la app,
+    con sus colores, en claro y en oscuro. Revisar al menos la fecha que se
+    propone en un brief, la fecha aspirada al enviar un brief, la tasa del
+    dolar, la fecha de un pago, la validez de un presupuesto, las fechas de
+    un proyecto, la de una fase y la de una tarea.
+15. En el calendario: los dias fuera de lo permitido salen tachados, hoy va
+    marcado, las flechas mueven el dia, Re Pag y Av Pag el mes, Enter elige
+    y Escape cierra.
+16. Se puede escribir la fecha a mano: `14/11/2026` vale; `31/02/2026` se
+    marca en rojo y pide escribirla asi: dd/mm/aaaa.

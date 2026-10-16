@@ -254,6 +254,13 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   y `compacto` para celdas y filtros. El lint lo impone. En las pruebas se
   elige con `elegirOpcion` (`tests/integracion/ayudas/formularios.ts`), no con
   `selectOption`.
+- **Ningun `<input type="date">`**, por lo mismo: las fechas son `CampoFecha`
+  (`src/components/ui`). Se puede escribir (`dd/mm/aaaa` o `aaaa-mm-dd`) o
+  elegir en su calendario; envia `aaaa-mm-dd` en un input oculto, asi que las
+  actions no cambian. Con `useCampos`, se conecta con `{...fecha("clave")}`.
+  Sus cuentas viven en `src/lib/calendario.ts`, en UTC. El lint lo impone.
+- Lo que flota pegado a un control (la lista de `Selector`, el calendario) usa
+  `useFlotante`: se pinta en el `<body>` para que una tabla no lo recorte.
 - Un dato que se pasa a otro sitio (RIF, telefono, direccion, numero de
   factura) lleva al lado `BotonCopiar`. La logica de copiar es `useCopiar`;
   no se vuelve a escribir `navigator.clipboard` en un componente.

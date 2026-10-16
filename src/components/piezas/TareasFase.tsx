@@ -13,7 +13,7 @@ import {
 } from "@/actions/tareas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { fechaCorta } from "@/components/proyectos/ColumnasProyectos";
-import { Boton, CLASE_CONTROL, Selector } from "@/components/ui";
+import { Boton, CampoFecha, CLASE_CONTROL, Selector } from "@/components/ui";
 import { herramientaPorSlug } from "@/lib/herramientas";
 import {
   ESTADO_INICIAL,
@@ -86,16 +86,15 @@ function CamposTarea({
       </div>
 
       <div>
-        <label htmlFor={`${prefijo}-fecha`} className="sr-only">
-          Para cuando
-        </label>
-        <input
+        <CampoFecha
           id={`${prefijo}-fecha`}
-          type="date"
-          name="fechaEstimada"
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-          className={`${CLASE_CONTROL} min-h-10 py-2`}
+          nombre="fechaEstimada"
+          etiqueta="Para cuando"
+          etiquetaOculta
+          compacto
+          opcional
+          valor={fecha}
+          onCambio={setFecha}
         />
       </div>
 

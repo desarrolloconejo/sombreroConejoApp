@@ -11,7 +11,7 @@ import {
 } from "@/actions/proformas";
 import { EditorRenglones } from "@/components/finanzas/EditorRenglones";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, Campo, CLASE_CONTROL, useCampos } from "@/components/ui";
+import { Boton, Campo, CampoFecha, CLASE_CONTROL, useCampos } from "@/components/ui";
 import {
   ESTADO_INICIAL,
   type EstadoFormulario,
@@ -228,13 +228,12 @@ export function RecurrenciaProforma({
       </label>
 
       {recurrente && (
-        <Campo
+        <CampoFecha
           id="proforma-proxima"
           etiqueta="Toca la siguiente el"
-          type="date"
-          name="proximaEmision"
-          value={proxima}
-          onChange={(evento) => setProxima(evento.target.value)}
+          nombre="proximaEmision"
+          valor={proxima}
+          onCambio={setProxima}
           error={estado.errores?.proximaEmision}
         />
       )}
