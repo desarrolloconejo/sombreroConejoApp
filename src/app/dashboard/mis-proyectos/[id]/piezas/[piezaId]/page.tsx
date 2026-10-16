@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PartyPopper } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 
 import { Wrapper } from "@/components/layout/Wrapper";
@@ -82,7 +83,7 @@ export default async function PaginaRevision(
       descripcion={pieza.ronda > 1 ? `Ronda ${pieza.ronda}: ya incluye la correccion que pediste.` : undefined}
     >
       {hecho === "aprobada" && aprobada && (
-        <Alerta tono="info" className="surge mb-5">
+        <Alerta tono="logro" icono={<PartyPopper />} className="mb-5">
           <b className="font-semibold">«{pieza.titulo}» aprobada. Ya puedes descargarla.</b>
         </Alerta>
       )}

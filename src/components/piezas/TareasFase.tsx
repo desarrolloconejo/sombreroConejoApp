@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { Check, Circle, ExternalLink, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, ExternalLink, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import {
   crearTarea,
@@ -13,7 +13,7 @@ import {
 } from "@/actions/tareas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { fechaCorta } from "@/components/proyectos/ColumnasProyectos";
-import { Boton, CampoFecha, claseLinea, Selector } from "@/components/ui";
+import { Boton, CampoFecha, claseLinea, MarcaTarea, Selector, useCelebrar } from "@/components/ui";
 import { herramientaPorSlug } from "@/lib/herramientas";
 import {
   ESTADO_INICIAL,
@@ -132,6 +132,7 @@ export function TareasFase({
   piezaActiva: boolean;
 }) {
   const [marcado, marcar, marcando] = useActionState(marcarTareaLista, ESTADO_INICIAL);
+  const { celebrada, envolver } = useCelebrar();
   const [reabierto, reabrir, reabriendo] = useActionState(reabrirTarea, ESTADO_INICIAL);
   const [quitado, quitar, quitando] = useActionState(quitarTarea, ESTADO_INICIAL);
   const [editado, editar, editando] = useActionState(editarTarea, ESTADO_INICIAL);
@@ -202,29 +203,26 @@ export function TareasFase({
                   mia ? "border-acento/40 bg-acento-tenue" : "border-borde",
                 ].join(" ")}
               >
-                <form action={lista ? reabrir : marcar}>
+                <form action={lista ? reabrir : envolver(marcar)}>
                   <input type="hidden" name="tareaId" value={tarea.id} />
-                  <button
-                    type="submit"
-                    disabled={!puedeMarcar || ocupado || (lista && faseCompletada)}
-                    aria-label={
+                  <MarcaTarea
+                    lista={lista}
+                    celebrar={celebrada === tarea.id}
+                    deshabilitado={!puedeMarcar || ocupado || (lista && faseCompletada)}
+                    etiqueta={
                       lista ? `Reabrir la tarea ${tarea.titulo}` : `Marcar como lista la tarea ${tarea.titulo}`
                     }
-                    title={lista ? "Reabrir" : "Marcar como lista"}
-                    className={[
-                      "suave grid size-8 shrink-0 place-items-center rounded-full border-2 [&>svg]:size-4",
-                      lista
-                        ? "border-blackberry bg-blackberry text-white dark-tema:border-gold dark-tema:bg-gold dark-tema:text-navy"
-                        : "border-borde text-transparent hover:border-acento hover:text-acento",
-                      "disabled:cursor-default",
-                    ].join(" ")}
-                  >
-                    {lista ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
-                  </button>
+                  />
                 </form>
 
                 <div className="min-w-0 flex-1">
-                  <p className={["truncate text-[13px] font-semibold", lista ? "text-suave line-through" : ""].join(" ")}>
+                  <p
+                    className={[
+                      "truncate text-[13px] font-semibold",
+                      lista ? "text-suave line-through" : "",
+                      lista && celebrada === tarea.id ? "logro-tachado" : "",
+                    ].join(" ")}
+                  >
                     {tarea.titulo}
                   </p>
                   <p className="truncate text-[11.5px] text-suave">

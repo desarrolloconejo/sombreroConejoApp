@@ -314,7 +314,13 @@ export async function completarFase(
       }
     }
 
-    return { proyectoId: proyecto.id, nombre: nombreDeFase(proyecto.tipo, fase), correos };
+    return {
+      proyectoId: proyecto.id,
+      nombre: nombreDeFase(proyecto.tipo, fase),
+      // Lo que viene: se dice en el aviso, para que se vea hacia donde avanza.
+      siguiente: fase < 5 ? nombreDeFase(proyecto.tipo, (fase + 1) as NumeroFase) : null,
+      correos,
+    };
   });
 
   if (resultado === null) return NO_ALCANCE;
@@ -325,7 +331,13 @@ export async function completarFase(
 
   revalidar(resultado.proyectoId, piezaId);
 
-  return { ok: true, mensaje: `${resultado.nombre}: completada` };
+  return {
+    ok: true,
+    logro: true,
+    mensaje: resultado.siguiente
+      ? `${resultado.nombre}: completada · sigue ${resultado.siguiente}`
+      : `${resultado.nombre}: completada`,
+  };
 }
 
 export async function regresarFase(

@@ -2,10 +2,11 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Circle, ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 
 import { marcarTareaLista, reabrirTarea } from "@/actions/tareas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
+import { MarcaTarea, useCelebrar } from "@/components/ui";
 import { fechaCorta } from "@/components/proyectos/ColumnasProyectos";
 import { herramientaPorSlug } from "@/lib/herramientas";
 import { nombreDeFase } from "@/lib/portal/catalogo";
@@ -31,9 +32,12 @@ function Fila({
   marcar,
   reabrir,
   ocupado,
+  celebrar,
 }: {
   tarea: TareaAsignada;
   hoy: string;
+  /** Es la que se acaba de marcar: llega a «Hechas» celebrandolo. */
+  celebrar: boolean;
   marcar: (datos: FormData) => void;
   reabrir: (datos: FormData) => void;
   ocupado: boolean;
@@ -43,27 +47,30 @@ function Fila({
   const atrasada = !lista && tarea.fechaEstimada !== null && tarea.fechaEstimada < hoy;
 
   return (
-    <li className="flex items-start gap-3 rounded-[15px] border border-borde bg-superficie px-4 py-3.5 shadow-[var(--sombra)]">
+    <li
+      className={[
+        "flex items-start gap-3 rounded-[15px] border border-borde bg-superficie px-4 py-3.5 shadow-[var(--sombra)]",
+        celebrar && lista ? "logro-entrar" : "",
+      ].join(" ")}
+    >
       <form action={lista ? reabrir : marcar} className="pt-0.5">
         <input type="hidden" name="tareaId" value={tarea.id} />
-        <button
-          type="submit"
-          disabled={ocupado}
-          aria-label={lista ? `Reabrir la tarea ${tarea.titulo}` : `Marcar como lista la tarea ${tarea.titulo}`}
-          title={lista ? "Reabrir" : "Marcar como lista"}
-          className={[
-            "suave grid size-8 shrink-0 place-items-center rounded-full border-2 [&>svg]:size-4",
-            lista
-              ? "border-blackberry bg-blackberry text-white dark-tema:border-gold dark-tema:bg-gold dark-tema:text-navy"
-              : "border-borde text-transparent hover:border-acento hover:text-acento",
-          ].join(" ")}
-        >
-          {lista ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
-        </button>
+        <MarcaTarea
+          lista={lista}
+          celebrar={celebrar}
+          deshabilitado={ocupado}
+          etiqueta={lista ? `Reabrir la tarea ${tarea.titulo}` : `Marcar como lista la tarea ${tarea.titulo}`}
+        />
       </form>
 
       <div className="min-w-0 flex-1">
-        <p className={["text-[14px] font-semibold", lista ? "text-suave line-through" : ""].join(" ")}>
+        <p
+          className={[
+            "text-[14px] font-semibold",
+            lista ? "text-suave line-through" : "",
+            celebrar && lista ? "logro-tachado" : "",
+          ].join(" ")}
+        >
           {tarea.titulo}
         </p>
         <p className="mt-0.5 truncate text-[12px] text-suave">
@@ -180,15 +187,11 @@ function TarjetaFase({
                 {mia ? (
                   <form action={marcar}>
                     <input type="hidden" name="tareaId" value={tarea.id} />
-                    <button
-                      type="submit"
-                      disabled={ocupado}
-                      aria-label={`Marcar como lista la tarea ${tarea.titulo}`}
-                      title="Marcar como lista"
-                      className="suave grid size-8 shrink-0 cursor-pointer place-items-center rounded-full border-2 border-borde text-transparent hover:border-acento hover:text-acento [&>svg]:size-4"
-                    >
-                      <Circle aria-hidden="true" />
-                    </button>
+                    <MarcaTarea
+                      lista={false}
+                      deshabilitado={ocupado}
+                      etiqueta={`Marcar como lista la tarea ${tarea.titulo}`}
+                    />
                   </form>
                 ) : (
                   <span aria-hidden="true" className="size-8 shrink-0 rounded-full border-2 border-dashed border-borde" />
@@ -231,6 +234,7 @@ export function ListaMiTrabajo({
   hoy: string;
 }) {
   const [marcado, marcar, marcando] = useActionState(marcarTareaLista, ESTADO_INICIAL);
+  const { celebrada, envolver } = useCelebrar();
   const [reabierto, reabrir, reabriendo] = useActionState(reabrirTarea, ESTADO_INICIAL);
 
   useAvisoDeAccion(marcado);
@@ -277,7 +281,7 @@ export function ListaMiTrabajo({
                 fase={fase}
                 hoy={hoy}
                 usuarioId={usuarioId}
-                marcar={marcar}
+                marcar={envolver(marcar)}
                 ocupado={ocupado}
               />
             ))}
@@ -311,9 +315,10 @@ export function ListaMiTrabajo({
                   key={tarea.id}
                   tarea={tarea}
                   hoy={hoy}
-                  marcar={marcar}
+                  marcar={envolver(marcar)}
                   reabrir={reabrir}
                   ocupado={ocupado}
+                  celebrar={celebrada === tarea.id}
                 />
               ))}
             </ul>

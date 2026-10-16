@@ -1,11 +1,11 @@
 "use client";
 
-import { createContext, useActionState, useContext, useState, type ReactNode } from "react";
+import { createContext, useActionState, useContext, useEffect, useState, type ReactNode } from "react";
 import { CalendarCheck, CheckCheck, Undo2 } from "lucide-react";
 
 import { completarFase, planificarFase, regresarFase } from "@/actions/piezas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CampoFecha, Selector } from "@/components/ui";
+import { anunciarLogro, Boton, CampoFecha, Selector } from "@/components/ui";
 import { ESTADO_INICIAL, type FasePieza, type PersonaDeEquipo } from "@/types";
 
 import { opcionesDeEquipo } from "./opcionesEquipo";
@@ -41,6 +41,11 @@ export function MovimientosDeFase({ children }: { children: ReactNode }) {
 
   useAvisoDeAccion(completado);
   useAvisoDeAccion(regresado);
+
+  // Completar una fase enciende la bateria de la cabecera.
+  useEffect(() => {
+    if (completado.ok && completado.logro) anunciarLogro();
+  }, [completado]);
 
   return (
     <ContextoMovimientos.Provider value={{ completar, completando, regresar, regresando }}>

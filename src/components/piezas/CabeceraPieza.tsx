@@ -3,7 +3,7 @@ import { Ban } from "lucide-react";
 
 import { EtiquetaAlerta } from "@/components/proyectos/EtiquetaAlerta";
 import { fechaCorta } from "@/components/proyectos/ColumnasProyectos";
-import { Bateria, segmentosDePieza } from "@/components/ui";
+import { Bateria, ResplandorLogro, segmentosDePieza } from "@/components/ui";
 import { nombreDeFase } from "@/lib/portal/catalogo";
 import { NOMBRES_DE_TIPO_PIEZA, type Pieza, type TipoProyecto } from "@/types";
 
@@ -35,12 +35,14 @@ export function CabeceraPieza({
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
-          <Bateria
-            segmentos={segmentosDePieza(pieza.fases)}
-            porcentaje={avance.porcentaje}
-            etiqueta="Avance de la pieza"
-            tamano="grande"
-          />
+          <ResplandorLogro>
+            <Bateria
+              segmentos={segmentosDePieza(pieza.fases)}
+              porcentaje={avance.porcentaje}
+              etiqueta="Avance de la pieza"
+              tamano="grande"
+            />
+          </ResplandorLogro>
           <div className="min-w-0">
             <p className="text-[15px] font-bold">{enQueVa}</p>
             <p className="mt-0.5 text-[12px] text-suave">
