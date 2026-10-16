@@ -4,6 +4,7 @@ import { GuardianSesion } from "@/components/layout/GuardianSesion";
 import { HeaderMovil } from "@/components/layout/HeaderMovil";
 import { ProveedorAvisos } from "@/components/layout/ProveedorAvisos";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { RastroNavegacion } from "@/components/layout/Volver";
 import { modulosDe, vistaDeModulos } from "@/lib/navegacion";
 import { resumenDeNotificaciones } from "@/lib/notificaciones";
 import {
@@ -52,6 +53,7 @@ export default async function LayoutDashboard({
       perfectamente. Un aviso flotante ahi seria peor, no mejor.
     */
     <ProveedorAvisos>
+      <RastroNavegacion />
       {reloj && (
         <GuardianSesion
           accesoCaducaEn={reloj.accesoCaducaEn}
