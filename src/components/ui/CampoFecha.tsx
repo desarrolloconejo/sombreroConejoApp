@@ -41,8 +41,19 @@ import { useFlotante } from "./useFlotante";
  * el control nativo: las actions no notan la diferencia.
  */
 
-const ALTO_PANEL = 372;
-const ANCHO_PANEL = 300;
+/**
+ * El panel mide siempre lo mismo: seis semanas, el titulo en una linea y
+ * filas de alto fijo. Si cambiara con el mes (hay meses de cuatro, cinco y
+ * seis semanas, y nombres largos como septiembre), saltaria al pasar de uno
+ * a otro y las flechas se moverian bajo el dedo.
+ *
+ * 12 + 40 (cabecera) + 28 (dias) + 6 x 40 (semanas) + 52 (pie) + 12 + 2 de
+ * borde = 386. Se reserva algo mas: si el tope quedara justo, el panel
+ * sacaria una barra de desplazamiento por un pixel.
+ */
+const SEMANAS_VISIBLES = 6;
+const ALTO_PANEL = 392;
+const ANCHO_PANEL = 320;
 
 const DIAS_SEMANA = [
   { corto: "L", largo: "lunes" },
@@ -226,6 +237,11 @@ export function CampoFecha({
 
   const visible = piezasDe(foco);
   const semanas = visible ? semanasDelMes(visible.ano, visible.mes) : [];
+  // Siempre seis semanas: las que faltan se completan con el mes siguiente.
+  while (semanas.length > 0 && semanas.length < SEMANAS_VISIBLES) {
+    const ultimo = semanas[semanas.length - 1][6];
+    semanas.push(Array.from({ length: 7 }, (_, i) => sumarDias(ultimo, i + 1)));
+  }
   const primeroDelMes = visible ? foco.slice(0, 8) + "01" : "";
 
   const descrito =
@@ -291,16 +307,20 @@ export function CampoFecha({
               aria-labelledby={idTitulo}
               onKeyDown={alPulsarTecla}
               style={posicion}
-              className="fixed z-50 overflow-y-auto rounded-2xl border border-borde bg-superficie p-3 shadow-[var(--sombra-alta)]"
+              className="fixed z-50 overflow-y-auto rounded-2xl border border-borde bg-superficie p-3 shadow-[var(--sombra-alta)] select-none"
             >
-              <div className="mb-2 flex items-center gap-0.5">
+              <div className="flex h-10 items-center gap-0.5">
                 <button type="button" aria-label="Ano anterior" className={BOTON_NAVEGAR} onClick={() => mover(sumarMeses(foco, -12))}>
                   <ChevronsLeft aria-hidden="true" />
                 </button>
                 <button type="button" aria-label="Mes anterior" className={BOTON_NAVEGAR} onClick={() => mover(sumarMeses(foco, -1))}>
                   <ChevronLeft aria-hidden="true" />
                 </button>
-                <p id={idTitulo} aria-live="polite" className="flex-1 text-center text-[13.5px] font-bold first-letter:uppercase">
+                <p
+                  id={idTitulo}
+                  aria-live="polite"
+                  className="min-w-0 flex-1 truncate text-center text-[13.5px] font-bold whitespace-nowrap first-letter:uppercase"
+                >
                   {MES.format(comoFecha(primeroDelMes))}
                 </p>
                 <button type="button" aria-label="Mes siguiente" className={BOTON_NAVEGAR} onClick={() => mover(sumarMeses(foco, 1))}>
@@ -315,7 +335,7 @@ export function CampoFecha({
                 <thead>
                   <tr>
                     {DIAS_SEMANA.map((dia) => (
-                      <th key={dia.largo} scope="col" abbr={dia.largo} className="pb-1 text-[11px] font-semibold text-suave">
+                      <th key={dia.largo} scope="col" abbr={dia.largo} className="h-7 text-[11px] font-semibold text-suave">
                         {dia.corto}
                       </th>
                     ))}
@@ -329,7 +349,7 @@ export function CampoFecha({
                         const elegido = dia === valor;
                         const permitido = dentroDe(dia, min, max);
                         return (
-                          <td key={dia} className="p-0.5">
+                          <td key={dia} className="h-10 p-0.5">
                             <button
                               type="button"
                               data-dia={dia}
@@ -362,7 +382,7 @@ export function CampoFecha({
                 </tbody>
               </table>
 
-              <div className="mt-2 flex items-center justify-between gap-2 border-t border-borde pt-2">
+              <div className="mt-1 flex h-12 items-center justify-between gap-2 border-t border-borde pt-1">
                 <button
                   type="button"
                   disabled={!dentroDe(hoy, min, max)}
