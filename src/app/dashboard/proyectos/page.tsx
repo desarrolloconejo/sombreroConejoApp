@@ -78,14 +78,10 @@ export default async function PaginaProyectos(props: PageProps<"/dashboard/proye
       tx,
     );
 
-    // El alta necesita saber quien puede llevar cada proyecto.
+    // El alta necesita saber quien puede llevar cada proyecto: los ejecutivos
+    // de cuentas asignados a cada empresa.
     const alta =
-      estado.panel === "nuevo"
-        ? {
-            administradores: await proyectosModelo.administradores(tx),
-            asignaciones: await asignacionesModelo.visibles(tx),
-          }
-        : null;
+      estado.panel === "nuevo" ? { asignaciones: await asignacionesModelo.visibles(tx) } : null;
 
     return { empresas, pagina, alta, empresaIds };
   });
@@ -143,7 +139,6 @@ export default async function PaginaProyectos(props: PageProps<"/dashboard/proye
             >
               <FormularioProyecto
                 empresas={datos.empresas}
-                administradores={datos.alta.administradores}
                 asignaciones={datos.alta.asignaciones}
                 usuarioId={usuario.id}
                 empresaInicial={datos.empresaIds[0] ?? null}

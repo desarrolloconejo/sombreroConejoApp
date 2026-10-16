@@ -372,21 +372,10 @@ export async function empresasGestionables(ejecutor: Ejecutor): Promise<NombreEm
   );
 }
 
-/** Los administradores activos: pueden llevar cualquier proyecto. */
-export async function administradores(ejecutor: Ejecutor): Promise<PersonaBreve[]> {
-  return consultar<PersonaBreve>(
-    `SELECT id, nombre || ' ' || apellido AS nombre
-     FROM vw_usuarios_completos
-     WHERE activo AND rol = 'admin'
-     ORDER BY lower(nombre), lower(apellido)`,
-    [],
-    ejecutor,
-  );
-}
-
 /**
- * Quien puede llevar un proyecto de una empresa: los administradores activos
- * y los ejecutivos asignados a ella.
+ * Quien puede llevar un proyecto de una empresa: SOLO los ejecutivos de
+ * cuentas activos asignados a ella. Un administrador no lleva proyectos: si
+ * quiere uno, se le asigna la empresa como a cualquier ejecutivo.
  */
 export async function ejecutivosPosibles(
   empresaId: number,
@@ -396,12 +385,10 @@ export async function ejecutivosPosibles(
     `SELECT v.id, v.nombre || ' ' || v.apellido AS nombre
      FROM vw_usuarios_completos v
      WHERE v.activo
-       AND (
-         v.rol = 'admin'
-         OR (v.cargo_slug = 'cuentas' AND EXISTS (
-           SELECT 1 FROM portal.asignaciones a
-           WHERE a.usuario_id = v.id AND a.empresa_id = $1
-         ))
+       AND v.cargo_slug = 'cuentas'
+       AND EXISTS (
+         SELECT 1 FROM portal.asignaciones a
+         WHERE a.usuario_id = v.id AND a.empresa_id = $1
        )
      ORDER BY lower(v.nombre), lower(v.apellido)`,
     [empresaId],

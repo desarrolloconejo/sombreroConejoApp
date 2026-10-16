@@ -31,7 +31,7 @@ export function EditarProyecto({
   hrefCancelar,
 }: {
   proyecto: Proyecto;
-  /** Quien puede llevarlo: administradores y ejecutivos de la empresa. */
+  /** Quien puede llevarlo: los ejecutivos de cuentas asignados a la empresa. */
   ejecutivos: PersonaBreve[];
   hrefCancelar: string;
 }) {
@@ -73,7 +73,20 @@ export function EditarProyecto({
             id="editar-ejecutivo"
             nombre="ejecutivoId"
             etiqueta="Lo lleva"
-            opciones={ejecutivos.map((p) => ({ valor: String(p.id), texto: p.nombre }))}
+            opciones={[
+              // Quien lo lleva hoy sigue en la lista aunque ya no pueda elegirse
+              // (un administrador de antes, alguien que dejo la cuenta).
+              ...(ejecutivos.some((p) => p.id === proyecto.ejecutivoId)
+                ? []
+                : [
+                    {
+                      valor: String(proyecto.ejecutivoId),
+                      texto: proyecto.ejecutivoNombre,
+                      detalle: "Lo lleva hoy; ya no se puede elegir",
+                    },
+                  ]),
+              ...ejecutivos.map((p) => ({ valor: String(p.id), texto: p.nombre })),
+            ]}
             valorInicial={String(proyecto.ejecutivoId)}
             error={errores.ejecutivoId}
             className="col-span-2"
