@@ -3,10 +3,15 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
-import { BotonIcono, CLASE_CONTROL } from "@/components/ui";
+import { BotonIcono, CLASE_CONTROL, Selector } from "@/components/ui";
 import { importesDe, subtotalDe } from "@/lib/finanzas/calculo";
 import { dolares } from "@/lib/finanzas/documentos";
 import type { Renglon, RenglonNuevo } from "@/types";
+
+const OPCIONES_IVA = [
+  { valor: "no", texto: "Gravado" },
+  { valor: "si", texto: "Exento" },
+];
 
 /**
  * Los renglones de un borrador, editables, con su vista previa.
@@ -128,21 +133,23 @@ export function EditorRenglones({
                 />
               </label>
 
-              <label className="col-span-2 sm:col-span-1">
-                <span className={`mb-1.5 block text-[11.5px] font-semibold ${indice > 0 ? "sm:sr-only" : ""}`}>
+              <div className="col-span-2 sm:col-span-1">
+                <span
+                  aria-hidden="true"
+                  className={`mb-1.5 block text-[11.5px] font-semibold ${indice > 0 ? "sm:sr-only" : ""}`}
+                >
                   IVA
                 </span>
-                <select
-                  name="exento"
-                  value={fila.exento ? "si" : "no"}
-                  onChange={(evento) => cambiar(fila.clave, { exento: evento.target.value === "si" })}
-                  aria-label={`IVA del renglon ${numero}`}
-                  className={`${CLASE_CONTROL} cursor-pointer`}
-                >
-                  <option value="no">Gravado</option>
-                  <option value="si">Exento</option>
-                </select>
-              </label>
+                <Selector
+                  id={`renglon-${fila.clave}-iva`}
+                  nombre="exento"
+                  etiqueta={`IVA del renglon ${numero}`}
+                  etiquetaOculta
+                  valor={fila.exento ? "si" : "no"}
+                  onCambio={(valor) => cambiar(fila.clave, { exento: valor === "si" })}
+                  opciones={OPCIONES_IVA}
+                />
+              </div>
 
               {/* En movil, subtotal y quitar comparten fila; en escritorio cada
                   uno ocupa su columna (`sm:contents` deshace la envoltura). */}

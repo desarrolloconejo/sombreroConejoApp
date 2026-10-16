@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { Check, Copy, KeyRound, LoaderCircle, Smartphone } from "lucide-react";
 
 import { confirmarDosPasos, iniciarDosPasos } from "@/actions/dosPasos";
-import { Alerta, Boton, Campo } from "@/components/ui";
+import { Alerta, Boton, Campo, useCopiar } from "@/components/ui";
 import { ESTADO_INICIAL, type EstadoDosPasos } from "@/types";
 
 /** El margen en blanco que el estandar pide alrededor de un QR, en modulos. */
@@ -41,7 +41,7 @@ export function ConfigurarDosPasos({
     confirmarDosPasos,
     ESTADO_INICIAL as EstadoDosPasos,
   );
-  const [copiado, setCopiado] = useState(false);
+  const { copiado, copiar } = useCopiar();
 
   // Tras un codigo equivocado la action devuelve el mismo secreto: manda la
   // respuesta mas reciente.
@@ -49,16 +49,6 @@ export function ConfigurarDosPasos({
   const enlace = confirmacion.enlace ?? inicio.enlace;
   const qr = confirmacion.qr ?? inicio.qr;
   const respaldos = confirmacion.respaldos;
-
-  async function copiar(texto: string) {
-    try {
-      await navigator.clipboard.writeText(texto);
-      setCopiado(true);
-      window.setTimeout(() => setCopiado(false), 2200);
-    } catch {
-      // Sin permiso para el portapapeles, el texto sigue a la vista.
-    }
-  }
 
   // --- 3. Activada: los codigos de respaldo, una sola vez -------------------
   if (respaldos) {

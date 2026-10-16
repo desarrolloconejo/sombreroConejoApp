@@ -6,7 +6,7 @@ import { Check, Copy, Link2, Link2Off, TriangleAlert } from "lucide-react";
 
 import { crearEnlace, revocarEnlace } from "@/actions/briefs";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, Campo, CampoSelect, Etiqueta, useCampos } from "@/components/ui";
+import { Boton, Campo, Etiqueta, Selector, useCampos, useCopiar } from "@/components/ui";
 import { ESTADO_INICIAL, type EstadoFormulario } from "@/types";
 
 /**
@@ -36,19 +36,11 @@ const VACIOS = { empresaNombre: "", contactoNombre: "", email: "", telefono: "" 
 
 /** La ruta recien generada, entera, con boton de copiar que confirma. */
 function EnlaceGenerado({ ruta }: { ruta: string }) {
-  const [copiado, setCopiado] = useState(false);
-  const [fallo, setFallo] = useState(false);
+  const { copiado, fallo, copiar: copiarTexto } = useCopiar(2500);
   const url = typeof window === "undefined" ? ruta : `${window.location.origin}${ruta}`;
 
   async function copiar() {
-    try {
-      await navigator.clipboard.writeText(url);
-      setFallo(false);
-      setCopiado(true);
-      window.setTimeout(() => setCopiado(false), 2500);
-    } catch {
-      setFallo(true);
-    }
+    await copiarTexto(url);
   }
 
   return (
@@ -122,21 +114,16 @@ function NuevoEnlace({ formatos }: { formatos: { clave: string; nombre: string }
           {...campo("email")}
         />
         <Campo id="enlace-telefono" etiqueta="Telefono" opcional maxLength={40} {...campo("telefono")} />
-        <CampoSelect
+        <Selector
           id="enlace-formato"
+          nombre="formato"
           etiqueta="Tipo de brief"
-          name="formato"
-          value={formato}
-          onChange={(evento) => setFormato(evento.target.value)}
+          valor={formato}
+          onCambio={setFormato}
           error={errores.formato}
           className="sm:col-span-2"
-        >
-          {formatos.map((f) => (
-            <option key={f.clave} value={f.clave}>
-              {f.nombre}
-            </option>
-          ))}
-        </CampoSelect>
+          opciones={formatos.map((f) => ({ valor: f.clave, texto: f.nombre }))}
+        />
         <div className="flex justify-end sm:col-span-2">
           <Boton type="submit" disabled={enviando}>
             <Link2 aria-hidden="true" />

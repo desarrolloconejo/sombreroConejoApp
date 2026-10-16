@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { Check, Copy, LoaderCircle, RotateCw } from "lucide-react";
 
 import { marcarCorreoEntregado, reintentarCorreo } from "@/actions/correos";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton } from "@/components/ui";
+import { Boton, useCopiar } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
 
 /**
@@ -28,7 +28,7 @@ export function AccionesCorreo({
   puedeMarcar: boolean;
   puedeReintentar: boolean;
 }) {
-  const [copiado, setCopiado] = useState(false);
+  const { copiado, copiar: copiarTexto } = useCopiar();
 
   const [marcado, marcar, marcando] = useActionState(
     marcarCorreoEntregado,
@@ -43,15 +43,7 @@ export function AccionesCorreo({
   useAvisoDeAccion(reintento);
 
   async function copiar() {
-    try {
-      await navigator.clipboard.writeText(texto);
-      setCopiado(true);
-      window.setTimeout(() => setCopiado(false), 2200);
-    } catch {
-      // Sin permiso para el portapapeles (o en http fuera de localhost) no
-      // se puede copiar: el texto sigue a la vista para seleccionarlo.
-      setCopiado(false);
-    }
+    await copiarTexto(texto);
   }
 
   return (

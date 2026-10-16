@@ -5,8 +5,10 @@ import { CalendarCheck, CheckCheck, Undo2 } from "lucide-react";
 
 import { completarFase, planificarFase, regresarFase } from "@/actions/piezas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CLASE_CONTROL } from "@/components/ui";
+import { Boton, CLASE_CONTROL, Selector } from "@/components/ui";
 import { ESTADO_INICIAL, type FasePieza, type PersonaDeEquipo } from "@/types";
+
+import { opcionesDeEquipo } from "./opcionesEquipo";
 
 /**
  * Lo que el ejecutivo hace con una fase: completarla, regresarla y
@@ -130,24 +132,19 @@ export function PlanificarFase({
       </div>
 
       <div className="min-w-0 flex-1">
-        <label htmlFor={`${id}-responsable`} className="mb-1 block text-[11px] font-semibold text-suave">
+        <span aria-hidden="true" className="mb-1 block text-[11px] font-semibold text-suave">
           Responsable
-        </label>
-        <select
+        </span>
+        <Selector
           id={`${id}-responsable`}
-          name="responsableId"
-          value={responsable}
-          onChange={(e) => setResponsable(e.target.value)}
-          className={`${CLASE_CONTROL} min-h-10 cursor-pointer py-2`}
-        >
-          <option value="">Sin asignar</option>
-          {equipo.map((persona) => (
-            <option key={persona.id} value={persona.id}>
-              {persona.nombre}
-              {persona.cargo ? ` · ${persona.cargo}` : ""}
-            </option>
-          ))}
-        </select>
+          nombre="responsableId"
+          etiqueta="Responsable"
+          etiquetaOculta
+          compacto
+          valor={responsable}
+          onCambio={setResponsable}
+          opciones={opcionesDeEquipo(equipo)}
+        />
       </div>
 
       <Boton type="submit" variante="fantasma" tamano="chico" disabled={enviando}>

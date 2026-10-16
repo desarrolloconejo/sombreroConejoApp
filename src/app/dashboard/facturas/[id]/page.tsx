@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { AnularFactura, EtiquetaCobro, ImprimirFactura, ProveedorFactura, ResumenCobro } from "@/components/facturas";
 import { fechaDia, fechaHora, ResumenImportes, SECCION_DOCUMENTO, TablaRenglones } from "@/components/finanzas";
 import { Wrapper } from "@/components/layout/Wrapper";
+import { BotonCopiar } from "@/components/ui";
 import { FormularioPago, ListaPagos } from "@/components/pagos";
 import { registrarPago } from "@/actions/pagos";
 import { conSesion } from "@/lib/db";
@@ -22,13 +23,31 @@ export const metadata: Metadata = {
   title: "Factura",
 };
 
+/** Un dato con su boton de copiar al lado, si lo hay. */
+function Copiable({ valor, que, falta }: { valor: string; que: string; falta: string }) {
+  if (!valor) return <>{falta}</>;
+  return (
+    <span className="inline-flex max-w-full items-start gap-1.5">
+      <span className="min-w-0">{valor}</span>
+      <BotonCopiar texto={valor} que={que} className="-my-1" />
+    </span>
+  );
+}
+
 function Parte({ titulo, parte }: { titulo: string; parte: ParteFactura }) {
+  const de = titulo.toLowerCase();
   return (
     <div>
       <p className="text-[11.5px] font-semibold uppercase tracking-[0.06em] text-suave">{titulo}</p>
-      <p className="mt-1 text-[13.5px] font-bold">{parte.razonSocial}</p>
-      <p className="text-[12.5px] tabular-nums">{parte.rif || "Sin RIF"}</p>
-      <p className="mt-0.5 text-[12.5px] leading-relaxed text-suave">{parte.domicilio || "Sin domicilio"}</p>
+      <p className="mt-1 text-[13.5px] font-bold">
+        <Copiable valor={parte.razonSocial} que={`la razon social del ${de}`} falta="Sin razon social" />
+      </p>
+      <p className="text-[12.5px] tabular-nums">
+        <Copiable valor={parte.rif} que={`el RIF del ${de}`} falta="Sin RIF" />
+      </p>
+      <p className="mt-0.5 text-[12.5px] leading-relaxed text-suave">
+        <Copiable valor={parte.domicilio} que={`el domicilio del ${de}`} falta="Sin domicilio" />
+      </p>
     </div>
   );
 }
@@ -71,6 +90,14 @@ export default async function PaginaFactura(props: PageProps<"/dashboard/factura
       <ProveedorFactura>
         <div className="surge flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-suave">
           <EtiquetaCobro cobro={factura.cobro} vencida={factura.vencida} />
+          <span className="inline-flex items-center gap-1">
+            Numero <b className="font-semibold text-texto tabular-nums">{numero}</b>
+            <BotonCopiar texto={numero} que="el numero de factura" />
+          </span>
+          <span className="inline-flex items-center gap-1">
+            Control <b className="font-semibold text-texto tabular-nums">{factura.numeroControl}</b>
+            <BotonCopiar texto={factura.numeroControl} que="el numero de control" />
+          </span>
           <span>Emitida el {fechaDia(factura.fechaEmision)}</span>
           <span>Vence el {fechaDia(factura.venceEl)}</span>
           <span>

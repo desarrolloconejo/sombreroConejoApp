@@ -30,6 +30,20 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // La lista de un <select> la pinta el sistema operativo, con sus colores
+    // y no con los del tema. Los desplegables son Selector.
+    files: ["src/**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXOpeningElement[name.name='select']",
+          message: "Nada de <select> nativo: usa Selector de @/components/ui.",
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

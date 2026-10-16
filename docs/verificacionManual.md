@@ -315,3 +315,34 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
    ruta con su guardia) y `prueba:permisos` la seccion «Estructura».
 
 **Piloto**: se sigue `docs/planPiloto.md` cuando se elija cliente y fecha.
+
+## Mejora — Desplegables y botones de copiar
+
+**Desplegables (en claro, en oscuro y en el telefono)**
+
+1. Ningun desplegable abre la lista azul del sistema: todos se ven con los
+   colores del tema. Revisar:
+   - Tablero: los filtros.
+   - Una pieza: el responsable de la fase y de las tareas.
+   - Proyecto nuevo: el tipo de cada pieza.
+   - Presupuesto: el IVA de los renglones.
+   - Factura: el formato de impresion.
+   - Reportar un pago: medio y moneda.
+   - Ajustes de finanzas: la retencion de cada empresa y la alineacion en un
+     formato.
+   - Briefs: el tipo de brief del enlace.
+2. Dentro de las tablas (alineacion de un formato, renglones) la lista se ve
+   entera y no queda cortada; cerca del borde de abajo abre hacia arriba.
+3. Con el teclado: Tab hasta el desplegable, flechas, Enter para elegir y
+   Escape para cerrar.
+
+**Botones de copiar (como `admin@conejo.test` y `finanzas@conejo.test`)**
+
+4. Empresas → una ficha: nombre, RIF, telefono, direccion y cada enlace de
+   redes tienen su boton; al pulsarlo sale «Copiado el RIF» y se pega bien en
+   otro sitio.
+5. Usuarios → una ficha: correo y telefono.
+6. Una factura: numero, numero de control, y razon social, RIF y domicilio
+   del cliente y del emisor.
+7. Cobranza: el RIF y el telefono de cada empresa con deuda, tambien en el
+   telefono.

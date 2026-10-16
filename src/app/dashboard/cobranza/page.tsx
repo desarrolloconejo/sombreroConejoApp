@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 
 import { SECCION_DOCUMENTO } from "@/components/finanzas";
 import { Wrapper } from "@/components/layout/Wrapper";
+import { BotonCopiar } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { aEscalado, deEscalado } from "@/lib/finanzas/calculo";
 import { bolivares } from "@/lib/finanzas/documentos";
@@ -31,6 +32,27 @@ const TRAMOS: { clave: keyof CobranzaEmpresa; texto: string }[] = [
 function sumar(importes: string[]): string {
   const total = importes.reduce((suma, importe) => suma + (aEscalado(importe, 2) ?? BigInt(0)), BigInt(0));
   return deEscalado(total, 2);
+}
+
+/** RIF y telefono de la empresa, cada uno con su boton de copiar. */
+function ContactoCobro({ empresa }: { empresa: CobranzaEmpresa }) {
+  if (!empresa.rif && !empresa.telefono) return null;
+  return (
+    <span className="flex flex-wrap items-center gap-x-3 text-[11.5px] text-suave">
+      {empresa.rif && (
+        <span className="inline-flex items-center gap-0.5 tabular-nums">
+          {empresa.rif}
+          <BotonCopiar texto={empresa.rif} que={`el RIF de ${empresa.empresaNombre}`} />
+        </span>
+      )}
+      {empresa.telefono && (
+        <span className="inline-flex items-center gap-0.5 tabular-nums">
+          {empresa.telefono}
+          <BotonCopiar texto={empresa.telefono} que={`el telefono de ${empresa.empresaNombre}`} />
+        </span>
+      )}
+    </span>
+  );
 }
 
 function rutaDeEmpresa(empresaId: number): string {
@@ -86,10 +108,10 @@ export default async function PaginaCobranza() {
           <>
             <ul aria-label="Deuda por empresa" className="flex flex-col md:hidden">
               {empresas.map((empresa) => (
-                <li key={empresa.empresaId} className="border-b border-borde last:border-0">
+                <li key={empresa.empresaId} className="border-b border-borde py-1 last:border-0">
                   <Link
                     href={rutaDeEmpresa(empresa.empresaId)}
-                    className="suave -mx-2 flex items-center gap-3 rounded-xl px-2 py-3 hover:bg-acento-tenue"
+                    className="suave -mx-2 flex items-center gap-3 rounded-xl px-2 pt-2 pb-1 hover:bg-acento-tenue"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[14px] font-bold">{empresa.empresaNombre}</p>
@@ -101,6 +123,7 @@ export default async function PaginaCobranza() {
                     <p className="text-[14px] font-bold tabular-nums">{bolivares(empresa.total)}</p>
                     <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-suave" />
                   </Link>
+                  <ContactoCobro empresa={empresa} />
                 </li>
               ))}
             </ul>
@@ -133,6 +156,7 @@ export default async function PaginaCobranza() {
                         >
                           {empresa.empresaNombre}
                         </Link>
+                        <ContactoCobro empresa={empresa} />
                         <span className="block text-[11.5px] text-suave">
                           {empresa.facturas} {empresa.facturas === 1 ? "factura" : "facturas"}
                           {empresa.retencionesAbiertas > 0

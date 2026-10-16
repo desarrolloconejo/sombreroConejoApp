@@ -229,6 +229,9 @@ export type DatosFiscalesEmpresa = {
 export type CobranzaEmpresa = {
   empresaId: number;
   empresaNombre: string;
+  /** Para escribirle o llamarle al cobrar, con su boton de copiar. */
+  rif: string | null;
+  telefono: string | null;
   facturas: number;
   porVencer: string;
   dias0a30: string;

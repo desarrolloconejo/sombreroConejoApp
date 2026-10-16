@@ -5,7 +5,7 @@ import { Copy, MessageSquarePlus, Save } from "lucide-react";
 
 import { comentarPieza, guardarCopy } from "@/actions/piezas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton } from "@/components/ui";
+import { Boton, useCopiar } from "@/components/ui";
 import { ESTADO_INICIAL, type ComentarioPieza } from "@/types";
 import { ZONA_HORARIA } from "@/lib/fechas";
 
@@ -34,17 +34,10 @@ export function CopyPieza({
   useAvisoDeAccion(estado);
 
   const [texto, setTexto] = useState(copy);
-  const [copiado, setCopiado] = useState(false);
+  const { copiado, copiar: copiarTexto } = useCopiar(1600);
 
   async function copiar() {
-    try {
-      await navigator.clipboard.writeText(texto);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 1600);
-    } catch {
-      // Sin permiso para el portapapeles no hay nada que hacer: el texto
-      // sigue ahi para seleccionarlo a mano.
-    }
+    await copiarTexto(texto);
   }
 
   return (

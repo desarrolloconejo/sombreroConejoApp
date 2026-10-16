@@ -202,6 +202,8 @@ export async function cobranza(ejecutor: Ejecutor): Promise<CobranzaEmpresa[]> {
      )
      SELECT a.empresa_id                                                  AS "empresaId",
             e.nombre                                                      AS "empresaNombre",
+            e.rif,
+            e.telefono,
             count(*)::int                                                 AS facturas,
             coalesce(sum(a.saldo) FILTER (WHERE a.dias <= 0), 0)::text            AS "porVencer",
             coalesce(sum(a.saldo) FILTER (WHERE a.dias BETWEEN 1 AND 30), 0)::text  AS "dias0a30",
@@ -211,7 +213,7 @@ export async function cobranza(ejecutor: Ejecutor): Promise<CobranzaEmpresa[]> {
             coalesce(sum(a.saldo), 0)::text                                         AS total,
             count(*) FILTER (WHERE a.retencion_abierta)::int                        AS "retencionesAbiertas"
      FROM abiertas a JOIN empresas e ON e.id = a.empresa_id
-     GROUP BY a.empresa_id, e.nombre
+     GROUP BY a.empresa_id, e.nombre, e.rif, e.telefono
      ORDER BY sum(a.saldo) DESC, e.nombre`,
     [],
     ejecutor,

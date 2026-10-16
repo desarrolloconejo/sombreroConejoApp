@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { avisado, entrar } from "./ayudas/briefs";
 import { proformaEmitida } from "./ayudas/finanzas";
+import { elegirOpcion } from "./ayudas/formularios";
 
 /**
  * Pagos de punta a punta: el cliente reporta un pago con su comprobante;
@@ -33,8 +34,8 @@ test("el cliente reporta, administracion confirma y rechaza", async ({ page }) =
   await page.getByRole("link", { name: new RegExp(numero ?? "sin-numero") }).click();
   await expect(page).toHaveURL(new RegExp(`/dashboard/facturacion/facturas/${id}$`), { timeout: 60_000 });
 
-  await page.getByLabel("Como pagaste").selectOption({ label: "Transferencia bancaria" });
-  await page.getByLabel("Moneda").selectOption("VES");
+  await elegirOpcion(page, "Como pagaste", "Transferencia bancaria");
+  await elegirOpcion(page, "Moneda", /bolivares/i);
   await page.getByLabel(/^Monto/).fill("1000");
   await page.getByLabel("Numero de referencia").fill("000999");
   await page.getByRole("button", { name: "Reportar" }).click();
@@ -63,7 +64,7 @@ test("el cliente reporta, administracion confirma y rechaza", async ({ page }) =
 
   // ---- Registra otro a nombre del cliente, en dolares, y lo rechaza.
   await page.getByText("Registrar un pago a nombre del cliente").click();
-  await page.getByLabel("Como pagaste").selectOption({ label: "Zelle" });
+  await elegirOpcion(page, "Como pagaste", "Zelle");
   await page.getByLabel(/^Monto/).fill("10");
   await page.getByLabel("Numero de referencia").fill("ZL-1");
   await page.getByRole("button", { name: "Registrar a nombre del cliente" }).click();

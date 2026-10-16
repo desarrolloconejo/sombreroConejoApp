@@ -209,22 +209,16 @@ export function FormularioProyecto({
                   {String(indice + 1).padStart(2, "0")}
                 </span>
 
-                <label className="sr-only" htmlFor={`pieza-tipo-${fila.clave}`}>
-                  Tipo de la pieza {indice + 1}
-                </label>
-                <select
+                <Selector
                   id={`pieza-tipo-${fila.clave}`}
-                  name="piezaTipo"
-                  value={fila.tipo}
-                  onChange={(e) => cambiarFila(fila.clave, { tipo: e.target.value as TipoPieza })}
-                  className={`${CLASE_CONTROL} w-[132px] shrink-0 cursor-pointer`}
-                >
-                  {servicio.tiposDePieza.map((tipo) => (
-                    <option key={tipo} value={tipo}>
-                      {NOMBRES_DE_TIPO_PIEZA[tipo]}
-                    </option>
-                  ))}
-                </select>
+                  nombre="piezaTipo"
+                  etiqueta={`Tipo de la pieza ${indice + 1}`}
+                  etiquetaOculta
+                  className="w-[132px] shrink-0"
+                  valor={fila.tipo}
+                  onCambio={(valor) => cambiarFila(fila.clave, { tipo: valor as TipoPieza })}
+                  opciones={servicio.tiposDePieza.map((tipo) => ({ valor: tipo, texto: NOMBRES_DE_TIPO_PIEZA[tipo] }))}
+                />
 
                 <label className="sr-only" htmlFor={`pieza-titulo-${fila.clave}`}>
                   Titulo de la pieza {indice + 1}

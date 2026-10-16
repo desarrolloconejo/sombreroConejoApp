@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
 
 /**
@@ -22,6 +23,15 @@ import { Check, ChevronDown } from "lucide-react";
  *     cualquier otro campo.
  *
  * Si esto no estuviera, seria un desplegable bonito e inutilizable sin raton.
+ *
+ * La lista se pinta en el <body>, fija sobre la pantalla y medida contra el
+ * boton. Dentro de una tabla con desplazamiento lateral, una lista absoluta
+ * quedaria recortada por la tabla. Si no cabe debajo, abre hacia arriba, y
+ * al desplazar la pagina se vuelve a medir para seguir pegada al boton.
+ *
+ * Es controlado si recibe `valor` (quien lo usa guarda el estado y lo cambia
+ * con `onCambio`), y no controlado con `valorInicial`. Sin `nombre` no envia
+ * nada: sirve para elegir algo que no es un formulario.
  */
 
 export type OpcionSelector = {
@@ -32,15 +42,24 @@ export type OpcionSelector = {
 };
 
 const DISPARADOR =
-  "flex w-full min-h-11 cursor-pointer items-center gap-2.5 rounded-xl " +
-  "border-[1.5px] border-borde bg-campo px-3.5 py-3 text-left text-[13.5px] " +
+  "flex w-full cursor-pointer items-center gap-2.5 rounded-xl " +
+  "border-[1.5px] border-borde bg-campo text-left text-[13.5px] " +
 
   "focus:outline-none focus:border-acento focus:bg-superficie focus:shadow-[var(--foco)] " +
   "disabled:cursor-not-allowed disabled:opacity-60 " +
   "aria-[invalid=true]:border-blackberry";
 
+const TAMANO = {
+  normal: "min-h-11 px-3.5 py-3",
+  compacto: "min-h-9 px-3 py-2",
+} as const;
+
+// Lo que se deja libre entre la lista y el borde de la pantalla.
+const MARGEN = 8;
+const ALTO_LISTA = 256;
+
 const LISTA =
-  "absolute z-30 mt-1.5 max-h-64 w-full overflow-y-auto rounded-xl " +
+  "fixed z-50 max-h-64 overflow-y-auto rounded-xl " +
   "border border-borde bg-superficie p-1.5 shadow-[var(--sombra-alta)]";
 
 const OPCION =
@@ -52,8 +71,11 @@ export function Selector({
   nombre,
   etiqueta,
   opciones,
+  valor: valorControlado,
   valorInicial = "",
   marcador = "Elige una opcion",
+  etiquetaOculta,
+  compacto,
   error,
   ayuda,
   requerido,
@@ -62,11 +84,18 @@ export function Selector({
   onCambio,
 }: {
   id: string;
-  nombre: string;
+  /** El nombre con que lo envia el formulario. Sin el, no envia nada. */
+  nombre?: string;
   etiqueta: string;
   opciones: OpcionSelector[];
+  /** Si viene, el selector es controlado: muestra esto y avisa con onCambio. */
+  valor?: string;
   valorInicial?: string;
   marcador?: string;
+  /** La etiqueta solo la oye el lector de pantalla: para celdas de una tabla. */
+  etiquetaOculta?: boolean;
+  /** Mas bajo, para filas y filtros. */
+  compacto?: boolean;
   error?: string;
   ayuda?: string;
   requerido?: boolean;
@@ -74,9 +103,11 @@ export function Selector({
   className?: string;
   onCambio?: (valor: string) => void;
 }) {
-  const [valor, setValor] = useState(valorInicial);
+  const [valorPropio, setValorPropio] = useState(valorInicial);
+  const valor = valorControlado ?? valorPropio;
   const [abierto, setAbierto] = useState(false);
   const [resaltado, setResaltado] = useState(0);
+  const [posicion, setPosicion] = useState<CSSProperties>({});
 
   const caja = useRef<HTMLDivElement>(null);
   const disparador = useRef<HTMLButtonElement>(null);
@@ -97,23 +128,71 @@ export function Selector({
     if (!abierto) return;
 
     function alPulsarFuera(evento: MouseEvent) {
-      if (!caja.current?.contains(evento.target as Node)) setAbierto(false);
+      const objetivo = evento.target as Node;
+      if (caja.current?.contains(objetivo) || lista.current?.contains(objetivo)) return;
+      setAbierto(false);
+    }
+
+    // La lista esta fija en la pantalla: si la pagina se mueve o cambia de
+    // tamano, se vuelve a medir. Cerrarla no sirve: el propio navegador
+    // desplaza la pagina al enfocar el boton, y la lista se iria al abrirla.
+    let cuadro = 0;
+    function alMoverse(evento: Event) {
+      if (lista.current?.contains(evento.target as Node)) return;
+      cancelAnimationFrame(cuadro);
+      cuadro = requestAnimationFrame(() => setPosicion(medir()));
     }
 
     document.addEventListener("pointerdown", alPulsarFuera, true);
-    return () => document.removeEventListener("pointerdown", alPulsarFuera, true);
+    window.addEventListener("scroll", alMoverse, true);
+    window.addEventListener("resize", alMoverse);
+    return () => {
+      cancelAnimationFrame(cuadro);
+      document.removeEventListener("pointerdown", alPulsarFuera, true);
+      window.removeEventListener("scroll", alMoverse, true);
+      window.removeEventListener("resize", alMoverse);
+    };
   }, [abierto]);
 
   // La opcion resaltada tiene que verse aunque la lista este desplazada.
   useEffect(() => {
     if (!abierto) return;
 
-    lista.current
-      ?.querySelector<HTMLElement>(`[data-indice="${resaltado}"]`)
-      ?.scrollIntoView({ block: "nearest" });
+    // Se mueve solo la lista: scrollIntoView desplazaria tambien la pagina.
+    const caja = lista.current;
+    const opcion = caja?.querySelector<HTMLElement>(`[data-indice="${resaltado}"]`);
+    if (!caja || !opcion) return;
+    if (opcion.offsetTop < caja.scrollTop) {
+      caja.scrollTop = opcion.offsetTop;
+    } else if (opcion.offsetTop + opcion.offsetHeight > caja.scrollTop + caja.clientHeight) {
+      caja.scrollTop = opcion.offsetTop + opcion.offsetHeight - caja.clientHeight;
+    }
   }, [abierto, resaltado]);
 
+  /** Donde se pinta la lista: bajo el boton, o encima si no cabe. */
+  function medir(): CSSProperties {
+    const caja = disparador.current?.getBoundingClientRect();
+    if (!caja) return {};
+
+    const debajo = window.innerHeight - caja.bottom - MARGEN;
+    const arriba = caja.top - MARGEN;
+    const haciaArriba = debajo < ALTO_LISTA && arriba > debajo;
+    const ancho = Math.min(Math.max(caja.width, 180), window.innerWidth - MARGEN * 2);
+    const izquierda = Math.min(caja.left, window.innerWidth - ancho - MARGEN);
+
+    return {
+      left: Math.max(MARGEN, izquierda),
+      minWidth: ancho,
+      maxWidth: window.innerWidth - MARGEN * 2,
+      maxHeight: Math.min(ALTO_LISTA, Math.max(haciaArriba ? arriba : debajo, 120)),
+      ...(haciaArriba
+        ? { bottom: window.innerHeight - caja.top + 6 }
+        : { top: caja.bottom + 6 }),
+    };
+  }
+
   function abrir(indice?: number) {
+    setPosicion(medir());
     setResaltado(
       indice ?? Math.max(0, opciones.findIndex((o) => o.valor === valor)),
     );
@@ -124,7 +203,7 @@ export function Selector({
     const opcion = opciones[indice];
     if (!opcion) return;
 
-    setValor(opcion.valor);
+    setValorPropio(opcion.valor);
     setAbierto(false);
     disparador.current?.focus();
     onCambio?.(opcion.valor);
@@ -211,15 +290,16 @@ export function Selector({
     <div className={className}>
       <label
         htmlFor={id}
-        className="mb-2 block text-xs font-semibold"
+        className={etiquetaOculta ? "sr-only" : "mb-2 block text-xs font-semibold"}
         onClick={() => disparador.current?.focus()}
       >
         {etiqueta}
       </label>
 
       <div ref={caja} className="relative">
-        {/* Lo que de verdad envia el formulario. El boton es solo la fachada. */}
-        <input type="hidden" name={nombre} value={valor} />
+        {/* Lo que de verdad envia el formulario. El boton es solo la fachada.
+            Deshabilitado no se envia, igual que un control nativo. */}
+        {nombre && <input type="hidden" name={nombre} value={valor} disabled={deshabilitado} />}
 
         <button
           ref={disparador}
@@ -238,7 +318,7 @@ export function Selector({
           disabled={deshabilitado}
           onClick={() => (abierto ? setAbierto(false) : abrir())}
           onKeyDown={alPulsarTecla}
-          className={DISPARADOR}
+          className={`${DISPARADOR} ${compacto ? TAMANO.compacto : TAMANO.normal}`}
         >
           <span
             className={[
@@ -258,13 +338,14 @@ export function Selector({
           />
         </button>
 
-        {abierto && (
+        {abierto && createPortal(
           <ul
             ref={lista}
             id={idLista}
             role="listbox"
             aria-label={etiqueta}
             className={LISTA}
+            style={posicion}
           >
             {opciones.map((opcion, indice) => {
               const seleccionada = opcion.valor === valor;
@@ -308,7 +389,8 @@ export function Selector({
                 </li>
               );
             })}
-          </ul>
+          </ul>,
+          document.body,
         )}
       </div>
 

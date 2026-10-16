@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { avisado, entrar } from "./ayudas/briefs";
+import { elegirOpcion } from "./ayudas/formularios";
 
 /**
  * Ajustes de finanzas, del lado de administracion: emisor, numeracion que
@@ -76,10 +77,10 @@ test("administracion configura emisor, numeracion, medios y formatos", async ({ 
 
   // ---- Datos de facturacion de una empresa.
   await page.goto("/dashboard/ajustes-finanzas", { waitUntil: "networkidle" });
-  await page.getByLabel("Retencion de IVA de Distribuidora Ejemplo, C.A.").selectOption("75");
+  await elegirOpcion(page, "Retencion de IVA de Distribuidora Ejemplo, C.A.", "Retiene el 75 %");
   await page.getByRole("button", { name: "Guardar los datos de facturacion de Distribuidora Ejemplo, C.A." }).click();
   await avisado(page, "Datos de facturacion guardados");
-  await page.getByLabel("Retencion de IVA de Distribuidora Ejemplo, C.A.").selectOption("no");
+  await elegirOpcion(page, "Retencion de IVA de Distribuidora Ejemplo, C.A.", "No retiene");
   await page.getByRole("button", { name: "Guardar los datos de facturacion de Distribuidora Ejemplo, C.A." }).click();
   await avisado(page, "Datos de facturacion guardados");
 

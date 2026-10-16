@@ -92,55 +92,6 @@ export function Campo({
   );
 }
 
-/** Igual que Campo pero con un desplegable. */
-export function CampoSelect({
-  id,
-  etiqueta,
-  error,
-  ayuda,
-  className,
-  children,
-  ...resto
-}: {
-  id: string;
-  etiqueta: string;
-  error?: string;
-  ayuda?: string;
-  className?: string;
-  children: ReactNode;
-} & Omit<ComponentProps<"select">, "id" | "className" | "children">) {
-  const idError = `${id}-error`;
-
-  return (
-    <div className={className}>
-      <label htmlFor={id} className="mb-2 block text-xs font-semibold">
-        {etiqueta}
-      </label>
-      <select
-        id={id}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? idError : undefined}
-        className={`${CONTROL} cursor-pointer appearance-none pr-10`}
-        {...resto}
-      >
-        {children}
-      </select>
-      {ayuda && !error && (
-        <p className="mt-1.5 text-[11.5px] leading-relaxed text-suave">{ayuda}</p>
-      )}
-      {error && (
-        <p
-          id={idError}
-          role="alert"
-          className="mt-1.5 text-[11.5px] font-medium text-blackberry dark-tema:text-[#e9a9cd]"
-        >
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
-
 /** Dato que se muestra pero no se puede editar aqui. */
 export function CampoFijo({
   etiqueta,

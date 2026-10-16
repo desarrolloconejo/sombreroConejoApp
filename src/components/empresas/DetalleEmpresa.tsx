@@ -2,7 +2,7 @@ import { ExternalLink, Pencil, Users } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { BotonEnlace, Estado, Etiqueta } from "@/components/ui";
+import { BotonCopiar, BotonEnlace, Estado, Etiqueta } from "@/components/ui";
 import { ENLACES_EMPRESA } from "@/lib/validaciones";
 import type { Asignacion, Empresa, EstadoFicha, PersonaBreve } from "@/types";
 import { EjecutivosEmpresa } from "./EjecutivosEmpresa";
@@ -29,13 +29,23 @@ function Dato({ rotulo, children }: { rotulo: string; children: ReactNode }) {
   );
 }
 
-/** Un dato que puede faltar. Se dice que falta, no se deja el hueco mudo. */
-function Texto({ valor }: { valor: string | null }) {
+/**
+ * Un dato que puede faltar. Se dice que falta, no se deja el hueco mudo. Con
+ * `que`, lleva al lado su boton de copiar.
+ */
+function Texto({ valor, que }: { valor: string | null; que?: string }) {
   if (!valor) {
     return <span className="text-[12.5px] text-suave italic">Sin escribir</span>;
   }
 
-  return <>{valor}</>;
+  if (!que) return <>{valor}</>;
+
+  return (
+    <span className="inline-flex max-w-full items-start gap-1.5">
+      <span className="min-w-0">{valor}</span>
+      <BotonCopiar texto={valor} que={que} className="-my-1" />
+    </span>
+  );
 }
 
 function Cifra({ rotulo, valor }: { rotulo: string; valor: number }) {
@@ -83,8 +93,9 @@ export function DetalleEmpresa({
   return (
     <>
       <PanelCuerpo>
-        <p className="text-[19px] leading-snug font-bold tracking-[-0.022em]">
-          {empresa.nombre}
+        <p className="flex items-start gap-1.5 text-[19px] leading-snug font-bold tracking-[-0.022em]">
+          <span className="min-w-0">{empresa.nombre}</span>
+          <BotonCopiar texto={empresa.nombre} que="el nombre" className="mt-0.5" />
         </p>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -109,7 +120,7 @@ export function DetalleEmpresa({
 
         <dl>
           <Dato rotulo="RIF">
-            <Texto valor={empresa.rif} />
+            <Texto valor={empresa.rif} que="el RIF" />
           </Dato>
           <Dato rotulo="Sector">
             {empresa.sector ? (
@@ -129,10 +140,10 @@ export function DetalleEmpresa({
             )}
           </Dato>
           <Dato rotulo="Telefono">
-            <Texto valor={empresa.telefono} />
+            <Texto valor={empresa.telefono} que="el telefono" />
           </Dato>
           <Dato rotulo="Direccion">
-            <Texto valor={empresa.direccion} />
+            <Texto valor={empresa.direccion} que="la direccion" />
           </Dato>
         </dl>
 
@@ -155,7 +166,7 @@ export function DetalleEmpresa({
         ) : (
           <ul className="flex flex-col gap-1.5">
             {enlaces.map(({ rotulo, url }) => (
-              <li key={rotulo}>
+              <li key={rotulo} className="flex items-center gap-1.5">
                 {/*
                   `noreferrer noopener` porque son enlaces a sitios de fuera, y
                   `target="_blank"` para no perder la ficha que se esta mirando.
@@ -164,12 +175,13 @@ export function DetalleEmpresa({
                   href={url ?? "#"}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="suave grid grid-cols-[minmax(0,110px)_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-borde px-3.5 py-2.5 hover:border-acento hover:bg-acento-tenue"
+                  className="suave grid min-w-0 flex-1 grid-cols-[minmax(0,110px)_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-borde px-3.5 py-2.5 hover:border-acento hover:bg-acento-tenue"
                 >
                   <span className="text-[11.5px] font-bold text-suave">{rotulo}</span>
                   <span className="truncate text-[12.5px] text-acento">{url}</span>
                   <ExternalLink aria-hidden="true" className="size-4 shrink-0 text-suave" />
                 </a>
+                {url && <BotonCopiar texto={url} que={`el enlace de ${rotulo}`} />}
               </li>
             ))}
           </ul>
