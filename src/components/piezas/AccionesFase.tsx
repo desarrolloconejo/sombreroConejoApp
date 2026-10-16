@@ -113,12 +113,15 @@ export function PlanificarFase({
   const [responsable, setResponsable] = useState(String(fase.responsableId ?? ""));
 
   return (
-    <form action={enviar} className="flex flex-wrap items-end gap-2">
+    <form
+      action={enviar}
+      className="grid gap-3 rounded-xl border border-borde bg-campo p-4 sm:grid-cols-[170px_minmax(0,1fr)]"
+    >
       <input type="hidden" name="piezaId" value={piezaId} />
       <input type="hidden" name="fase" value={fase.fase} />
 
       <div>
-        <span aria-hidden="true" className="mb-1 block text-[11px] font-semibold text-suave">
+        <span aria-hidden="true" className="mb-1.5 block text-[11.5px] font-semibold text-suave">
           Fecha estimada
         </span>
         <CampoFecha
@@ -130,12 +133,11 @@ export function PlanificarFase({
           opcional
           valor={fecha}
           onCambio={setFecha}
-          className="w-[160px]"
         />
       </div>
 
       <div className="min-w-0 flex-1">
-        <span aria-hidden="true" className="mb-1 block text-[11px] font-semibold text-suave">
+        <span aria-hidden="true" className="mb-1.5 block text-[11.5px] font-semibold text-suave">
           Responsable
         </span>
         <Selector
@@ -150,16 +152,18 @@ export function PlanificarFase({
         />
       </div>
 
-      <Boton type="submit" variante="fantasma" tamano="chico" disabled={enviando}>
-        <CalendarCheck aria-hidden="true" />
-        {enviando ? "Guardando…" : "Guardar"}
-      </Boton>
-
       {estado.errores?.fechaEstimada && (
-        <p role="alert" className="w-full text-[11.5px] font-medium text-blackberry dark-tema:text-gold">
+        <p role="alert" className="text-[11.5px] font-medium text-blackberry sm:col-span-2 dark-tema:text-gold">
           {estado.errores.fechaEstimada}
         </p>
       )}
+
+      <div className="flex justify-end sm:col-span-2">
+        <Boton type="submit" variante="fantasma" tamano="chico" disabled={enviando}>
+          <CalendarCheck aria-hidden="true" />
+          {enviando ? "Guardando…" : "Guardar"}
+        </Boton>
+      </div>
     </form>
   );
 }

@@ -5,7 +5,7 @@ import { ExternalLink, FileText, Send, Upload } from "lucide-react";
 
 import { marcarVersionEnviada, subirVersion } from "@/actions/versiones";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CLASE_CONTROL } from "@/components/ui";
+import { Boton, CampoArchivo, CLASE_CONTROL } from "@/components/ui";
 import { sitioDeEnlace } from "@/lib/portal/archivos";
 import { ESTADO_INICIAL, type Version } from "@/types";
 import { ZONA_HORARIA } from "@/lib/fechas";
@@ -91,7 +91,7 @@ export function VersionesPieza({
   const puedeMarcar = gestiona && faseActual === 4;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {faseActual === 4 && gestiona && !enviadaDeLaRonda && (
         <p className="rounded-xl border border-acento/40 bg-acento-tenue px-3.5 py-2.5 text-[12.5px] leading-relaxed">
           Para completar la fase 4 marca la version que vera el cliente.
@@ -101,9 +101,9 @@ export function VersionesPieza({
       {versiones.length === 0 ? (
         <p className="text-[12.5px] text-suave">Todavia no hay ninguna version.</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2.5">
           {versiones.map((version) => (
-            <li key={version.id} className="flex items-center gap-3 rounded-xl border border-borde px-3 py-2.5">
+            <li key={version.id} className="flex items-center gap-3.5 rounded-xl border border-borde px-3.5 py-3">
               <Miniatura version={version} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-semibold" title={version.nombre}>
@@ -139,12 +139,12 @@ export function VersionesPieza({
         <form
           key={subido.ok ? subido.mensaje : "subir"}
           action={subir}
-          className="flex flex-col gap-2.5 rounded-xl border border-dashed border-borde px-3 py-3"
+          className="mt-1 flex flex-col gap-4 rounded-xl border border-borde px-4 py-4"
         >
           <input type="hidden" name="piezaId" value={piezaId} />
           <input type="hidden" name="origen" value={origen} />
 
-          <div role="radiogroup" aria-label="Que se sube" className="flex gap-2">
+          <div role="radiogroup" aria-label="Que se sube" className="inline-flex gap-1 self-start rounded-full border border-borde bg-superficie p-1">
             {(["archivo", "enlace"] as const).map((opcion) => (
               <button
                 key={opcion}
@@ -153,10 +153,10 @@ export function VersionesPieza({
                 aria-checked={origen === opcion}
                 onClick={() => setOrigen(opcion)}
                 className={[
-                  "suave rounded-full border px-3 py-1 text-[12px] font-semibold",
+                  "suave rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold",
                   origen === opcion
-                    ? "border-acento bg-acento text-acento-contraste"
-                    : "border-borde text-suave hover:border-acento",
+                    ? "bg-acento text-acento-contraste"
+                    : "text-suave hover:text-texto",
                 ].join(" ")}
               >
                 {opcion === "archivo" ? "Archivo" : "Enlace"}
@@ -164,53 +164,66 @@ export function VersionesPieza({
             ))}
           </div>
 
-          {origen === "archivo" ? (
-            <div>
-              <label htmlFor={`version-archivo-${piezaId}`} className="mb-1 block text-[11px] font-semibold text-suave">
-                Imagen o PDF, hasta 4 MB
-              </label>
-              <input
+          {/*
+            Los dos paneles estan siempre, uno encima del otro en la misma
+            celda: el hueco mide lo que el mas alto, y cambiar de Archivo a
+            Enlace no mueve la tarjeta. El que no toca queda invisible, sin
+            foco y deshabilitado, asi que tampoco se envia.
+          */}
+          <div className="grid">
+            <fieldset
+              disabled={origen !== "archivo"}
+              inert={origen !== "archivo"}
+              className={["[grid-area:1/1] min-w-0", origen === "archivo" ? "" : "invisible"].join(" ")}
+            >
+              <legend className="sr-only">Archivo</legend>
+              <CampoArchivo
                 id={`version-archivo-${piezaId}`}
-                type="file"
-                name="archivo"
+                nombre="archivo"
+                etiqueta="El archivo"
+                ayuda="Imagen o PDF, hasta 4 MB"
                 accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
-                className="block w-full text-[12.5px] file:mr-3 file:cursor-pointer file:rounded-[10px] file:border-0 file:bg-acento file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-acento-contraste"
+                error={subido.errores?.archivo}
               />
-              {subido.errores?.archivo && (
-                <p role="alert" className="mt-1.5 text-[11.5px] font-medium text-blackberry dark-tema:text-gold">
-                  {subido.errores.archivo}
-                </p>
-              )}
-            </div>
-          ) : (
-            <div>
-              <label htmlFor={`version-enlace-${piezaId}`} className="mb-1 block text-[11px] font-semibold text-suave">
-                Enlace de Figma, Frame.io, Dropbox, Drive, Canva, Vimeo o YouTube
-              </label>
-              <input
-                id={`version-enlace-${piezaId}`}
-                name="enlace"
-                type="url"
-                placeholder="https://www.figma.com/file/..."
-                className={`${CLASE_CONTROL} min-h-10 py-2`}
-              />
-              <label htmlFor={`version-nombre-${piezaId}`} className="mt-2 mb-1 block text-[11px] font-semibold text-suave">
-                Como se llama
-              </label>
-              <input
-                id={`version-nombre-${piezaId}`}
-                name="nombre"
-                maxLength={120}
-                placeholder="Corte final con subtitulos"
-                className={`${CLASE_CONTROL} min-h-10 py-2`}
-              />
+            </fieldset>
+
+            <fieldset
+              disabled={origen !== "enlace"}
+              inert={origen !== "enlace"}
+              className={["[grid-area:1/1] flex min-w-0 flex-col gap-3", origen === "enlace" ? "" : "invisible"].join(" ")}
+            >
+              <legend className="sr-only">Enlace</legend>
+              <div>
+                <label htmlFor={`version-enlace-${piezaId}`} className="mb-1.5 block text-xs font-semibold">
+                  Enlace de Figma, Frame.io, Dropbox, Drive, Canva, Vimeo o YouTube
+                </label>
+                <input
+                  id={`version-enlace-${piezaId}`}
+                  name="enlace"
+                  type="url"
+                  placeholder="https://www.figma.com/file/..."
+                  className={`${CLASE_CONTROL} min-h-10 py-2`}
+                />
+              </div>
+              <div>
+                <label htmlFor={`version-nombre-${piezaId}`} className="mb-1.5 block text-xs font-semibold">
+                  Como se llama
+                </label>
+                <input
+                  id={`version-nombre-${piezaId}`}
+                  name="nombre"
+                  maxLength={120}
+                  placeholder="Corte final con subtitulos"
+                  className={`${CLASE_CONTROL} min-h-10 py-2`}
+                />
+              </div>
               {subido.errores?.enlace && (
-                <p role="alert" className="mt-1.5 text-[11.5px] font-medium text-blackberry dark-tema:text-gold">
+                <p role="alert" className="text-[11.5px] font-medium text-blackberry dark-tema:text-gold">
                   {subido.errores.enlace}
                 </p>
               )}
-            </div>
-          )}
+            </fieldset>
+          </div>
 
           <div className="flex justify-end">
             <Boton type="submit" tamano="chico" disabled={subiendo}>

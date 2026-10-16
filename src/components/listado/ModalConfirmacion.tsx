@@ -33,6 +33,7 @@ export function ModalConfirmacion({
   children,
   pie,
   tono = "normal",
+  ancho = "normal",
   id = "modal-confirmacion",
 }: {
   hrefCerrar: string;
@@ -48,6 +49,8 @@ export function ModalConfirmacion({
 
   /** "aviso" tine el kicker, para lo que apaga o retira algo. */
   tono?: "normal" | "aviso";
+  /** «amplio» para elegir entre varias opciones explicadas, que necesitan aire. */
+  ancho?: "normal" | "amplio";
   id?: string;
 }) {
   const idTitulo = `${id}-titulo`;
@@ -83,7 +86,8 @@ export function ModalConfirmacion({
           aria-modal="true"
           aria-labelledby={idTitulo}
           className={[
-            "modal-caja w-full max-w-[430px] rounded-[17px] border border-borde",
+            "modal-caja w-full rounded-[17px] border border-borde",
+            ancho === "amplio" ? "max-w-[520px]" : "max-w-[430px]",
             "bg-superficie shadow-[var(--sombra-alta)]",
           ].join(" ")}
         >

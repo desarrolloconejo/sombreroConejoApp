@@ -10,11 +10,9 @@ import {
   presupuestarBrief,
 } from "@/actions/briefs";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CampoFecha, CLASE_CONTROL } from "@/components/ui";
+import { Boton, CampoFecha, CLASE_CONTROL, PIE_TARJETA } from "@/components/ui";
 import { CredencialProvisional } from "@/components/usuarios/CredencialProvisional";
 import { ESTADO_INICIAL, type EstadoFormulario } from "@/types";
-
-import { PIE_TARJETA_BRIEF } from "./LecturaBrief";
 
 /**
  * Las decisiones de la bandeja sobre un brief.
@@ -245,7 +243,7 @@ export function FechaViable({
         </div>
       )}
 
-      <div className={PIE_TARJETA_BRIEF}>
+      <div className={PIE_TARJETA}>
         <Boton type="submit" variante="fantasma" tamano="chico" disabled={enviando}>
           <CalendarCheck aria-hidden="true" />
           {enviando ? "Guardando..." : "Guardar la fecha"}

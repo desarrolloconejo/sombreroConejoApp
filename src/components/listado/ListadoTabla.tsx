@@ -42,7 +42,7 @@ function pista(ancho?: string): string {
   return medida.endsWith("fr") ? `minmax(0, ${medida})` : medida;
 }
 
-function IconoOrden({ activa, direccion }: { activa: boolean; direccion: string }) {
+export function IconoOrden({ activa, direccion }: { activa: boolean; direccion: string }) {
   if (!activa) {
     return (
       <ChevronsUpDown

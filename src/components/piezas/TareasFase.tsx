@@ -55,7 +55,7 @@ function CamposTarea({
   const [fecha, setFecha] = useState(tarea?.fechaEstimada ?? "");
 
   return (
-    <div className="grid gap-2 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_150px]">
+    <div className="grid gap-2.5 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_170px]">
       <div className="min-w-0">
         <label htmlFor={`${prefijo}-titulo`} className="sr-only">
           Que hay que hacer
@@ -147,13 +147,13 @@ export function TareasFase({
   const puedeAnadir = gestiona && piezaActiva && !faseCompletada;
 
   return (
-    <div className="mt-3">
+    <div className="mt-4">
       {tareas.length === 0 ? (
         <p className="text-[12px] text-suave">
           Sin tareas: la fase se completa directamente.
         </p>
       ) : (
-        <ul className="flex flex-col gap-1.5">
+        <ul className="flex flex-col gap-2.5">
           {tareas.map((tarea) => {
             const mia = tarea.responsableId === usuarioId;
             const puedeMarcar = (gestiona || mia) && piezaActiva;
@@ -162,13 +162,13 @@ export function TareasFase({
 
             if (enEdicion === tarea.id) {
               return (
-                <li key={tarea.id} className="rounded-xl border border-acento px-3 py-3">
+                <li key={tarea.id} className="rounded-xl border border-acento px-4 py-4">
                   <form
                     action={(datos) => {
                       editar(datos);
                       setEnEdicion(null);
                     }}
-                    className="flex flex-col gap-2"
+                    className="flex flex-col gap-3"
                   >
                     <input type="hidden" name="tareaId" value={tarea.id} />
                     <CamposTarea
@@ -195,7 +195,7 @@ export function TareasFase({
               <li
                 key={tarea.id}
                 className={[
-                  "flex items-center gap-2.5 rounded-xl border px-2.5 py-2",
+                  "flex min-h-[56px] items-center gap-3 rounded-xl border px-3.5 py-2.5",
                   mia ? "border-acento/40 bg-acento-tenue" : "border-borde",
                 ].join(" ")}
               >
@@ -275,7 +275,7 @@ export function TareasFase({
       )}
 
       {puedeAnadir && !anadiendo && (
-        <div className="mt-2">
+        <div className="mt-3">
           <Boton type="button" variante="fantasma" tamano="chico" onClick={() => setAnadiendo(true)}>
             <Plus aria-hidden="true" />
             Anadir tarea
@@ -287,7 +287,7 @@ export function TareasFase({
         <form
           key={creado.ok ? creado.mensaje + String(tareas.length) : "nueva"}
           action={crear}
-          className="mt-2 flex flex-col gap-2 rounded-xl border border-dashed border-borde px-3 py-3"
+          className="mt-3 flex flex-col gap-3 rounded-xl border border-dashed border-borde px-4 py-4"
         >
           <input type="hidden" name="piezaId" value={piezaId} />
           <input type="hidden" name="fase" value={fase} />

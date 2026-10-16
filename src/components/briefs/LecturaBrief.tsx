@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import { ZONA_HORARIA } from "@/lib/fechas";
 import { NOMBRES_DE_ESTADO_BRIEF, type EstadoBrief, type RespuestaCongelada } from "@/types";
 
@@ -11,40 +9,6 @@ import { NOMBRES_DE_ESTADO_BRIEF, type EstadoBrief, type RespuestaCongelada } fr
 export const SECCION_BRIEF =
   "rounded-[15px] border border-borde bg-superficie p-4 shadow-[var(--sombra)] sm:p-5";
 
-/** El pie de una tarjeta: sus botones a la derecha, separados por una raya. */
-export const PIE_TARJETA_BRIEF = "mt-4 flex flex-wrap justify-end gap-2.5 border-t border-borde pt-3.5";
-
-/**
- * Una tarjeta de la ficha de un brief. Todas llevan la misma cabecera dentro
- * (titulo y, a la derecha, algo breve como una etiqueta), para que las dos
- * columnas de la ficha arranquen a la misma altura y se lean igual.
- */
-export function TarjetaBrief({
-  id,
-  titulo,
-  extra,
-  className,
-  children,
-}: {
-  /** Para enlazar el titulo con la seccion. */
-  id: string;
-  titulo: string;
-  extra?: ReactNode;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section aria-labelledby={id} className={[SECCION_BRIEF, className].filter(Boolean).join(" ")}>
-      <header className="mb-3.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <h2 id={id} className="text-[15px] font-bold tracking-[-0.01em]">
-          {titulo}
-        </h2>
-        {extra}
-      </header>
-      {children}
-    </section>
-  );
-}
 
 const FECHA_HORA = new Intl.DateTimeFormat("es-VE", {
   timeZone: ZONA_HORARIA,

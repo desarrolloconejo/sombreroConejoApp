@@ -14,9 +14,9 @@ import {
 import { EtiquetaAlerta, ORDEN_DE_ALERTAS } from "./EtiquetaAlerta";
 
 /**
- * Las columnas del listado de proyectos. Mismo contrato que el resto de
- * listados: el modulo dice que va en cada celda y el listado estandar monta la
- * tabla y las tarjetas.
+ * Las columnas del listado de proyectos. El listado se pinta en rejilla con
+ * TarjetaProyecto; de aqui salen el orden (las columnas `ordenable`) y la
+ * tabla si alguna vez se pidiera sin rejilla.
  */
 
 const ANCHOS = {
@@ -28,11 +28,6 @@ const ANCHOS = {
   alertas: "1.6fr",
   acciones: "56px",
 } as const;
-
-/** La misma rejilla que arma ListadoTabla. La usa el esqueleto de carga. */
-export const REJILLA_PROYECTOS = Object.values(ANCHOS)
-  .map((ancho) => (ancho.endsWith("fr") ? `minmax(0, ${ancho})` : ancho))
-  .join(" ");
 
 const FECHA = new Intl.DateTimeFormat("es-VE", {
   day: "numeric",
@@ -60,7 +55,10 @@ export function columnasProyectos(): Columna<Proyecto>[] {
       tarjeta: "titulo",
       render: (proyecto) => (
         <div className="min-w-0">
-          <p className="truncate text-[13.5px] font-semibold">{proyecto.empresaNombre}</p>
+          <p className="flex items-center gap-2">
+            <span className="truncate text-[13.5px] font-semibold">{proyecto.empresaNombre}</span>
+            {proyecto.estado !== "activo" && <Etiqueta>{NOMBRES_DE_ESTADO_PROYECTO[proyecto.estado]}</Etiqueta>}
+          </p>
           <p className="truncate text-[12px] text-suave">
             {proyecto.nombre} · {nombreDeServicio(proyecto.servicio)}
           </p>
@@ -92,9 +90,6 @@ export function columnasProyectos(): Columna<Proyecto>[] {
           <span className="text-[12.5px] font-bold tabular-nums">
             {Math.round(proyecto.avance.porcentaje)}%
           </span>
-          {proyecto.estado !== "activo" && (
-            <Etiqueta>{NOMBRES_DE_ESTADO_PROYECTO[proyecto.estado]}</Etiqueta>
-          )}
         </div>
       ),
     },

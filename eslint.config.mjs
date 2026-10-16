@@ -2,6 +2,19 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+const SIN_SELECT = {
+  selector: "JSXOpeningElement[name.name='select']",
+  message: "Nada de <select> nativo: usa Selector de @/components/ui.",
+};
+const SIN_FECHA = {
+  selector: "JSXAttribute[name.name='type'][value.value='date']",
+  message: "Nada de fecha nativa: usa CampoFecha de @/components/ui.",
+};
+const SIN_ARCHIVO = {
+  selector: "JSXAttribute[name.name='type'][value.value='file']",
+  message: "Nada de archivo nativo: usa CampoArchivo de @/components/ui.",
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -31,21 +44,20 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // La lista de un <select> y el calendario de un <input type="date"> los
-    // pinta el sistema operativo, con sus colores y no con los del tema.
+    // La lista de un <select>, el calendario de un <input type="date"> y el
+    // boton de un <input type="file"> los pinta el sistema operativo, con sus
+    // colores e idioma y no con los del tema.
     files: ["src/**/*.tsx"],
     rules: {
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: "JSXOpeningElement[name.name='select']",
-          message: "Nada de <select> nativo: usa Selector de @/components/ui.",
-        },
-        {
-          selector: "JSXAttribute[name.name='type'][value.value='date']",
-          message: "Nada de fecha nativa: usa CampoFecha de @/components/ui.",
-        },
-      ],
+      "no-restricted-syntax": ["error", SIN_SELECT, SIN_FECHA, SIN_ARCHIVO],
+    },
+  },
+  {
+    // CampoArchivo envuelve el input real. La foto de perfil esta apagada
+    // hasta la mudanza al VPS: su codigo se conserva tal cual.
+    files: ["src/components/ui/CampoArchivo.tsx", "src/components/perfil/TarjetaFoto.tsx"],
+    rules: {
+      "no-restricted-syntax": ["error", SIN_SELECT, SIN_FECHA],
     },
   },
   // Override default ignores of eslint-config-next.

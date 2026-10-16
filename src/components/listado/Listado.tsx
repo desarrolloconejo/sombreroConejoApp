@@ -7,6 +7,7 @@ import { BotonEnlace } from "@/components/ui";
 
 import { ListadoBuscador } from "./ListadoBuscador";
 import { ListadoFiltros } from "./ListadoFiltros";
+import { ListadoOrden } from "./ListadoOrden";
 import { ListadoPaginacion } from "./ListadoPaginacion";
 import { ListadoTabla } from "./ListadoTabla";
 import { ListadoVacio } from "./ListadoVacio";
@@ -59,6 +60,13 @@ export type PropsListado<T> = {
   /** Nombre de la tabla para lectores de pantalla. */
   titulo?: string;
 
+  /**
+   * Si viene, el listado se pinta como una rejilla de tarjetas en lugar de
+   * una tabla: cada fila es lo que devuelve. El orden pasa a un control
+   * propio, con las columnas que se declararon `ordenable`.
+   */
+  rejilla?: (fila: T) => ReactNode;
+
   className?: string;
 };
 
@@ -77,6 +85,7 @@ export function Listado<T>({
   etiquetaBusqueda = "Buscar",
   claveFila,
   titulo,
+  rejilla,
   className,
 }: PropsListado<T>) {
   const filtrado = hayCriterios(estado);
@@ -110,7 +119,17 @@ export function Listado<T>({
 
         <ListadoFiltros ruta={ruta} estado={estado} filtros={filtros} />
 
-        {hayFilas ? (
+        {rejilla && hayFilas && <ListadoOrden ruta={ruta} estado={estado} columnas={columnas} />}
+
+        {hayFilas && rejilla ? (
+          <ul aria-label={titulo} className="grid grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+            {filas.map((fila, indice) => (
+              <li key={claveFila ? claveFila(fila) : indice} className="min-w-0">
+                {rejilla(fila)}
+              </li>
+            ))}
+          </ul>
+        ) : hayFilas ? (
           <ListadoTabla
             ruta={ruta}
             estado={estado}

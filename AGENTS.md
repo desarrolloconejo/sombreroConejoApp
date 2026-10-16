@@ -261,6 +261,18 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   Sus cuentas viven en `src/lib/calendario.ts`, en UTC. El lint lo impone.
 - Lo que flota pegado a un control (la lista de `Selector`, el calendario) usa
   `useFlotante`: se pinta en el `<body>` para que una tabla no lo recorte.
+- **Ningun `<input type="file">`** fuera de `CampoArchivo`
+  (`src/components/ui`): zona propia en espanol, con arrastrar y soltar, que
+  envuelve el input real. La unica excepcion es la foto de perfil, apagada
+  hasta el VPS. El lint lo impone.
+- Una seccion con titulo es `Tarjeta` (`src/components/ui`): el titulo va
+  dentro, asi dos columnas de tarjetas arrancan a la misma altura. Su pie de
+  botones usa `PIE_TARJETA`.
+- Si un control cambia entre dos formularios (Archivo o Enlace), los dos se
+  pintan en la misma celda de una rejilla y el que no toca queda `invisible`,
+  `inert` y deshabilitado: la tarjeta no cambia de alto.
+- Un listado puede pintarse en tarjetas con la prop `rejilla` de `Listado`
+  (Proyectos lo hace); el orden pasa a `ListadoOrden`.
 - Un dato que se pasa a otro sitio (RIF, telefono, direccion, numero de
   factura) lleva al lado `BotonCopiar`. La logica de copiar es `useCopiar`;
   no se vuelve a escribir `navigator.clipboard` en un componente.

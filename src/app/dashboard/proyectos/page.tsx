@@ -7,6 +7,7 @@ import {
   columnasProyectos,
   filtrosProyectos,
   FormularioProyecto,
+  TarjetaProyecto,
 } from "@/components/proyectos";
 import { BotonEnlace } from "@/components/ui";
 import { conSesion } from "@/lib/db";
@@ -109,6 +110,7 @@ export default async function PaginaProyectos(props: PageProps<"/dashboard/proye
         total={datos.pagina.total}
         totalPaginas={datos.pagina.totalPaginas}
         claveFila={(proyecto) => proyecto.id}
+        rejilla={(proyecto) => <TarjetaProyecto proyecto={proyecto} />}
         titulo="Proyectos"
         etiquetaBusqueda="Buscar proyectos"
         marcadorBusqueda="Buscar por proyecto o empresa"
