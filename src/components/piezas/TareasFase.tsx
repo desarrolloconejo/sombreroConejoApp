@@ -55,54 +55,57 @@ function CamposTarea({
   const [fecha, setFecha] = useState(tarea?.fechaEstimada ?? "");
 
   return (
-    <div className="grid gap-2.5 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_170px]">
-      <div className="min-w-0">
-        <label htmlFor={`${prefijo}-titulo`} className="sr-only">
-          Que hay que hacer
-        </label>
-        <input
-          id={`${prefijo}-titulo`}
-          name="titulo"
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-          placeholder="Que hay que hacer"
-          maxLength={160}
-          aria-invalid={errores?.titulo ? true : undefined}
-          className={claseLinea("compacto")}
-        />
-      </div>
+    // Como en planificar: la rejilla mira el ancho de la tarjeta, no la pantalla.
+    <div className="@container">
+      <div className="grid gap-2.5 @lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_170px]">
+        <div className="min-w-0">
+          <label htmlFor={`${prefijo}-titulo`} className="sr-only">
+            Que hay que hacer
+          </label>
+          <input
+            id={`${prefijo}-titulo`}
+            name="titulo"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            placeholder="Que hay que hacer"
+            maxLength={160}
+            aria-invalid={errores?.titulo ? true : undefined}
+            className={claseLinea("compacto")}
+          />
+        </div>
 
-      <div className="min-w-0">
-        <Selector
-          id={`${prefijo}-responsable`}
-          nombre="responsableId"
-          etiqueta="Quien la hace"
-          etiquetaOculta
-          compacto
-          valor={responsable}
-          onCambio={setResponsable}
-          opciones={opcionesDeEquipo(equipo)}
-        />
-      </div>
+        <div className="min-w-0">
+          <Selector
+            id={`${prefijo}-responsable`}
+            nombre="responsableId"
+            etiqueta="Quien la hace"
+            etiquetaOculta
+            compacto
+            valor={responsable}
+            onCambio={setResponsable}
+            opciones={opcionesDeEquipo(equipo)}
+          />
+        </div>
 
-      <div>
-        <CampoFecha
-          id={`${prefijo}-fecha`}
-          nombre="fechaEstimada"
-          etiqueta="Para cuando"
-          etiquetaOculta
-          compacto
-          opcional
-          valor={fecha}
-          onCambio={setFecha}
-        />
-      </div>
+        <div>
+          <CampoFecha
+            id={`${prefijo}-fecha`}
+            nombre="fechaEstimada"
+            etiqueta="Para cuando"
+            etiquetaOculta
+            compacto
+            opcional
+            valor={fecha}
+            onCambio={setFecha}
+          />
+        </div>
 
-      {(errores?.titulo || errores?.responsableId || errores?.fechaEstimada) && (
-        <p role="alert" className="text-[11.5px] font-medium text-blackberry sm:col-span-3 dark-tema:text-gold">
-          {errores.titulo ?? errores.responsableId ?? errores.fechaEstimada}
-        </p>
-      )}
+        {(errores?.titulo || errores?.responsableId || errores?.fechaEstimada) && (
+          <p role="alert" className="text-[11.5px] font-medium text-blackberry @lg:col-span-3 dark-tema:text-gold">
+            {errores.titulo ?? errores.responsableId ?? errores.fechaEstimada}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

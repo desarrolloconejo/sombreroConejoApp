@@ -56,7 +56,7 @@ const TAMANO = ALTO_CONTROL;
 const ALTO_LISTA = 256;
 
 const LISTA =
-  "fixed z-50 max-h-64 overflow-y-auto rounded-xl " +
+  "barra-fina-flotante fixed z-50 max-h-64 overflow-y-auto rounded-xl " +
   "border border-borde bg-superficie p-1.5 shadow-[var(--sombra-alta)]";
 
 const OPCION =

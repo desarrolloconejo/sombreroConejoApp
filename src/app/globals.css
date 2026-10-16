@@ -436,6 +436,43 @@ select:autofill {
   }
 }
 
+/*
+ * La misma barra para lo que flota: listas de un desplegable, el calendario,
+ * el buscador, la campana. Sin reservar hueco: en un panel corto que casi
+ * nunca desplaza, el hueco seria un margen raro a la derecha. Se ve, fina,
+ * solo al pasar por encima o al moverse con el teclado dentro. Algo mas
+ * marcada que la del sidebar: va sobre la superficie blanca, no sobre el
+ * fondo del menu.
+ */
+@utility barra-fina-flotante {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s var(--ease-suave);
+
+  &:hover,
+  &:focus-within {
+    scrollbar-color: color-mix(in srgb, var(--texto) 22%, transparent) transparent;
+  }
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:focus-within::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--texto) 22%, transparent);
+  }
+}
+
 /* Quien pidio menos movimiento no recibe ninguno */
 @media (prefers-reduced-motion: reduce) {
   *,
