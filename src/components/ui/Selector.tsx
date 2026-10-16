@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
+
+import { useFlotante } from "./useFlotante";
 
 /**
  * Un desplegable que SI se puede estilar.
@@ -24,10 +26,8 @@ import { Check, ChevronDown } from "lucide-react";
  *
  * Si esto no estuviera, seria un desplegable bonito e inutilizable sin raton.
  *
- * La lista se pinta en el <body>, fija sobre la pantalla y medida contra el
- * boton. Dentro de una tabla con desplazamiento lateral, una lista absoluta
- * quedaria recortada por la tabla. Si no cabe debajo, abre hacia arriba, y
- * al desplazar la pagina se vuelve a medir para seguir pegada al boton.
+ * La lista flota pegada al boton con useFlotante: pintada en el <body> para
+ * que una tabla con desplazamiento no la recorte.
  *
  * Es controlado si recibe `valor` (quien lo usa guarda el estado y lo cambia
  * con `onCambio`), y no controlado con `valorInicial`. Sin `nombre` no envia
@@ -54,8 +54,6 @@ const TAMANO = {
   compacto: "min-h-9 px-3 py-2",
 } as const;
 
-// Lo que se deja libre entre la lista y el borde de la pantalla.
-const MARGEN = 8;
 const ALTO_LISTA = 256;
 
 const LISTA =
@@ -107,7 +105,6 @@ export function Selector({
   const valor = valorControlado ?? valorPropio;
   const [abierto, setAbierto] = useState(false);
   const [resaltado, setResaltado] = useState(0);
-  const [posicion, setPosicion] = useState<CSSProperties>({});
 
   const caja = useRef<HTMLDivElement>(null);
   const disparador = useRef<HTMLButtonElement>(null);
@@ -122,37 +119,14 @@ export function Selector({
 
   const elegida = opciones.find((o) => o.valor === valor) ?? null;
 
-  // Cerrar al pulsar fuera. Se escucha en captura para que un clic sobre otro
-  // desplegable cierre este antes de que aquel se abra.
-  useEffect(() => {
-    if (!abierto) return;
-
-    function alPulsarFuera(evento: MouseEvent) {
-      const objetivo = evento.target as Node;
-      if (caja.current?.contains(objetivo) || lista.current?.contains(objetivo)) return;
-      setAbierto(false);
-    }
-
-    // La lista esta fija en la pantalla: si la pagina se mueve o cambia de
-    // tamano, se vuelve a medir. Cerrarla no sirve: el propio navegador
-    // desplaza la pagina al enfocar el boton, y la lista se iria al abrirla.
-    let cuadro = 0;
-    function alMoverse(evento: Event) {
-      if (lista.current?.contains(evento.target as Node)) return;
-      cancelAnimationFrame(cuadro);
-      cuadro = requestAnimationFrame(() => setPosicion(medir()));
-    }
-
-    document.addEventListener("pointerdown", alPulsarFuera, true);
-    window.addEventListener("scroll", alMoverse, true);
-    window.addEventListener("resize", alMoverse);
-    return () => {
-      cancelAnimationFrame(cuadro);
-      document.removeEventListener("pointerdown", alPulsarFuera, true);
-      window.removeEventListener("scroll", alMoverse, true);
-      window.removeEventListener("resize", alMoverse);
-    };
-  }, [abierto]);
+  const { posicion, colocar } = useFlotante({
+    abierto,
+    cerrar: () => setAbierto(false),
+    ancla: caja,
+    medida: disparador,
+    panel: lista,
+    alto: ALTO_LISTA,
+  });
 
   // La opcion resaltada tiene que verse aunque la lista este desplazada.
   useEffect(() => {
@@ -169,30 +143,8 @@ export function Selector({
     }
   }, [abierto, resaltado]);
 
-  /** Donde se pinta la lista: bajo el boton, o encima si no cabe. */
-  function medir(): CSSProperties {
-    const caja = disparador.current?.getBoundingClientRect();
-    if (!caja) return {};
-
-    const debajo = window.innerHeight - caja.bottom - MARGEN;
-    const arriba = caja.top - MARGEN;
-    const haciaArriba = debajo < ALTO_LISTA && arriba > debajo;
-    const ancho = Math.min(Math.max(caja.width, 180), window.innerWidth - MARGEN * 2);
-    const izquierda = Math.min(caja.left, window.innerWidth - ancho - MARGEN);
-
-    return {
-      left: Math.max(MARGEN, izquierda),
-      minWidth: ancho,
-      maxWidth: window.innerWidth - MARGEN * 2,
-      maxHeight: Math.min(ALTO_LISTA, Math.max(haciaArriba ? arriba : debajo, 120)),
-      ...(haciaArriba
-        ? { bottom: window.innerHeight - caja.top + 6 }
-        : { top: caja.bottom + 6 }),
-    };
-  }
-
   function abrir(indice?: number) {
-    setPosicion(medir());
+    colocar();
     setResaltado(
       indice ?? Math.max(0, opciones.findIndex((o) => o.valor === valor)),
     );

@@ -9,6 +9,17 @@
  */
 export const ZONA_HORARIA = "America/Caracas";
 
+/** El dia de hoy en Caracas, como AAAA-MM-DD. */
+export function hoyEnCaracas(ahora: Date = new Date()): string {
+  // en-CA escribe las fechas como AAAA-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: ZONA_HORARIA,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(ahora);
+}
+
 const RELATIVO = new Intl.RelativeTimeFormat("es", { numeric: "auto" });
 
 /**

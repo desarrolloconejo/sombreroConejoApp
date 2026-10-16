@@ -6,7 +6,9 @@ export {
   cuandoBrief,
   diaBrief,
   EtiquetaBrief,
+  PIE_TARJETA_BRIEF,
   SECCION_BRIEF,
+  TarjetaBrief,
 } from "./LecturaBrief";
 export { EnlacesProspectos } from "./EnlacesProspectos";
 export type { FilaEnlace } from "./EnlacesProspectos";

@@ -5,7 +5,7 @@ import { Save } from "lucide-react";
 
 import { registrarTasa } from "@/actions/tasas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, Campo } from "@/components/ui";
+import { Boton, Campo, CampoFecha } from "@/components/ui";
 import { ESTADO_INICIAL, type TasaDeCambio } from "@/types";
 
 /**
@@ -65,14 +65,13 @@ export function TasaDolar({ recientes, hoy }: { recientes: TasaDeCambio[]; hoy: 
 
       <form action={enviar} noValidate className="grid grid-cols-[minmax(0,1fr)] gap-3 border-t border-borde pt-4 sm:grid-cols-2">
         <p className="text-[14px] font-bold sm:col-span-2">Registrar a mano</p>
-        <Campo
+        <CampoFecha
           id="tasa-fecha"
           etiqueta="Fecha de la tasa"
-          name="fechaValor"
-          type="date"
+          nombre="fechaValor"
           max={hoy}
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
+          valor={fecha}
+          onCambio={setFecha}
           error={errores.fechaValor}
         />
         <Campo

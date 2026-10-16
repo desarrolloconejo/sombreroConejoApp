@@ -7,7 +7,7 @@ import { cambiarEstadoProyecto, editarProyecto } from "@/actions/proyectos";
 import { crearPieza } from "@/actions/piezas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { PanelCuerpo, PanelPie } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, Selector, useCampos } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, CampoFecha, Selector, useCampos } from "@/components/ui";
 import {
   ESTADO_INICIAL,
   NOMBRES_DE_ESTADO_PROYECTO,
@@ -39,7 +39,7 @@ export function EditarProyecto({
   useAvisoDeAccion(estado);
 
   const errores = estado.errores ?? {};
-  const { campo } = useCampos({
+  const { campo, fecha } = useCampos({
     nombre: proyecto.nombre,
     descripcion: proyecto.descripcion ?? "",
     fechaInicio: proyecto.fechaInicio ?? "",
@@ -78,21 +78,19 @@ export function EditarProyecto({
             error={errores.ejecutivoId}
             className="col-span-2"
           />
-          <Campo
+          <CampoFecha
             id="editar-inicio"
-            {...campo("fechaInicio")}
-            type="date"
             etiqueta="Inicio"
             opcional
             error={errores.fechaInicio}
+            {...fecha("fechaInicio")}
           />
-          <Campo
+          <CampoFecha
             id="editar-cierre"
-            {...campo("fechaEstimadaCierre")}
-            type="date"
             etiqueta="Cierre estimado"
             opcional
             error={errores.fechaEstimadaCierre}
+            {...fecha("fechaEstimadaCierre")}
           />
         </div>
       </PanelCuerpo>

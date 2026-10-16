@@ -3,7 +3,7 @@
 import { Save, Send } from "lucide-react";
 
 import { EditorRenglones } from "@/components/finanzas/EditorRenglones";
-import { Boton, Campo, Selector, useCampos } from "@/components/ui";
+import { Boton, Campo, CampoFecha, Selector, useCampos } from "@/components/ui";
 import type { Presupuesto, ProyectoDeProforma, Renglon } from "@/types";
 import { useGuardado } from "./ProveedorGuardado";
 
@@ -31,7 +31,7 @@ export function EditorPresupuesto({
 
   const errores = estado.errores ?? {};
 
-  const { campo } = useCampos({
+  const { campo, fecha } = useCampos({
     titulo: presupuesto.titulo,
     validoHasta: presupuesto.validoHasta,
     notas: presupuesto.notas ?? "",
@@ -50,12 +50,11 @@ export function EditorPresupuesto({
           className="sm:col-span-2"
           {...campo("titulo")}
         />
-        <Campo
+        <CampoFecha
           id="editor-validez"
           etiqueta="Vale hasta"
-          type="date"
           error={errores.validoHasta}
-          {...campo("validoHasta")}
+          {...fecha("validoHasta")}
         />
         <Selector
           id="editor-proyecto"

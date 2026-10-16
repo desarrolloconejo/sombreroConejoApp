@@ -6,14 +6,7 @@ import { FolderPlus, Plus, X } from "lucide-react";
 import { crearProyecto } from "@/actions/proyectos";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import {
-  Boton,
-  BotonEnlace,
-  Campo,
-  CLASE_CONTROL,
-  Selector,
-  useCampos,
-} from "@/components/ui";
+import { Boton, BotonEnlace, Campo, CampoFecha, CLASE_CONTROL, Selector, useCampos } from "@/components/ui";
 import { SERVICIOS } from "@/lib/portal/catalogo";
 import {
   ESTADO_INICIAL,
@@ -78,7 +71,7 @@ export function FormularioProyecto({
   const [sugeridas, setSugeridas] = useState(true);
   const [filas, setFilas] = useState<FilaPieza[]>(() => [filaNueva("post")]);
 
-  const { campo } = useCampos({
+  const { campo, fecha } = useCampos({
     nombre: "",
     descripcion: "",
     fechaInicio: "",
@@ -175,22 +168,20 @@ export function FormularioProyecto({
             className="col-span-2"
           />
 
-          <Campo
+          <CampoFecha
             id="proyecto-inicio"
-            {...campo("fechaInicio")}
-            type="date"
             etiqueta="Inicio"
             opcional
             error={errores.fechaInicio}
+            {...fecha("fechaInicio")}
           />
 
-          <Campo
+          <CampoFecha
             id="proyecto-cierre"
-            {...campo("fechaEstimadaCierre")}
-            type="date"
             etiqueta="Cierre estimado"
             opcional
             error={errores.fechaEstimadaCierre}
+            {...fecha("fechaEstimadaCierre")}
           />
         </div>
 

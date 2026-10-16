@@ -32,6 +32,17 @@ test("aceptar abre el proyecto, y completar su fase 1 valida el brief", async ({
   await page.getByLabel("No, proponer otra fecha").check();
   await page.getByRole("button", { name: "Guardar la fecha" }).click();
   await avisado(page, "Indica la fecha que propones");
+
+  // El calendario propio: se abre, se maneja con el teclado y escribe la fecha.
+  await page.getByRole("button", { name: "Abrir el calendario" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("PageDown");
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByLabel("Fecha que propones")).toHaveValue(/^\d{2}\/\d{2}\/\d{4}$/);
+
+  // Y tambien se puede escribir.
   await page.getByLabel("Fecha que propones").fill(dentroDe(45));
   await page.getByLabel("Por que").fill("Necesitamos dos semanas mas para la fotografia");
   await page.getByRole("button", { name: "Guardar la fecha" }).click();

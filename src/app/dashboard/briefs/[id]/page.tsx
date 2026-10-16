@@ -12,7 +12,7 @@ import {
   FechaViable,
   HiloAclaraciones,
   ProveedorDecisiones,
-  SECCION_BRIEF,
+  TarjetaBrief,
 } from "@/components/briefs";
 import { Wrapper } from "@/components/layout/Wrapper";
 import { conSesion } from "@/lib/db";
@@ -86,11 +86,7 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
         <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <div className="flex flex-col gap-6">
             {cambios.length > 0 && (
-              <section aria-labelledby="titulo-cambios" className="surge">
-                <h2 id="titulo-cambios" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
-                  Que cambio en la version {ultima?.numero}
-                </h2>
-                <div className={SECCION_BRIEF}>
+              <TarjetaBrief id="titulo-cambios" titulo={`Que cambio en la version ${ultima?.numero}`} className="surge">
                   <ul aria-label="Cambios entre versiones" className="flex flex-col">
                     {cambios.map((cambio) => (
                       <li key={cambio.clave} className="border-b border-borde/70 py-2.5 last:border-0">
@@ -100,25 +96,20 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
                       </li>
                     ))}
                   </ul>
-                </div>
-              </section>
+              </TarjetaBrief>
             )}
 
-            <section aria-labelledby="titulo-contenido" className="surge [--retraso:0.04s]">
-              <h2 id="titulo-contenido" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
-                Brief completo
-              </h2>
-              <div className={SECCION_BRIEF}>{ultima ? <ContenidoBrief contenido={ultima.contenido} /> : null}</div>
-            </section>
+            <TarjetaBrief id="titulo-contenido" titulo="Brief completo" className="surge [--retraso:0.04s]">
+              {ultima ? <ContenidoBrief contenido={ultima.contenido} /> : null}
+            </TarjetaBrief>
           </div>
 
           <div className="surge flex flex-col gap-4 [--retraso:0.08s]">
-            <div className={SECCION_BRIEF}>
-              <div className="flex flex-wrap items-center gap-2">
-                <EtiquetaBrief estado={brief.estado} />
-                {brief.estado === "enviado" && <span className="text-[12px] text-suave">Fase 0 · brief recibido</span>}
-              </div>
-              <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-[13px]">
+            <TarjetaBrief id="titulo-estado" titulo="Estado" extra={<EtiquetaBrief estado={brief.estado} />}>
+              {brief.estado === "enviado" && (
+                <p className="-mt-2 mb-3 text-[12px] text-suave">Fase 0 · brief recibido</p>
+              )}
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[13px]">
                 <div>
                   <dt className="text-[11.5px] text-suave">Enviado</dt>
                   <dd className="font-semibold">{cuandoBrief(brief.enviadoEn)}</dd>
@@ -159,10 +150,10 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
                   </Link>
                 </p>
               )}
-            </div>
+            </TarjetaBrief>
 
             {decide && VIVOS.has(brief.estado) && brief.fechaAspirada && (
-              <div className={SECCION_BRIEF}>
+              <TarjetaBrief id="titulo-fecha" titulo="Fecha de entrega">
                 <FechaViable
                   briefId={brief.id}
                   fechaAspirada={diaBrief(brief.fechaAspirada)}
@@ -170,12 +161,11 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
                   motivo={brief.motivoFechaPropuesta}
                   hoy={hoyEnCaracas()}
                 />
-              </div>
+              </TarjetaBrief>
             )}
 
             {decide && (puedeAceptar || puedePresupuestar || puedeDescartar) && (
-              <div className={SECCION_BRIEF}>
-                <h3 className="mb-3 text-[14px] font-bold">Decision</h3>
+              <TarjetaBrief id="titulo-decision" titulo="Decision">
                 <BotonesDecision
                   briefId={brief.id}
                   aceptar={puedeAceptar}
@@ -186,11 +176,10 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
                   Convertir en presupuesto lo pasa a la cola de administracion. Al descartar, el
                   cliente recibe el motivo y el brief queda archivado.
                 </p>
-              </div>
+              </TarjetaBrief>
             )}
 
-            <div className={SECCION_BRIEF}>
-              <h3 className="mb-3 text-[14px] font-bold">Aclaraciones</h3>
+            <TarjetaBrief id="titulo-aclaraciones" titulo="Aclaraciones">
               <HiloAclaraciones
                 briefId={brief.id}
                 mensajes={aclaraciones}
@@ -198,7 +187,7 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
                 abierto={VIVOS.has(brief.estado)}
                 vacio="Pide aqui lo que falte. El cliente lo responde desde su cuenta."
               />
-            </div>
+            </TarjetaBrief>
           </div>
         </div>
       </ProveedorDecisiones>

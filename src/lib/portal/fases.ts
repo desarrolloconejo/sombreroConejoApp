@@ -8,7 +8,6 @@ import type {
   TipoCorreccion,
   TipoProyecto,
 } from "@/types";
-import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
  * Las reglas de la bateria como funciones puras.
@@ -129,16 +128,8 @@ export function aplicarCorreccion(
   });
 }
 
-/** El dia de hoy en Caracas, como AAAA-MM-DD. */
-export function hoyEnCaracas(ahora: Date = new Date()): string {
-  // en-CA escribe las fechas como AAAA-MM-DD.
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: ZONA_HORARIA,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(ahora);
-}
+/** El dia de hoy en Caracas. Vive en lib/fechas; se reexporta por sus usos de siempre. */
+export { hoyEnCaracas } from "@/lib/fechas";
 
 /** Suma dias a una fecha AAAA-MM-DD, sin pasar por ninguna zona horaria. */
 export function sumarDias(fecha: string, dias: number): string {

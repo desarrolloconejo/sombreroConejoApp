@@ -5,7 +5,7 @@ import { CalendarCheck, CheckCheck, Undo2 } from "lucide-react";
 
 import { completarFase, planificarFase, regresarFase } from "@/actions/piezas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CLASE_CONTROL, Selector } from "@/components/ui";
+import { Boton, CampoFecha, Selector } from "@/components/ui";
 import { ESTADO_INICIAL, type FasePieza, type PersonaDeEquipo } from "@/types";
 
 import { opcionesDeEquipo } from "./opcionesEquipo";
@@ -118,16 +118,19 @@ export function PlanificarFase({
       <input type="hidden" name="fase" value={fase.fase} />
 
       <div>
-        <label htmlFor={`${id}-fecha`} className="mb-1 block text-[11px] font-semibold text-suave">
+        <span aria-hidden="true" className="mb-1 block text-[11px] font-semibold text-suave">
           Fecha estimada
-        </label>
-        <input
+        </span>
+        <CampoFecha
           id={`${id}-fecha`}
-          type="date"
-          name="fechaEstimada"
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-          className={`${CLASE_CONTROL} min-h-10 w-[160px] py-2`}
+          nombre="fechaEstimada"
+          etiqueta="Fecha estimada"
+          etiquetaOculta
+          compacto
+          opcional
+          valor={fecha}
+          onCambio={setFecha}
+          className="w-[160px]"
         />
       </div>
 
