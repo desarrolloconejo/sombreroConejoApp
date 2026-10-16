@@ -108,7 +108,7 @@ function Resolver({ pago, tasaSugerida }: { pago: Pago; tasaSugerida: string }) 
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             aria-invalid={error ? true : undefined}
-            className={`${CLASE_CONTROL} min-h-[64px] py-2.5`}
+            className={`${CLASE_CONTROL} min-h-[64px]`}
           />
           {error && (
             <span role="alert" className="mt-1.5 block text-[12px] text-blackberry dark-tema:text-acento">

@@ -16,7 +16,7 @@ import {
   sumarMeses,
 } from "@/lib/calendario";
 import { hoyEnCaracas } from "@/lib/fechas";
-import { CLASE_CONTROL } from "./Campo";
+import { claseLinea } from "./Campo";
 import { useFlotante } from "./useFlotante";
 
 /**
@@ -271,11 +271,7 @@ export function CampoFecha({
           }}
           aria-invalid={error || malEscrita ? true : undefined}
           aria-describedby={descrito}
-          className={[
-            CLASE_CONTROL,
-            "pr-11 tabular-nums",
-            compacto ? "min-h-9 py-2 text-[13px]" : "",
-          ].join(" ")}
+          className={`${claseLinea(compacto ? "compacto" : "normal")} pr-11 tabular-nums`}
         />
 
         <button

@@ -401,3 +401,12 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
 22. Lo mismo con el comprobante al reportar un pago.
 23. Como `cliente@empresa.test`, la pieza en revision (Mis proyectos) tiene
     sus tarjetas con titulo y el mismo aire.
+
+**Altos parejos (en cualquier pantalla con varios campos en fila)**
+
+24. En una fila, el cuadro de texto, el desplegable y la fecha miden lo
+    mismo: al editar una tarea (titulo, quien la hace, para cuando), en
+    «Fecha y responsable de la fase», en los renglones de un presupuesto y
+    en los datos de facturacion de una empresa. Ninguno sobresale.
+25. En un brief con una pregunta de fecha, esa pregunta abre el calendario
+    de la app, no el del sistema.

@@ -259,6 +259,13 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   elegir en su calendario; envia `aaaa-mm-dd` en un input oculto, asi que las
   actions no cambian. Con `useCampos`, se conecta con `{...fecha("clave")}`.
   Sus cuentas viven en `src/lib/calendario.ts`, en UTC. El lint lo impone.
+- **Todos los controles de una linea miden lo mismo**: 44 px (`normal`) o
+  40 px (`compacto`), fijos. Salen de `claseLinea()` y `ALTO_CONTROL`
+  (`src/components/ui/Campo.tsx`), que comparten `Campo`, `Selector` y
+  `CampoFecha`. Un input suelto usa `claseLinea()`; nunca se le suman
+  `min-h-*` ni `py-*` a otra clase de control, porque dos alturas en la misma
+  clase dan un resultado distinto segun el orden de la hoja de estilos.
+  `CLASE_CONTROL` queda para areas de texto, con su `min-h-[…]`.
 - Lo que flota pegado a un control (la lista de `Selector`, el calendario) usa
   `useFlotante`: se pinta en el `<body>` para que una tabla no lo recorte.
 - **Ningun `<input type="file">`** fuera de `CampoArchivo`

@@ -5,7 +5,7 @@ import { Copy, Grid3x3, Save, Star } from "lucide-react";
 
 import { duplicarFormato, guardarFormato, marcarFormatoHabitual } from "@/actions/ajustesFinanzas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CLASE_CONTROL, Campo, Selector } from "@/components/ui";
+import { ASPECTO_CONTROL, Boton, Campo, Selector } from "@/components/ui";
 import {
   CAMPOS_FACTURA,
   COLUMNAS_FACTURA,
@@ -32,7 +32,8 @@ const OPCIONES_ALINEAR = [
 type Fila = { usar: boolean; x: string; y: string; ancho: string; alinear: string };
 type Columna = { x: string; ancho: string; alinear: string };
 
-const CELDA = `${CLASE_CONTROL} min-h-9 px-2 py-1.5 text-[12.5px] tabular-nums`;
+// Celdas estrechas: el alto compacto, con menos relleno lateral.
+const CELDA = `${ASPECTO_CONTROL} h-10 px-2 text-[12.5px] tabular-nums`;
 
 /** De un texto en milimetros a numero, para dibujar. Lo invalido no se dibuja. */
 function mm(texto: string): number | null {

@@ -73,7 +73,7 @@ export function DecisionPresupuesto({ presupuestoId }: { presupuestoId: number }
           maxLength={500}
           placeholder="Lo que cambiarias, o lo que no encaja"
           aria-invalid={estado.errores?.motivo ? true : undefined}
-          className={`${CLASE_CONTROL} min-h-[104px] py-2.5`}
+          className={`${CLASE_CONTROL} min-h-[104px]`}
         />
         {estado.errores?.motivo && (
           <span role="alert" className="mt-1.5 block text-[12px] font-medium text-blackberry dark-tema:text-acento">

@@ -10,7 +10,7 @@ import {
   presupuestarBrief,
 } from "@/actions/briefs";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CampoFecha, CLASE_CONTROL, PIE_TARJETA } from "@/components/ui";
+import { Boton, CampoFecha, CLASE_CONTROL, claseLinea, PIE_TARJETA } from "@/components/ui";
 import { CredencialProvisional } from "@/components/usuarios/CredencialProvisional";
 import { ESTADO_INICIAL, type EstadoFormulario } from "@/types";
 
@@ -97,7 +97,7 @@ export function BotonesDecision({
             rows={3}
             maxLength={1000}
             aria-invalid={descartar[0].errores?.motivo ? true : undefined}
-            className={`${CLASE_CONTROL} min-h-[84px] py-2.5`}
+            className={`${CLASE_CONTROL} min-h-[84px]`}
           />
           {descartar[0].errores?.motivo && (
             <span role="alert" className="mt-1.5 block text-[12px] font-medium text-blackberry dark-tema:text-acento">
@@ -232,7 +232,7 @@ export function FechaViable({
               onChange={(evento) => setPorque(evento.target.value)}
               maxLength={500}
               aria-invalid={errores.motivoFecha ? true : undefined}
-              className={CLASE_CONTROL}
+              className={claseLinea()}
             />
             {errores.motivoFecha && (
               <span role="alert" className="mt-1 block text-[12px] text-blackberry dark-tema:text-acento">

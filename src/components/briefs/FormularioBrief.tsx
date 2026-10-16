@@ -14,7 +14,7 @@ import {
 import { ArrowLeft, ArrowRight, Check, Save, Send } from "lucide-react";
 
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Alerta, Boton, CampoFecha, CLASE_CONTROL } from "@/components/ui";
+import { Alerta, Boton, CampoFecha, CLASE_CONTROL, claseLinea } from "@/components/ui";
 import { ZONA_HORARIA } from "@/lib/fechas";
 import { avisosDeReglas, contarNoSe, pasosVisibles, respondida } from "@/lib/portal/briefs";
 import {
@@ -497,14 +497,23 @@ function CampoPregunta({
         {encabezado}
       </label>
       {pregunta.tipo === "texto_largo" ? (
-        <textarea {...comunes} rows={3} maxLength={4000} className={`${CLASE_CONTROL} min-h-[84px] py-2.5`} />
+        <textarea {...comunes} rows={3} maxLength={4000} className={`${CLASE_CONTROL} min-h-[84px]`} />
+      ) : pregunta.tipo === "fecha" ? (
+        // La fecha con el calendario de la casa; «No lo se» la deja vacia.
+        <CampoFecha
+          id={id}
+          etiqueta={pregunta.texto}
+          etiquetaOculta
+          valor={esNoSe ? "" : texto}
+          onCambio={onCambio}
+        />
       ) : (
         <input
           {...comunes}
-          type={pregunta.tipo === "email" ? "email" : pregunta.tipo === "telefono" ? "tel" : pregunta.tipo === "fecha" ? "date" : "text"}
+          type={pregunta.tipo === "email" ? "email" : pregunta.tipo === "telefono" ? "tel" : "text"}
           inputMode={pregunta.tipo === "numero" ? "decimal" : undefined}
           maxLength={500}
-          className={CLASE_CONTROL}
+          className={claseLinea()}
         />
       )}
       {pregunta.permiteNoSe && (

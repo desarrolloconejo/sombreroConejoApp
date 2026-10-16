@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
-import { BotonIcono, CLASE_CONTROL, Selector } from "@/components/ui";
+import { BotonIcono, claseLinea, Selector } from "@/components/ui";
 import { importesDe, subtotalDe } from "@/lib/finanzas/calculo";
 import { dolares } from "@/lib/finanzas/documentos";
 import type { Renglon, RenglonNuevo } from "@/types";
@@ -100,7 +100,7 @@ export function EditorRenglones({
                   maxLength={300}
                   placeholder="Que se cobra"
                   aria-label={`Descripcion del renglon ${numero}`}
-                  className={CLASE_CONTROL}
+                  className={claseLinea()}
                 />
               </label>
 
@@ -114,7 +114,7 @@ export function EditorRenglones({
                   onChange={(evento) => cambiar(fila.clave, { cantidad: evento.target.value })}
                   inputMode="decimal"
                   aria-label={`Cantidad del renglon ${numero}`}
-                  className={`${CLASE_CONTROL} text-right tabular-nums`}
+                  className={`${claseLinea()} text-right tabular-nums`}
                 />
               </label>
 
@@ -129,7 +129,7 @@ export function EditorRenglones({
                   inputMode="decimal"
                   placeholder="0,00"
                   aria-label={`Precio del renglon ${numero}`}
-                  className={`${CLASE_CONTROL} text-right tabular-nums`}
+                  className={`${claseLinea()} text-right tabular-nums`}
                 />
               </label>
 

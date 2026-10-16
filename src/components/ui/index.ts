@@ -1,7 +1,8 @@
 /** Punto unico de importacion de las primitivas de interfaz. */
 export { Boton, BotonEnlace, BotonIcono } from "./Boton";
 export type { VarianteBoton, TamanoBoton } from "./Boton";
-export { Campo, CampoFijo, CLASE_CONTROL } from "./Campo";
+export { ASPECTO_CONTROL, ALTO_CONTROL, Campo, CampoFijo, CLASE_CONTROL, claseLinea } from "./Campo";
+export type { TamanoControl } from "./Campo";
 export { Selector } from "./Selector";
 export { CampoArchivo } from "./CampoArchivo";
 export { CampoFecha } from "./CampoFecha";

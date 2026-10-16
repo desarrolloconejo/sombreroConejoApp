@@ -85,7 +85,7 @@ export function HiloAclaraciones({
               maxLength={2000}
               placeholder="Escribe una pregunta o una respuesta"
               aria-invalid={estado.errores?.texto ? true : undefined}
-              className={`${CLASE_CONTROL} min-h-[84px] py-2.5`}
+              className={`${CLASE_CONTROL} min-h-[84px]`}
             />
           </label>
           {estado.errores?.texto && (

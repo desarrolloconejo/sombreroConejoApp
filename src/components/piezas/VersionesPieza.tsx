@@ -5,7 +5,7 @@ import { ExternalLink, FileText, Send, Upload } from "lucide-react";
 
 import { marcarVersionEnviada, subirVersion } from "@/actions/versiones";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
-import { Boton, CampoArchivo, CLASE_CONTROL } from "@/components/ui";
+import { Boton, CampoArchivo, claseLinea } from "@/components/ui";
 import { sitioDeEnlace } from "@/lib/portal/archivos";
 import { ESTADO_INICIAL, type Version } from "@/types";
 import { ZONA_HORARIA } from "@/lib/fechas";
@@ -202,7 +202,7 @@ export function VersionesPieza({
                   name="enlace"
                   type="url"
                   placeholder="https://www.figma.com/file/..."
-                  className={`${CLASE_CONTROL} min-h-10 py-2`}
+                  className={claseLinea("compacto")}
                 />
               </div>
               <div>
@@ -214,7 +214,7 @@ export function VersionesPieza({
                   name="nombre"
                   maxLength={120}
                   placeholder="Corte final con subtitulos"
-                  className={`${CLASE_CONTROL} min-h-10 py-2`}
+                  className={claseLinea("compacto")}
                 />
               </div>
               {subido.errores?.enlace && (

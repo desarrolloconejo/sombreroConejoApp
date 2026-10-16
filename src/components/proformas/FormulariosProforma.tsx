@@ -167,7 +167,7 @@ export function AnularProforma({ proformaId }: { proformaId: number }) {
           rows={3}
           maxLength={500}
           aria-invalid={estado.errores?.motivo ? true : undefined}
-          className={`${CLASE_CONTROL} min-h-[84px] py-2.5`}
+          className={`${CLASE_CONTROL} min-h-[84px]`}
         />
         {estado.errores?.motivo && (
           <span role="alert" className="mt-1.5 block text-[12px] font-medium text-blackberry dark-tema:text-acento">

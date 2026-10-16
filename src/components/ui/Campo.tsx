@@ -8,18 +8,41 @@ import type { ComponentProps, ReactNode } from "react";
  * haya que verlo para enterarse.
  */
 
-const CONTROL =
-  "w-full min-h-11 rounded-xl border-[1.5px] border-borde bg-campo px-3.5 py-3 " +
-  "text-[13.5px] text-texto placeholder:text-suave " +
-
+/**
+ * El aspecto de un control, SIN medidas: borde, fondo, foco y error. Las
+ * medidas van aparte para que nunca se pisen dos alturas en la misma clase:
+ * "min-h-11 py-3" mas un "min-h-10 py-2" anadido despues daba un alto
+ * distinto segun el orden de las reglas en la hoja de estilos.
+ */
+export const ASPECTO_CONTROL =
+  "w-full rounded-xl border-[1.5px] border-borde bg-campo text-texto placeholder:text-suave " +
   "focus:outline-none focus:border-acento focus:bg-superficie focus:shadow-[var(--foco)] " +
-  "" +
   "disabled:opacity-60 disabled:cursor-not-allowed " +
   "aria-[invalid=true]:border-blackberry aria-[invalid=true]:shadow-[0_0_0_3px_rgb(96_34_73_/_0.14)]";
 
-// Para controles que no son un Campo entero (una fila con varios), con el
-// mismo aspecto.
-export const CLASE_CONTROL = CONTROL;
+/**
+ * Los dos altos de un control de una linea (texto, Selector, CampoFecha).
+ * Son fijos, no minimos: en una fila, todos miden exactamente lo mismo.
+ */
+export const ALTO_CONTROL = {
+  normal: "h-11 px-3.5 text-[13.5px]",
+  compacto: "h-10 px-3 text-[13px]",
+} as const;
+
+export type TamanoControl = keyof typeof ALTO_CONTROL;
+
+/** Un control de una linea con su alto: lo comparten Campo, Selector y CampoFecha. */
+export function claseLinea(tamano: TamanoControl = "normal"): string {
+  return `${ASPECTO_CONTROL} ${ALTO_CONTROL[tamano]}`;
+}
+
+/**
+ * Para un area de texto: el aspecto, con su relleno. El alto minimo lo pone
+ * quien la usa (min-h-[84px]).
+ */
+export const CLASE_CONTROL = `${ASPECTO_CONTROL} px-3.5 py-2.5 text-[13.5px]`;
+
+const CONTROL = claseLinea("normal");
 
 export function Campo({
   id,

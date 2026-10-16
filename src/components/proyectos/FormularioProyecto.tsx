@@ -6,7 +6,7 @@ import { FolderPlus, Plus, X } from "lucide-react";
 import { crearProyecto } from "@/actions/proyectos";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, CampoFecha, CLASE_CONTROL, Selector, useCampos } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, CampoFecha, claseLinea, Selector, useCampos } from "@/components/ui";
 import { SERVICIOS } from "@/lib/portal/catalogo";
 import {
   ESTADO_INICIAL,
@@ -221,7 +221,7 @@ export function FormularioProyecto({
                   onChange={(e) => cambiarFila(fila.clave, { titulo: e.target.value })}
                   placeholder={`${NOMBRES_DE_TIPO_PIEZA[fila.tipo]} ${indice + 1}`}
                   maxLength={120}
-                  className={`${CLASE_CONTROL} min-w-0 flex-1`}
+                  className={`${claseLinea()} min-w-0 flex-1`}
                 />
 
                 <button
