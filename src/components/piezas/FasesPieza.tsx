@@ -1,8 +1,11 @@
+import { MessageSquare } from "lucide-react";
+
 import { fechaCorta } from "@/components/proyectos/ColumnasProyectos";
 import { PLANTILLAS } from "@/lib/portal/catalogo";
 import { esFaseDeTrabajo, faseQueSePuedeRegresar } from "@/lib/portal/fases";
 import {
   NOMBRES_DE_ESTADO_FASE,
+  type ComentarioPieza,
   type FasePieza,
   type Pieza,
   type PersonaDeEquipo,
@@ -10,6 +13,7 @@ import {
   type TipoProyecto,
 } from "@/types";
 import { CompletarFase, MovimientosDeFase, PlanificarFase, RegresarFase } from "./AccionesFase";
+import { HiloComentarios } from "./ContenidoPieza";
 import { TareasFase } from "./TareasFase";
 
 /**
@@ -31,6 +35,7 @@ export function FasesPieza({
   pieza,
   tipo,
   tareas,
+  comentarios,
   gestiona,
   usuarioId,
   equipo,
@@ -38,6 +43,8 @@ export function FasesPieza({
   pieza: Pieza;
   tipo: TipoProyecto;
   tareas: Tarea[];
+  /** Todos los de la pieza: cada fase se queda con los suyos. */
+  comentarios: ComentarioPieza[];
   gestiona: boolean;
   usuarioId: number;
   equipo: PersonaDeEquipo[];
@@ -54,6 +61,7 @@ export function FasesPieza({
           const deTrabajo = esFaseDeTrabajo(fase.fase);
           const suyas = tareas.filter((tarea) => tarea.fase === fase.fase);
           const pendientes = suyas.filter((tarea) => tarea.estado === "pendiente").length;
+          const deLaFase = comentarios.filter((comentario) => comentario.fase === fase.fase);
 
           return (
             <li
@@ -114,6 +122,32 @@ export function FasesPieza({
                       correccion.
                     </p>
                   )}
+
+                  {/*
+                    Los comentarios de la fase, plegados: se abren solos si la
+                    fase esta en curso y ya hay conversacion.
+                  */}
+                  <details
+                    className="group mt-5 border-t border-borde pt-4"
+                    open={enCurso && deLaFase.length > 0}
+                  >
+                    <summary className="flex cursor-pointer items-center gap-2 text-[12.5px] font-semibold text-acento select-none">
+                      <MessageSquare aria-hidden="true" className="size-4" />
+                      Comentarios
+                      <span className="rounded-full bg-acento-tenue px-1.5 py-0.5 text-[11px] font-bold tabular-nums">
+                        {deLaFase.length}
+                      </span>
+                    </summary>
+                    <div className="mt-3.5">
+                      <HiloComentarios
+                        piezaId={pieza.id}
+                        fase={fase.fase}
+                        comentarios={deLaFase}
+                        tareas={suyas.map((tarea) => ({ id: tarea.id, titulo: tarea.titulo }))}
+                        vacio="Nadie ha comentado esta fase todavia."
+                      />
+                    </div>
+                  </details>
 
                   {gestiona && activa && (
                     <div className="mt-5 flex flex-col gap-4 border-t border-borde pt-4">

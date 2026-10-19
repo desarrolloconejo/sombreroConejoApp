@@ -1491,6 +1491,28 @@ CREATE TABLE IF NOT EXISTS portal.comentarios_pieza (
 CREATE INDEX IF NOT EXISTS comentarios_pieza_idx
   ON portal.comentarios_pieza (pieza_id, creado_en);
 
+-- Comentarios por fase (y, si se quiere, sobre una tarea de esa fase). Los de
+-- antes quedan con fase NULL: son los «generales» de la pieza. Quitar una
+-- tarea no borra sus comentarios: se quedan en la fase sin la etiqueta.
+ALTER TABLE portal.comentarios_pieza ADD COLUMN IF NOT EXISTS fase SMALLINT;
+ALTER TABLE portal.comentarios_pieza ADD COLUMN IF NOT EXISTS tarea_id INTEGER
+  REFERENCES portal.tareas(id) ON DELETE SET NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'comentarios_pieza_fase_valida') THEN
+    ALTER TABLE portal.comentarios_pieza
+      ADD CONSTRAINT comentarios_pieza_fase_valida CHECK (fase IS NULL OR fase BETWEEN 1 AND 5);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'comentarios_pieza_tarea_con_fase') THEN
+    ALTER TABLE portal.comentarios_pieza
+      ADD CONSTRAINT comentarios_pieza_tarea_con_fase CHECK (tarea_id IS NULL OR fase IS NOT NULL);
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS comentarios_pieza_fase_idx
+  ON portal.comentarios_pieza (pieza_id, fase, creado_en);
+
 -- ---------------------------------------------------------------------------
 -- Permisos. Sin DELETE salvo en asignaciones (quitar una) y tareas (quitar
 -- una pendiente que el ejecutivo no quiere): lo demas se cancela o se cierra.

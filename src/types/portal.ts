@@ -223,6 +223,11 @@ export type ComentarioPieza = {
   autorNombre: string;
   texto: string;
   creadoEn: Date;
+  /** La fase en la que se dijo; null, un comentario general de la pieza. */
+  fase: NumeroFase | null;
+  /** La tarea de esa fase a la que se refiere, si se marco. */
+  tareaId: number | null;
+  tareaTitulo: string | null;
 };
 
 /** Lo que hace falta para crear una pieza. */

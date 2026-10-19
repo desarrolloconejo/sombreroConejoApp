@@ -626,7 +626,7 @@ async function probarProyectos(): Promise<void> {
         admin.id,
         tx,
       );
-      await comentarios.crear(piezaA, admin.id, "Comentario interno", tx);
+      await comentarios.crear(piezaA, admin.id, "Comentario interno", { fase: null, tareaId: null }, tx);
       await piezas.guardarCopy(piezaA, "Copy secreto", admin.id, tx);
 
       r.fasesCreadas = await cuenta(
@@ -733,7 +733,7 @@ async function probarProyectos(): Promise<void> {
       );
       r.quitaTareaLista = await tareas.quitar(tarea, tx);
       r.comentaComoOtro = await intentarDentro(() =>
-        comentarios.crear(piezaA, cuentas.id, "Suplantado", tx),
+        comentarios.crear(piezaA, cuentas.id, "Suplantado", { fase: null, tareaId: null }, tx),
       );
 
       throw new Deshacer();
