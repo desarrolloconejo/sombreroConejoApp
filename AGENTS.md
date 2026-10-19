@@ -226,6 +226,11 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Un comprobante de pago se sube con `subirArchivo({ carpeta: "comprobantes" })`
   antes de la transaccion, como las versiones de las piezas.
 - Lo que nace con valores de ejemplo se anota en `docs/pendientesIntegracion.md`.
+- Un proyecto lo lleva **solo un ejecutivo de cuentas asignado a la
+  empresa** (`proyectos.ejecutivosPosibles`); los administradores no. Quien
+  lo lleva hoy puede seguir aunque ya no se pudiera elegir.
+- Los comentarios internos de una pieza van por fase (y, si se quiere,
+  sobre una tarea de esa fase); los que no tienen fase son los generales.
 - Finanzas lo opera `requerirFinanzas` (admin o cargo `administracion`). El
   cliente entra con `requerirFinanzasDeEmpresa`, que exige su casilla
   `puede_ver_finanzas`. Un modulo del menu que dependa de esa casilla declara
@@ -280,6 +285,19 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   `inert` y deshabilitado: la tarjeta no cambia de alto.
 - Un listado puede pintarse en tarjetas con la prop `rejilla` de `Listado`
   (Proyectos lo hace); el orden pasa a `ListadoOrden`.
+- Lo que se desplaza dentro de un panel usa la barra fina: `barra-fina` en
+  columnas y paneles, `barra-fina-flotante` en lo que flota (listas,
+  calendario, buscador, campana).
+- Cada page del panel trae «Volver» (en `Wrapper`) y el indice flotante
+  (`IndicePagina`, en el layout), sin hacer nada: el indice lee los `h2` del
+  `<main>`, asi que una seccion nueva debe tener su titulo en un `h2`.
+  «Volver» usa el rastro de `RastroNavegacion` y, si no hay, sube a la miga
+  anterior.
+- Completar algo que cuenta se celebra: una action devuelve `logro: true` y
+  el aviso sale con el tono de logro; la tarea recien marcada usa
+  `MarcaTarea` con `useCelebrar`; `anunciarLogro()` enciende
+  `ResplandorLogro`. Las clases `logro-*` viven en `globals.css` y se apagan
+  con el movimiento reducido.
 - Un dato que se pasa a otro sitio (RIF, telefono, direccion, numero de
   factura) lleva al lado `BotonCopiar`. La logica de copiar es `useCopiar`;
   no se vuelve a escribir `navigator.clipboard` en un componente.

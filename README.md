@@ -67,6 +67,8 @@ deshacer —restablecer la contrasena, bloquear o desactivar la cuenta—; no se
 con ellas. Siembra tambien dos proyectos de ejemplo de la empresa, asignada al
 ejecutivo: una parrilla de redes de diez piezas que suma el 60 % y ensena las
 cuatro alertas, y un proyecto especial recien empezado (`db/datos/proyectos.mts`).
+Si ya existen, volver a sembrar les corre las fechas los dias que hayan pasado:
+siguen al dia, con lo atrasado atrasado y lo demas a tiempo.
 Y finanzas de ejemplo: un presupuesto por aprobar, uno aprobado con su
 proforma emitida, un borrador y una proforma recurrente a la que ya le toca la
 siguiente (`db/datos/finanzas.mts`). Briefs de ejemplo: uno enviado y un
