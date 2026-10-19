@@ -47,6 +47,7 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 | `docs/reglasBateria.md` | Reglas de proyectos, piezas, fases y tareas, extraidas del paquete. Para la etapa 3 sustituye a `appFacturas` |
 | `docs/despliegueProduccion.md` | Guia viva del despliegue: SQL, variables y pasos, por etapa |
 | `docs/informeIntegracion.md` | Que hace la aplicacion hoy, como se probo y la guia para probarla |
+| `docs/guiaFinanzas.md` | Como funciona finanzas de punta a punta, para el equipo: estados, quien hace que, tasa, pagos y cobranza |
 | `docs/informePendientes.md` | Lo que falta para usarla de verdad, por momento y con quien aporta cada dato |
 | `docs/planPiloto.md` | Como se hace la prueba con un cliente real: preparacion, semanas, que observar y como volver atras |
 | `docs/pendientesIntegracion.md` | Valores de ejemplo que hay que sustituir, decisiones del negocio que faltan y lo que no se hizo. Cada etapa lo actualiza; de aqui sale el informe final |
