@@ -138,6 +138,7 @@ export type {
   Pieza,
   Tarea,
   TareaAsignada,
+  FaseACargo,
   ComentarioPieza,
   DatosNuevaPieza,
   DatosNuevaTarea,

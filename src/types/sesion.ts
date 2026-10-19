@@ -86,6 +86,8 @@ export type ErroresCampo = Record<string, string>;
 export type EstadoFormulario = {
   ok: boolean;
   mensaje?: string;
+  /** Se termino algo que cuenta (una fase): el aviso se celebra. */
+  logro?: boolean;
   errores?: ErroresCampo;
 
   /**

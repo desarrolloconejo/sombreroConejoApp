@@ -303,7 +303,7 @@ export function CampoFecha({
               aria-labelledby={idTitulo}
               onKeyDown={alPulsarTecla}
               style={posicion}
-              className="fixed z-50 overflow-y-auto rounded-2xl border border-borde bg-superficie p-3 shadow-[var(--sombra-alta)] select-none"
+              className="barra-fina-flotante fixed z-50 overflow-y-auto rounded-2xl border border-borde bg-superficie p-3 shadow-[var(--sombra-alta)] select-none"
             >
               <div className="flex h-10 items-center gap-0.5">
                 <button type="button" aria-label="Ano anterior" className={BOTON_NAVEGAR} onClick={() => mover(sumarMeses(foco, -12))}>

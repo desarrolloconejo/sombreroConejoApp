@@ -314,7 +314,13 @@ export async function completarFase(
       }
     }
 
-    return { proyectoId: proyecto.id, nombre: nombreDeFase(proyecto.tipo, fase), correos };
+    return {
+      proyectoId: proyecto.id,
+      nombre: nombreDeFase(proyecto.tipo, fase),
+      // Lo que viene: se dice en el aviso, para que se vea hacia donde avanza.
+      siguiente: fase < 5 ? nombreDeFase(proyecto.tipo, (fase + 1) as NumeroFase) : null,
+      correos,
+    };
   });
 
   if (resultado === null) return NO_ALCANCE;
@@ -325,7 +331,13 @@ export async function completarFase(
 
   revalidar(resultado.proyectoId, piezaId);
 
-  return { ok: true, mensaje: `${resultado.nombre}: completada` };
+  return {
+    ok: true,
+    logro: true,
+    mensaje: resultado.siguiente
+      ? `${resultado.nombre}: completada · sigue ${resultado.siguiente}`
+      : `${resultado.nombre}: completada`,
+  };
 }
 
 export async function regresarFase(
@@ -476,17 +488,29 @@ export async function comentarPieza(
   const texto = limpiarTexto(datos.get("texto"), LIMITES.comentario);
   if (!texto) return { ok: false, errores: { texto: "Escribe el comentario" } };
 
+  // Donde se dice: en una fase (o en general, sin fase) y, si se marco, sobre
+  // una tarea de esa fase. Una tarea de otra pieza o de otra fase no vale.
+  const fase = datos.get("fase") ? comoFase(datos.get("fase")) : null;
+  const tareaId = datos.get("tareaId") ? comoIdentificador(datos.get("tareaId")) : null;
+  if (datos.get("fase") && fase === null) return NO_ALCANCE;
+  if (tareaId !== null && fase === null) return NO_ALCANCE;
+
   const resultado = await conSesion(usuario, async (tx) => {
     const pieza = await piezas.buscarPorId(piezaId, tx);
     if (!pieza) return null;
 
-    const comentarioId = await comentarios.crear(piezaId, usuario.id, texto, tx);
+    if (tareaId !== null) {
+      const tarea = await tareas.buscarPorId(tareaId, tx);
+      if (!tarea || tarea.piezaId !== piezaId || tarea.fase !== fase) return null;
+    }
+
+    const comentarioId = await comentarios.crear(piezaId, usuario.id, texto, { fase, tareaId }, tx);
     const proyecto = await proyectos.buscarPorId(pieza.proyectoId, tx);
 
     await anotar(tx, usuario, "pieza.comentada", {
       entidadId: piezaId,
       empresaId: proyecto?.empresaId ?? null,
-      despues: { comentarioId },
+      despues: { comentarioId, fase, tareaId },
     });
 
     return pieza.proyectoId;

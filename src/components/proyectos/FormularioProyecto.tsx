@@ -6,7 +6,7 @@ import { FolderPlus, Plus, X } from "lucide-react";
 import { crearProyecto } from "@/actions/proyectos";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, CampoFecha, claseLinea, Selector, useCampos } from "@/components/ui";
+import { Alerta, Boton, BotonEnlace, Campo, CampoFecha, claseLinea, Selector, useCampos } from "@/components/ui";
 import { SERVICIOS } from "@/lib/portal/catalogo";
 import {
   ESTADO_INICIAL,
@@ -39,7 +39,6 @@ function filaNueva(tipo: TipoPieza): FilaPieza {
 
 export function FormularioProyecto({
   empresas,
-  administradores,
   asignaciones,
   usuarioId,
   empresaInicial,
@@ -47,7 +46,6 @@ export function FormularioProyecto({
 }: {
   /** Las empresas donde quien mira puede abrir proyectos. */
   empresas: NombreEmpresa[];
-  administradores: PersonaBreve[];
   /** Quien atiende a cada empresa. */
   asignaciones: Asignacion[];
   /** Quien abre el proyecto: se propone como ejecutivo si puede serlo. */
@@ -80,14 +78,12 @@ export function FormularioProyecto({
 
   const servicio = SERVICIOS.find((s) => s.slug === servicioSlug) ?? SERVICIOS[0];
 
-  // Los administradores primero, despues quien atiende a la empresa elegida.
-  const ejecutivos: PersonaBreve[] = [
-    ...administradores,
-    ...asignaciones
-      .filter((a) => String(a.empresaId) === empresaId)
-      .map((a) => ({ id: a.usuarioId, nombre: a.usuarioNombre }))
-      .filter((p) => !administradores.some((admin) => admin.id === p.id)),
-  ];
+  // Solo quien atiende a la empresa elegida: los ejecutivos de cuentas
+  // asignados a ella. La action lo vuelve a comprobar contra la base.
+  const ejecutivos: PersonaBreve[] = asignaciones
+    .filter((a) => String(a.empresaId) === empresaId)
+    .map((a) => ({ id: a.usuarioId, nombre: a.usuarioNombre }));
+  const sinEjecutivo = empresaId !== "" && ejecutivos.length === 0;
 
   const ejecutivoInicial = ejecutivos.some((p) => p.id === usuarioId)
     ? String(usuarioId)
@@ -163,10 +159,18 @@ export function FormularioProyecto({
             marcador={empresaId ? "Elige quien lo lleva" : "Primero elige la empresa"}
             opciones={ejecutivos.map((p) => ({ valor: String(p.id), texto: p.nombre }))}
             valorInicial={ejecutivoInicial}
-            deshabilitado={!empresaId}
+            deshabilitado={!empresaId || sinEjecutivo}
             error={errores.ejecutivoId}
             className="col-span-2"
           />
+
+          {sinEjecutivo && (
+            <Alerta className="col-span-2">
+              <b className="font-semibold">Esta empresa no tiene ejecutivo de cuentas.</b> Un
+              proyecto solo lo lleva un ejecutivo asignado a la empresa: un administrador se lo
+              asigna en Empresas, en su ficha.
+            </Alerta>
+          )}
 
           <CampoFecha
             id="proyecto-inicio"
@@ -283,7 +287,7 @@ export function FormularioProyecto({
         <BotonEnlace href={hrefCancelar} variante="fantasma">
           Cancelar
         </BotonEnlace>
-        <Boton type="submit" disabled={enviando}>
+        <Boton type="submit" disabled={enviando || sinEjecutivo}>
           <FolderPlus aria-hidden="true" />
           {enviando ? "Creando…" : "Crear proyecto"}
         </Boton>

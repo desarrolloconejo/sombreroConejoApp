@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { EMAIL_EJECUTIVO, USUARIOS } from "../../db/datos/semilla.mts";
-import { elegirEmpresa } from "./ayudas/formularios";
+import { elegirEmpresa, elegirOpcion } from "./ayudas/formularios";
 
 /**
  * Proyectos, de punta a punta, como ejecutivo de cuentas.
@@ -64,6 +64,19 @@ test("el ejecutivo crea un proyecto, cumple una tarea y completa la fase", async
     timeout: 30_000,
   });
   await expect(page.getByRole("img", { name: "Avance de la pieza: 20 por ciento" })).toBeVisible();
+
+  // Un comentario en la fase 1, sobre su tarea: sale en esa fase con la tarea
+  // como etiqueta, y no entre los generales.
+  const fase1 = page.locator("details").filter({ has: page.locator("summary", { hasText: "Comentarios" }) }).first();
+  await fase1.locator("summary").click();
+  await elegirOpcion(page, "Sobre la tarea", "Redactar el copy", fase1);
+  await fase1.getByPlaceholder("Solo lo ve el equipo.").fill("Revisar el tono antes de enviar");
+  await fase1.getByRole("button", { name: "Comentar" }).click();
+  await expect(page.getByText("Comentario anadido").first()).toBeVisible({ timeout: 30_000 });
+  await expect(fase1.getByRole("listitem").filter({ hasText: "Revisar el tono antes de enviar" })).toContainText(
+    "Redactar el copy",
+  );
+  await expect(page.getByText("Sin comentarios generales")).toBeVisible();
 
   // Fuera del tablero: se cancela.
   await page.getByRole("link", { name: nombre }).click();

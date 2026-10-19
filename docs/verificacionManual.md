@@ -410,3 +410,34 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
     en los datos de facturacion de una empresa. Ninguno sobresale.
 25. En un brief con una pregunta de fecha, esa pregunta abre el calendario
     de la app, no el del sistema.
+
+**Siete mejoras (proyectos, comentarios, completar, indice, volver, barra y Mi trabajo)**
+
+26. Nuevo proyecto (como `cuentas@conejo.test`): «Lo lleva» solo ofrece
+    ejecutivos de cuentas asignados a la empresa, ningun administrador. Con
+    una empresa sin ejecutivo asignado sale un aviso y no deja crear.
+27. En una pieza, cada fase tiene «Comentarios · N». Un comentario escrito
+    en la fase 3 eligiendo «Sobre la tarea» sale en esa fase con la tarea
+    como etiqueta. Los comentarios de antes estan en «Comentarios generales».
+28. Marcar una tarea: el circulo rebota, suelta un anillo y el titulo se
+    tacha con una raya que avanza. En Mi trabajo, la tarea llega a «Hechas»
+    con un pequeno rebote.
+29. Completar una fase: el aviso sale lleno de color, con un icono, y dice
+    lo que sigue («…: completada · sigue X»); la bateria de arriba brilla.
+    Como cliente, aprobar una pieza muestra el aviso de logro.
+30. Con «reducir movimiento» activado en el sistema, nada de lo anterior se
+    mueve: solo cambia el estado.
+31. En una pagina con varias secciones (una pieza, un brief, Ajustes de
+    finanzas) aparece abajo a la derecha un boton redondo con un numero. Al
+    pulsarlo, «En esta pagina» lista las secciones, marca la que se ve y
+    lleva a cada una. En una pagina corta no aparece.
+32. Toda pagina del panel tiene «Volver» junto a las migas: vuelve a la
+    pagina anterior; si se entro directo (un enlace, una recarga), sube un
+    nivel. Nunca saca de la aplicacion.
+33. Las listas de los desplegables, el calendario, el buscador y la campana
+    usan la barra fina, que aparece al pasar el raton.
+34. Mi trabajo (como `diseno@conejo.test`) abre con «Fases a tu cargo»: las
+    fases de las que es responsable, con su fecha (en rojo si vencio), sus
+    tareas pendientes de quien sean y «Abrir la pieza». Al poner a alguien
+    como responsable de una fase en una pieza, la fase le aparece en su Mi
+    trabajo.

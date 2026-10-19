@@ -149,7 +149,7 @@ export function SeparadorPanel({ children }: { children: ReactNode }) {
  */
 export function PanelCuerpo({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
+    <div className="barra-fina min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
       {children}
     </div>
   );

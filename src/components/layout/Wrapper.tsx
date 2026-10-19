@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Breadcrumb, type Miga } from "./Breadcrumb";
+import { BotonVolver } from "./Volver";
 
 /**
  * El envoltorio comun de toda page del dashboard: migas, cabecera y contenido.
@@ -28,12 +29,15 @@ export function Wrapper({
 
   children: ReactNode;
 }) {
+  const arriba = migas.at(-2)?.href;
+
   return (
     <>
-      <Breadcrumb
-        migas={migas}
-        className="surge mb-3 [--retraso:0.02s] lg:mb-[13px]"
-      />
+      {/* Volver junto a las migas: la anterior es a donde sube si se entro directo. */}
+      <div className="surge mb-3 flex items-center gap-3 [--retraso:0.02s] lg:mb-[13px]">
+        {arriba && <BotonVolver hrefArriba={arriba} />}
+        <Breadcrumb migas={migas} className="min-w-0" />
+      </div>
 
       <header className="surge mb-5 flex flex-col gap-4 border-b border-borde pb-[18px] [--retraso:0.06s] sm:flex-row sm:items-end sm:justify-between sm:gap-6 lg:mb-6 lg:pb-5">
         <div className="min-w-0">

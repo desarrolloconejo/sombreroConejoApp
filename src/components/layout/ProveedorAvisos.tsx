@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { CircleAlert, CircleCheck, X } from "lucide-react";
+import { CircleAlert, CircleCheck, PartyPopper, X } from "lucide-react";
 
 /**
  * Los avisos de que algo se guardo o fallo, flotando sobre la pantalla.
@@ -30,7 +30,7 @@ import { CircleAlert, CircleCheck, X } from "lucide-react";
  * ya no existe", "no se pudo conectar".
  */
 
-type Tono = "exito" | "error";
+type Tono = "exito" | "error" | "logro";
 
 type Aviso = {
   id: number;
@@ -123,12 +123,41 @@ function Notificacion({
   aviso: Aviso;
   alCerrar: (id: number) => void;
 }) {
-  useEffect(() => {
-    const temporizador = window.setTimeout(() => alCerrar(aviso.id), DURACION);
-    return () => window.clearTimeout(temporizador);
-  }, [aviso.id, alCerrar]);
-
   const esError = aviso.tono === "error";
+  const esLogro = aviso.tono === "logro";
+
+  useEffect(() => {
+    // Un logro se queda un poco mas: se lee con gusto, no con prisa.
+    const temporizador = window.setTimeout(() => alCerrar(aviso.id), esLogro ? DURACION + 2000 : DURACION);
+    return () => window.clearTimeout(temporizador);
+  }, [aviso.id, alCerrar, esLogro]);
+
+  if (esLogro) {
+    return (
+      <div
+        className={[
+          "pointer-events-auto logro-entrar flex w-full max-w-[440px] items-center gap-3.5",
+          "rounded-2xl bg-acento px-4 py-4 text-acento-contraste shadow-[var(--sombra-alta)]",
+        ].join(" ")}
+      >
+        <span
+          aria-hidden="true"
+          className="grid size-10 shrink-0 place-items-center rounded-full bg-acento-contraste/15 [&>svg]:size-5"
+        >
+          <PartyPopper />
+        </span>
+        <p className="min-w-0 flex-1 text-[13.5px] leading-snug font-semibold">{aviso.texto}</p>
+        <button
+          type="button"
+          onClick={() => alCerrar(aviso.id)}
+          aria-label="Cerrar aviso"
+          className="suave -mr-1 grid size-7 shrink-0 cursor-pointer place-items-center rounded-lg opacity-80 hover:bg-acento-contraste/15 hover:opacity-100"
+        >
+          <X aria-hidden="true" className="size-4" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -190,6 +190,49 @@ async function crearPieza(
 }
 
 /**
+ * Pone al dia las fechas de un proyecto de ejemplo que ya existe.
+ *
+ * La semilla no vuelve a crear lo que ya esta, asi que sus fechas, relativas
+ * al dia en que se sembro, envejecen: una fase «para dentro de 2 dias» acaba
+ * vencida una semana despues, y el tablero la marca atrasada. Se corren
+ * todas las fechas del proyecto (el, sus fases y sus tareas) los dias que
+ * hayan pasado, contando desde su inicio, que se siembra veinte dias atras.
+ * Se conserva la forma: lo que iba atrasado sigue atrasado.
+ */
+async function alDia(cliente: Client, empresaId: number, nombre: string): Promise<void> {
+  const { rows } = await cliente.query<{ id: number; dias: number }>(
+    `SELECT id, (CURRENT_DATE - 20) - fecha_inicio AS dias
+     FROM portal.proyectos
+     WHERE empresa_id = $1 AND nombre = $2 AND fecha_inicio IS NOT NULL`,
+    [empresaId, nombre],
+  );
+  const proyecto = rows[0];
+  if (!proyecto || proyecto.dias === 0) return;
+
+  await cliente.query(
+    `UPDATE portal.proyectos
+     SET fecha_inicio = fecha_inicio + $2::int,
+         fecha_estimada_cierre = fecha_estimada_cierre + $2::int
+     WHERE id = $1`,
+    [proyecto.id, proyecto.dias],
+  );
+  await cliente.query(
+    `UPDATE portal.pieza_fases f
+     SET fecha_estimada = f.fecha_estimada + $2::int
+     FROM portal.piezas p
+     WHERE p.id = f.pieza_id AND p.proyecto_id = $1 AND f.fecha_estimada IS NOT NULL`,
+    [proyecto.id, proyecto.dias],
+  );
+  await cliente.query(
+    `UPDATE portal.tareas t
+     SET fecha_estimada = t.fecha_estimada + $2::int
+     FROM portal.piezas p
+     WHERE p.id = t.pieza_id AND p.proyecto_id = $1 AND t.fecha_estimada IS NOT NULL`,
+    [proyecto.id, proyecto.dias],
+  );
+}
+
+/**
  * Siembra los proyectos de ejemplo si no existen. Idempotente: si el proyecto
  * ya esta, no lo toca.
  */
@@ -221,7 +264,10 @@ export async function sembrarProyectos(
       [empresaId, proyecto.nombre],
     );
 
-    if (existe.rowCount) continue;
+    if (existe.rowCount) {
+      await alDia(cliente, empresaId, proyecto.nombre);
+      continue;
+    }
 
     const { rows } = await cliente.query<{ id: number }>(
       `INSERT INTO portal.proyectos

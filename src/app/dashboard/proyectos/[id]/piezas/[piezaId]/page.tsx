@@ -155,6 +155,7 @@ export default async function PaginaPieza(
             pieza={pieza}
             tipo={proyecto.tipo}
             tareas={tareas}
+            comentarios={comentarios}
             gestiona={gestiona}
             usuarioId={usuario.id}
             equipo={equipo}
@@ -200,7 +201,7 @@ export default async function PaginaPieza(
             />
           </Tarjeta>
 
-          <Tarjeta id="titulo-comentarios" titulo="Comentarios internos">
+          <Tarjeta id="titulo-comentarios" titulo="Comentarios generales">
             <ComentariosPieza piezaId={piezaId} comentarios={comentarios} />
           </Tarjeta>
         </div>

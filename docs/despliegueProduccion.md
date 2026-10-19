@@ -155,6 +155,7 @@ rol `prospecto`, que la version publicada no usa.
 | # | Archivo | Que hace | Resultado esperado |
 | --- | --- | --- | --- |
 | 16 | `db/neon/16-facturas-y-pagos.sql` | Ajustes de finanzas, formatos de impresion, medios de pago, facturas y renglones, pagos y retenciones, la vista del estado de cobro, y en empresas la retencion de IVA y los dias de credito | `tablas = 6` y `con_seguridad_por_fila = 6`; `funciones = 9`, `columnas_empresa = 3` y `vista = 1`; `formatos = 1`, `medios = 4`, `facturas = 0` y `emisor_vacio = true` |
+| 17 | `db/neon/17-comentarios-por-fase.sql` | En `portal.comentarios_pieza`, la fase y la tarea de cada comentario (los de antes quedan como generales), dos comprobaciones y un indice | `columnas = 2`, `restricciones = 2` e `indice = 1` |
 
 Trae un formato de impresion de ejemplo (carta) y cuatro medios de pago de
 ejemplo sin datos bancarios. **El emisor nace vacio: no se puede emitir
@@ -565,6 +566,13 @@ resolver antes.
 | Registrar la tasa a mano | Hecho en la etapa 8: Finanzas → Ajustes de finanzas → Tasa del dolar |
 | Comprobantes en Drive real | Sin probar desde Vercel: aqui en modo simulado |
 
+### Mejoras posteriores al cierre
+
+| Tema | Estado |
+| --- | --- |
+| `db/neon/17-comentarios-por-fase.sql` | Ensayado dos veces sobre la base local: aplica limpio y la comprobacion da lo esperado. Solo anade columnas |
+| Proyectos solo de ejecutivos de cuentas | Sin cambio de esquema. Los proyectos que hoy lleva un admin siguen igual hasta que se les cambie el ejecutivo |
+
 ## Registro por etapa
 
 | Etapa | SQL antes | Variables | SQL despues | Anotada |
@@ -578,3 +586,4 @@ resolver antes.
 | 6. Briefs | 15 | `BRIEFS_MAILBOX` (opcional) | — | Si |
 | 7. Facturas, pagos y cobranza | 16 | `DRIVE_CARPETA_COMPROBANTES_ID` | — | Si, con datos de ejemplo |
 | 8. Endurecimiento y piloto | — | — | — | Si. El piloto, despues de publicar: `docs/planPiloto.md` |
+| Mejoras posteriores (comentarios por fase) | 17 | — | — | Si |

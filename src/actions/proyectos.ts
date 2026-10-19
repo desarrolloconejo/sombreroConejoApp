@@ -178,7 +178,7 @@ export async function crearProyecto(
       : {
           ok: false,
           errores: {
-            ejecutivoId: "Tiene que ser un administrador o un ejecutivo asignado a la empresa",
+            ejecutivoId: "Tiene que ser un ejecutivo de cuentas asignado a la empresa",
           },
         };
   }
@@ -223,8 +223,14 @@ export async function editarProyecto(
 
     if (!proyecto || !(await proyectos.gestiona(id, tx))) return "no_existe" as const;
 
+    // Quien lo lleva hoy puede seguir llevandolo aunque ya no se pudiera elegir
+    // (un administrador de antes): editar otra cosa no obliga a cambiarlo.
+    // Un ejecutivo NUEVO, en cambio, tiene que ser de cuentas y de la empresa.
     const posibles = await proyectos.ejecutivosPosibles(proyecto.empresaId, tx);
-    const ejecutivo = posibles.find((persona) => persona.id === cambios.ejecutivoId);
+    const ejecutivo =
+      cambios.ejecutivoId === proyecto.ejecutivoId
+        ? { id: proyecto.ejecutivoId }
+        : posibles.find((persona) => persona.id === cambios.ejecutivoId);
 
     if (!ejecutivo) return "ejecutivo" as const;
 
@@ -257,7 +263,7 @@ export async function editarProyecto(
     return {
       ok: false,
       errores: {
-        ejecutivoId: "Tiene que ser un administrador o un ejecutivo asignado a la empresa",
+        ejecutivoId: "Tiene que ser un ejecutivo de cuentas asignado a la empresa",
       },
     };
   }

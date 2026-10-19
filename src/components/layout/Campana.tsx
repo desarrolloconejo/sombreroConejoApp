@@ -164,7 +164,7 @@ export function Campana({
               aqui.
             </p>
           ) : (
-            <ul className="min-h-0 flex-1 divide-y divide-borde overflow-y-auto overscroll-contain">
+            <ul className="barra-fina-flotante min-h-0 flex-1 divide-y divide-borde overflow-y-auto overscroll-contain">
               {resumen.recientes.map((notificacion) => {
                 const contenido = (
                   <>

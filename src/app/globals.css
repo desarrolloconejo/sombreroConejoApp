@@ -436,6 +436,144 @@ select:autofill {
   }
 }
 
+/*
+ * La misma barra para lo que flota: listas de un desplegable, el calendario,
+ * el buscador, la campana. Sin reservar hueco: en un panel corto que casi
+ * nunca desplaza, el hueco seria un margen raro a la derecha. Se ve, fina,
+ * solo al pasar por encima o al moverse con el teclado dentro. Algo mas
+ * marcada que la del sidebar: va sobre la superficie blanca, no sobre el
+ * fondo del menu.
+ */
+@utility barra-fina-flotante {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s var(--ease-suave);
+
+  &:hover,
+  &:focus-within {
+    scrollbar-color: color-mix(in srgb, var(--texto) 22%, transparent) transparent;
+  }
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:focus-within::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--texto) 22%, transparent);
+  }
+}
+
+/*
+ * Al ir a una seccion desde el indice, el titulo no queda bajo la cabecera
+ * fija del escritorio (68 px) ni pegado al borde.
+ */
+main h2 {
+  scroll-margin-top: 88px;
+}
+
+/* ===========================================================================
+   LOGRO
+
+   Lo que se ve al terminar algo: una tarea marcada, una fase completada, una
+   pieza aprobada. Corto (menos de un segundo) y en el color de acento: que se
+   note que se avanzo, sin interrumpir. Con el movimiento reducido no se
+   mueve nada: queda el estado final.
+   =========================================================================== */
+@keyframes logro-marca {
+  0% { transform: scale(0.6); }
+  55% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+@keyframes logro-destello {
+  0% { opacity: 0.55; transform: scale(1); }
+  100% { opacity: 0; transform: scale(2.3); }
+}
+@keyframes logro-trazo {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes logro-tachar {
+  from { background-size: 0% 1.5px; }
+  to { background-size: 100% 1.5px; }
+}
+@keyframes logro-brillo {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--acento) 55%, transparent); }
+  100% { box-shadow: 0 0 0 14px transparent; }
+}
+@keyframes logro-entrar {
+  0% { opacity: 0; transform: translateY(10px) scale(0.96); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.01); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* El circulo de la tarea: crece, rebota y suelta un anillo. */
+.logro-marca {
+  position: relative;
+  animation: logro-marca 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.logro-marca::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 999px;
+  border: 2px solid var(--acento);
+  animation: logro-destello 0.6s ease-out 0.08s both;
+  pointer-events: none;
+}
+/* El check se dibuja de izquierda a derecha. */
+.logro-marca svg path,
+.logro-marca svg polyline {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: logro-trazo 0.32s ease-out 0.12s forwards;
+}
+/* El titulo se tacha con una raya que avanza, en lugar de aparecer tachado. */
+.logro-tachado {
+  text-decoration: none !important;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 55%;
+  background-size: 100% 1.5px;
+  animation: logro-tachar 0.45s ease-out 0.15s both;
+}
+/* Un segmento de la bateria que se acaba de encender. */
+.logro-brillo {
+  border-radius: 7px;
+  animation: logro-brillo 0.9s ease-out 2;
+}
+/* Lo que aparece para celebrar: un aviso, una fila que llega a «Hechas». */
+.logro-entrar {
+  animation: logro-entrar 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logro-marca,
+  .logro-marca::after,
+  .logro-marca svg path,
+  .logro-marca svg polyline,
+  .logro-tachado,
+  .logro-brillo,
+  .logro-entrar {
+    animation: none !important;
+  }
+  .logro-marca svg path,
+  .logro-marca svg polyline {
+    stroke-dashoffset: 0;
+  }
+  .logro-marca::after {
+    display: none;
+  }
+}
+
 /* Quien pidio menos movimiento no recibe ninguno */
 @media (prefers-reduced-motion: reduce) {
   *,

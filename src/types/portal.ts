@@ -195,6 +195,27 @@ export type TareaAsignada = Tarea & {
   faseEnCurso: boolean;
 };
 
+/**
+ * Una fase de la que alguien es responsable, vista desde «Mi trabajo»: donde
+ * esta, para cuando, y las tareas que le faltan, sean de quien sean. Quien
+ * lleva la fase responde por que salga.
+ */
+export type FaseACargo = {
+  id: number;
+  piezaId: number;
+  fase: NumeroFase;
+  estado: EstadoFase;
+  fechaEstimada: string | null;
+  proyectoId: number;
+  proyectoNombre: string;
+  proyectoTipo: TipoProyecto;
+  empresaNombre: string;
+  piezaTitulo: string;
+  piezaTipo: TipoPieza;
+  /** Las tareas pendientes de la fase, de cualquiera. */
+  tareas: Tarea[];
+};
+
 /** Un comentario interno sobre una pieza. */
 export type ComentarioPieza = {
   id: number;
@@ -202,6 +223,11 @@ export type ComentarioPieza = {
   autorNombre: string;
   texto: string;
   creadoEn: Date;
+  /** La fase en la que se dijo; null, un comentario general de la pieza. */
+  fase: NumeroFase | null;
+  /** La tarea de esa fase a la que se refiere, si se marco. */
+  tareaId: number | null;
+  tareaTitulo: string | null;
 };
 
 /** Lo que hace falta para crear una pieza. */

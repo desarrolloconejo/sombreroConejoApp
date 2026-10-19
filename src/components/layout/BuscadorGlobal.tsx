@@ -170,7 +170,7 @@ export function BuscadorGlobal({ modulos }: { modulos: ModuloVista[] }) {
             id={idLista}
             role="listbox"
             aria-label="Modulos"
-            className="max-h-[320px] overflow-y-auto p-1.5"
+            className="barra-fina-flotante max-h-[320px] overflow-y-auto p-1.5"
           >
             {resultados.map((modulo, indice) => {
               const resalta = indice === resaltado;

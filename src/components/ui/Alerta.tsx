@@ -17,6 +17,11 @@ const TONOS = {
     caja: "bg-navy/[0.05] border-navy/15 border-l-navy dark-tema:bg-white/[0.05] dark-tema:border-white/15 dark-tema:border-l-gold",
     icono: "text-navy dark-tema:text-acento",
   },
+  // Algo que se termino: una pieza aprobada. Llena de acento y entra con un rebote.
+  logro: {
+    caja: "logro-entrar bg-acento text-acento-contraste border-acento border-l-acento",
+    icono: "text-acento-contraste",
+  },
 } as const;
 
 export function Alerta({

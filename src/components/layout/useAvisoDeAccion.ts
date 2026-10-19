@@ -34,6 +34,7 @@ import { useAvisos } from "./ProveedorAvisos";
 export function useAvisoDeAccion(estado: {
   ok: boolean;
   mensaje?: string;
+  logro?: boolean;
   errores?: Record<string, string>;
 }): void {
   const { avisar } = useAvisos();
@@ -47,7 +48,7 @@ export function useAvisoDeAccion(estado: {
     anterior.current = estado;
 
     if (estado.mensaje) {
-      avisar(estado.mensaje, estado.ok ? "exito" : "error");
+      avisar(estado.mensaje, estado.ok ? (estado.logro ? "logro" : "exito") : "error");
       return;
     }
 
