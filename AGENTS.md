@@ -205,6 +205,13 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   mensaje flotante que confirma una accion (`ProveedorAvisos`). No se mezclan
   los nombres. Las notificaciones se escriben dentro de `conSesion`, en la
   transaccion del cambio, y su tipo sale de `TipoNotificacion`.
+- **Nadie se avisa a si mismo**: `notificaciones.crear` descarta a
+  `app_usuario_id()`, asi que una action pasa a todos los destinatarios y la
+  base quita a quien la provoca. Lo que cambia algo de otro le avisa: la tabla
+  «Quien se entera de que» (abajo) es la referencia, y un evento nuevo se
+  anade alli. Para los ejecutivos de una empresa se usa
+  `notificarAEjecutivosDe` (funcion `portal.ejecutivos_de_empresa`):
+  administracion y el cliente no leen las asignaciones.
 - Una tarea programada vive en `src/app/api/cron/`, comprueba `CRON_SECRET`
   antes de nada y escribe con `conSistema`, nunca con una identidad
   inventada. Si una tabla debe aceptarla, su politica nombra el rol
@@ -227,9 +234,27 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Un comprobante de pago se sube con `subirArchivo({ carpeta: "comprobantes" })`
   antes de la transaccion, como las versiones de las piezas.
 - Lo que nace con valores de ejemplo se anota en `docs/pendientesIntegracion.md`.
-- Un proyecto lo lleva **solo un ejecutivo de cuentas asignado a la
-  empresa** (`proyectos.ejecutivosPosibles`); los administradores no. Quien
-  lo lleva hoy puede seguir aunque ya no se pudiera elegir.
+- Un proyecto lo lleva **solo un ejecutivo de cuentas**; los
+  administradores no. Si lo abre un ejecutivo, lo lleva el. **Solo un
+  administrador elige o cambia quien lo lleva**, y puede darselo a un
+  ejecutivo de otra cuenta (`proyectos.ejecutivosPosibles` los marca
+  `deOtraCuenta`). Ese ejecutivo gestiona ese proyecto y nada mas de la
+  empresa: `portal.gestiona_proyecto` (empresa asignada o `ejecutivo_id`) lo
+  aplican las politicas de proyectos y, por `gestiona_pieza`, todo lo que
+  cuelga de las piezas; los briefs siguen por `gestiona_empresa`. Un trigger
+  impide a quien no es admin cambiar `ejecutivo_id`. Quitarle la empresa a un
+  ejecutivo no le quita los proyectos que lleva. Quien lo lleva hoy puede
+  seguir aunque ya no se pudiera elegir.
+- Las decisiones del brief (aceptar, convertir en presupuesto, descartar) se
+  confirman en una ventana (`?decision=`, `ConfirmarDecisionBrief`) que dice
+  antes que pasara y muestra despues el resultado, con los datos de acceso si
+  nacio una cuenta. Las dos que hacen cliente a un prospecto le crean la
+  cuenta (`convertirSiEsProspecto`, que decide por la cuenta y no por la
+  empresa), y esa cuenta nace pudiendo aprobar piezas y ver las finanzas; las
+  que crea el administrador en Usuarios nacen sin permisos.
+- La version que vera el cliente se elige en la fase 4
+  (`VersionParaCliente`, dentro de su tarjeta); la tarjeta Versiones sirve
+  para subir en cualquier fase.
 - Los comentarios internos de una pieza van por fase (y, si se quiere,
   sobre una tarea de esa fase); los que no tienen fase son los generales.
 - Finanzas lo opera `requerirFinanzas` (admin o cargo `administracion`). El
@@ -334,6 +359,37 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   despues hay que volver a ejecutar el seed.
 - **La base de produccion tiene datos reales.** El SQL que se genera para ella
   lleva esquema y catalogos imprescindibles; no inserta datos de ejemplo.
+
+## Quien se entera de que
+
+La campana (`TipoNotificacion`). Quien provoca el evento nunca se avisa a si
+mismo. Un evento nuevo que cambie algo de otra persona se anade aqui.
+
+| Evento | Se enteran |
+| --- | --- |
+| Cuenta bloqueada por intentos, correo que no salio, lectura rara de la tasa | Administradores |
+| Contrasena restablecida, dos pasos retirados | La persona |
+| Empresa asignada o retirada | Ese ejecutivo |
+| Proyecto asignado (al crear o al reasignar) | El ejecutivo que lo lleva |
+| Proyecto creado a mano | Clientes de la empresa |
+| Proyecto pausado, cerrado o reactivado | Ejecutivo, quienes trabajan en el y clientes (cancelado: sin clientes) |
+| Tarea asignada; la fase de una tarea empieza | Su responsable |
+| Responsable de una fase | Ese responsable |
+| Todas las tareas de la fase listas | Ejecutivo |
+| Comentario en una pieza | Ejecutivo, quien lleva la fase y quien tiene la tarea mencionada |
+| Pieza en revision (fase 5) | Clientes que pueden aprobar (y correo) |
+| Pieza aprobada o con correccion | Ejecutivo y responsables |
+| Brief enviado | Quienes lo atienden (y copia por correo) |
+| Brief aceptado, a presupuesto, descartado, fecha propuesta, validado | Clientes de la empresa |
+| Aclaracion en un brief | La otra parte |
+| Presupuesto creado | Ejecutivos de la empresa |
+| Presupuesto enviado | Clientes con finanzas (y correo) y ejecutivos |
+| Presupuesto aprobado o rechazado | Administracion y ejecutivos (si viene de un brief aprobado: «ya puedes aceptarlo»); si lo registra administracion, tambien los clientes con finanzas |
+| Proforma emitida; proforma emitida que se anula | Clientes con finanzas |
+| Factura emitida o anulada | Clientes con finanzas |
+| Pago o retencion reportado | Administracion |
+| Pago registrado por administracion a nombre del cliente | Clientes con finanzas |
+| Pago confirmado o rechazado | Quien lo reporto |
 
 ## Dependencias
 

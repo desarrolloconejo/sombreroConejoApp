@@ -413,9 +413,8 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
 
 **Siete mejoras (proyectos, comentarios, completar, indice, volver, barra y Mi trabajo)**
 
-26. Nuevo proyecto (como `cuentas@conejo.test`): «Lo lleva» solo ofrece
-    ejecutivos de cuentas asignados a la empresa, ningun administrador. Con
-    una empresa sin ejecutivo asignado sale un aviso y no deja crear.
+26. Nuevo proyecto (como `cuentas@conejo.test`): «Lo lleva» dice «Tu» y no
+    se puede cambiar (ver el punto 40).
 27. En una pieza, cada fase tiene «Comentarios · N». Un comentario escrito
     en la fase 3 eligiendo «Sobre la tarea» sale en esa fase con la tarea
     como etiqueta. Los comentarios de antes estan en «Comentarios generales».
@@ -441,3 +440,44 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
     tareas pendientes de quien sean y «Abrir la pieza». Al poner a alguien
     como responsable de una fase en una pieza, la fase le aparece en su Mi
     trabajo.
+
+## Revision del responsable — Bloque 1
+
+Lo que el responsable pidio corregir al revisar la aplicacion (R3, R4, R6,
+R9, R13, R14 y R16 de `docs/pendientesIntegracion.md`).
+
+35. Brief del cliente (como `cliente@empresa.test`, Mis briefs → empezar):
+    el paso «03 · El producto por dentro» no sale marcado hasta escribir algo
+    en el.
+36. Mis proyectos del cliente: el aviso «N piezas esperan tu revision» lleva
+    directo a la pieza si es una; si son varias, lista cada una con su
+    enlace. En Inicio, el de presupuestos por aprobar lleva directo al
+    presupuesto si es uno.
+37. Ficha de un brief (como `cuentas@conejo.test`): «Aceptar y abrir
+    proyecto», «Convertir en presupuesto» y «Descartar» abren una ventana que
+    explica que va a pasar. Cancelar no hace nada. Al confirmar, la ventana
+    muestra el resultado (y «Abrir el proyecto» al aceptar). Descartar pide
+    el motivo dentro de la ventana.
+38. Con el brief de un prospecto (generar un enlace, llenarlo en una
+    ventana privada): convertirlo en presupuesto muestra en la ventana su
+    cuenta y su contrasena provisional, con boton de copiar. Como
+    administrador, en Usuarios, esa cuenta puede aprobar piezas y ver las
+    finanzas.
+39. Como administrador, al crear un usuario cliente a mano, nace sin esos
+    dos permisos.
+40. Como `cuentas@conejo.test`, al editar un proyecto «Lo lleva» se ve pero
+    no se cambia. Como `admin@conejo.test`, «Lo lleva» ofrece primero los
+    ejecutivos de la empresa y despues los de otra cuenta, marcados. Un
+    ejecutivo al que se le da un proyecto de una empresa que no atiende lo
+    ve en Proyectos y lo gestiona, pero no ve los briefs ni otros proyectos
+    de esa empresa.
+41. Pieza en fase 4: la tarjeta de la fase lista las versiones de la ronda
+    con «Para el cliente»; «Completar fase» esta deshabilitado con el motivo
+    hasta elegir una. La tarjeta Versiones solo sube y muestra cual ve el
+    cliente.
+42. Avisos (campana): como `finanzas@conejo.test`, crear y enviar un
+    presupuesto a Distribuidora Ejemplo; `cuentas@conejo.test` recibe los dos
+    avisos. Registrar el rechazo a nombre del cliente: le llega al cliente y
+    al ejecutivo, y no a quien lo registro. Poner a alguien como responsable
+    de una fase le avisa; comentar en una fase avisa a quien la lleva y al
+    ejecutivo, nunca a quien comenta.

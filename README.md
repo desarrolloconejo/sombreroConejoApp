@@ -562,9 +562,10 @@ lista. Quien no es de redes entra asi, y solo a su ficha.
 /api/archivos/[versionId]                    la unica entrega de un archivo de una pieza
 ```
 
-Lo gestionan el admin y el ejecutivo de cuentas asignado a la empresa. Quien
-tiene una tarea abre la ficha de esa pieza, marca su tarea y escribe el copy,
-pero no mueve fases. Las reglas estan en
+Lo gestionan el admin, el ejecutivo de cuentas asignado a la empresa y el
+ejecutivo que lleva ese proyecto, aunque sea de otra cuenta (solo el admin
+decide quien lo lleva). Quien tiene una tarea abre la ficha de esa pieza,
+marca su tarea y escribe el copy, pero no mueve fases. Las reglas estan en
 [docs/reglasBateria.md](docs/reglasBateria.md); el criterio de la agencia
 (plantillas, servicios y tareas sugeridas), en `src/lib/portal/catalogo.ts`; y
 lo que decide si una fase se mueve, en `src/lib/portal/fases.ts`.
