@@ -4,6 +4,7 @@ import { AvisoPresupuestos } from "@/components/facturacion";
 import { InicioWrapper } from "@/components/inicio";
 import { AvisoRevision, TarjetaProyectoCliente } from "@/components/misProyectos";
 import { conSesion } from "@/lib/db";
+import * as piezas from "@/models/piezas";
 import * as presupuestos from "@/models/presupuestos";
 import * as proyectos from "@/models/proyectos";
 import { requerirUsuario } from "@/lib/sesion";
@@ -50,21 +51,25 @@ export default async function PaginaInicio() {
       : null;
 
   // El inicio de un cliente: lo que espera su revision y sus proyectos.
-  const enCurso =
+  const delCliente =
     usuario.tipo === "cliente" && usuario.empresaId
-      ? await conSesion(usuario, (tx) => proyectos.enCurso(tx))
+      ? await conSesion(usuario, async (tx) => ({
+          enCurso: await proyectos.enCurso(tx),
+          esperando: await piezas.esperandoCliente(tx),
+        }))
       : null;
+  const enCurso = delCliente?.enCurso ?? null;
 
   // Y, si ve las finanzas de su empresa, lo que espera su aprobacion.
   const presupuestosPendientes =
     usuario.tipo === "cliente" && usuario.puedeVerFinanzas
-      ? (await conSesion(usuario, (tx) => presupuestos.porAprobar(tx))).length
-      : 0;
+      ? await conSesion(usuario, (tx) => presupuestos.porAprobar(tx))
+      : [];
 
   const destacado = enCurso && (
     <>
-      <AvisoPresupuestos pendientes={presupuestosPendientes} />
-      <AvisoRevision piezas={enCurso.reduce((suma, p) => suma + p.alertas.esperando_cliente, 0)} />
+      <AvisoPresupuestos presupuestos={presupuestosPendientes} />
+      <AvisoRevision piezas={delCliente?.esperando ?? []} />
       {enCurso.length > 0 && (
         <section aria-label="Tus proyectos en curso">
           <h2 className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">Tus proyectos</h2>

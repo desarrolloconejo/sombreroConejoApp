@@ -3,8 +3,8 @@ import { ArrowRight, Eye } from "lucide-react";
 
 import { fechaCorta } from "@/components/proyectos/ColumnasProyectos";
 import { Bateria, segmentosDeProyecto } from "@/components/ui";
-import { RUTA_MIS_PROYECTOS, rutaMiProyecto } from "@/lib/portal/rutas";
-import { NOMBRES_DE_ESTADO_PROYECTO, type Proyecto } from "@/types";
+import { rutaMiPieza, rutaMiProyecto } from "@/lib/portal/rutas";
+import { NOMBRES_DE_ESTADO_PROYECTO, type PiezaEsperandoCliente, type Proyecto } from "@/types";
 
 /**
  * Lo que el cliente ve de un vistazo: el aviso de lo que espera su revision y
@@ -13,14 +13,16 @@ import { NOMBRES_DE_ESTADO_PROYECTO, type Proyecto } from "@/types";
  * El aviso es dorado sobre navy: el dorado de la marca solo va sobre azul.
  */
 
-export function AvisoRevision({ piezas }: { piezas: number }) {
-  if (piezas === 0) return null;
+/**
+ * Lo que espera la revision del cliente. Con una pieza, el aviso entero lleva
+ * a ella; con varias, cada una tiene su enlace: un aviso que lleva a la misma
+ * pagina en la que ya se esta no lleva a ningun sitio.
+ */
+export function AvisoRevision({ piezas }: { piezas: PiezaEsperandoCliente[] }) {
+  if (piezas.length === 0) return null;
 
-  return (
-    <Link
-      href={RUTA_MIS_PROYECTOS}
-      className="surge suave group flex items-center gap-4 rounded-[15px] bg-navy px-5 py-4 text-white shadow-[var(--sombra)] hover:-translate-y-0.5"
-    >
+  const cabecera = (
+    <>
       <span
         aria-hidden="true"
         className="grid size-10 shrink-0 place-items-center rounded-full bg-gold text-navy [&>svg]:size-5"
@@ -29,14 +31,55 @@ export function AvisoRevision({ piezas }: { piezas: number }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] font-bold text-gold">
-          {piezas === 1 ? "1 pieza espera tu revision" : `${piezas} piezas esperan tu revision`}
+          {piezas.length === 1 ? "1 pieza espera tu revision" : `${piezas.length} piezas esperan tu revision`}
         </span>
         <span className="block text-[12.5px] text-white/75">
-          Apruebala o pide una correccion: el equipo sigue cuando decides.
+          {piezas.length === 1
+            ? `${piezas[0].titulo} · ${piezas[0].proyectoNombre}. Apruebala o pide una correccion.`
+            : "Apruebalas o pide una correccion: el equipo sigue cuando decides."}
         </span>
       </span>
-      <ArrowRight aria-hidden="true" className="size-5 shrink-0 text-gold" />
-    </Link>
+    </>
+  );
+
+  if (piezas.length === 1) {
+    return (
+      <Link
+        href={rutaMiPieza(piezas[0].proyectoId, piezas[0].piezaId)}
+        className="surge suave group flex items-center gap-4 rounded-[15px] bg-navy px-5 py-4 text-white shadow-[var(--sombra)] hover:-translate-y-0.5"
+      >
+        {cabecera}
+        <ArrowRight aria-hidden="true" className="size-5 shrink-0 text-gold" />
+      </Link>
+    );
+  }
+
+  return (
+    <section
+      aria-label="Piezas que esperan tu revision"
+      className="surge rounded-[15px] bg-navy px-5 py-4 text-white shadow-[var(--sombra)]"
+    >
+      <div className="flex items-center gap-4">{cabecera}</div>
+      <ul className="mt-3.5 flex flex-col gap-1.5 border-t border-white/15 pt-3.5">
+        {piezas.map((pieza) => (
+          <li key={pieza.piezaId}>
+            <Link
+              href={rutaMiPieza(pieza.proyectoId, pieza.piezaId)}
+              className="suave group flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-white/10"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13.5px] font-semibold">{pieza.titulo}</span>
+                <span className="block truncate text-[12px] text-white/65">{pieza.proyectoNombre}</span>
+              </span>
+              <ArrowRight
+                aria-hidden="true"
+                className="suave size-4 shrink-0 text-gold group-hover:translate-x-0.5"
+              />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

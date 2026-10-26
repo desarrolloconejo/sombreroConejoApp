@@ -1,19 +1,23 @@
 import Link from "next/link";
 import { ArrowRight, FileSpreadsheet } from "lucide-react";
 
-import { RUTA_FACTURACION } from "@/lib/finanzas/rutas";
+import { RUTA_FACTURACION, rutaMiPresupuesto } from "@/lib/finanzas/rutas";
+import type { Presupuesto } from "@/types";
 
 /**
  * El aviso del inicio del cliente con permiso de finanzas: presupuestos que
  * esperan su aprobacion. Mismo aspecto que el de las piezas por revisar: son
  * las dos cosas que solo puede desbloquear el cliente.
+ *
+ * Con uno, lleva directo a el; con varios, a Facturacion, que los lista.
  */
-export function AvisoPresupuestos({ pendientes }: { pendientes: number }) {
+export function AvisoPresupuestos({ presupuestos }: { presupuestos: Pick<Presupuesto, "id" | "titulo">[] }) {
+  const pendientes = presupuestos.length;
   if (pendientes === 0) return null;
 
   return (
     <Link
-      href={RUTA_FACTURACION}
+      href={pendientes === 1 ? rutaMiPresupuesto(presupuestos[0].id) : RUTA_FACTURACION}
       className="surge suave group flex items-center gap-4 rounded-[15px] bg-navy px-5 py-4 text-white shadow-[var(--sombra)] hover:-translate-y-0.5"
     >
       <span
@@ -29,7 +33,9 @@ export function AvisoPresupuestos({ pendientes }: { pendientes: number }) {
             : `${pendientes} presupuestos esperan tu aprobacion`}
         </span>
         <span className="block text-[12.5px] text-white/75">
-          Revisalo y apruebalo, o cuentanos que cambiarias.
+          {pendientes === 1
+            ? `«${presupuestos[0].titulo}». Revisalo y apruebalo, o cuentanos que cambiarias.`
+            : "Revisalos y apruebalos, o cuentanos que cambiarias."}
         </span>
       </span>
       <ArrowRight aria-hidden="true" className="size-5 shrink-0 text-gold" />

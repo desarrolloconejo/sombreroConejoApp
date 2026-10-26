@@ -195,6 +195,14 @@ export type TareaAsignada = Tarea & {
   faseEnCurso: boolean;
 };
 
+/** Una pieza que espera la revision del cliente, para llevarle directo a ella. */
+export type PiezaEsperandoCliente = {
+  piezaId: number;
+  proyectoId: number;
+  titulo: string;
+  proyectoNombre: string;
+};
+
 /**
  * Una fase de la que alguien es responsable, vista desde «Mi trabajo»: donde
  * esta, para cuando, y las tareas que le faltan, sean de quien sean. Quien

@@ -139,6 +139,7 @@ export type {
   Tarea,
   TareaAsignada,
   FaseACargo,
+  PiezaEsperandoCliente,
   ComentarioPieza,
   DatosNuevaPieza,
   DatosNuevaTarea,
