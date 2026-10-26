@@ -173,3 +173,15 @@ export const NOMBRES_DE_ESTADO_BRIEF: Record<EstadoBrief, string> = {
   aceptado: "Validado",
   descartado: "Descartado",
 };
+
+/** Lo que el ejecutivo decide sobre un brief recibido. */
+export type DecisionBrief = "aceptar" | "presupuestar" | "descartar";
+
+export const DECISIONES_BRIEF: readonly DecisionBrief[] = ["aceptar", "presupuestar", "descartar"];
+
+/** El nombre de cada decision: su boton y el titulo de su ventana. */
+export const TITULOS_DECISION: Record<DecisionBrief, string> = {
+  aceptar: "Aceptar y abrir proyecto",
+  presupuestar: "Convertir en presupuesto",
+  descartar: "Descartar el brief",
+};

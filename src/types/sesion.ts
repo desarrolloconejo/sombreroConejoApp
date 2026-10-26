@@ -109,6 +109,9 @@ export type EstadoFormulario = {
    * hash del token, y ningun correo lo lleva.
    */
   enlace?: string;
+
+  /** La ruta de lo que acaba de nacer (el proyecto de un brief aceptado), para ir a verlo. */
+  destino?: string;
 };
 
 /**

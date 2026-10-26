@@ -208,6 +208,7 @@ export async function aceptarBrief(_estadoPrevio: EstadoFormulario, datos: FormD
       ? "Proyecto abierto y cuenta creada para el prospecto. Entregale su contrasena provisional"
       : "Proyecto abierto. Completar su fase 1 valida el brief",
     credencial: resultado.credencial ?? undefined,
+    destino: rutaProyecto(resultado.proyectoId),
   };
 }
 
