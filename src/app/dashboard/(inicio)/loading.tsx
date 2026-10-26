@@ -61,6 +61,12 @@ export default function CargandoInicio() {
         Cargando tu espacio de trabajo
       </p>
 
+      {/* Los bloques de lo que le toca a cada uno, en dos columnas. */}
+      <div aria-hidden="true" className="mb-8 grid gap-4 md:grid-cols-2">
+        <BloqueHueso />
+        <BloqueHueso />
+      </div>
+
       {/* Tres cifras en fila, con la misma rejilla que EstadoCuenta */}
       <div
         aria-hidden="true"
@@ -91,6 +97,27 @@ function TarjetaCifra({ conBarra }: { conBarra?: boolean }) {
       {conBarra && <div className="hueso mt-[13px] h-[7px] w-full rounded-full" />}
 
       <div className="hueso mt-[7px] h-[11px] w-full max-w-[172px]" />
+    </div>
+  );
+}
+
+/** Un bloque del inicio: titulo, cifra, nota, unas filas y su enlace. */
+function BloqueHueso() {
+  return (
+    <div className="rounded-[15px] border border-borde bg-superficie p-5 shadow-[var(--sombra)]">
+      <div className="hueso h-4 w-[150px]" />
+      <div className="hueso mt-3 h-7 w-[60px]" />
+      <div className="hueso mt-2 h-3 w-[180px]" />
+      {[0, 1, 2].map((fila) => (
+        <div key={fila} className="mt-3.5 flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="hueso h-3.5 w-[70%]" />
+            <div className="hueso mt-1.5 h-3 w-[45%]" />
+          </div>
+          <div className="hueso h-3 w-[56px]" />
+        </div>
+      ))}
+      <div className="hueso mt-4 h-3 w-[90px]" />
     </div>
   );
 }

@@ -36,11 +36,16 @@ async function entrar(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 90_000 });
 }
 
-/** Abre la ficha de la empresa de ejemplo desde el listado. */
+/**
+ * Abre la empresa de ejemplo para editarla: la ficha solo muestra quien la
+ * atiende; se asigna y se quita en «Editar».
+ */
 async function abrirFicha(page: Page) {
   await page.goto("/dashboard/empresas?busqueda=Distribuidora");
   await visible(page.getByRole("link", { name: /^Ver la ficha de/ })).click();
-  await expect(page.getByText("Quien la atiende")).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText("Se asignan y se quitan en «Editar».")).toBeVisible({ timeout: 60_000 });
+  await page.getByRole("link", { name: "Editar", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Guardar cambios" })).toBeVisible({ timeout: 60_000 });
 }
 
 test("el administrador quita y vuelve a asignar el ejecutivo de una empresa", async ({ page }) => {

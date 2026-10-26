@@ -67,6 +67,25 @@ export type PropsListado<T> = {
    */
   rejilla?: (fila: T) => ReactNode;
 
+  /**
+   * Como `rejilla`, pero en filas de lectura de arriba abajo, una debajo de
+   * otra (la bandeja de briefs). El orden tambien pasa a su control propio.
+   */
+  lista?: (fila: T) => ReactNode;
+
+  /**
+   * El cuerpo entero lo pinta la page (una tabla de importes que no cabe en
+   * la estandar, la de Cobranza). El listado pone igual el buscador, los
+   * filtros, el orden, las paginas y los estados vacios.
+   */
+  cuerpo?: (filas: T[]) => ReactNode;
+
+  /**
+   * Filtros que forman parte de donde se esta, no del criterio de quien
+   * busca (la pestana de una bandeja): «Limpiar filtros» no los quita.
+   */
+  fijos?: readonly string[];
+
   className?: string;
 };
 
@@ -86,9 +105,17 @@ export function Listado<T>({
   claveFila,
   titulo,
   rejilla,
+  lista,
+  cuerpo,
+  fijos = [],
   className,
 }: PropsListado<T>) {
-  const filtrado = hayCriterios(estado);
+  // Un filtro fijo (la pestana) no es un criterio: sin resultados en ella se
+  // muestra su estado vacio, no «quita los filtros».
+  const filtrado = hayCriterios({
+    ...estado,
+    filtros: Object.fromEntries(Object.entries(estado.filtros).filter(([clave]) => !fijos.includes(clave))),
+  });
   const hayFilas = filas.length > 0;
 
   return (
@@ -117,12 +144,25 @@ export function Listado<T>({
           )}
         </div>
 
-        <ListadoFiltros ruta={ruta} estado={estado} filtros={filtros} />
+        {/* El titulo de la lista, para el indice de la pagina y los lectores de pantalla. */}
+        {titulo && <h2 className="sr-only">{titulo}</h2>}
 
-        {rejilla && hayFilas && <ListadoOrden ruta={ruta} estado={estado} columnas={columnas} />}
+        <ListadoFiltros ruta={ruta} estado={estado} filtros={filtros} fijos={fijos} />
 
-        {hayFilas && rejilla ? (
-          <ul aria-label={titulo} className="grid grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+        {(rejilla || lista || cuerpo) && hayFilas && <ListadoOrden ruta={ruta} estado={estado} columnas={columnas} />}
+
+        {hayFilas && cuerpo ? (
+          cuerpo(filas)
+        ) : hayFilas && lista ? (
+          <ul aria-label={titulo} className="flex flex-col px-5 py-2">
+            {filas.map((fila, indice) => (
+              <li key={claveFila ? claveFila(fila) : indice} className="min-w-0 border-b border-borde last:border-0">
+                {lista(fila)}
+              </li>
+            ))}
+          </ul>
+        ) : hayFilas && rejilla ? (
+          <ul aria-label={titulo} className="grid grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:grid-cols-2 sm:p-5 2xl:grid-cols-3">
             {filas.map((fila, indice) => (
               <li key={claveFila ? claveFila(fila) : indice} className="min-w-0">
                 {rejilla(fila)}
@@ -139,7 +179,7 @@ export function Listado<T>({
             titulo={titulo}
           />
         ) : filtrado ? (
-          <ListadoVacio filtrado hrefLimpiar={sinFiltros(ruta, { ...estado, busqueda: "" })} />
+          <ListadoVacio filtrado hrefLimpiar={sinFiltros(ruta, { ...estado, busqueda: "" }, fijos)} />
         ) : (
           (vacio ?? <ListadoVacio />)
         )}

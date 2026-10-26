@@ -83,14 +83,15 @@ async function retirarSiLosTiene(browser: Browser) {
   const ficha = page.getByRole("complementary", { name: /Dos Pasos/ });
   await expect(ficha.getByText("Verificacion en dos pasos:")).toBeVisible({ timeout: 30_000 });
 
-  const retirar = ficha.getByRole("button", { name: /^Retirar la verificacion/ });
+  // La ficha solo lo muestra; se retira en «Editar».
+  if ((await ficha.getByText(/activada\./).count()) > 0) {
+    await ficha.getByRole("link", { name: "Editar", exact: true }).click();
+    const panel = page.getByRole("complementary", { name: /Dos Pasos/ });
+    const retirar = panel.getByRole("button", { name: /^Retirar la verificacion/ });
+    await retirar.click({ timeout: 30_000 });
 
-  if ((await retirar.count()) > 0) {
-    await retirar.click();
-
-    // La ficha se vuelve a pintar ya sin ellos: esa es la confirmacion.
-    await expect(ficha.getByText("sin activar")).toBeVisible({ timeout: 30_000 });
-    await expect(retirar).toHaveCount(0);
+    // El panel se vuelve a pintar ya sin la seccion: esa es la confirmacion.
+    await expect(retirar).toHaveCount(0, { timeout: 30_000 });
   }
 
   await contexto.close();

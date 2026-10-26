@@ -98,6 +98,7 @@ export function FormularioMetricas({
         className="surge overflow-hidden rounded-[15px] border border-borde bg-superficie shadow-[var(--sombra)]"
       >
         <input type="hidden" name="fichaId" value={fichaId ?? ""} />
+        <h2 className="sr-only">La medicion</h2>
 
         {/*
           La cabecera dice QUE pieza se esta midiendo, y no se puede cambiar
@@ -193,6 +194,7 @@ export function FormularioMetricas({
 
       {/* ================= el diagnostico, en vivo ================= */}
       <div className="surge [--retraso:0.06s]">
+        <h2 className="sr-only">Diagnostico</h2>
         <DiagnosticoHookRate impresiones={imp} vistas={vis} />
       </div>
     </div>

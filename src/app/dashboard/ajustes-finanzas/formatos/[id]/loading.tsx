@@ -18,7 +18,7 @@ export default function CargandoFormato() {
           <div className="hueso mt-2.5 h-[28px] w-[220px] lg:h-[42px] lg:w-[300px]" />
           <div className="hueso mt-2.5 h-3.5 w-full max-w-[460px]" />
         </div>
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 rounded-[15px] border border-borde bg-superficie p-4 shadow-[var(--sombra)] sm:p-5 xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 rounded-[15px] border border-borde bg-superficie p-4 shadow-[var(--sombra)] sm:p-5 2xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="flex flex-col gap-2">
             <div className="hueso h-[46px] rounded-xl" />
             {Array.from({ length: 13 }, (_, i) => (

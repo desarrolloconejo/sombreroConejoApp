@@ -2,16 +2,12 @@ import type { Metadata } from "next";
 import { Plus } from "lucide-react";
 
 import { Wrapper } from "@/components/layout/Wrapper";
-import {
-  Listado,
-  ListadoVacio,
-  ModalConfirmacion,
-  PanelLateral,
-} from "@/components/listado";
+import { Listado, ListadoVacio, ModalConfirmacion, PanelLateral, SeparadorPanel } from "@/components/listado";
 import {
   columnasEmpresas,
   ConfirmarEstadoEmpresa,
   DetalleEmpresa,
+  EjecutivosEmpresa,
   filtrosEmpresas,
   FormularioEmpresa,
 } from "@/components/empresas";
@@ -159,9 +155,10 @@ export default async function PaginaEmpresas(
         ) ?? 0
       : 0;
 
-  // Quien atiende a la empresa, y a quien mas se le puede asignar.
+  // Quien atiende a la empresa (la ficha lo muestra) y a quien mas se le
+  // puede asignar (se asigna en «Editar»).
   const ejecutivosDePanel =
-    empresaPanel && estado.panel === "ver"
+    empresaPanel && (estado.panel === "ver" || estado.panel === "editar")
       ? await conSesion(admin, async (tx) => {
           const asignados = await asignacionesModelo.deEmpresa(empresaPanel.id, tx);
           const yaEstan = new Set(asignados.map((asignacion) => asignacion.usuarioId));
@@ -231,6 +228,17 @@ export default async function PaginaEmpresas(
                 <FormularioEmpresa
                   empresa={empresaPanel}
                   hrefCancelar={hrefCerrar}
+                  aparte={
+                    <>
+                      <SeparadorPanel>Quien la atiende</SeparadorPanel>
+                      <EjecutivosEmpresa
+                        empresaId={empresaPanel.id}
+                        activa={empresaPanel.activo}
+                        asignados={ejecutivosDePanel.asignados}
+                        candidatos={ejecutivosDePanel.candidatos}
+                      />
+                    </>
+                  }
                 />
               </PanelLateral>
             )}
@@ -247,7 +255,6 @@ export default async function PaginaEmpresas(
                   contactos={contactosDePanel}
                   piezas={piezasDePanel}
                   asignados={ejecutivosDePanel.asignados}
-                  candidatos={ejecutivosDePanel.candidatos}
                   hrefEditar={conPanel(RUTA, estado, "editar", empresaPanel.id)}
                   /* Sus personas, en el modulo donde se gestionan. */
                   hrefContactos={`/dashboard/usuarios?empresa=${empresaPanel.id}`}

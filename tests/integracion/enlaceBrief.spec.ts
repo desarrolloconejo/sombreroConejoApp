@@ -56,8 +56,8 @@ test("el prospecto llena su brief por el enlace, y aceptarlo lo hace cliente", a
 
   // ---- El ejecutivo lo encuentra en la bandeja y lo acepta.
   await entrar(page, "cuentas@conejo.test");
-  await page.goto("/dashboard/briefs", { waitUntil: "networkidle" });
-  const fila = page.getByRole("region", { name: "Por decidir" }).getByRole("link", { name: new RegExp(codigo) });
+  await page.goto(`/dashboard/briefs?busqueda=${encodeURIComponent(codigo)}`, { waitUntil: "networkidle" });
+  const fila = page.getByRole("list", { name: "Por decidir" }).getByRole("link", { name: new RegExp(codigo) });
   await expect(fila).toContainText(/prospecto/i);
   await fila.click();
   await expect(page.getByRole("heading", { name: "Brief completo" })).toBeVisible({ timeout: 60_000 });
@@ -87,8 +87,8 @@ test("pasar a presupuesto el brief de un prospecto le crea la cuenta, con sus pe
   const codigo = await enviarAbierto(page);
 
   await entrar(page, "cuentas@conejo.test");
-  await page.goto("/dashboard/briefs", { waitUntil: "networkidle" });
-  await page.getByRole("region", { name: "Por decidir" }).getByRole("link", { name: new RegExp(codigo) }).click();
+  await page.goto(`/dashboard/briefs?busqueda=${encodeURIComponent(codigo)}`, { waitUntil: "networkidle" });
+  await page.getByRole("list", { name: "Por decidir" }).getByRole("link", { name: new RegExp(codigo) }).click();
   await page.getByRole("link", { name: "Convertir en presupuesto" }).click();
   const ventana = page.getByRole("dialog", { name: "Convertir en presupuesto" });
   await ventana.getByRole("button", { name: "Convertir en presupuesto" }).click();

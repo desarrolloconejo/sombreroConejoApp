@@ -7,6 +7,7 @@ import {
   ListadoVacio,
   ModalConfirmacion,
   PanelLateral,
+  SeparadorPanel,
 } from "@/components/listado";
 import {
   columnasUsuarios,
@@ -16,6 +17,7 @@ import {
   filtrosUsuarios,
   FormularioEditarUsuario,
   FormularioNuevoUsuario,
+  RetirarDosPasos,
 } from "@/components/usuarios";
 import { BotonEnlace } from "@/components/ui";
 import { leerEstadoListado } from "@/lib/parametros";
@@ -304,6 +306,18 @@ export default async function PaginaUsuarios(
                   cargos={cargos}
                   empresas={registro.opciones.empresas}
                   hrefCancelar={hrefCerrar}
+                  aparte={
+                    (await dosPasosModelo.estado(registro.usuario.id)).activado ? (
+                      <>
+                        <SeparadorPanel>Verificacion en dos pasos</SeparadorPanel>
+                        <p className="mb-3 text-[12.5px] leading-relaxed text-suave">
+                          Activada. Si perdio el telefono y sus codigos de respaldo, retirasela
+                          para que pueda entrar. Se le pedira configurarla de nuevo.
+                        </p>
+                        <RetirarDosPasos id={registro.usuario.id} nombre={registro.usuario.nombre} />
+                      </>
+                    ) : null
+                  }
                 />
               </PanelLateral>
             )}

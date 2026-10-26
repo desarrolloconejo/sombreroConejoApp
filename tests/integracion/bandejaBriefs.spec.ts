@@ -14,8 +14,9 @@ test.describe.configure({ mode: "serial" });
 
 /** Abre en la bandeja el brief de un codigo. */
 async function abrirEnBandeja(page: Page, codigo: string) {
-  await page.goto("/dashboard/briefs", { waitUntil: "networkidle" });
-  await page.getByRole("region", { name: "Por decidir" }).getByRole("link", { name: new RegExp(codigo) }).click();
+  // Se busca por su codigo: la bandeja va por paginas.
+  await page.goto(`/dashboard/briefs?busqueda=${encodeURIComponent(codigo)}`, { waitUntil: "networkidle" });
+  await page.getByRole("list", { name: "Por decidir" }).getByRole("link", { name: new RegExp(codigo) }).click();
   await expect(page.getByRole("heading", { name: "Brief completo" })).toBeVisible({ timeout: 60_000 });
 }
 
@@ -110,14 +111,14 @@ test("presupuestar lo pasa a administracion, y descartar exige motivo", async ({
   await descartar.getByRole("link", { name: "Listo" }).click();
 
   // ---- Cada uno queda en su pestana de la bandeja.
-  await page.goto("/dashboard/briefs?ver=curso", { waitUntil: "networkidle" });
+  await page.goto(`/dashboard/briefs?ver=curso&busqueda=${encodeURIComponent(aPresupuesto)}`, { waitUntil: "networkidle" });
   await expect(page.getByRole("link", { name: "En curso", exact: false }).first()).toHaveAttribute("aria-current", "page");
   await expect(
-    page.getByRole("region", { name: "En curso" }).getByRole("link", { name: new RegExp(aPresupuesto) }),
+    page.getByRole("list", { name: "En curso" }).getByRole("link", { name: new RegExp(aPresupuesto) }),
   ).toBeVisible({ timeout: 60_000 });
-  await page.goto("/dashboard/briefs?ver=cerrados", { waitUntil: "networkidle" });
+  await page.goto(`/dashboard/briefs?ver=cerrados&busqueda=${encodeURIComponent(aDescartar)}`, { waitUntil: "networkidle" });
   await expect(
-    page.getByRole("region", { name: "Cerrados" }).getByRole("link", { name: new RegExp(aDescartar) }),
+    page.getByRole("list", { name: "Cerrados" }).getByRole("link", { name: new RegExp(aDescartar) }),
   ).toBeVisible({ timeout: 60_000 });
 
   // ---- Administracion arma el presupuesto desde el brief.

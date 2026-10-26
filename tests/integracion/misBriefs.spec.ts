@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { USUARIOS } from "../../db/datos/semilla.mts";
+import { empezarBrief } from "./ayudas/briefs";
 
 /**
  * Mis briefs, del lado del cliente, de punta a punta.
@@ -43,9 +44,15 @@ test("el cliente llena, envia y manda una version 2 de un brief", async ({ page 
   test.setTimeout(400_000);
 
   await entrar(page, "cliente@empresa.test");
+  // Empezar pide confirmacion: cancelar no crea nada.
   await page.goto("/dashboard/mis-briefs", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: /Empezar un Brief de Desarrollo de Producto/ }).click();
-  await expect(page).toHaveURL(/\/dashboard\/mis-briefs\/\d+$/, { timeout: 60_000 });
+  await page.getByRole("link", { name: "Nuevo brief" }).click();
+  const ventana = page.getByRole("dialog", { name: "Nuevo brief" });
+  await expect(ventana.getByText(/No le llega a la agencia hasta que pulses/)).toBeVisible({ timeout: 60_000 });
+  await ventana.getByRole("link", { name: "Cancelar" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await empezarBrief(page);
 
   // ---- Datos del proyecto: lo de la cuenta viene precargado.
   await expect(page.getByLabel(/Empresa \/ fabricante/)).not.toHaveValue("", { timeout: 60_000 });
@@ -104,8 +111,8 @@ test("el cliente llena, envia y manda una version 2 de un brief", async ({ page 
 
   // ---- Version 2: mismo codigo.
   await page.getByRole("button", { name: /enviar una version nueva/ }).click();
-  await expect(page.getByRole("button", { name: "Enviar la version 2" })).toBeVisible({ timeout: 60_000 });
-  await page.getByRole("button", { name: "Enviar la version 2" }).click();
+  await expect(page.getByRole("button", { name: "Enviar la version 2", exact: true })).toBeVisible({ timeout: 60_000 });
+  await page.getByRole("button", { name: "Enviar la version 2", exact: true }).click();
   await avisado(page, new RegExp(`Version 2 del brief ${codigo} enviada`));
   await expect(page.getByRole("heading", { name: "Lo que enviaste (version 2)" })).toBeVisible({
     timeout: 60_000,

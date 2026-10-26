@@ -4,14 +4,16 @@ import { ChevronRight } from "lucide-react";
 
 import { SECCION_DOCUMENTO } from "@/components/finanzas";
 import { Wrapper } from "@/components/layout/Wrapper";
+import { Listado } from "@/components/listado";
 import { BotonCopiar } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { aEscalado, deEscalado } from "@/lib/finanzas/calculo";
 import { bolivares } from "@/lib/finanzas/documentos";
-import { RUTA_FACTURAS } from "@/lib/finanzas/rutas";
+import { RUTA_COBRANZA, RUTA_FACTURAS } from "@/lib/finanzas/rutas";
+import { leerEstadoListado } from "@/lib/parametros";
 import { requerirFinanzas } from "@/lib/sesion";
 import * as facturasModelo from "@/models/facturas";
-import type { CobranzaEmpresa } from "@/types";
+import type { CobranzaEmpresa, Columna, DefinicionFiltro } from "@/types";
 
 export const metadata: Metadata = {
   title: "Cobranza",
@@ -55,6 +57,47 @@ function ContactoCobro({ empresa }: { empresa: CobranzaEmpresa }) {
   );
 }
 
+/** Lo vencido de una empresa: todos los tramos menos «por vencer». */
+function vencidoDe(empresa: CobranzaEmpresa): string {
+  return sumar([empresa.dias0a30, empresa.dias31a60, empresa.dias61a90, empresa.mas90]);
+}
+
+const ORDEN_PERMITIDO = ["total", "vencido", "mas90", "empresa"] as const;
+type OrdenCobranza = (typeof ORDEN_PERMITIDO)[number];
+
+/** Solo para ordenar: el cuerpo es la tabla de tramos de esta page. */
+const COLUMNAS: Columna<CobranzaEmpresa>[] = [
+  { clave: "total", titulo: "Total", ordenable: true, render: () => null },
+  { clave: "vencido", titulo: "Vencido", ordenable: true, render: () => null },
+  { clave: "mas90", titulo: "Mas de 90 dias", ordenable: true, render: () => null },
+  { clave: "empresa", titulo: "Empresa", ordenable: true, render: () => null },
+];
+
+const SITUACIONES = ["vencido", "por_vencer", "retencion"] as const;
+
+const FILTROS: DefinicionFiltro[] = [
+  {
+    clave: "situacion",
+    titulo: "Situacion",
+    opciones: [
+      { valor: "vencido", texto: "Con deuda vencida" },
+      { valor: "por_vencer", texto: "Solo por vencer" },
+      { valor: "retencion", texto: "Retencion pendiente" },
+    ],
+  },
+];
+
+/** Para ordenar importes en texto sin pasar por `number`. */
+function escalado(importe: string): bigint {
+  return aEscalado(importe, 2) ?? BigInt(0);
+}
+
+function claveDeOrden(empresa: CobranzaEmpresa, orden: OrdenCobranza): bigint | string {
+  if (orden === "empresa") return empresa.empresaNombre.toLowerCase();
+  if (orden === "vencido") return escalado(vencidoDe(empresa));
+  return escalado(String(empresa[orden]));
+}
+
 function rutaDeEmpresa(empresaId: number): string {
   return `${RUTA_FACTURAS}?empresa=${empresaId}&cobro=pendiente&cobro=parcial`;
 }
@@ -64,11 +107,18 @@ function rutaDeEmpresa(empresaId: number): string {
  * vencimiento de sus facturas. Un pago por confirmar no baja la deuda. Cada
  * empresa lleva a sus facturas abiertas.
  */
-export default async function PaginaCobranza() {
+export default async function PaginaCobranza(props: PageProps<"/dashboard/cobranza">) {
   const usuario = await requerirFinanzas();
+  const estado = leerEstadoListado(await props.searchParams, {
+    ordenPermitido: ORDEN_PERMITIDO,
+    ordenPorDefecto: "total",
+    direccionPorDefecto: "desc",
+    filtrosPermitidos: ["situacion"],
+  });
 
   const empresas = await conSesion(usuario, (tx) => facturasModelo.cobranza(tx));
 
+  // Las cifras de arriba son de todo; la tabla, de lo filtrado.
   const totales = Object.fromEntries(
     [...TRAMOS.map((t) => t.clave), "total" as const].map((clave) => [
       clave,
@@ -76,6 +126,42 @@ export default async function PaginaCobranza() {
     ]),
   ) as Record<string, string>;
   const vencido = sumar([totales.dias0a30, totales.dias31a60, totales.dias61a90, totales.mas90]);
+
+  // Una fila por empresa con deuda: son pocas, se buscan, filtran y ordenan
+  // aqui. Lo que llega de la URL ya paso por leerEstadoListado.
+  const termino = estado.busqueda.toLowerCase();
+  const situaciones = (estado.filtros.situacion ?? []).filter((v) => (SITUACIONES as readonly string[]).includes(v));
+  const orden = estado.orden as OrdenCobranza;
+  const signo = estado.direccion === "asc" ? 1 : -1;
+  const filtradas = empresas
+    .filter(
+      (e) =>
+        !termino || e.empresaNombre.toLowerCase().includes(termino) || (e.rif ?? "").toLowerCase().includes(termino),
+    )
+    .filter(
+      (e) =>
+        situaciones.length === 0 ||
+        situaciones.some((situacion) =>
+          situacion === "vencido"
+            ? escalado(vencidoDe(e)) > BigInt(0)
+            : situacion === "por_vencer"
+              ? escalado(vencidoDe(e)) === BigInt(0)
+              : e.retencionesAbiertas > 0,
+        ),
+    )
+    .sort((a, b) => {
+      const x = claveDeOrden(a, orden);
+      const y = claveDeOrden(b, orden);
+      return x === y ? 0 : x > y ? signo : -signo;
+    });
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / estado.porPagina));
+  const visibles = filtradas.slice((estado.pagina - 1) * estado.porPagina, estado.pagina * estado.porPagina);
+  const totalesFiltrados = Object.fromEntries(
+    [...TRAMOS.map((t) => t.clave), "total" as const].map((clave) => [
+      clave,
+      sumar(filtradas.map((e) => String(e[clave]))),
+    ]),
+  ) as Record<string, string>;
 
   return (
     <Wrapper
@@ -97,17 +183,23 @@ export default async function PaginaCobranza() {
         ))}
       </div>
 
-      <section aria-labelledby="titulo-empresas" className={`surge mt-6 [--retraso:0.06s] ${SECCION_DOCUMENTO}`}>
-        <h2 id="titulo-empresas" className="mb-3 text-[15px] font-bold">
-          Por empresa
-        </h2>
-
-        {empresas.length === 0 ? (
-          <p className="text-[13px] text-suave">Nadie debe nada. Las facturas con saldo apareceran aqui.</p>
-        ) : (
-          <>
+      <Listado
+        ruta={RUTA_COBRANZA}
+        estado={estado}
+        columnas={COLUMNAS}
+        filas={visibles}
+        total={filtradas.length}
+        totalPaginas={totalPaginas}
+        filtros={FILTROS}
+        marcadorBusqueda="Empresa o RIF"
+        etiquetaBusqueda="Buscar empresas"
+        titulo="Por empresa"
+        className="mt-6 [--retraso:0.06s]"
+        vacio={<p className="px-5 py-8 text-center text-[13px] text-suave">Nadie debe nada. Las facturas con saldo apareceran aqui.</p>}
+        cuerpo={(filas) => (
+          <div className="px-5 py-3">
             <ul aria-label="Deuda por empresa" className="flex flex-col md:hidden">
-              {empresas.map((empresa) => (
+              {filas.map((empresa) => (
                 <li key={empresa.empresaId} className="border-b border-borde py-1 last:border-0">
                   <Link
                     href={rutaDeEmpresa(empresa.empresaId)}
@@ -117,7 +209,7 @@ export default async function PaginaCobranza() {
                       <p className="truncate text-[14px] font-bold">{empresa.empresaNombre}</p>
                       <p className="text-[12px] text-suave">
                         {empresa.facturas} {empresa.facturas === 1 ? "factura" : "facturas"} · vencido{" "}
-                        {bolivares(sumar([empresa.dias0a30, empresa.dias31a60, empresa.dias61a90, empresa.mas90]))}
+                        {bolivares(vencidoDe(empresa))}
                       </p>
                     </div>
                     <p className="text-[14px] font-bold tabular-nums">{bolivares(empresa.total)}</p>
@@ -147,7 +239,7 @@ export default async function PaginaCobranza() {
                   </tr>
                 </thead>
                 <tbody>
-                  {empresas.map((empresa) => (
+                  {filas.map((empresa) => (
                     <tr key={empresa.empresaId} className="border-b border-borde/70 last:border-0">
                       <td className="py-2.5 pr-2">
                         <Link
@@ -184,17 +276,17 @@ export default async function PaginaCobranza() {
                     <td className="py-2.5 pr-2">Total</td>
                     {TRAMOS.map((tramo) => (
                       <td key={tramo.clave} className="px-2 py-2.5 text-right tabular-nums">
-                        {bolivares(totales[tramo.clave])}
+                        {bolivares(totalesFiltrados[tramo.clave])}
                       </td>
                     ))}
-                    <td className="py-2.5 pl-2 text-right tabular-nums">{bolivares(totales.total)}</td>
+                    <td className="py-2.5 pl-2 text-right tabular-nums">{bolivares(totalesFiltrados.total)}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
-          </>
+          </div>
         )}
-      </section>
+      />
     </Wrapper>
   );
 }

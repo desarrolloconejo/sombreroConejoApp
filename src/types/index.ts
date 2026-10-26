@@ -183,6 +183,9 @@ export { DECISIONES_BRIEF, NOMBRES_DE_ESTADO_BRIEF, TITULOS_DECISION } from "./b
 export type {
   DecisionBrief,
   EstadoBrief,
+  FiltrosBandeja,
+  GrupoBandeja,
+  OrigenBrief,
   TipoPregunta,
   OpcionPregunta,
   FilaMatriz,

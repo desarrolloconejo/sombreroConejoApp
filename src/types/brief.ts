@@ -185,3 +185,20 @@ export const TITULOS_DECISION: Record<DecisionBrief, string> = {
   presupuestar: "Convertir en presupuesto",
   descartar: "Descartar el brief",
 };
+
+/** Las pestanas de la bandeja de briefs. */
+export type GrupoBandeja = "decidir" | "curso" | "cerrados";
+
+/** De donde llego un brief: de una cuenta de cliente o del enlace de un prospecto. */
+export type OrigenBrief = "cuenta" | "prospecto";
+
+export type FiltrosBandeja = {
+  grupo: GrupoBandeja;
+  busqueda?: string;
+  origen?: OrigenBrief[];
+  formato?: string[];
+  orden: "recibido" | "movimiento" | "aspira" | "solicitante";
+  direccion: "asc" | "desc";
+  pagina: number;
+  porPagina: number;
+};

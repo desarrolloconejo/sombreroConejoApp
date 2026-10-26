@@ -4,8 +4,7 @@ import type { ReactNode } from "react";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
 import { BotonCopiar, BotonEnlace, Estado, Etiqueta } from "@/components/ui";
 import { ENLACES_EMPRESA } from "@/lib/validaciones";
-import type { Asignacion, Empresa, EstadoFicha, PersonaBreve } from "@/types";
-import { EjecutivosEmpresa } from "./EjecutivosEmpresa";
+import type { Asignacion, Empresa, EstadoFicha } from "@/types";
 import { ZONA_HORARIA } from "@/lib/fechas";
 
 /**
@@ -64,16 +63,13 @@ export function DetalleEmpresa({
   contactos,
   piezas,
   asignados,
-  candidatos,
   hrefEditar,
   hrefContactos,
   hrefCerrar,
 }: {
   empresa: Empresa;
-  /** Los ejecutivos que la atienden. */
+  /** Los ejecutivos que la atienden. Se cambian en «Editar». */
   asignados: Asignacion[];
-  /** Los ejecutivos de cuentas que se le pueden asignar. */
-  candidatos: PersonaBreve[];
   /** Personas de contacto activas de esta cuenta. */
   contactos: number;
   /** Sus piezas, repartidas por estado. */
@@ -149,12 +145,18 @@ export function DetalleEmpresa({
 
         <SeparadorPanel>Quien la atiende</SeparadorPanel>
 
-        <EjecutivosEmpresa
-          empresaId={empresa.id}
-          activa={empresa.activo}
-          asignados={asignados}
-          candidatos={candidatos}
-        />
+        {asignados.length === 0 ? (
+          <p className="text-[12.5px] text-suave">Nadie la atiende todavia.</p>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {asignados.map((asignacion) => (
+              <li key={asignacion.id} className="text-[13px] font-semibold">
+                {asignacion.usuarioNombre}
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-2 text-[11.5px] text-suave">Se asignan y se quitan en «Editar».</p>
 
         <SeparadorPanel>Donde publica</SeparadorPanel>
 

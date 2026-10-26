@@ -152,8 +152,11 @@ export function conPorPagina(
 }
 
 /** Quita todos los filtros y conserva la busqueda, que es lo que se escribio. */
-export function sinFiltros(ruta: string, estado: EstadoListado): string {
-  return unir(ruta, parametrosDe({ ...estado, filtros: {}, pagina: 1 }));
+export function sinFiltros(ruta: string, estado: EstadoListado, fijos: readonly string[] = []): string {
+  // Los filtros fijos no son criterios del usuario sino parte de donde esta
+  // (la pestana de una bandeja): limpiar no los quita.
+  const conservados = Object.fromEntries(Object.entries(estado.filtros).filter(([clave]) => fijos.includes(clave)));
+  return unir(ruta, parametrosDe({ ...estado, filtros: conservados, pagina: 1 }));
 }
 
 /** Abre o cierra el panel lateral. Cerrar tambien se lleva el id. */

@@ -7,3 +7,4 @@ export { DetalleUsuario } from "./DetalleUsuario";
 export { ConfirmarEstadoUsuario } from "./ConfirmarEstadoUsuario";
 export { ConfirmarRestablecer } from "./ConfirmarRestablecer";
 export { CredencialProvisional } from "./CredencialProvisional";
+export { RetirarDosPasos } from "./RetirarDosPasos";

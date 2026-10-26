@@ -278,7 +278,16 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Cada modulo trae su propio `loading.tsx` con la geometria de su page.
 - Un limite de error (`error.tsx`) reintenta con `retry`, no con `reset`:
   `reset` repinta sin volver a pedir los datos al servidor.
-- Los listados usan el componente `Listado`, con el estado en la URL.
+- **Todo lo que lista registros usa `Listado`**, con el estado en la URL:
+  buscador, filtros de varios valores (sin ninguno marcado se ve todo; el
+  «Todos» lo pone el componente), orden y paginas. No se escribe otra barra.
+  Pinta tabla (por defecto), tarjetas (`rejilla`), filas de lectura (`lista`)
+  o un cuerpo propio (`cuerpo`, la tabla de tramos de Cobranza); en los tres
+  ultimos el orden sale en `ListadoOrden`, con las columnas `ordenable`. Un
+  filtro que es parte de donde se esta (la pestana de la bandeja de briefs)
+  va en `fijos`: «Limpiar filtros» no lo quita. Si la consulta es grande,
+  busca y pagina la base; si son pocas filas por empresa (Cobranza, Mis
+  briefs), la page filtra lo que leyo, siempre desde `leerEstadoListado`.
 - **Ningun `<select>` nativo**: su lista la pinta el sistema operativo y no
   sigue el tema. Los desplegables son `Selector` (`src/components/ui`),
   controlado con `valor` + `onCambio` o no con `valorInicial`; `etiquetaOculta`
@@ -309,16 +318,30 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Si un control cambia entre dos formularios (Archivo o Enlace), los dos se
   pintan en la misma celda de una rejilla y el que no toca queda `invisible`,
   `inert` y deshabilitado: la tarjeta no cambia de alto.
-- Un listado puede pintarse en tarjetas con la prop `rejilla` de `Listado`
-  (Proyectos lo hace); el orden pasa a `ListadoOrden`.
+- «Ver mas» solo muestra; **lo que modifica algo va en «Editar»**. Si en
+  Editar hay algo con su propio formulario (los ejecutivos de una empresa,
+  retirar los dos pasos), entra por la prop `aparte` del formulario de
+  edicion, fuera de su `<form>` (no se anidan), y el boton de guardar lo
+  encuentra con `form={id}`.
+- El inicio (`src/app/dashboard/(inicio)/page.tsx`) reune `BloqueInicio`
+  segun el rol y el cargo: cada bloque es una pregunta con su cifra, los
+  primeros pendientes y el enlace al modulo. Solo se consulta lo que se pinta.
+- Empezar un brief pide confirmacion: «Nuevo brief» abre la ventana
+  (`?panel=nuevo`, `ElegirFormatoBrief`) donde se elige el formato y se dice
+  que va a pasar.
 - Lo que se desplaza dentro de un panel usa la barra fina: `barra-fina` en
   columnas y paneles, `barra-fina-flotante` en lo que flota (listas,
   calendario, buscador, campana).
-- Cada page del panel trae «Volver» (en `Wrapper`) y el indice flotante
-  (`IndicePagina`, en el layout), sin hacer nada: el indice lee los `h2` del
-  `<main>`, asi que una seccion nueva debe tener su titulo en un `h2`.
-  «Volver» usa el rastro de `RastroNavegacion` y, si no hay, sube a la miga
-  anterior.
+- Cada page del panel trae «Volver» (en `Wrapper`) y el indice
+  (`IndicePagina`, en el layout), sin hacer nada. Desde xl el indice es una
+  columna fija a la derecha que reserva su sitio (el contenido queda como en
+  lg, asi que lo que pasa a dos columnas en lg sigue igual; lo que pasaba a
+  tres en xl pasa en 2xl); por debajo, un boton flotante. Lee los `h2` del
+  `<main>`, sin sus contadores (`.tabular-nums`, `data-indice` para dar otro
+  texto): una seccion nueva lleva su titulo en un `h2` (`sr-only` si no debe
+  verse). Sus botones se llaman «Ir a la seccion …»: en las pruebas, un boton
+  con el mismo texto que una seccion se busca con `exact: true`. «Volver» usa
+  el rastro de `RastroNavegacion` y, si no hay, sube a la miga anterior.
 - Completar algo que cuenta se celebra: una action devuelve `logro: true` y
   el aviso sale con el tono de logro; la tarea recien marcada usa
   `MarcaTarea` con `useCelebrar`; `anunciarLogro()` enciende

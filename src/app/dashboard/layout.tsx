@@ -80,10 +80,15 @@ export default async function LayoutDashboard({
             </div>
           </header>
 
-          <main className="mx-auto w-full max-w-[1240px] flex-1 px-4 pt-5 pb-4 lg:px-[34px] lg:py-7">
-            {children}
-          </main>
-          <IndicePagina />
+          {/*
+            El contenido y, desde xl, la columna del indice a su derecha. El
+            ancho maximo crece lo que ocupa el indice: el contenido conserva
+            el suyo de siempre (1240 menos el relleno).
+          */}
+          <div className="mx-auto flex w-full max-w-[1492px] flex-1 gap-8 px-4 pt-5 pb-4 lg:px-[34px] lg:py-7">
+            <main className="min-w-0 flex-1">{children}</main>
+            <IndicePagina />
+          </div>
         </div>
       </div>
     </ProveedorAvisos>

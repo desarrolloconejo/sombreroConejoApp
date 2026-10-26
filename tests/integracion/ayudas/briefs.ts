@@ -47,10 +47,22 @@ async function primeraOpcionDeCadaGrupo(page: Page) {
  * deja en el ultimo paso, sin enviar. `producto` distingue un brief de otro.
  */
 export async function llenarBrief(page: Page, producto: string) {
-  await page.goto("/dashboard/mis-briefs", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: /Empezar un Brief de Desarrollo de Producto/ }).click();
-  await expect(page).toHaveURL(/\/dashboard\/mis-briefs\/\d+$/, { timeout: 60_000 });
+  await empezarBrief(page);
   await responderBrief(page, producto);
+}
+
+/**
+ * Empieza un brief de Desarrollo de Producto como el cliente en sesion: la
+ * ventana de «Nuevo brief», elegir el formato y confirmar. Deja en su
+ * formulario.
+ */
+export async function empezarBrief(page: Page) {
+  await page.goto("/dashboard/mis-briefs", { waitUntil: "networkidle" });
+  await page.getByRole("link", { name: "Nuevo brief" }).click();
+  const ventana = page.getByRole("dialog", { name: "Nuevo brief" });
+  await ventana.getByLabel(/Brief de Desarrollo de Producto/).check({ timeout: 60_000 });
+  await ventana.getByRole("button", { name: "Empezar el brief" }).click();
+  await expect(page).toHaveURL(/\/dashboard\/mis-briefs\/\d+$/, { timeout: 60_000 });
 }
 
 /**

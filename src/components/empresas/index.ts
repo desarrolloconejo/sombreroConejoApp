@@ -4,3 +4,4 @@ export { FormularioEmpresa } from "./FormularioEmpresa";
 export { DetalleEmpresa } from "./DetalleEmpresa";
 export { ConfirmarEstadoEmpresa } from "./ConfirmarEstadoEmpresa";
 export { AvisoAltaEmpresa } from "./AvisoAltaEmpresa";
+export { EjecutivosEmpresa } from "./EjecutivosEmpresa";

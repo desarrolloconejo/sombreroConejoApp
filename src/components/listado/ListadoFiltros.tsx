@@ -41,10 +41,13 @@ export function ListadoFiltros({
   ruta,
   estado,
   filtros,
+  fijos = [],
 }: {
   ruta: string;
   estado: EstadoListado;
   filtros: DefinicionFiltro[];
+  /** Claves de filtro que «Limpiar filtros» conserva (la pestana de una bandeja). */
+  fijos?: readonly string[];
 }) {
   if (filtros.length === 0) return null;
 
@@ -134,7 +137,7 @@ export function ListadoFiltros({
           nada es ruido permanente. */}
       {hayAlguno && (
         <Link
-          href={sinFiltros(ruta, estado)}
+          href={sinFiltros(ruta, estado, fijos)}
           scroll={false}
           className={[
             // En columna no hay margen automatico que empuje: se centra, y
