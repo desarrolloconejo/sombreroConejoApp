@@ -9,14 +9,24 @@ import {
   type FilaEnlace,
 } from "@/components/briefs";
 import { Wrapper } from "@/components/layout/Wrapper";
+import { Listado } from "@/components/listado";
 import { conSesion } from "@/lib/db";
 import { haceCuanto, ZONA_HORARIA } from "@/lib/fechas";
-import { formatoPor, formatosVigentes } from "@/lib/portal/briefs";
+import { leerEstadoListado } from "@/lib/parametros";
+import { formatoPor, formatosVigentes, FORMATOS } from "@/lib/portal/briefs";
 import { rutaBrief } from "@/lib/portal/rutas";
 import { requerirCargo } from "@/lib/sesion";
 import * as briefsModelo from "@/models/briefs";
 import * as enlacesModelo from "@/models/enlacesBrief";
-import { NOMBRES_DE_ESTADO_BRIEF, type Brief, type EnlaceBrief } from "@/types";
+import {
+  NOMBRES_DE_ESTADO_BRIEF,
+  type Brief,
+  type Columna,
+  type DefinicionFiltro,
+  type EnlaceBrief,
+  type GrupoBandeja,
+  type OrigenBrief,
+} from "@/types";
 
 export const metadata: Metadata = {
   title: "Briefs",
@@ -31,17 +41,6 @@ const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Briefs" }]
  * atiende la empresa decide su destino. El ejecutivo ve los de sus empresas y
  * los de los prospectos que invito; el admin, todos. Lo decide la base.
  */
-
-/** Lo que espera una decision: recien llegado, o con su presupuesto resuelto. */
-function porDecidir(brief: Brief): boolean {
-  return (
-    brief.estado === "enviado" ||
-    (brief.estado === "en_presupuesto" &&
-      (brief.presupuestoEstado === "aprobado" ||
-        brief.presupuestoEstado === "rechazado" ||
-        brief.presupuestoVencido))
-  );
-}
 
 function detalleDe(brief: Brief): string {
   if (brief.estado === "en_presupuesto") {
@@ -97,9 +96,6 @@ function comoPestana(valor: string | string[] | undefined): ClavePestana {
 /** Un dia del calendario, corto («14 nov»). En UTC para no correrlo al anterior. */
 const DIA_CORTO = new Intl.DateTimeFormat("es-VE", { timeZone: "UTC", day: "numeric", month: "short" });
 
-/** Los cerrados crecen sin fin: se muestran los ultimos. */
-const MAXIMO_CERRADOS = 30;
-
 function Pestanas({ activa, cuentas }: { activa: ClavePestana; cuentas: Record<ClavePestana, number> }) {
   return (
     <nav aria-label="Bandejas de briefs" className="surge mb-4">
@@ -152,94 +148,106 @@ function FilaBrief({ brief, pestana }: { brief: Brief; pestana: ClavePestana }) 
   ].filter(Boolean);
 
   return (
-    <li className="border-b border-borde last:border-0">
-      <Link
-        href={rutaBrief(brief.id)}
-        className="suave -mx-2 flex items-start gap-3 rounded-xl px-2 py-3.5 hover:bg-acento-tenue sm:items-center"
-      >
-        <div className="min-w-0 flex-1">
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="min-w-0 truncate text-[15px] font-bold text-texto">{brief.solicitante}</span>
-            {brief.empresaId === null && (
-              <span className="rounded-full border border-borde px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-suave">
-                Prospecto
-              </span>
-            )}
-          </p>
-          <p className={["mt-1 text-[13px] font-semibold", pestana === "decidir" ? "text-acento" : "text-texto"].join(" ")}>
-            {detalleDe(brief)}
-          </p>
-          <p className="mt-1 text-[12px] text-suave">
-            {referencia.join(" · ")}
-            {brief.codigo && <span className="ml-2 whitespace-nowrap tabular-nums opacity-80">{brief.codigo}</span>}
-          </p>
-          <p className="mt-2 flex flex-wrap items-center gap-2 sm:hidden">
-            {pestana !== "decidir" && <EtiquetaBrief estado={brief.estado} />}
-            <span className="text-[12px] text-suave">{haceCuanto(desde)}</span>
-          </p>
-        </div>
-
-        <div className="hidden shrink-0 flex-col items-end gap-1.5 text-right sm:flex">
-          <span className="text-[12px] whitespace-nowrap text-suave">
-            <span className="sr-only">{pestana === "decidir" ? "Recibido " : "Ultimo movimiento "}</span>
-            {haceCuanto(desde)}
-          </span>
+    <Link
+      href={rutaBrief(brief.id)}
+      className="suave -mx-2 flex items-start gap-3 rounded-xl px-2 py-3.5 hover:bg-acento-tenue sm:items-center"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="min-w-0 truncate text-[15px] font-bold text-texto">{brief.solicitante}</span>
+          {brief.empresaId === null && (
+            <span className="rounded-full border border-borde px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-suave">
+              Prospecto
+            </span>
+          )}
+        </p>
+        <p className={["mt-1 text-[13px] font-semibold", pestana === "decidir" ? "text-acento" : "text-texto"].join(" ")}>
+          {detalleDe(brief)}
+        </p>
+        <p className="mt-1 text-[12px] text-suave">
+          {referencia.join(" · ")}
+          {brief.codigo && <span className="ml-2 whitespace-nowrap tabular-nums opacity-80">{brief.codigo}</span>}
+        </p>
+        <p className="mt-2 flex flex-wrap items-center gap-2 sm:hidden">
           {pestana !== "decidir" && <EtiquetaBrief estado={brief.estado} />}
-        </div>
-        <ChevronRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-suave sm:mt-0" />
-      </Link>
-    </li>
+          <span className="text-[12px] text-suave">{haceCuanto(desde)}</span>
+        </p>
+      </div>
+
+      <div className="hidden shrink-0 flex-col items-end gap-1.5 text-right sm:flex">
+        <span className="text-[12px] whitespace-nowrap text-suave">
+          <span className="sr-only">{pestana === "decidir" ? "Recibido " : "Ultimo movimiento "}</span>
+          {haceCuanto(desde)}
+        </span>
+        {pestana !== "decidir" && <EtiquetaBrief estado={brief.estado} />}
+      </div>
+      <ChevronRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-suave sm:mt-0" />
+    </Link>
   );
 }
 
-function Bandeja({ pestana, briefs, total }: { pestana: ClavePestana; briefs: Brief[]; total: number }) {
-  const { titulo, vacio } = PESTANAS.find((p) => p.clave === pestana) ?? PESTANAS[0];
-  return (
-    <section aria-label={titulo} className={`surge [--retraso:0.04s] ${SECCION_BRIEF}`}>
-      {briefs.length === 0 ? (
-        <p className="py-2 text-[13px] text-suave">{vacio}</p>
-      ) : (
-        <>
-          {pestana === "decidir" && (
-            <p className="mb-1 text-[12px] text-suave">Primero los que mas llevan esperando.</p>
-          )}
-          <ul className="-my-1 flex flex-col">
-            {briefs.map((brief) => (
-              <FilaBrief key={brief.id} brief={brief} pestana={pestana} />
-            ))}
-          </ul>
-          {total > briefs.length && (
-            <p className="mt-3 border-t border-borde pt-3 text-[12px] text-suave">
-              Se muestran los ultimos {briefs.length} de {total}.
-            </p>
-          )}
-        </>
-      )}
-    </section>
-  );
-}
+/** El orden de cada pestana: lo que espera decision, del que mas lleva esperando. */
+const ORDEN_PERMITIDO = ["recibido", "movimiento", "aspira", "solicitante"] as const;
+
+/** Solo sirven para ordenar: la bandeja se pinta en filas propias, no en tabla. */
+const COLUMNAS: Columna<Brief>[] = [
+  { clave: "recibido", titulo: "Recibido", ordenable: true, render: () => null },
+  { clave: "movimiento", titulo: "Ultimo movimiento", ordenable: true, render: () => null },
+  { clave: "aspira", titulo: "Fecha que aspira", ordenable: true, render: () => null },
+  { clave: "solicitante", titulo: "Empresa", ordenable: true, render: () => null },
+];
+
+const ORIGENES: readonly OrigenBrief[] = ["cuenta", "prospecto"];
+
+const FILTROS: DefinicionFiltro[] = [
+  {
+    clave: "origen",
+    titulo: "Origen",
+    opciones: [
+      { valor: "cuenta", texto: "Su cuenta" },
+      { valor: "prospecto", texto: "Prospecto" },
+    ],
+  },
+  {
+    clave: "formato",
+    titulo: "Formato",
+    opciones: FORMATOS.map((formato) => ({ valor: formato.clave, texto: formato.nombre })),
+  },
+];
 
 export default async function PaginaBriefs(props: PageProps<"/dashboard/briefs">) {
   const usuario = await requerirCargo("cuentas");
-  const pestana = comoPestana((await props.searchParams).ver);
+  const parametros = await props.searchParams;
+  const pestana = comoPestana(parametros.ver);
 
-  const [lista, enlaces] = await conSesion(usuario, async (tx) => [
-    await briefsModelo.listar({ sinBorradores: true }, tx),
-    await enlacesModelo.listar(tx),
-  ] as const);
+  // La pestana es un filtro fijo: va en la URL con los demas, asi buscar u
+  // ordenar no la pierden, y «Limpiar filtros» no la quita.
+  const estado = leerEstadoListado(parametros, {
+    ordenPermitido: ORDEN_PERMITIDO,
+    ordenPorDefecto: pestana === "decidir" ? "recibido" : "movimiento",
+    direccionPorDefecto: pestana === "decidir" ? "asc" : "desc",
+    filtrosPermitidos: ["ver", "origen", "formato"],
+  });
 
-  const recientes = (a: Brief, b: Brief) => b.actualizadoEn.getTime() - a.actualizadoEn.getTime();
-  const llegada = (b: Brief) => (b.enviadoEn ?? b.actualizadoEn).getTime();
-  const grupos: Record<ClavePestana, Brief[]> = {
-    // Lo que espera decision, del que mas lleva esperando al mas nuevo.
-    decidir: lista.filter(porDecidir).sort((a, b) => llegada(a) - llegada(b)),
-    curso: lista
-      .filter((b) => !porDecidir(b) && (b.estado === "en_validacion" || b.estado === "en_presupuesto"))
-      .sort(recientes),
-    cerrados: lista.filter((b) => b.estado === "aceptado" || b.estado === "descartado").sort(recientes),
-  };
-  const cuentas = { decidir: grupos.decidir.length, curso: grupos.curso.length, cerrados: grupos.cerrados.length };
-  const visibles = pestana === "cerrados" ? grupos.cerrados.slice(0, MAXIMO_CERRADOS) : grupos[pestana];
+  const { pagina, cuentas, enlaces } = await conSesion(usuario, async (tx) => ({
+    pagina: await briefsModelo.bandeja(
+      {
+        grupo: pestana as GrupoBandeja,
+        busqueda: estado.busqueda || undefined,
+        origen: (estado.filtros.origen ?? []).filter((v): v is OrigenBrief => (ORIGENES as readonly string[]).includes(v)),
+        formato: (estado.filtros.formato ?? []).filter((v) => FORMATOS.some((f) => f.clave === v)),
+        orden: estado.orden as (typeof ORDEN_PERMITIDO)[number],
+        direccion: estado.direccion,
+        pagina: estado.pagina,
+        porPagina: estado.porPagina,
+      },
+      tx,
+    ),
+    cuentas: await briefsModelo.cuentasBandeja(tx),
+    enlaces: await enlacesModelo.listar(tx),
+  }));
+
+  const { titulo, vacio } = PESTANAS.find((p) => p.clave === pestana) ?? PESTANAS[0];
 
   return (
     <Wrapper
@@ -249,7 +257,22 @@ export default async function PaginaBriefs(props: PageProps<"/dashboard/briefs">
       descripcion="Todo brief enviado entra aqui como fase 0. Tu decides su destino: proyecto, presupuesto o descarte."
     >
       <Pestanas activa={pestana} cuentas={cuentas} />
-      <Bandeja pestana={pestana} briefs={visibles} total={cuentas[pestana]} />
+      <Listado
+        ruta={RUTA}
+        estado={estado}
+        columnas={COLUMNAS}
+        filas={pagina.filas}
+        total={pagina.total}
+        totalPaginas={pagina.totalPaginas}
+        filtros={FILTROS}
+        fijos={["ver"]}
+        marcadorBusqueda="Empresa o codigo"
+        etiquetaBusqueda="Buscar briefs"
+        claveFila={(brief) => brief.id}
+        titulo={titulo}
+        lista={(brief) => <FilaBrief brief={brief} pestana={pestana} />}
+        vacio={<p className="px-5 py-8 text-center text-[13px] text-suave">{vacio}</p>}
+      />
 
       <section aria-labelledby="titulo-enlaces" className="surge mt-6 [--retraso:0.08s]">
         <h2 id="titulo-enlaces" className="mb-1 text-[19px] font-extrabold tracking-[-0.02em]">

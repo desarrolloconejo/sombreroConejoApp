@@ -1,8 +1,11 @@
-import { consultar, consultarUno, ejecutar, type Ejecutor } from "@/lib/db";
+import { consultar, consultarUno, ejecutar, escaparLike, identificadorSeguro, type Ejecutor } from "@/lib/db";
 import type {
   AclaracionBrief,
   Brief,
   EstadoBrief,
+  FiltrosBandeja,
+  GrupoBandeja,
+  Pagina,
   RespuestaCongelada,
   Respuestas,
   VersionBrief,
@@ -85,6 +88,94 @@ export async function listar(
     valores,
     ejecutor,
   );
+}
+
+/**
+ * Lo que espera una decision del ejecutivo: recien llegado, o con su
+ * presupuesto resuelto (aprobado, rechazado o vencido). Sin presupuesto, las
+ * comparaciones con `p` dan NULL: el coalesce lo deja en falso, o el NOT de
+ * «en curso» lo perderia.
+ */
+const POR_DECIDIR = `coalesce(b.estado = 'enviado' OR (b.estado = 'en_presupuesto' AND (
+  p.estado IN ('aprobado', 'rechazado') OR (p.estado = 'enviado' AND p.valido_hasta < finanzas.hoy())
+)), false)`;
+
+/** Cada pestana de la bandeja, como condicion. Los borradores no entran nunca. */
+const GRUPOS: Record<GrupoBandeja, string> = {
+  decidir: POR_DECIDIR,
+  curso: `(b.estado IN ('en_validacion', 'en_presupuesto') AND NOT ${POR_DECIDIR})`,
+  cerrados: "b.estado IN ('aceptado', 'descartado')",
+};
+
+const ORDEN_BANDEJA = {
+  recibido: "coalesce(b.enviado_en, b.actualizado_en)",
+  movimiento: "b.actualizado_en",
+  aspira: "b.fecha_aspirada",
+  solicitante: "lower(coalesce(e.nombre, pr.empresa_nombre))",
+} as const;
+
+/**
+ * La bandeja de briefs: una pestana, con busqueda (empresa o codigo),
+ * filtros de origen y formato, orden y paginas. Lo que ve cada uno lo deciden
+ * las politicas: el ejecutivo, los de sus empresas y sus prospectos.
+ */
+export async function bandeja(filtros: FiltrosBandeja, ejecutor: Ejecutor): Promise<Pagina<Brief>> {
+  const pagina = Math.max(1, Math.trunc(filtros.pagina));
+  const porPagina = Math.min(100, Math.max(1, Math.trunc(filtros.porPagina)));
+
+  const condiciones = [GRUPOS[filtros.grupo], "b.codigo IS NOT NULL"];
+  const valores: unknown[] = [];
+
+  if (filtros.busqueda?.trim()) {
+    valores.push(`%${escaparLike(filtros.busqueda.trim())}%`);
+    const marcador = `$${valores.length}`;
+    condiciones.push(
+      `(coalesce(e.nombre, pr.empresa_nombre) ILIKE ${marcador} ESCAPE '\' OR b.codigo ILIKE ${marcador} ESCAPE '\')`,
+    );
+  }
+  if (filtros.origen?.length === 1) {
+    condiciones.push(filtros.origen[0] === "prospecto" ? "b.prospecto_id IS NOT NULL" : "b.prospecto_id IS NULL");
+  }
+  if (filtros.formato?.length) {
+    valores.push(filtros.formato);
+    condiciones.push(`b.formato = ANY($${valores.length})`);
+  }
+
+  const donde = `WHERE ${condiciones.join(" AND ")}`;
+  const claveOrden = identificadorSeguro(filtros.orden, Object.keys(ORDEN_BANDEJA) as (keyof typeof ORDEN_BANDEJA)[]);
+  const direccion = identificadorSeguro(filtros.direccion, ["asc", "desc"]);
+
+  const totales = await consultarUno<{ total: string }>(
+    `SELECT count(*)::text AS total ${DESDE} ${donde}`,
+    valores,
+    ejecutor,
+  );
+  const total = Number(totales?.total ?? 0);
+
+  valores.push(porPagina, (pagina - 1) * porPagina);
+  const filas = await consultar<Brief>(
+    `SELECT ${COLUMNAS} ${DESDE} ${donde}
+     ORDER BY ${ORDEN_BANDEJA[claveOrden]} ${direccion.toUpperCase()} NULLS LAST, b.id DESC
+     LIMIT $${valores.length - 1} OFFSET $${valores.length}`,
+    valores,
+    ejecutor,
+  );
+
+  return { filas, total, pagina, porPagina, totalPaginas: Math.max(1, Math.ceil(total / porPagina)) };
+}
+
+/** Cuantos hay en cada pestana de la bandeja, para sus contadores. */
+export async function cuentasBandeja(ejecutor: Ejecutor): Promise<Record<GrupoBandeja, number>> {
+  const fila = await consultarUno<Record<GrupoBandeja, number>>(
+    `SELECT count(*) FILTER (WHERE ${GRUPOS.decidir})::int  AS decidir,
+            count(*) FILTER (WHERE ${GRUPOS.curso})::int    AS curso,
+            count(*) FILTER (WHERE ${GRUPOS.cerrados})::int AS cerrados
+     ${DESDE}
+     WHERE b.codigo IS NOT NULL`,
+    [],
+    ejecutor,
+  );
+  return fila ?? { decidir: 0, curso: 0, cerrados: 0 };
 }
 
 /**
