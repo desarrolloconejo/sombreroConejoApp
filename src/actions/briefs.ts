@@ -55,7 +55,11 @@ function revalidar(id: number): void {
 async function avisarALaEmpresa(
   tx: Ejecutor,
   brief: Brief,
-  aviso: { tipo: "brief.aceptado" | "brief.descartado" | "brief.aclaracion" | "brief.fecha_propuesta"; titulo: string; cuerpo?: string | null },
+  aviso: {
+    tipo: "brief.aceptado" | "brief.a_presupuesto" | "brief.descartado" | "brief.aclaracion" | "brief.fecha_propuesta";
+    titulo: string;
+    cuerpo?: string | null;
+  },
 ): Promise<void> {
   if (brief.empresaId === null) return;
   const personas = await clientes.activosDe(brief.empresaId, tx);
@@ -71,14 +75,25 @@ async function avisarALaEmpresa(
  * ejecutivo que decide) y su cuenta de cliente, con una contrasena
  * provisional que se entrega en mano. Devuelve la empresa y, si se creo la
  * cuenta, su credencial y el correo de bienvenida encolado.
+ *
+ * La usan las dos decisiones que lo hacen cliente, aceptar y pasar a
+ * presupuesto. Decide por la cuenta y no por la empresa: un brief que ya paso
+ * a presupuesto tiene empresa, y su prospecto puede seguir sin cuenta.
+ *
+ * Quien lleno el brief es quien pidio el trabajo: su cuenta nace pudiendo
+ * aprobar piezas y ver las finanzas, o no podria aprobar ni su presupuesto.
  */
 async function convertirSiEsProspecto(
   tx: Ejecutor,
   brief: Brief,
   usuario: UsuarioCompleto,
 ): Promise<{ empresaId: number; credencial: { email: string; password: string } | null; correo: number | null }> {
-  if (brief.empresaId !== null) return { empresaId: brief.empresaId, credencial: null, correo: null };
+  if (brief.prospectoId === null) {
+    if (brief.empresaId === null) throw new Error("Un brief sin prospecto tiene empresa");
+    return { empresaId: brief.empresaId, credencial: null, correo: null };
+  }
 
+  // Si ya tiene empresa, la devuelve tal cual: convertir es idempotente.
   const empresaId = await briefs.convertirProspecto(brief.id, tx);
   const prospecto = await briefs.prospectoDe(brief.id, tx);
   if (!prospecto || (await usuarios.existeEmail(prospecto.email))) {
@@ -98,7 +113,10 @@ async function convertirSiEsProspecto(
     },
     tx,
   );
-  await clientes.crear({ usuarioId: creado.id, empresaId, cargo: null }, tx);
+  await clientes.crear(
+    { usuarioId: creado.id, empresaId, cargo: null, puedeAprobar: true, puedeVerFinanzas: true },
+    tx,
+  );
   await anotar(tx, usuario, "usuario.creado", {
     entidadId: creado.id,
     empresaId,
@@ -194,6 +212,7 @@ export async function aceptarBrief(_estadoPrevio: EstadoFormulario, datos: FormD
       ? "Proyecto abierto y cuenta creada para el prospecto. Entregale su contrasena provisional"
       : "Proyecto abierto. Completar su fase 1 valida el brief",
     credencial: resultado.credencial ?? undefined,
+    destino: rutaProyecto(resultado.proyectoId),
   };
 }
 
@@ -218,27 +237,41 @@ export async function presupuestarBrief(_estadoPrevio: EstadoFormulario, datos: 
       (brief.presupuestoEstado === "rechazado" || brief.presupuestoVencido);
     if (brief.estado !== "enviado" && !denuevo) return { error: "Este brief ya no esta para presupuestarse" };
 
-    if (brief.empresaId === null) await briefs.convertirProspecto(id, tx);
-    if (!(await briefs.aPresupuesto(id, usuario.id, tx))) return { error: "Este brief ya no esta para presupuestarse" };
+    // Pasar a presupuesto ya lo hace cliente: nacen su empresa y su cuenta.
+    const conversion = await convertirSiEsProspecto(tx, brief, usuario);
+    if (!(await briefs.aPresupuesto(id, usuario.id, tx))) throw new Error("El brief cambio mientras se presupuestaba");
 
-    await anotar(tx, usuario, "brief.a_presupuesto", { entidadId: id, empresaId: brief.empresaId });
+    await anotar(tx, usuario, "brief.a_presupuesto", { entidadId: id, empresaId: conversion.empresaId });
 
     await notificarA(tx, await usuarios.operadoresDeFinanzas(tx), {
       tipo: "brief.a_presupuesto",
       titulo: `Hay que presupuestar el brief ${brief.codigo}`,
       cuerpo: `De ${brief.solicitante}.`,
       href: RUTA_PRESUPUESTOS,
-      empresaId: brief.empresaId,
+      empresaId: conversion.empresaId,
     });
 
-    return { ok: true as const };
+    await avisarALaEmpresa(tx, { ...brief, empresaId: conversion.empresaId }, {
+      tipo: "brief.a_presupuesto",
+      titulo: `Preparamos el presupuesto de tu brief ${brief.codigo}`,
+      cuerpo: "Te avisamos cuando este listo para que lo revises.",
+    });
+
+    return { credencial: conversion.credencial, correos: conversion.correo ? [conversion.correo] : [] };
   });
 
   if ("error" in resultado) return { ok: false, mensaje: resultado.error };
 
+  await entregarCorreos(usuario, resultado.correos);
   revalidar(id);
   revalidatePath(RUTA_PRESUPUESTOS);
-  return { ok: true, mensaje: "Pasado a administracion para su presupuesto" };
+  return {
+    ok: true,
+    mensaje: resultado.credencial
+      ? "Pasado a administracion y cuenta creada para el prospecto. Entregale su contrasena provisional"
+      : "Pasado a administracion para su presupuesto",
+    credencial: resultado.credencial ?? undefined,
+  };
 }
 
 /** Descartar con motivo. No se borra: queda archivado, y el cliente ve por que. */

@@ -1,9 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { ExternalLink, FileText, Send, Upload } from "lucide-react";
+import { ExternalLink, FileText, Upload } from "lucide-react";
 
-import { marcarVersionEnviada, subirVersion } from "@/actions/versiones";
+import { subirVersion } from "@/actions/versiones";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { Boton, CampoArchivo, claseLinea } from "@/components/ui";
 import { sitioDeEnlace } from "@/lib/portal/archivos";
@@ -26,7 +26,8 @@ const FECHA = new Intl.DateTimeFormat("es-VE", {
   timeZone: ZONA_HORARIA,
 });
 
-function Miniatura({ version }: { version: Version }) {
+/** El archivo o el enlace de una version, en pequeno. La usa tambien la fase 4. */
+export function Miniatura({ version }: { version: Version }) {
   if (version.origen === "enlace" && version.enlace) {
     return (
       <a
@@ -68,36 +69,21 @@ export function VersionesPieza({
   piezaId,
   versiones,
   puedeSubir,
-  gestiona,
-  faseActual,
-  ronda,
 }: {
   piezaId: number;
   versiones: Version[];
   /** Trabaja en la pieza o la gestiona, y la pieza esta activa. */
   puedeSubir: boolean;
-  gestiona: boolean;
-  faseActual: number | null;
-  ronda: number;
 }) {
   const [subido, subir, subiendo] = useActionState(subirVersion, ESTADO_INICIAL);
-  const [marcado, marcar, marcando] = useActionState(marcarVersionEnviada, ESTADO_INICIAL);
-
   useAvisoDeAccion(subido);
-  useAvisoDeAccion(marcado);
 
   const [origen, setOrigen] = useState<"archivo" | "enlace">("archivo");
-  const enviadaDeLaRonda = versiones.find((v) => v.ronda === ronda && v.enviadaEn !== null);
-  const puedeMarcar = gestiona && faseActual === 4;
 
+  // Aqui se sube, en cualquier fase. Cual vera el cliente se elige en la
+  // tarjeta de la fase 4 (VersionParaCliente); aqui solo se ve cual es.
   return (
     <div className="flex flex-col gap-4">
-      {faseActual === 4 && gestiona && !enviadaDeLaRonda && (
-        <p className="rounded-xl border border-acento/40 bg-acento-tenue px-3.5 py-2.5 text-[12.5px] leading-relaxed">
-          Para completar la fase 4 marca la version que vera el cliente.
-        </p>
-      )}
-
       {versiones.length === 0 ? (
         <p className="text-[12.5px] text-suave">Todavia no hay ninguna version.</p>
       ) : (
@@ -120,16 +106,6 @@ export function VersionesPieza({
                 )}
               </div>
 
-              {puedeMarcar && version.ronda === ronda && !version.enviadaEn && (
-                <form action={marcar}>
-                  <input type="hidden" name="piezaId" value={piezaId} />
-                  <input type="hidden" name="versionId" value={version.id} />
-                  <Boton type="submit" variante="fantasma" tamano="chico" disabled={marcando}>
-                    <Send aria-hidden="true" />
-                    Para el cliente
-                  </Boton>
-                </form>
-              )}
             </li>
           ))}
         </ul>

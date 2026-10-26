@@ -48,10 +48,17 @@ test("aceptar abre el proyecto, y completar su fase 1 valida el brief", async ({
   await page.getByRole("button", { name: "Guardar la fecha" }).click();
   await avisado(page, "Fecha propuesta al cliente");
 
-  // Aceptar: nace el proyecto con la fase 1 en curso.
-  await page.getByRole("button", { name: "Aceptar y abrir proyecto" }).click();
-  await avisado(page, /Proyecto abierto/);
-  await expect(page.getByRole("button", { name: "Aceptar y abrir proyecto" })).toHaveCount(0);
+  // Aceptar: la ventana dice que va a pasar; al confirmar, nace el proyecto
+  // con la fase 1 en curso y el resultado sale en la misma ventana.
+  await page.getByRole("link", { name: "Aceptar y abrir proyecto" }).click();
+  const ventana = page.getByRole("dialog", { name: "Aceptar y abrir proyecto" });
+  await expect(ventana.getByText(/Nace el proyecto/)).toBeVisible({ timeout: 60_000 });
+  await ventana.getByRole("button", { name: "Aceptar y abrir proyecto" }).click();
+  await expect(ventana.getByText(/Proyecto abierto/)).toBeVisible({ timeout: 60_000 });
+  await expect(ventana.getByRole("link", { name: "Abrir el proyecto" })).toBeVisible();
+  await ventana.getByRole("link", { name: "Listo" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Aceptar y abrir proyecto" })).toHaveCount(0);
   await page.getByRole("link", { name: "Abrir su proyecto" }).click();
   await expect(page).toHaveURL(/\/dashboard\/proyectos\/\d+$/, { timeout: 60_000 });
 
@@ -86,17 +93,21 @@ test("presupuestar lo pasa a administracion, y descartar exige motivo", async ({
   // ---- Convertir en presupuesto.
   await entrar(page, "cuentas@conejo.test");
   await abrirEnBandeja(page, aPresupuesto);
-  await page.getByRole("button", { name: "Convertir en presupuesto" }).click();
-  await avisado(page, "Pasado a administracion para su presupuesto");
+  await page.getByRole("link", { name: "Convertir en presupuesto" }).click();
+  const presupuestar = page.getByRole("dialog", { name: "Convertir en presupuesto" });
+  await presupuestar.getByRole("button", { name: "Convertir en presupuesto" }).click();
+  await expect(presupuestar.getByText("Pasado a administracion para su presupuesto")).toBeVisible({ timeout: 60_000 });
+  await presupuestar.getByRole("link", { name: "Listo" }).click();
 
-  // ---- Descartar, primero sin motivo.
+  // ---- Descartar: sin motivo no se puede; con el, queda archivado.
   await abrirEnBandeja(page, aDescartar);
-  await page.getByRole("button", { name: "Descartar", exact: true }).click();
-  await page.getByRole("button", { name: "Descartar el brief" }).click();
-  await avisado(page, "Escribe el motivo: el cliente lo vera");
-  await page.getByLabel("Por que no seguimos").fill("Por ahora no hacemos empaques de vidrio");
-  await page.getByRole("button", { name: "Descartar el brief" }).click();
-  await avisado(page, "Brief descartado");
+  await page.getByRole("link", { name: "Descartar", exact: true }).click();
+  const descartar = page.getByRole("dialog", { name: "Descartar el brief" });
+  await expect(descartar.getByRole("button", { name: "Descartar el brief" })).toBeDisabled({ timeout: 60_000 });
+  await descartar.getByLabel("Por que no seguimos").fill("Por ahora no hacemos empaques de vidrio");
+  await descartar.getByRole("button", { name: "Descartar el brief" }).click();
+  await expect(descartar.getByText("Brief descartado")).toBeVisible({ timeout: 60_000 });
+  await descartar.getByRole("link", { name: "Listo" }).click();
 
   // ---- Cada uno queda en su pestana de la bandeja.
   await page.goto("/dashboard/briefs?ver=curso", { waitUntil: "networkidle" });

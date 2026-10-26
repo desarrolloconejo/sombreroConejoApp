@@ -7,7 +7,7 @@ import { anotar, soloCambios } from "@/lib/auditoria";
 import { conSesion, type Ejecutor } from "@/lib/db";
 import { notificarA } from "@/lib/notificaciones";
 import { servicioPorSlug } from "@/lib/portal/catalogo";
-import { RUTA_PROYECTOS, rutaProyecto } from "@/lib/portal/rutas";
+import { RUTA_PROYECTOS, rutaMiProyecto, rutaProyecto } from "@/lib/portal/rutas";
 import { requerirCargo } from "@/lib/sesion";
 import {
   comoIdentificador,
@@ -15,10 +15,12 @@ import {
   limpiarTexto,
   validarProyecto,
 } from "@/lib/validaciones";
+import * as clientes from "@/models/clientes";
 import * as piezas from "@/models/piezas";
 import * as proyectos from "@/models/proyectos";
 import * as tareas from "@/models/tareas";
 import {
+  NOMBRES_DE_ESTADO_PROYECTO,
   NOMBRES_DE_TIPO_PIEZA,
   type DatosNuevaPieza,
   type EstadoFormulario,
@@ -30,10 +32,11 @@ import {
 /**
  * Proyectos: crearlos, editarlos y cambiarles el estado.
  *
- * Los gestiona el admin o un ejecutivo de cuentas asignado a la empresa. La
- * guardia deja pasar a los dos, y la base decide sobre que empresa: un
- * ejecutivo que intente tocar una empresa ajena no vera el proyecto, y su
- * escritura la rechazan las politicas.
+ * Los gestiona el admin o un ejecutivo de cuentas asignado a la empresa, y
+ * cada proyecto tambien el ejecutivo que lo lleva, aunque sea de otra cuenta.
+ * La guardia deja pasar a todos, y la base decide: un ejecutivo que intente
+ * tocar un proyecto ajeno no lo vera, y su escritura la rechazan las
+ * politicas. Quien lleva un proyecto solo lo cambia un administrador.
  */
 
 /** Crea las piezas de un proyecto, con sus tareas sugeridas si se piden. */
@@ -125,8 +128,13 @@ export async function crearProyecto(
 
     if (!empresa) return { error: "empresa" as const };
 
+    // Quien lo lleva: el ejecutivo que lo abre, siempre; el administrador
+    // elige, y puede darselo a un ejecutivo de otra cuenta.
+    const esAdmin = usuario.rol === "admin";
     const posibles = await proyectos.ejecutivosPosibles(empresaId, tx);
-    const ejecutivo = posibles.find((persona) => persona.id === ejecutivoId);
+    const ejecutivo = posibles.find(
+      (persona) => persona.id === (esAdmin ? ejecutivoId : usuario.id) && (esAdmin || !persona.deOtraCuenta),
+    );
 
     if (!ejecutivo) return { error: "ejecutivo" as const };
 
@@ -169,6 +177,20 @@ export async function crearProyecto(
       });
     }
 
+    // El cliente se entera de que su proyecto ya esta en marcha.
+    const personas = await clientes.activosDe(empresaId, tx);
+    await notificarA(
+      tx,
+      personas.map((persona) => persona.id),
+      {
+        tipo: "proyecto.creado",
+        titulo: `Abrimos tu proyecto ${nombre}`,
+        cuerpo: "Puedes seguir su avance, pieza a pieza.",
+        href: rutaMiProyecto(proyectoId),
+        empresaId,
+      },
+    );
+
     return { proyectoId };
   });
 
@@ -178,7 +200,7 @@ export async function crearProyecto(
       : {
           ok: false,
           errores: {
-            ejecutivoId: "Tiene que ser un ejecutivo de cuentas asignado a la empresa",
+            ejecutivoId: "Tiene que ser un ejecutivo de cuentas activo",
           },
         };
   }
@@ -225,12 +247,16 @@ export async function editarProyecto(
 
     // Quien lo lleva hoy puede seguir llevandolo aunque ya no se pudiera elegir
     // (un administrador de antes): editar otra cosa no obliga a cambiarlo.
-    // Un ejecutivo NUEVO, en cambio, tiene que ser de cuentas y de la empresa.
-    const posibles = await proyectos.ejecutivosPosibles(proyecto.empresaId, tx);
-    const ejecutivo =
-      cambios.ejecutivoId === proyecto.ejecutivoId
-        ? { id: proyecto.ejecutivoId }
-        : posibles.find((persona) => persona.id === cambios.ejecutivoId);
+    // Cambiarlo es solo del administrador (la base tambien lo impone), y el
+    // nuevo tiene que ser un ejecutivo de cuentas activo, de esta cuenta o de
+    // otra.
+    const reasigna = cambios.ejecutivoId !== proyecto.ejecutivoId;
+    if (reasigna && usuario.rol !== "admin") return "solo_admin" as const;
+
+    const posibles = reasigna ? await proyectos.ejecutivosPosibles(proyecto.empresaId, tx) : [];
+    const ejecutivo = reasigna
+      ? posibles.find((persona) => persona.id === cambios.ejecutivoId)
+      : { id: proyecto.ejecutivoId };
 
     if (!ejecutivo) return "ejecutivo" as const;
 
@@ -259,11 +285,14 @@ export async function editarProyecto(
   });
 
   if (resultado === "no_existe") return { ok: false, mensaje: "Ese proyecto ya no esta a tu alcance" };
+  if (resultado === "solo_admin") {
+    return { ok: false, errores: { ejecutivoId: "Solo un administrador cambia quien lleva el proyecto" } };
+  }
   if (resultado === "ejecutivo") {
     return {
       ok: false,
       errores: {
-        ejecutivoId: "Tiene que ser un ejecutivo de cuentas asignado a la empresa",
+        ejecutivoId: "Tiene que ser un ejecutivo de cuentas activo",
       },
     };
   }
@@ -316,6 +345,25 @@ export async function cambiarEstadoProyecto(
       antes: { estado: proyecto.estado },
       despues: { estado: destino },
     });
+
+    // Se enteran el ejecutivo, quien tiene trabajo en el y, salvo que se
+    // cancele, el cliente (un proyecto cancelado no se le muestra).
+    const titulo = `${proyecto.nombre}: ${NOMBRES_DE_ESTADO_PROYECTO[destino].toLowerCase()}`;
+    await notificarA(tx, [proyecto.ejecutivoId, ...(await proyectos.equipoDe(id, tx))], {
+      tipo: "proyecto.estado",
+      titulo,
+      cuerpo: `Antes estaba ${NOMBRES_DE_ESTADO_PROYECTO[proyecto.estado].toLowerCase()}.`,
+      href: rutaProyecto(id),
+      empresaId: proyecto.empresaId,
+    });
+    if (destino !== "cancelado") {
+      const personas = await clientes.activosDe(proyecto.empresaId, tx);
+      await notificarA(
+        tx,
+        personas.map((persona) => persona.id),
+        { tipo: "proyecto.estado", titulo, href: rutaMiProyecto(id), empresaId: proyecto.empresaId },
+      );
+    }
 
     return "ok" as const;
   });

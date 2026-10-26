@@ -111,6 +111,19 @@ export function respondida(pregunta: Pregunta, valor: ValorRespuesta | undefined
   }
 }
 
+/**
+ * Si un paso esta listo, para el check del indice. Con preguntas obligatorias,
+ * todas respondidas. Sin ninguna, al menos una respuesta: un paso opcional que
+ * no se toco no esta «listo», aunque nada le falte para enviar.
+ */
+export function pasoCompleto(paso: PasoBrief, respuestas: Respuestas): boolean {
+  const obligatorias = paso.preguntas.filter((pregunta) => pregunta.obligatoria);
+  if (obligatorias.length === 0) {
+    return paso.preguntas.some((pregunta) => respondida(pregunta, respuestas[pregunta.clave]));
+  }
+  return obligatorias.every((pregunta) => respondida(pregunta, respuestas[pregunta.clave]));
+}
+
 /** Cuantas respuestas son «No lo se», en los pasos visibles. Para el contador. */
 export function contarNoSe(formato: FormatoBrief, respuestas: Respuestas): number {
   let cuenta = 0;

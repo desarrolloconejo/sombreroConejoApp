@@ -50,6 +50,20 @@ export async function visibles(ejecutor: Ejecutor): Promise<Asignacion[]> {
   );
 }
 
+/**
+ * Los ejecutivos activos que atienden una empresa, para avisarles. Lo pregunta
+ * a la base con una funcion propia: quien avisa (administracion, el cliente)
+ * no puede leer las asignaciones.
+ */
+export async function ejecutivosDe(empresaId: number, ejecutor: Ejecutor): Promise<number[]> {
+  const filas = await consultar<{ id: number }>(
+    "SELECT id FROM portal.ejecutivos_de_empresa($1)",
+    [empresaId],
+    ejecutor,
+  );
+  return filas.map((fila) => fila.id);
+}
+
 /** Las empresas que atiende una persona. */
 export async function deUsuario(
   usuarioId: number,

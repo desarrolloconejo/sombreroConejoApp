@@ -58,29 +58,32 @@ export function CompletarFase({
   piezaId,
   fase,
   pendientes,
+  falta = null,
 }: {
   piezaId: number;
   fase: number;
   /** Tareas de la fase que faltan por marcar. */
   pendientes: number;
+  /** Otra cosa que falta para completarla (la version del cliente, en la fase 4). */
+  falta?: string | null;
 }) {
   const { completar: enviar, completando: enviando } = useMovimientos();
+  const motivo =
+    pendientes > 0
+      ? pendientes === 1
+        ? "Falta una tarea por marcar como lista."
+        : `Faltan ${pendientes} tareas por marcar como listas.`
+      : falta;
 
   return (
     <form action={enviar} className="flex flex-wrap items-center gap-3">
       <input type="hidden" name="piezaId" value={piezaId} />
       <input type="hidden" name="fase" value={fase} />
-      <Boton type="submit" tamano="chico" disabled={enviando || pendientes > 0}>
+      <Boton type="submit" tamano="chico" disabled={enviando || motivo !== null}>
         <CheckCheck aria-hidden="true" />
         {enviando ? "Completando…" : "Completar fase"}
       </Boton>
-      {pendientes > 0 && (
-        <span className="text-[12px] text-suave">
-          {pendientes === 1
-            ? "Falta una tarea por marcar como lista."
-            : `Faltan ${pendientes} tareas por marcar como listas.`}
-        </span>
-      )}
+      {motivo && <span className="text-[12px] text-suave">{motivo}</span>}
     </form>
   );
 }

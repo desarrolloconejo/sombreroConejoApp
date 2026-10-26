@@ -117,6 +117,14 @@ export async function quitarEjecutivo(
       antes: { ejecutivo: fila.usuarioNombre },
     });
 
+    await notificarA(tx, [fila.usuarioId], {
+      tipo: "empresa.retirada",
+      titulo: `Dejas de atender a ${fila.empresaNombre}`,
+      cuerpo: "Sigues viendo los proyectos que llevas de ella.",
+      href: "/dashboard",
+      empresaId: fila.empresaId,
+    });
+
     return fila;
   });
 

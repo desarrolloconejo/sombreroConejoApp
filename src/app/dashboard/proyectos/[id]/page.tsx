@@ -59,8 +59,9 @@ export default async function PaginaProyecto(props: PageProps<"/dashboard/proyec
       proyecto,
       gestiona,
       piezas: await piezasModelo.deProyecto(id, tx),
+      // Solo el administrador cambia quien lo lleva: el resto no necesita la lista.
       ejecutivos:
-        gestiona && estado.panel === "editar"
+        gestiona && estado.panel === "editar" && usuario.rol === "admin"
           ? await proyectosModelo.ejecutivosPosibles(proyecto.empresaId, tx)
           : [],
     };
@@ -131,7 +132,12 @@ export default async function PaginaProyecto(props: PageProps<"/dashboard/proyec
           titulo={proyecto.nombre}
           descripcion="El servicio y la empresa no cambian: definen la plantilla de fases."
         >
-          <EditarProyecto proyecto={proyecto} ejecutivos={ejecutivos} hrefCancelar={hrefCerrar} />
+          <EditarProyecto
+            proyecto={proyecto}
+            ejecutivos={ejecutivos}
+            puedeReasignar={usuario.rol === "admin"}
+            hrefCancelar={hrefCerrar}
+          />
         </PanelLateral>
       )}
 

@@ -127,6 +127,7 @@ export type {
   EstadoTarea,
   TipoCorreccion,
   AlertaPieza,
+  EjecutivoPosible,
   PersonaBreve,
   PersonaDeEquipo,
   Asignacion,
@@ -139,6 +140,7 @@ export type {
   Tarea,
   TareaAsignada,
   FaseACargo,
+  PiezaEsperandoCliente,
   ComentarioPieza,
   DatosNuevaPieza,
   DatosNuevaTarea,
@@ -177,8 +179,9 @@ export type {
   FiltrosProformas,
 } from "./finanzas";
 
-export { NOMBRES_DE_ESTADO_BRIEF } from "./brief";
+export { DECISIONES_BRIEF, NOMBRES_DE_ESTADO_BRIEF, TITULOS_DECISION } from "./brief";
 export type {
+  DecisionBrief,
   EstadoBrief,
   TipoPregunta,
   OpcionPregunta,

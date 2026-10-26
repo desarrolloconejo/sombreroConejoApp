@@ -82,6 +82,12 @@ export type PersonaBreve = {
   nombre: string;
 };
 
+/**
+ * Un ejecutivo de cuentas que puede llevar un proyecto de una empresa. Los de
+ * otra cuenta solo los ofrece el administrador: es la excepcion por proyecto.
+ */
+export type EjecutivoPosible = PersonaBreve & { deOtraCuenta: boolean };
+
 /** Alguien del equipo a quien se le puede asignar trabajo. */
 export type PersonaDeEquipo = PersonaBreve & {
   /** El nombre del cargo, para distinguir a quien se elige. */
@@ -193,6 +199,14 @@ export type TareaAsignada = Tarea & {
   piezaTipo: TipoPieza;
   /** Si la fase de la tarea es la que esta en curso ahora. */
   faseEnCurso: boolean;
+};
+
+/** Una pieza que espera la revision del cliente, para llevarle directo a ella. */
+export type PiezaEsperandoCliente = {
+  piezaId: number;
+  proyectoId: number;
+  titulo: string;
+  proyectoNombre: string;
 };
 
 /**

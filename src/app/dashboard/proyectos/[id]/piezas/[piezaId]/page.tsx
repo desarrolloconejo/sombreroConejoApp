@@ -156,6 +156,7 @@ export default async function PaginaPieza(
             tipo={proyecto.tipo}
             tareas={tareas}
             comentarios={comentarios}
+            versiones={versiones}
             gestiona={gestiona}
             usuarioId={usuario.id}
             equipo={equipo}
@@ -179,9 +180,6 @@ export default async function PaginaPieza(
               piezaId={piezaId}
               versiones={versiones}
               puedeSubir={puedeTrabajar && activa}
-              gestiona={gestiona}
-              faseActual={pieza.avance.faseActual}
-              ronda={pieza.ronda}
             />
           </Tarjeta>
 

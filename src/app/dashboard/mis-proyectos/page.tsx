@@ -4,6 +4,7 @@ import { Wrapper } from "@/components/layout/Wrapper";
 import { AvisoRevision, TarjetaProyectoCliente } from "@/components/misProyectos";
 import { conSesion } from "@/lib/db";
 import { requerirEmpresa } from "@/lib/sesion";
+import * as piezasModelo from "@/models/piezas";
 import * as proyectosModelo from "@/models/proyectos";
 
 /**
@@ -22,15 +23,15 @@ const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Mis proyec
 export default async function PaginaMisProyectos() {
   const { usuario } = await requerirEmpresa();
 
-  const pagina = await conSesion(usuario, (tx) =>
-    proyectosModelo.listar({ porPagina: 100, direccion: "desc" }, tx),
-  );
+  const { pagina, esperando } = await conSesion(usuario, async (tx) => ({
+    pagina: await proyectosModelo.listar({ porPagina: 100, direccion: "desc" }, tx),
+    esperando: await piezasModelo.esperandoCliente(tx),
+  }));
 
   // Un proyecto cancelado no es algo que el cliente tenga que seguir.
   const visibles = pagina.filas.filter((proyecto) => proyecto.estado !== "cancelado");
   const enCurso = visibles.filter((p) => p.estado === "activo" || p.estado === "pausado");
   const cerrados = visibles.filter((p) => p.estado === "cerrado");
-  const esperando = enCurso.reduce((suma, p) => suma + p.alertas.esperando_cliente, 0);
 
   return (
     <Wrapper

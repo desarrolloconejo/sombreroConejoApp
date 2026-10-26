@@ -6,7 +6,7 @@ import { FolderPlus, Plus, X } from "lucide-react";
 import { crearProyecto } from "@/actions/proyectos";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Alerta, Boton, BotonEnlace, Campo, CampoFecha, claseLinea, Selector, useCampos } from "@/components/ui";
+import { Alerta, Boton, BotonEnlace, Campo, CampoFecha, CampoFijo, claseLinea, Selector, useCampos } from "@/components/ui";
 import { SERVICIOS } from "@/lib/portal/catalogo";
 import {
   ESTADO_INICIAL,
@@ -24,8 +24,9 @@ import {
  * pieza se ofrecen y que tareas se proponen. Un proyecto de redes se arma con
  * sus piezas aqui mismo; uno especial tiene una sola, que se crea sola.
  *
- * Quien lo lleva depende de la empresa: un administrador o un ejecutivo
- * asignado a ella. Por eso el selector de ejecutivo se rehace al cambiar de
+ * Quien lo lleva: si lo abre un ejecutivo, el mismo, sin selector. El
+ * administrador elige: primero los ejecutivos asignados a la empresa y
+ * despues los de otra cuenta. Por eso el selector se rehace al cambiar de
  * empresa.
  */
 
@@ -40,6 +41,8 @@ function filaNueva(tipo: TipoPieza): FilaPieza {
 export function FormularioProyecto({
   empresas,
   asignaciones,
+  ejecutivos,
+  esAdmin,
   usuarioId,
   empresaInicial,
   hrefCancelar,
@@ -48,7 +51,11 @@ export function FormularioProyecto({
   empresas: NombreEmpresa[];
   /** Quien atiende a cada empresa. */
   asignaciones: Asignacion[];
-  /** Quien abre el proyecto: se propone como ejecutivo si puede serlo. */
+  /** Todos los ejecutivos de cuentas activos. Solo los recibe el administrador. */
+  ejecutivos: PersonaBreve[];
+  /** El administrador elige quien lo lleva; un ejecutivo lo lleva el mismo. */
+  esAdmin: boolean;
+  /** Quien abre el proyecto: si es un ejecutivo, es quien lo lleva. */
   usuarioId: number;
   empresaInicial: number | null;
   hrefCancelar: string;
@@ -78,16 +85,18 @@ export function FormularioProyecto({
 
   const servicio = SERVICIOS.find((s) => s.slug === servicioSlug) ?? SERVICIOS[0];
 
-  // Solo quien atiende a la empresa elegida: los ejecutivos de cuentas
-  // asignados a ella. La action lo vuelve a comprobar contra la base.
-  const ejecutivos: PersonaBreve[] = asignaciones
-    .filter((a) => String(a.empresaId) === empresaId)
-    .map((a) => ({ id: a.usuarioId, nombre: a.usuarioNombre }));
-  const sinEjecutivo = empresaId !== "" && ejecutivos.length === 0;
-
-  const ejecutivoInicial = ejecutivos.some((p) => p.id === usuarioId)
-    ? String(usuarioId)
-    : "";
+  // Para el administrador: primero quien atiende a la empresa elegida, despues
+  // los ejecutivos de otra cuenta. La action lo vuelve a comprobar en la base.
+  const asignados = new Set(
+    asignaciones.filter((a) => String(a.empresaId) === empresaId).map((a) => a.usuarioId),
+  );
+  const opcionesEjecutivo = [
+    ...ejecutivos.filter((p) => asignados.has(p.id)).map((p) => ({ valor: String(p.id), texto: p.nombre })),
+    ...ejecutivos
+      .filter((p) => !asignados.has(p.id))
+      .map((p) => ({ valor: String(p.id), texto: p.nombre, detalle: "De otra cuenta: vera solo este proyecto" })),
+  ];
+  const sinEjecutivo = esAdmin && ejecutivos.length === 0;
 
   function cambiarFila(clave: number, cambio: Partial<FilaPieza>) {
     setFilas((actuales) =>
@@ -150,25 +159,35 @@ export function FormularioProyecto({
             className="col-span-2"
           />
 
-          {/* La clave cambia con la empresa: el selector se rehace con sus ejecutivos. */}
-          <Selector
-            key={`ejecutivo-${empresaId}`}
-            id="proyecto-ejecutivo"
-            nombre="ejecutivoId"
-            etiqueta="Lo lleva"
-            marcador={empresaId ? "Elige quien lo lleva" : "Primero elige la empresa"}
-            opciones={ejecutivos.map((p) => ({ valor: String(p.id), texto: p.nombre }))}
-            valorInicial={ejecutivoInicial}
-            deshabilitado={!empresaId || sinEjecutivo}
-            error={errores.ejecutivoId}
-            className="col-span-2"
-          />
+          {esAdmin ? (
+            // La clave cambia con la empresa: el selector se rehace con sus ejecutivos.
+            <Selector
+              key={`ejecutivo-${empresaId}`}
+              id="proyecto-ejecutivo"
+              nombre="ejecutivoId"
+              etiqueta="Lo lleva"
+              marcador={empresaId ? "Elige quien lo lleva" : "Primero elige la empresa"}
+              opciones={opcionesEjecutivo}
+              deshabilitado={!empresaId || sinEjecutivo}
+              error={errores.ejecutivoId}
+              className="col-span-2"
+            />
+          ) : (
+            <>
+              <input type="hidden" name="ejecutivoId" value={usuarioId} />
+              <CampoFijo
+                etiqueta="Lo lleva"
+                valor="Tu"
+                ayuda="Solo un administrador puede darselo a otro ejecutivo."
+                className="col-span-2"
+              />
+            </>
+          )}
 
           {sinEjecutivo && (
             <Alerta className="col-span-2">
-              <b className="font-semibold">Esta empresa no tiene ejecutivo de cuentas.</b> Un
-              proyecto solo lo lleva un ejecutivo asignado a la empresa: un administrador se lo
-              asigna en Empresas, en su ficha.
+              <b className="font-semibold">No hay ningun ejecutivo de cuentas activo.</b> Un
+              proyecto solo lo lleva un ejecutivo de cuentas: crea uno en Usuarios.
             </Alerta>
           )}
 

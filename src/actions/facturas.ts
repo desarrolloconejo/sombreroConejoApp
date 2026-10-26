@@ -127,6 +127,19 @@ export async function anularFactura(_estadoPrevio: EstadoFormulario, datos: Form
         antes: { numero: numeroFactura(factura.serie, factura.numero), estado: factura.estado },
         despues: { estado: "anulada", motivo },
       });
+
+      const personas = await clientes.conFinanzasDe(factura.empresaId, tx);
+      await notificarA(
+        tx,
+        personas.map((persona) => persona.id),
+        {
+          tipo: "factura.anulada",
+          titulo: `Anulamos la factura ${numeroFactura(factura.serie, factura.numero)}`,
+          cuerpo: motivo,
+          href: rutaMiFactura(id),
+          empresaId: factura.empresaId,
+        },
+      );
       return factura.proformaId;
     });
     if (resultado === null) return { ok: false, mensaje: "No se encontro la factura" };

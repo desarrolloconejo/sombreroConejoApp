@@ -4,19 +4,12 @@ import { revalidatePath } from "next/cache";
 
 import { anotar } from "@/lib/auditoria";
 import { conSesion, esErrorPostgres } from "@/lib/db";
-import { numeroDe } from "@/lib/finanzas/documentos";
-import {
-  RUTA_FACTURACION,
-  RUTA_PRESUPUESTOS,
-  rutaMiPresupuesto,
-  rutaPresupuesto,
-} from "@/lib/finanzas/rutas";
+import { avisarRespuestaPresupuesto } from "@/lib/finanzas/avisosPresupuesto";
+import { RUTA_FACTURACION, RUTA_PRESUPUESTOS, rutaMiPresupuesto } from "@/lib/finanzas/rutas";
 import { leerMotivo } from "@/lib/finanzas/validar";
-import { notificarA } from "@/lib/notificaciones";
 import { requerirFinanzasDeEmpresa } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
 import * as presupuestos from "@/models/presupuestos";
-import * as usuarios from "@/models/usuarios";
 import type { EstadoFormulario } from "@/types";
 
 /**
@@ -58,18 +51,8 @@ export async function resolverPresupuesto(
         despues: { total: actual.total, motivo },
       });
 
-      // Quien opera finanzas se entera en la campana: si lo aprobo, toca
-      // generar la proforma.
-      const numero = numeroDe("presupuesto", actual.numero);
-      await notificarA(tx, await usuarios.operadoresDeFinanzas(tx), {
-        tipo: "presupuesto.resuelto",
-        titulo: aprobar
-          ? `${actual.empresaNombre} aprobo ${numero}`
-          : `${actual.empresaNombre} rechazo ${numero}`,
-        cuerpo: aprobar ? `«${actual.titulo}». Ya puedes generar la proforma.` : motivo,
-        href: rutaPresupuesto(id),
-        empresaId: actual.empresaId,
-      });
+      // Administracion y los ejecutivos de la empresa se enteran en la campana.
+      await avisarRespuestaPresupuesto(tx, actual, { aprobado: aprobar, motivo, aNombreDelCliente: false });
 
       return { ok: true as const };
     });

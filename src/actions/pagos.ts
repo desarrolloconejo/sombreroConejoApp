@@ -15,6 +15,7 @@ import { hoyEnCaracas } from "@/lib/portal/fases";
 import { requerirFinanzas, requerirFinanzasDeEmpresa } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
 import * as ajustes from "@/models/ajustesFinanzas";
+import * as clientes from "@/models/clientes";
 import * as facturas from "@/models/facturas";
 import * as pagos from "@/models/pagos";
 import * as usuarios from "@/models/usuarios";
@@ -129,6 +130,22 @@ async function guardarPago(
         href: rutaFactura(facturaId),
         empresaId: factura.empresaId,
       });
+
+      // Si lo registra administracion, el cliente sabe que ya consta.
+      if (aNombreDelCliente) {
+        const personas = await clientes.conFinanzasDe(factura.empresaId, tx);
+        await notificarA(
+          tx,
+          personas.map((persona) => persona.id),
+          {
+            tipo: "pago.registrado",
+            titulo: `Registramos un ${NOMBRES_DE_TIPO_PAGO[pago.tipo].toLowerCase()} de la factura ${numero}`,
+            cuerpo: `${pago.moneda === "USD" ? "$" : "Bs. "}${pago.monto}. Queda por confirmar.`,
+            href: rutaMiFactura(facturaId),
+            empresaId: factura.empresaId,
+          },
+        );
+      }
     });
   } catch (error) {
     if (esErrorPostgres(error, "23514")) {

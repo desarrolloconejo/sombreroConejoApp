@@ -5,23 +5,25 @@ import { notFound } from "next/navigation";
 import { aclararBrief } from "@/actions/briefs";
 import {
   BotonesDecision,
+  ConfirmarDecisionBrief,
   ContenidoBrief,
   cuandoBrief,
   diaBrief,
   EtiquetaBrief,
   FechaViable,
   HiloAclaraciones,
-  ProveedorDecisiones,
 } from "@/components/briefs";
 import { Wrapper } from "@/components/layout/Wrapper";
+import { ModalConfirmacion } from "@/components/listado/ModalConfirmacion";
 import { Tarjeta } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { rutaPresupuesto } from "@/lib/finanzas/rutas";
 import { cambiosEntre, contarNoSe, formatoPor, respuestasDesdeContenido } from "@/lib/portal/briefs";
 import { hoyEnCaracas } from "@/lib/portal/fases";
-import { RUTA_BRIEFS, rutaProyecto } from "@/lib/portal/rutas";
+import { RUTA_BRIEFS, rutaBrief, rutaProyecto } from "@/lib/portal/rutas";
 import { requerirCargo } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
+import { DECISIONES_BRIEF, TITULOS_DECISION, type DecisionBrief } from "@/types";
 import * as briefsModelo from "@/models/briefs";
 
 export const metadata: Metadata = {
@@ -29,6 +31,12 @@ export const metadata: Metadata = {
 };
 
 const VIVOS = new Set(["enviado", "en_validacion", "en_presupuesto"]);
+
+/** La decision que pide la URL, si es una de las tres. Nunca lanza. */
+function leerDecision(valor: string | string[] | undefined): DecisionBrief | null {
+  const texto = Array.isArray(valor) ? valor[0] : valor;
+  return DECISIONES_BRIEF.find((decision) => decision === texto) ?? null;
+}
 
 /**
  * Un brief recibido: lo que se envio (y que cambio entre versiones), sus
@@ -69,6 +77,12 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
   const puedePresupuestar = brief.estado === "enviado" || presupuestoResuelto;
   const puedeDescartar = brief.estado === "enviado" || presupuestoResuelto;
 
+  // La ventana de confirmacion se pinta mientras este el parametro, aunque la
+  // decision ya no este disponible: dentro vive el resultado que se acaba de
+  // obtener, y la revalidacion no debe llevarselo.
+  const decision = decide ? leerDecision((await props.searchParams).decision) : null;
+  const disponible = { aceptar: puedeAceptar, presupuestar: puedePresupuestar, descartar: puedeDescartar };
+
   const migas = [
     { texto: "Conejo App", href: "/dashboard" },
     { texto: "Briefs", href: RUTA_BRIEFS },
@@ -82,7 +96,7 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
       titulo={brief.solicitante}
       descripcion={`${formato?.nombre ?? brief.formato} · version ${brief.versionActual}`}
     >
-      <ProveedorDecisiones>
+      <>
         <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <div className="flex flex-col gap-6">
             {cambios.length > 0 && (
@@ -167,7 +181,7 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
             {decide && (puedeAceptar || puedePresupuestar || puedeDescartar) && (
               <Tarjeta id="titulo-decision" titulo="Decision">
                 <BotonesDecision
-                  briefId={brief.id}
+                  hrefBase={rutaBrief(brief.id)}
                   aceptar={puedeAceptar}
                   presupuestar={puedePresupuestar}
                   descartar={puedeDescartar}
@@ -190,7 +204,26 @@ export default async function PaginaBrief(props: PageProps<"/dashboard/briefs/[i
             </Tarjeta>
           </div>
         </div>
-      </ProveedorDecisiones>
+
+        {decision && (
+          <ModalConfirmacion
+            hrefCerrar={rutaBrief(brief.id)}
+            kicker={`${brief.codigo} · ${brief.solicitante}`}
+            titulo={TITULOS_DECISION[decision]}
+            tono={decision === "descartar" ? "aviso" : "normal"}
+            ancho="amplio"
+          >
+            <ConfirmarDecisionBrief
+              key={decision}
+              decision={decision}
+              briefId={brief.id}
+              esProspecto={brief.prospectoId !== null}
+              disponible={disponible[decision]}
+              hrefCerrar={rutaBrief(brief.id)}
+            />
+          </ModalConfirmacion>
+        )}
+      </>
     </Wrapper>
   );
 }

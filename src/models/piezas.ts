@@ -7,6 +7,7 @@ import type {
   FasePieza,
   NumeroFase,
   Pieza,
+  PiezaEsperandoCliente,
 } from "@/types";
 
 /**
@@ -489,6 +490,27 @@ export async function fasesACargoDe(usuarioId: number, ejecutor: Ejecutor): Prom
        AND pr.estado IN ('activo', 'pausado')
      ORDER BY f.fecha_estimada NULLS LAST, (f.estado = 'en_curso') DESC, pr.nombre, p.orden, f.fase`,
     [usuarioId],
+    ejecutor,
+  );
+}
+
+/**
+ * Las piezas que esperan la revision del cliente: en fase 5, activas, de
+ * proyectos en curso. La base solo devuelve las de su empresa. Para el aviso
+ * que lleva a cada una.
+ */
+export async function esperandoCliente(ejecutor: Ejecutor): Promise<PiezaEsperandoCliente[]> {
+  return consultar<PiezaEsperandoCliente>(
+    `SELECT v.pieza_id     AS "piezaId",
+            v.proyecto_id  AS "proyectoId",
+            p.titulo,
+            pr.nombre      AS "proyectoNombre"
+     FROM portal.v_progreso_pieza v
+     JOIN portal.piezas p     ON p.id = v.pieza_id
+     JOIN portal.proyectos pr ON pr.id = v.proyecto_id
+     WHERE v.esperando_cliente AND pr.estado IN ('activo', 'pausado')
+     ORDER BY pr.nombre, p.id`,
+    [],
     ejecutor,
   );
 }

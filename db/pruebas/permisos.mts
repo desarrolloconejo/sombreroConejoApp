@@ -671,6 +671,34 @@ async function probarProyectos(): Promise<void> {
       r.cuentasAsigna = await intentarDentro(() =>
         asignaciones.crear(cuentas.id, empresaB, cuentas.id, tx),
       );
+      r.asignadoReasigna = await intentarDentro(() =>
+        tx.query("UPDATE portal.proyectos SET ejecutivo_id = $2 WHERE id = $1", [proyectoA, cuentas.id]),
+      );
+
+      // ---- La excepcion por proyecto: el admin le da el proyecto B a cuentas,
+      // que no tiene la empresa B. Gestiona ese proyecto y nada mas de B.
+      await como(admin.id, "admin", "direccion");
+      const proyectoB2 = await proyectos.crear(datos(empresaB, "Permisos B2"), admin.id, tx);
+      r.adminReasigna = await intentarDentro(() =>
+        tx.query("UPDATE portal.proyectos SET ejecutivo_id = $2 WHERE id = $1", [proyectoB, cuentas.id]),
+      );
+
+      await como(cuentas.id, "trabajador", "cuentas");
+      r.otraCuentaVe = await cuenta(
+        "SELECT count(*)::text AS n FROM portal.proyectos WHERE id = ANY($1::int[])",
+        [[proyectoB, proyectoB2]],
+      );
+      r.otraCuentaPiezas = (await piezas.deProyecto(proyectoB, tx)).length;
+      r.otraCuentaGestiona = await proyectos.gestiona(proyectoB, tx);
+      r.otraCuentaCreaPieza = await intentarDentro(() =>
+        piezas.crear(proyectoB, { tipo: "reel", titulo: "B3" }, cuentas.id, tx),
+      );
+      r.otraCuentaEmpresa = (
+        await tx.query<{ gestiona: boolean }>("SELECT portal.gestiona_empresa($1) AS gestiona", [empresaB])
+      ).rows[0].gestiona;
+      r.otraCuentaSeLoPasa = await intentarDentro(() =>
+        tx.query("UPDATE portal.proyectos SET ejecutivo_id = $2 WHERE id = $1", [proyectoB, disenador.id]),
+      );
 
       // ---- Quien tiene una tarea ve solo esa pieza y solo marca lo suyo.
       await como(produccion.id, "trabajador", "produccion");
@@ -768,6 +796,20 @@ async function probarProyectos(): Promise<void> {
     "Solo el admin asigna empresas",
     r.cuentasAsigna === DENEGADO,
     String(r.cuentasAsigna),
+  );
+  comprobar(
+    "Solo un administrador cambia quien lleva un proyecto",
+    r.asignadoReasigna === DENEGADO && r.adminReasigna === null && r.otraCuentaSeLoPasa === DENEGADO,
+    `asignado: ${r.asignadoReasigna}; admin: ${r.adminReasigna}; el que lo lleva: ${r.otraCuentaSeLoPasa}`,
+  );
+  comprobar(
+    "El ejecutivo de otra cuenta gestiona el proyecto que lleva y nada mas de esa empresa",
+    r.otraCuentaVe === 1 &&
+      r.otraCuentaPiezas === 1 &&
+      r.otraCuentaGestiona === true &&
+      r.otraCuentaCreaPieza === null &&
+      r.otraCuentaEmpresa === false,
+    `ve ${r.otraCuentaVe} de 2; piezas ${r.otraCuentaPiezas}; gestiona ${r.otraCuentaGestiona}; crea pieza: ${r.otraCuentaCreaPieza}; empresa: ${r.otraCuentaEmpresa}`,
   );
   comprobar(
     "Quien tiene una tarea ve el proyecto y solo esa pieza",
