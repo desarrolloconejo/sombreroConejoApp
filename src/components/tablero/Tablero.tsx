@@ -1,3 +1,4 @@
+import Form from "next/form";
 import Link from "next/link";
 import { ArrowRight, Filter, X } from "lucide-react";
 
@@ -74,6 +75,7 @@ export function TarjetasAlerta({
           <li key={alerta} className="surge" style={{ ["--retraso" as string]: `${0.08 + indice * 0.04}s` }}>
             <Link
               href={urlTablero(ruta, { ...filtros, alerta: activa ? null : alerta })}
+              scroll={false}
               aria-pressed={activa}
               aria-label={`${NOMBRES_DE_ALERTA[alerta]}: ${totales[alerta]} piezas. ${activa ? "Quitar el filtro" : "Ver solo esos proyectos"}`}
               className={[
@@ -115,7 +117,9 @@ export function FiltrosDelTablero({
   const hayFiltros = Boolean(filtros.ejecutivo || filtros.empresa || filtros.tipo || filtros.alerta);
 
   return (
-    <form method="get" action={ruta} className="flex flex-wrap items-end gap-2.5">
+    // `Form` de Next navega sin recargar la pagina, y sin `scroll` no vuelve
+    // arriba: filtrar no mueve lo que se esta mirando.
+    <Form action={ruta} scroll={false} className="flex flex-wrap items-end gap-2.5">
       {filtros.alerta && <input type="hidden" name="alerta" value={filtros.alerta} />}
 
       <div className="min-w-[180px] flex-1 sm:flex-none">
@@ -180,7 +184,7 @@ export function FiltrosDelTablero({
           Quitar filtros
         </BotonEnlace>
       )}
-    </form>
+    </Form>
   );
 }
 

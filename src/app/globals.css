@@ -210,6 +210,27 @@
     text-decoration: none;
   }
 
+  /*
+   * Todo lo que se pulsa lleva la mano. Tailwind 4 deja los botones con el
+   * cursor normal, y pedirla en cada componente se olvida: un boton suelto
+   * sin ella parece que no hace nada. Lo deshabilitado dice que no se puede.
+   */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  label:has(> input[type="checkbox"], > input[type="radio"]),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"],
+  input:disabled,
+  label:has(> input:disabled) {
+    cursor: not-allowed;
+  }
+
   /* El foco visible no se quita nunca: es como se navega con teclado */
   :focus-visible {
     outline: 2px solid var(--acento);
@@ -444,6 +465,21 @@ select:autofill {
  * marcada que la del sidebar: va sobre la superficie blanca, no sobre el
  * fondo del menu.
  */
+/*
+ * Una columna de una rejilla de dos que termina a la misma altura que su
+ * vecina: la rejilla ya las estira, y esto estira su ultima tarjeta hasta el
+ * final. Sin ello la columna corta deja un hueco debajo. Va en cada columna
+ * de las pages de dos columnas.
+ */
+@utility columna-pareja {
+  display: flex;
+  flex-direction: column;
+
+  & > :last-child {
+    flex-grow: 1;
+  }
+}
+
 @utility barra-fina-flotante {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;

@@ -110,7 +110,7 @@ export default async function PaginaFactura(props: PageProps<"/dashboard/factura
         </div>
 
         <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <section aria-labelledby="titulo-factura" className="surge flex flex-col gap-4 [--retraso:0.06s]">
+          <section aria-labelledby="titulo-factura" className="surge columna-pareja gap-4 [--retraso:0.06s]">
             <h2 id="titulo-factura" className="text-[19px] font-extrabold tracking-[-0.02em]">
               Lo que se facturo
             </h2>
@@ -132,7 +132,7 @@ export default async function PaginaFactura(props: PageProps<"/dashboard/factura
             </div>
           </section>
 
-          <section aria-labelledby="titulo-cobro" className="surge flex flex-col gap-4 [--retraso:0.1s]">
+          <section aria-labelledby="titulo-cobro" className="surge columna-pareja gap-4 [--retraso:0.1s]">
             <h2 id="titulo-cobro" className="text-[19px] font-extrabold tracking-[-0.02em]">
               Cobro
             </h2>
