@@ -88,9 +88,10 @@ test("dos rondas: el cliente corrige la redaccion y despues aprueba", async ({ p
 
   await completar(page, "Diseno, edicion y produccion");
 
-  // La fase 4 no se completa sin la version para el cliente.
-  await page.getByRole("button", { name: "Completar fase" }).click();
-  await avisado(page, /Marca antes la version que vera el cliente/);
+  // La fase 4 no se completa sin la version para el cliente, que se elige en
+  // la propia fase.
+  await expect(page.getByRole("button", { name: "Completar fase" })).toBeDisabled({ timeout: 60_000 });
+  await expect(page.getByText("Elige antes la version que vera el cliente.")).toBeVisible();
 
   await page.getByRole("button", { name: "Para el cliente" }).click();
   await avisado(page, "Es la version que vera el cliente");
@@ -100,9 +101,9 @@ test("dos rondas: el cliente corrige la redaccion y despues aprueba", async ({ p
   await entrar(page, "cliente@empresa.test");
   await expect(page.getByText(/esperan? tu revision/).first()).toBeVisible({ timeout: 180_000 });
 
+  // El aviso de lo que espera su revision lleva directo a la pieza.
   await page.goto("/dashboard/mis-proyectos", { waitUntil: "networkidle" });
-  await page.getByRole("link", { name: new RegExp(nombre) }).click();
-  await page.getByRole("link", { name: /Revisar/ }).click();
+  await page.getByRole("link", { name: new RegExp(`Pieza para revisar.*${nombre}`) }).first().click();
   await expect(page.getByRole("heading", { name: "Tu decision" })).toBeVisible({ timeout: 60_000 });
 
   const imagen = page.getByRole("img", { name: "Version 1 de la pieza" });
@@ -140,9 +141,9 @@ test("dos rondas: el cliente corrige la redaccion y despues aprueba", async ({ p
 
   // ---- El cliente aprueba.
   await entrar(page, "cliente@empresa.test");
+  // El aviso de lo que espera su revision lleva directo a la pieza.
   await page.goto("/dashboard/mis-proyectos", { waitUntil: "networkidle" });
-  await page.getByRole("link", { name: new RegExp(nombre) }).click();
-  await page.getByRole("link", { name: /Revisar/ }).click();
+  await page.getByRole("link", { name: new RegExp(`Pieza para revisar.*${nombre}`) }).first().click();
   await expect(page.getByRole("link", { name: /Abrir en figma.com/ })).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Aprobar" }).click();
   await avisado(page, /aprobada\. Ya puedes descargarla/);

@@ -11,10 +11,12 @@ import {
   type PersonaDeEquipo,
   type Tarea,
   type TipoProyecto,
+  type Version,
 } from "@/types";
 import { CompletarFase, MovimientosDeFase, PlanificarFase, RegresarFase } from "./AccionesFase";
 import { HiloComentarios } from "./ContenidoPieza";
 import { TareasFase } from "./TareasFase";
+import { VersionParaCliente } from "./VersionParaCliente";
 
 /**
  * Las cinco fases de una pieza, de arriba abajo, con sus tareas.
@@ -36,6 +38,7 @@ export function FasesPieza({
   tipo,
   tareas,
   comentarios,
+  versiones,
   gestiona,
   usuarioId,
   equipo,
@@ -45,6 +48,8 @@ export function FasesPieza({
   tareas: Tarea[];
   /** Todos los de la pieza: cada fase se queda con los suyos. */
   comentarios: ComentarioPieza[];
+  /** Todas las versiones: la fase 4 elige, entre las de la ronda, la del cliente. */
+  versiones: Version[];
   gestiona: boolean;
   usuarioId: number;
   equipo: PersonaDeEquipo[];
@@ -52,6 +57,8 @@ export function FasesPieza({
   const plantilla = PLANTILLAS[tipo];
   const activa = pieza.estado === "activa";
   const regresable = activa ? faseQueSePuedeRegresar(pieza.fases) : null;
+  const deLaRonda = versiones.filter((version) => version.ronda === pieza.ronda);
+  const hayParaCliente = deLaRonda.some((version) => version.enviadaEn !== null);
 
   return (
     <MovimientosDeFase>
@@ -151,8 +158,21 @@ export function FasesPieza({
 
                   {gestiona && activa && (
                     <div className="mt-5 flex flex-col gap-4 border-t border-borde pt-4">
+                      {enCurso && fase.fase === 4 && (
+                        <VersionParaCliente piezaId={pieza.id} versiones={deLaRonda} />
+                      )}
+
                       {enCurso && fase.fase !== 5 && (
-                        <CompletarFase piezaId={pieza.id} fase={fase.fase} pendientes={deTrabajo ? pendientes : 0} />
+                        <CompletarFase
+                          piezaId={pieza.id}
+                          fase={fase.fase}
+                          pendientes={deTrabajo ? pendientes : 0}
+                          falta={
+                            fase.fase === 4 && !hayParaCliente
+                              ? "Elige antes la version que vera el cliente."
+                              : null
+                          }
+                        />
                       )}
 
                       {regresable === fase.fase && <RegresarFase piezaId={pieza.id} />}
