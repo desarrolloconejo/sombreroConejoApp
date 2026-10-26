@@ -380,3 +380,45 @@ Fuera de esta auditoria, por decision del responsable (2026-10-13):
 | Los once huecos de la seccion 5 | Plan del portal, etapa 1 |
 
 A11 ya esta corregido.
+
+## Parches de seguridad del 2026-10-26
+
+`npm audit` marco `next` 16.4.0 como **critico**, con tres avisos: ejecucion
+remota de codigo sin sesion en la optimizacion de imagenes con SVG
+(GHSA-2464-fhr4-w9xw), denegacion de servicio en el App Router con Server
+Actions (GHSA-p3m5-59mp-jv5r) y ejecucion remota en funciones `use cache` que
+devuelven arreglos tipados (GHSA-673q-mjm6-r5xr). El proyecto usa `next/image`
+y Server Actions, asi que le tocaba. Ademas, `zod` (alto, GHSA-mrhx-c7xc-m3w5),
+que solo llega por `eslint-config-next`: herramienta de desarrollo.
+
+Se subio todo dentro de la misma version, sin saltos mayores, como indica la
+guia de actualizacion de Next (Context7): `next`, `react`, `react-dom` y
+`eslint-config-next` juntos.
+
+| Paquete | Antes | Ahora |
+| --- | --- | --- |
+| `next`, `eslint-config-next` | 16.4.0 | 16.4.3 |
+| `react`, `react-dom` | 19.3.0 | 19.3.1 |
+| `jose` | 6.2.12 | 6.2.13 |
+| `lucide-react` | 1.56.0 | 1.61.0 |
+| `@playwright/test` | 1.64.0 | 1.64.1 |
+| `zod` (desarrollo, por `npm audit fix`) | 4.4.3 | La corregida |
+
+`npm audit`: cero avisos, tambien contando desarrollo.
+
+Siguen sin adoptarse, por lo mismo de la fase 3: `eslint` 10, `typescript` 7 y
+`@types/node` 26.
+
+`npm` avisa de que `unrs-resolver` (dependencia de `eslint-config-next`) trae un
+script de instalacion que no esta en la lista de permitidos. No se aprobo: no
+hace falta para que el lint funcione, y no ejecutar scripts ajenos es lo
+seguro.
+
+Comprobado: lint y typecheck limpios, unitarias 150/150, build de produccion
+con la imagen reconstruida (`next` 16.4.3) y todos los recorridos de
+integracion. La primera pasada completa, en paralelo y con el servidor de
+desarrollo recien reiniciado, fallo en 16 recorridos por peticiones que el
+servidor tardo 101 s en compilar; repetidos uno detras de otro pasaron todos
+sin reintento (39/39, mas los demas archivos por separado). No fue la
+actualizacion: es la carga del servidor de desarrollo, ya anotada en los
+pendientes.
