@@ -481,3 +481,37 @@ R9, R13, R14 y R16 de `docs/pendientesIntegracion.md`).
     al ejecutivo, y no a quien lo registro. Poner a alguien como responsable
     de una fase le avisa; comentar en una fase avisa a quien la lleva y al
     ejecutivo, nunca a quien comenta.
+
+## Revision del responsable — Bloque 2
+
+Reorganizar las pantallas (R1, R2, R5, R7 y R8 de
+`docs/pendientesIntegracion.md`).
+
+43. Con la ventana a 1280 px o mas, toda pagina con secciones tiene a la
+    derecha la columna «En esta pagina»: marca la seccion que se ve y lleva a
+    cada una. El contenido no cambia de ancho al aparecer. A 1024 px o en el
+    telefono, el indice es el boton redondo de abajo a la derecha.
+44. Una pieza, un brief, Ajustes de finanzas y el formato de impresion
+    muestran sus secciones en el indice; los titulos no llevan el contador
+    (Mi trabajo: «Para hacer ahora», sin el numero).
+45. Briefs (como `cuentas@conejo.test`): cada pestana tiene buscador
+    (empresa o codigo), filtros de origen y formato (se pueden marcar varios;
+    sin ninguno, todos), orden (recibido, ultimo movimiento, fecha que
+    aspira, empresa) y paginas. Cambiar de filtro no cambia de pestana, y
+    «Limpiar filtros» tampoco.
+46. Cobranza: buscador por empresa o RIF, filtro de situacion y orden por
+    total, vencido, mas de 90 dias o empresa. Las cifras de arriba son de
+    todo; los totales de la tabla, de lo filtrado.
+47. Como cliente, Mis proyectos y Mis briefs tienen la misma barra
+    (buscador, filtro de estado y orden). En Mis briefs, «Nuevo brief» abre
+    una ventana: se elige el formato, dice que va a pasar y Cancelar no crea
+    nada; «Empezar el brief» lleva al formulario.
+48. Empresas (como administrador): la ficha («Ver la ficha») dice quien la
+    atiende, sin botones; se asigna y se quita en «Editar». Usuarios: retirar
+    la verificacion en dos pasos esta en «Editar», no en la ficha.
+49. Inicio, entrando con cada cuenta: el ejecutivo ve briefs por decidir y
+    piezas que piden atencion; diseno, sus tareas y fases; finanzas, pagos
+    por confirmar, presupuestos por enviar, proformas por facturar, por
+    cobrar y la tasa; el administrador, todo eso y la actividad reciente; el
+    cliente, sus proyectos, sus briefs en curso y su saldo. Cada bloque lleva
+    a su modulo.
