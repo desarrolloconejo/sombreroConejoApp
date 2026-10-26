@@ -177,6 +177,7 @@ export function IndicePagina() {
               type="button"
               onClick={() => ir(seccion.id)}
               aria-current={actual ? "location" : undefined}
+              aria-label={`Ir a la seccion ${seccion.texto}`}
               className={[
                 "suave flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px]",
                 actual ? "bg-acento-tenue font-semibold text-texto" : "text-suave hover:bg-campo hover:text-texto",
