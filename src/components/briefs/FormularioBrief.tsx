@@ -16,7 +16,7 @@ import { ArrowLeft, ArrowRight, Check, Save, Send } from "lucide-react";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { Alerta, Boton, CampoFecha, CLASE_CONTROL, claseLinea } from "@/components/ui";
 import { ZONA_HORARIA } from "@/lib/fechas";
-import { avisosDeReglas, contarNoSe, pasosVisibles, respondida } from "@/lib/portal/briefs";
+import { avisosDeReglas, contarNoSe, pasoCompleto, pasosVisibles } from "@/lib/portal/briefs";
 import {
   ESTADO_INICIAL,
   type EstadoFormulario,
@@ -141,8 +141,7 @@ export function FormularioBrief({
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const completos = (p: (typeof visibles)[number]) =>
-    p.preguntas.filter((q) => q.obligatoria).every((q) => respondida(q, respuestas[q.clave]));
+  const completos = (p: (typeof visibles)[number]) => pasoCompleto(p, respuestas);
 
   if (!paso) return null;
 

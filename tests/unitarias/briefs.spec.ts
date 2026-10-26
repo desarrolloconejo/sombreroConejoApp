@@ -8,6 +8,7 @@ import {
   erroresParaEnviar,
   formatoPor,
   formatosVigentes,
+  pasoCompleto,
   pasosVisibles,
   respuestasDesdeContenido,
 } from "@/lib/portal/briefs";
@@ -112,4 +113,20 @@ test("las respuestas se rearman desde lo congelado y cuentan igual", () => {
   const rearmadas = respuestasDesdeContenido(congelar(formato, respuestas, quien));
   expect(contarNoSe(formato, rearmadas)).toBe(contarNoSe(formato, respuestas));
   expect((rearmadas.alcance as Record<string, string>).naming).toBe("agencia");
+});
+
+test("un paso sin obligatorias no sale listo hasta que tiene alguna respuesta", () => {
+  const opcional = formato.pasos.find((paso) => paso.preguntas.every((pregunta) => !pregunta.obligatoria))!;
+  expect(opcional).toBeDefined();
+  expect(pasoCompleto(opcional, {})).toBe(false);
+
+  const primera = opcional.preguntas.find((pregunta) => pregunta.tipo === "texto_corto" || pregunta.tipo === "texto_largo")!;
+  expect(pasoCompleto(opcional, { [primera.clave]: "   " })).toBe(false);
+  expect(pasoCompleto(opcional, { [primera.clave]: "Cacao al 70 %" })).toBe(true);
+});
+
+test("un paso con obligatorias sale listo cuando estan todas, como antes", () => {
+  const conObligatorias = formato.pasos.find((paso) => paso.preguntas.some((pregunta) => pregunta.obligatoria))!;
+  expect(pasoCompleto(conObligatorias, {})).toBe(false);
+  expect(pasoCompleto(conObligatorias, respuestas)).toBe(true);
 });
