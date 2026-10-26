@@ -1,17 +1,28 @@
 import type { Metadata } from "next";
 
 import { Wrapper } from "@/components/layout/Wrapper";
+import { Listado } from "@/components/listado";
 import { AvisoRevision, TarjetaProyectoCliente } from "@/components/misProyectos";
 import { conSesion } from "@/lib/db";
+import { leerEstadoListado } from "@/lib/parametros";
+import { RUTA_MIS_PROYECTOS } from "@/lib/portal/rutas";
 import { requerirEmpresa } from "@/lib/sesion";
 import * as piezasModelo from "@/models/piezas";
 import * as proyectosModelo from "@/models/proyectos";
+import {
+  NOMBRES_DE_ESTADO_PROYECTO,
+  type Columna,
+  type DefinicionFiltro,
+  type EstadoProyecto,
+  type Proyecto,
+} from "@/types";
 
 /**
  * Mis proyectos: lo que la agencia hace para la empresa de quien mira.
  *
  * La base solo le devuelve los de su empresa. Arriba, lo que espera su
- * revision; debajo, los proyectos en curso y, aparte, los ya cerrados.
+ * revision; debajo, sus proyectos en el listado estandar: buscar, filtrar por
+ * estado y ordenar. Los cancelados no se le muestran.
  */
 
 export const metadata: Metadata = {
@@ -20,18 +31,52 @@ export const metadata: Metadata = {
 
 const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Mis proyectos" }];
 
-export default async function PaginaMisProyectos() {
+/** Lo que el cliente puede ver: un proyecto cancelado no es algo que tenga que seguir. */
+const VISIBLES: readonly EstadoProyecto[] = ["activo", "pausado", "cerrado"];
+
+const ORDEN_PERMITIDO = ["creadoEn", "nombre", "cierre"] as const;
+
+/** Solo para ordenar: el listado se pinta en tarjetas. */
+const COLUMNAS: Columna<Proyecto>[] = [
+  { clave: "creadoEn", titulo: "Mas recientes", ordenable: true, render: () => null },
+  { clave: "nombre", titulo: "Nombre", ordenable: true, render: () => null },
+  { clave: "cierre", titulo: "Cierre estimado", ordenable: true, render: () => null },
+];
+
+const FILTROS: DefinicionFiltro[] = [
+  {
+    clave: "estado",
+    titulo: "Estado",
+    opciones: VISIBLES.map((estado) => ({ valor: estado, texto: NOMBRES_DE_ESTADO_PROYECTO[estado] })),
+  },
+];
+
+export default async function PaginaMisProyectos(props: PageProps<"/dashboard/mis-proyectos">) {
   const { usuario } = await requerirEmpresa();
+  const estado = leerEstadoListado(await props.searchParams, {
+    ordenPermitido: ORDEN_PERMITIDO,
+    ordenPorDefecto: "creadoEn",
+    direccionPorDefecto: "desc",
+    filtrosPermitidos: ["estado"],
+  });
+  const estados = (estado.filtros.estado ?? []).filter((v): v is EstadoProyecto =>
+    (VISIBLES as readonly string[]).includes(v),
+  );
 
   const { pagina, esperando } = await conSesion(usuario, async (tx) => ({
-    pagina: await proyectosModelo.listar({ porPagina: 100, direccion: "desc" }, tx),
+    pagina: await proyectosModelo.listar(
+      {
+        busqueda: estado.busqueda || undefined,
+        estado: estados.length > 0 ? estados : [...VISIBLES],
+        orden: estado.orden as (typeof ORDEN_PERMITIDO)[number],
+        direccion: estado.direccion,
+        pagina: estado.pagina,
+        porPagina: estado.porPagina,
+      },
+      tx,
+    ),
     esperando: await piezasModelo.esperandoCliente(tx),
   }));
-
-  // Un proyecto cancelado no es algo que el cliente tenga que seguir.
-  const visibles = pagina.filas.filter((proyecto) => proyecto.estado !== "cancelado");
-  const enCurso = visibles.filter((p) => p.estado === "activo" || p.estado === "pausado");
-  const cerrados = visibles.filter((p) => p.estado === "cerrado");
 
   return (
     <Wrapper
@@ -43,39 +88,25 @@ export default async function PaginaMisProyectos() {
       <div className="flex flex-col gap-8">
         <AvisoRevision piezas={esperando} />
 
-        <section aria-labelledby="titulo-en-curso" className="surge [--retraso:0.1s]">
-          <h2 id="titulo-en-curso" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
-            En curso
-          </h2>
-          {enCurso.length === 0 ? (
-            <p className="rounded-[15px] border border-borde bg-superficie px-5 py-8 text-center text-[13px] text-suave">
-              No hay proyectos en curso ahora mismo.
+        <Listado
+          ruta={RUTA_MIS_PROYECTOS}
+          estado={estado}
+          columnas={COLUMNAS}
+          filas={pagina.filas}
+          total={pagina.total}
+          totalPaginas={pagina.totalPaginas}
+          filtros={FILTROS}
+          marcadorBusqueda="Nombre del proyecto"
+          etiquetaBusqueda="Buscar proyectos"
+          claveFila={(proyecto) => proyecto.id}
+          titulo="Tus proyectos"
+          rejilla={(proyecto) => <TarjetaProyectoCliente proyecto={proyecto} />}
+          vacio={
+            <p className="px-5 py-8 text-center text-[13px] text-suave">
+              Todavia no hay proyectos. Cuando la agencia abra uno, lo veras aqui.
             </p>
-          ) : (
-            <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-              {enCurso.map((proyecto) => (
-                <li key={proyecto.id}>
-                  <TarjetaProyectoCliente proyecto={proyecto} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {cerrados.length > 0 && (
-          <section aria-labelledby="titulo-cerrados" className="surge [--retraso:0.16s]">
-            <h2 id="titulo-cerrados" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
-              Historial
-            </h2>
-            <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-              {cerrados.map((proyecto) => (
-                <li key={proyecto.id}>
-                  <TarjetaProyectoCliente proyecto={proyecto} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+          }
+        />
       </div>
     </Wrapper>
   );
