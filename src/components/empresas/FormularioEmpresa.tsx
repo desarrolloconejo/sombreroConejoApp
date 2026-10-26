@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, type ReactNode } from "react";
 import { Building2, Check } from "lucide-react";
 
 import { crearEmpresa, editarEmpresa } from "@/actions/empresas";
@@ -32,13 +32,23 @@ import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
  * todo de golpe convierte un alta de diez segundos en un formulario que se
  * abandona a la mitad.
  */
+/** El boton de guardar vive en el pie, fuera del formulario: lo encuentra por su id. */
+const ID_FORMULARIO = "formulario-empresa";
+
 export function FormularioEmpresa({
   empresa = null,
   hrefCancelar,
+  aparte,
 }: {
   /** La que se edita. Null en el alta. */
   empresa?: Empresa | null;
   hrefCancelar: string;
+  /**
+   * Lo que se edita con sus propios formularios (los ejecutivos que la
+   * atienden): va en el panel, debajo de los datos y fuera de este
+   * formulario, porque un formulario no puede ir dentro de otro.
+   */
+  aparte?: ReactNode;
 }) {
   const [estado, enviar, enviando] = useActionState(
     empresa ? editarEmpresa : crearEmpresa,
@@ -66,8 +76,9 @@ export function FormularioEmpresa({
   const errores = estado.errores ?? {};
 
   return (
-    <form action={enviar} noValidate className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <PanelCuerpo>
+        <form id={ID_FORMULARIO} action={enviar} noValidate>
         {/* Cual se edita viaja aqui, no en la URL de la action. La action lo
             vuelve a comprobar: este campo lo escribe el navegador. */}
         {empresa && <input type="hidden" name="id" value={empresa.id} />}
@@ -182,6 +193,9 @@ export function FormularioEmpresa({
           Registrar la empresa no le da acceso a nadie. Para que alguien de esa
           empresa pueda entrar, hay que crearle su cuenta desde Usuarios.
         </p>
+        </form>
+
+        {aparte}
       </PanelCuerpo>
 
       <PanelPie>
@@ -189,7 +203,7 @@ export function FormularioEmpresa({
           {estado.ok ? "Cerrar" : "Cancelar"}
         </BotonEnlace>
 
-        <Boton type="submit" disabled={enviando}>
+        <Boton type="submit" form={ID_FORMULARIO} disabled={enviando}>
           {enviando
             ? "Guardando…"
             : empresa
@@ -198,6 +212,6 @@ export function FormularioEmpresa({
           {!enviando && <Check aria-hidden="true" />}
         </Boton>
       </PanelPie>
-    </form>
+    </div>
   );
 }

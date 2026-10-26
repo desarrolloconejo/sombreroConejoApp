@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 import { Check, Mail, Phone } from "lucide-react";
 
 import { editarUsuario } from "@/actions/usuarios";
@@ -38,18 +38,28 @@ const ROTULO_ROL: Record<NombreRol, string> = {
   cliente: "Cliente",
 };
 
+/** El boton de guardar vive en el pie, fuera del formulario: lo encuentra por su id. */
+const ID_FORMULARIO = "formulario-editar-usuario";
+
 export function FormularioEditarUsuario({
   usuario,
   roles,
   cargos,
   empresas,
   hrefCancelar,
+  aparte,
 }: {
   usuario: UsuarioCompleto;
   roles: Rol[];
   cargos: Cargo[];
   empresas: Empresa[];
   hrefCancelar: string;
+  /**
+   * Lo que se cambia con su propio formulario (retirar los dos pasos): va en
+   * el panel, debajo de los datos y fuera de este formulario, porque un
+   * formulario no puede ir dentro de otro.
+   */
+  aparte?: ReactNode;
 }) {
   const [estado, enviar, enviando] = useActionState(editarUsuario, ESTADO_INICIAL);
 
@@ -76,8 +86,9 @@ export function FormularioEditarUsuario({
   const esTrabajador = usuario.tipo === "trabajador";
 
   return (
-    <form action={enviar} noValidate className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <PanelCuerpo>
+        <form id={ID_FORMULARIO} action={enviar} noValidate>
         {/*
           Que cuenta se edita viaja aqui, no en la URL de la action. La action
           lo vuelve a comprobar contra la base: este campo lo escribe el
@@ -249,6 +260,9 @@ export function FormularioEditarUsuario({
             </>
           )}
         </div>
+        </form>
+
+        {aparte}
       </PanelCuerpo>
 
       <PanelPie>
@@ -256,11 +270,11 @@ export function FormularioEditarUsuario({
           Cancelar
         </BotonEnlace>
 
-        <Boton type="submit" disabled={enviando}>
+        <Boton type="submit" form={ID_FORMULARIO} disabled={enviando}>
           {enviando ? "Guardando..." : "Guardar cambios"}
           {!enviando && <Check aria-hidden="true" />}
         </Boton>
       </PanelPie>
-    </form>
+    </div>
   );
 }

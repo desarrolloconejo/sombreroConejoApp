@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 
 import { PanelCuerpo, PanelPie } from "@/components/listado";
 
-import { RetirarDosPasos } from "./RetirarDosPasos";
 import { Avatar, BotonCopiar, BotonEnlace, Estado, Etiqueta } from "@/components/ui";
 import type { NombreRol, UsuarioCompleto } from "@/types";
 import { ZONA_HORARIA } from "@/lib/fechas";
@@ -155,13 +154,11 @@ export function DetalleUsuario({
             {dosPasos ? "activada" : "sin activar"}.
             {dosPasos && (
               <span className="block text-suave">
-                Si perdio el telefono y sus codigos de respaldo, retirasela para
-                que pueda entrar. Se le pedira configurarla de nuevo.
+                Si perdio el telefono y sus codigos de respaldo, se le retira en
+                «Editar».
               </span>
             )}
           </p>
-
-          {dosPasos && <RetirarDosPasos id={usuario.id} nombre={usuario.nombre} />}
         </div>
       </PanelCuerpo>
 
