@@ -64,7 +64,7 @@ export default async function PaginaFacturacion() {
       )}
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <section aria-labelledby="titulo-por-aprobar" className="surge">
+        <section aria-labelledby="titulo-por-aprobar" className="surge columna-pareja">
           <h2 id="titulo-por-aprobar" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
             Por aprobar
           </h2>
@@ -85,7 +85,7 @@ export default async function PaginaFacturacion() {
           </div>
         </section>
 
-        <section aria-labelledby="titulo-proformas" className="surge [--retraso:0.06s]">
+        <section aria-labelledby="titulo-proformas" className="surge columna-pareja [--retraso:0.06s]">
           <h2 id="titulo-proformas" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
             Proformas
           </h2>

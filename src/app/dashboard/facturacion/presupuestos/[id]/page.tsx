@@ -67,7 +67,7 @@ export default async function PaginaMiPresupuesto(
         </div>
 
         <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <section aria-labelledby="titulo-renglones" className="surge [--retraso:0.06s]">
+          <section aria-labelledby="titulo-renglones" className="surge columna-pareja [--retraso:0.06s]">
             <h2 id="titulo-renglones" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
               Lo que incluye
             </h2>
@@ -87,7 +87,7 @@ export default async function PaginaMiPresupuesto(
             </div>
           </section>
 
-          <section aria-labelledby="titulo-decision" className="surge [--retraso:0.1s]">
+          <section aria-labelledby="titulo-decision" className="surge columna-pareja [--retraso:0.1s]">
             <h2 id="titulo-decision" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
               {situacion === "enviado" ? "Tu decision" : "Estado"}
             </h2>

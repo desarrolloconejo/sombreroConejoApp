@@ -515,3 +515,17 @@ Reorganizar las pantallas (R1, R2, R5, R7 y R8 de
     cobrar y la tasa; el administrador, todo eso y la actividad reciente; el
     cliente, sus proyectos, sus briefs en curso y su saldo. Cada bloque lleva
     a su modulo.
+
+## Revision del responsable — Bloque 3
+
+Pulido (R15, R17 y R19 de `docs/pendientesIntegracion.md`).
+
+50. Un presupuesto, una proforma y una factura (de administracion y del
+    cliente) y la portada de Facturacion: las dos columnas terminan a la
+    misma altura. En la factura, «Abrir el PDF para imprimir» y «Marcar como
+    impresa» van uno bajo el otro, del mismo ancho.
+51. Tablero: pulsar una alerta o «Filtrar» no sube la pagina.
+52. Pasar el raton por cualquier boton, plegable («Comentarios», «Fecha y
+    responsable de la fase»), casilla u opcion muestra la mano; uno
+    deshabilitado, el cursor de no permitido. En el telefono, tocar algo no
+    lo deja con el color de «encima».

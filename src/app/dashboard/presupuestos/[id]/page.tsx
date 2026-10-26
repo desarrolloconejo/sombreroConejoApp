@@ -109,7 +109,7 @@ export default async function PaginaPresupuesto(props: PageProps<"/dashboard/pre
         </section>
       ) : (
         <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <section aria-labelledby="titulo-renglones" className="surge [--retraso:0.06s]">
+          <section aria-labelledby="titulo-renglones" className="surge columna-pareja [--retraso:0.06s]">
             <h2 id="titulo-renglones" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
               Renglones
             </h2>
@@ -126,7 +126,7 @@ export default async function PaginaPresupuesto(props: PageProps<"/dashboard/pre
             </div>
           </section>
 
-          <section aria-labelledby="titulo-situacion" className="surge flex flex-col gap-4 [--retraso:0.1s]">
+          <section aria-labelledby="titulo-situacion" className="surge columna-pareja gap-4 [--retraso:0.1s]">
             <h2 id="titulo-situacion" className="text-[19px] font-extrabold tracking-[-0.02em]">
               {situacion === "enviado" ? "Esperando al cliente" : "Decision"}
             </h2>

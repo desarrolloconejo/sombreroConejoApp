@@ -77,20 +77,21 @@ export function ImprimirFactura({
           detalle: f.habitual ? "El habitual" : undefined,
         }))}
       />
-      <div className="flex flex-wrap gap-2.5">
+      {/* Los dos botones, uno bajo el otro y del mismo ancho: la tarjeta es estrecha. */}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5">
         <a
           href={`/api/facturas/${facturaId}/pdf?formato=${formato}`}
           target="_blank"
           rel="noopener"
-          className="suave inline-flex min-h-9 items-center gap-2 rounded-xl border border-borde px-3.5 text-[13px] font-semibold hover:-translate-y-0.5 hover:border-acento [&>svg]:size-4"
+          className="suave inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border border-borde px-3.5 text-[13px] font-semibold hover:-translate-y-0.5 hover:border-acento [&>svg]:size-4"
         >
           <Printer aria-hidden="true" />
           Abrir el PDF para imprimir
         </a>
         {!impresa && (
-          <form action={marcar[1]}>
+          <form action={marcar[1]} className="contents">
             <input type="hidden" name="id" value={facturaId} />
-            <Boton type="submit" variante="fantasma" tamano="chico" disabled={marcar[2]}>
+            <Boton type="submit" variante="fantasma" tamano="chico" disabled={marcar[2]} className="w-full">
               <FileText aria-hidden="true" />
               Marcar como impresa
             </Boton>

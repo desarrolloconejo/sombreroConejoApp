@@ -329,6 +329,18 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 - Empezar un brief pide confirmacion: «Nuevo brief» abre la ventana
   (`?panel=nuevo`, `ElegirFormatoBrief`) donde se elige el formato y se dice
   que va a pasar.
+- En una page de dos columnas de alturas parecidas, cada columna lleva
+  `columna-pareja` (utilidad de `globals.css`): su ultima tarjeta se estira y
+  las dos terminan a la misma altura. No se usa si una columna es mucho mas
+  larga (la ficha de la pieza): quedaria una tarjeta enorme vacia. Los
+  botones de un mismo grupo comparten ancho.
+- Cambiar un valor no mueve la pagina: lo que navega dentro de la misma
+  page (pestanas, filtros, paneles) va con `scroll={false}` (`BotonEnlace`
+  ya lo trae), y un formulario de filtros GET es `Form` de `next/form` con
+  `scroll={false}`, nunca un `<form method="get">` que recargue.
+- Todo lo que se pulsa lleva la mano y lo deshabilitado el cursor de no
+  permitido: lo pone una regla base de `globals.css`, no cada componente.
+  Los `hover:` de Tailwind 4 solo actuan con raton (`@media (hover: hover)`).
 - Lo que se desplaza dentro de un panel usa la barra fina: `barra-fina` en
   columnas y paneles, `barra-fina-flotante` en lo que flota (listas,
   calendario, buscador, campana).
