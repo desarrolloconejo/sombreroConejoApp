@@ -74,6 +74,13 @@ export type PropsListado<T> = {
   lista?: (fila: T) => ReactNode;
 
   /**
+   * El cuerpo entero lo pinta la page (una tabla de importes que no cabe en
+   * la estandar, la de Cobranza). El listado pone igual el buscador, los
+   * filtros, el orden, las paginas y los estados vacios.
+   */
+  cuerpo?: (filas: T[]) => ReactNode;
+
+  /**
    * Filtros que forman parte de donde se esta, no del criterio de quien
    * busca (la pestana de una bandeja): «Limpiar filtros» no los quita.
    */
@@ -99,6 +106,7 @@ export function Listado<T>({
   titulo,
   rejilla,
   lista,
+  cuerpo,
   fijos = [],
   className,
 }: PropsListado<T>) {
@@ -141,9 +149,11 @@ export function Listado<T>({
 
         <ListadoFiltros ruta={ruta} estado={estado} filtros={filtros} fijos={fijos} />
 
-        {(rejilla || lista) && hayFilas && <ListadoOrden ruta={ruta} estado={estado} columnas={columnas} />}
+        {(rejilla || lista || cuerpo) && hayFilas && <ListadoOrden ruta={ruta} estado={estado} columnas={columnas} />}
 
-        {hayFilas && lista ? (
+        {hayFilas && cuerpo ? (
+          cuerpo(filas)
+        ) : hayFilas && lista ? (
           <ul aria-label={titulo} className="flex flex-col px-5 py-2">
             {filas.map((fila, indice) => (
               <li key={claveFila ? claveFila(fila) : indice} className="min-w-0 border-b border-borde last:border-0">
