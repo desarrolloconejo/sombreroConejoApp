@@ -16,9 +16,11 @@ import {
   rutaProforma,
 } from "@/lib/finanzas/rutas";
 import { leerCabecera, leerMotivo, leerRenglones } from "@/lib/finanzas/validar";
-import { notificarA } from "@/lib/notificaciones";
+import { avisarRespuestaPresupuesto } from "@/lib/finanzas/avisosPresupuesto";
+import { notificarA, notificarAEjecutivosDe } from "@/lib/notificaciones";
 import { formatoPor } from "@/lib/portal/briefs";
 import { hoyEnCaracas } from "@/lib/portal/fases";
+import { rutaBrief } from "@/lib/portal/rutas";
 import { requerirFinanzas } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
 import * as briefs from "@/models/briefs";
@@ -85,6 +87,13 @@ export async function crearPresupuesto(
       despues: { titulo: valores.titulo, validoHasta: valores.validoHasta },
     });
 
+    await notificarAEjecutivosDe(tx, empresaId, {
+      tipo: "presupuesto.creado",
+      titulo: `Administracion prepara un presupuesto para ${empresa.nombre}`,
+      cuerpo: valores.titulo,
+      empresaId,
+    });
+
     return { id };
   });
 
@@ -139,6 +148,14 @@ export async function presupuestarDesdeBrief(
       entidadId: id,
       empresaId: brief.empresaId,
       despues: { brief: brief.codigo },
+    });
+
+    await notificarAEjecutivosDe(tx, brief.empresaId, {
+      tipo: "presupuesto.creado",
+      titulo: `Administracion arma el presupuesto del brief ${brief.codigo}`,
+      cuerpo: brief.solicitante,
+      href: rutaBrief(briefId),
+      empresaId: brief.empresaId,
     });
 
     return { id };
@@ -231,6 +248,15 @@ export async function guardarPresupuesto(
       },
     );
 
+    // Los ejecutivos de la empresa saben que el cliente ya lo tiene.
+    await notificarAEjecutivosDe(tx, actual.empresaId, {
+      tipo: "presupuesto.enviado",
+      titulo: `Enviamos a ${actual.empresaNombre} el presupuesto ${numero}`,
+      cuerpo: cabecera.valores.titulo,
+      href: actual.briefId !== null ? rutaBrief(actual.briefId) : null,
+      empresaId: actual.empresaId,
+    });
+
     const correos: number[] = [];
     for (const persona of destinatarios) {
       correos.push(
@@ -300,6 +326,8 @@ export async function resolverPresupuestoANombre(
       empresaId: actual.empresaId,
       despues: { aNombreDelCliente: true, motivo },
     });
+
+    await avisarRespuestaPresupuesto(tx, actual, { aprobado: aprobar, motivo, aNombreDelCliente: true });
 
     return { ok: true as const };
   });

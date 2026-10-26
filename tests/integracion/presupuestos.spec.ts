@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { USUARIOS } from "../../db/datos/semilla.mts";
 import { elegirEmpresa, elegirOpcion } from "./ayudas/formularios";
 
@@ -23,6 +23,16 @@ async function entrar(page: Page, email: string) {
   await page.getByPlaceholder("Tu contrasena").fill(persona.password);
   await page.getByPlaceholder("Tu contrasena").press("Enter");
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 90_000 });
+}
+
+/** La campana del encabezado de escritorio: en movil hay otra, oculta. */
+function campana(page: Page): Locator {
+  return page.getByRole("button", { name: /^Notificaciones/ }).locator("visible=true").first();
+}
+
+/** La lista de la campana abierta. */
+function avisos(page: Page): Locator {
+  return page.getByRole("region", { name: "Notificaciones" }).locator("visible=true").first();
 }
 
 async function avisado(page: Page, texto: string | RegExp) {
@@ -94,6 +104,17 @@ test("administracion crea un presupuesto, lo envia y registra la respuesta del c
 
   await expect(page.getByText(/a nombre del cliente/).first()).toBeVisible({ timeout: 60_000 });
   await expect(page.getByText("Prefiere esperar al proximo trimestre")).toBeVisible();
+
+  // Quien lo registro no se avisa a si mismo.
+  await page.goto("/dashboard", { waitUntil: "networkidle" });
+  await campana(page).click();
+  await expect(avisos(page)).not.toContainText("Prefiere esperar al proximo trimestre");
+
+  // El ejecutivo de la empresa se entera de que se preparo y de la respuesta.
+  await entrar(page, "cuentas@conejo.test");
+  await campana(page).click();
+  await expect(avisos(page)).toContainText(titulo, { timeout: 60_000 });
+  await expect(avisos(page)).toContainText("Prefiere esperar al proximo trimestre");
 });
 
 test("quien no opera finanzas no entra en Presupuestos", async ({ page }) => {

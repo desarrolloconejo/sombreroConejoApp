@@ -1,4 +1,5 @@
 import { conSesion, type ActorDeBase, type Ejecutor } from "./db";
+import * as asignaciones from "@/models/asignaciones";
 import * as notificaciones from "@/models/notificaciones";
 import * as usuarios from "@/models/usuarios";
 import type { NuevaNotificacion, ResumenDeNotificaciones } from "@/types";
@@ -22,6 +23,18 @@ export async function notificarA(
   notificacion: NuevaNotificacion,
 ): Promise<void> {
   await notificaciones.crear(destinatarios, notificacion, ejecutor);
+}
+
+/**
+ * Notifica a los ejecutivos de cuentas que atienden una empresa: lo que pasa
+ * con el dinero o los proyectos de su cliente tambien es asunto suyo.
+ */
+export async function notificarAEjecutivosDe(
+  ejecutor: Ejecutor,
+  empresaId: number,
+  notificacion: NuevaNotificacion,
+): Promise<void> {
+  await notificaciones.crear(await asignaciones.ejecutivosDe(empresaId, ejecutor), notificacion, ejecutor);
 }
 
 /**

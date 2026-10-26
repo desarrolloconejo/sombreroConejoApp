@@ -24,7 +24,9 @@ export async function crear(
   notificacion: NuevaNotificacion,
   ejecutor: Ejecutor,
 ): Promise<number> {
-  // Sin repetidos: decirle dos veces lo mismo a la misma persona es ruido.
+  // Sin repetidos: decirle dos veces lo mismo a la misma persona es ruido. Y
+  // quien provoca algo no se avisa a si mismo: la base descarta a quien
+  // pregunta, asi no depende de que cada action se acuerde.
   const unicos = [...new Set(destinatarios)];
 
   if (unicos.length === 0) return 0;
@@ -33,7 +35,8 @@ export async function crear(
     `INSERT INTO portal.notificaciones
        (usuario_id, empresa_id, tipo, titulo, cuerpo, href)
      SELECT destinatario, $2, $3, $4, $5, $6
-     FROM unnest($1::int[]) AS destinatario`,
+     FROM unnest($1::int[]) AS destinatario
+     WHERE destinatario IS DISTINCT FROM app_usuario_id()`,
     [
       unicos,
       notificacion.empresaId ?? null,

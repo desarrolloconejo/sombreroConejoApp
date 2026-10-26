@@ -163,6 +163,22 @@ export async function anularProforma(
       despues: { motivo },
     });
 
+    // Un borrador el cliente no lo vio nunca; una emitida, si.
+    if (actual.estado === "emitida") {
+      const personas = await clientes.conFinanzasDe(actual.empresaId, tx);
+      await notificarA(
+        tx,
+        personas.map((persona) => persona.id),
+        {
+          tipo: "proforma.anulada",
+          titulo: `Anulamos la proforma ${numeroDe("proforma", actual.numero)}`,
+          cuerpo: motivo,
+          href: RUTA_FACTURACION,
+          empresaId: actual.empresaId,
+        },
+      );
+    }
+
     return { ok: true as const };
   });
 

@@ -410,3 +410,25 @@ export async function ejecutivosDeCuentas(ejecutor: Ejecutor): Promise<PersonaBr
     ejecutor,
   );
 }
+
+/**
+ * Quien tiene trabajo en un proyecto: responsables de sus fases y de sus
+ * tareas. Para avisarles cuando el proyecto se pausa, se cierra o vuelve.
+ */
+export async function equipoDe(id: number, ejecutor: Ejecutor): Promise<number[]> {
+  const filas = await consultar<{ id: number }>(
+    `SELECT DISTINCT persona AS id FROM (
+       SELECT f.responsable_id AS persona
+       FROM portal.pieza_fases f JOIN portal.piezas p ON p.id = f.pieza_id
+       WHERE p.proyecto_id = $1
+       UNION
+       SELECT t.responsable_id
+       FROM portal.tareas t JOIN portal.piezas p ON p.id = t.pieza_id
+       WHERE p.proyecto_id = $1
+     ) quienes
+     WHERE persona IS NOT NULL`,
+    [id],
+    ejecutor,
+  );
+  return filas.map((fila) => fila.id);
+}

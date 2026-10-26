@@ -55,7 +55,11 @@ function revalidar(id: number): void {
 async function avisarALaEmpresa(
   tx: Ejecutor,
   brief: Brief,
-  aviso: { tipo: "brief.aceptado" | "brief.descartado" | "brief.aclaracion" | "brief.fecha_propuesta"; titulo: string; cuerpo?: string | null },
+  aviso: {
+    tipo: "brief.aceptado" | "brief.a_presupuesto" | "brief.descartado" | "brief.aclaracion" | "brief.fecha_propuesta";
+    titulo: string;
+    cuerpo?: string | null;
+  },
 ): Promise<void> {
   if (brief.empresaId === null) return;
   const personas = await clientes.activosDe(brief.empresaId, tx);
@@ -245,6 +249,12 @@ export async function presupuestarBrief(_estadoPrevio: EstadoFormulario, datos: 
       cuerpo: `De ${brief.solicitante}.`,
       href: RUTA_PRESUPUESTOS,
       empresaId: conversion.empresaId,
+    });
+
+    await avisarALaEmpresa(tx, { ...brief, empresaId: conversion.empresaId }, {
+      tipo: "brief.a_presupuesto",
+      titulo: `Preparamos el presupuesto de tu brief ${brief.codigo}`,
+      cuerpo: "Te avisamos cuando este listo para que lo revises.",
     });
 
     return { credencial: conversion.credencial, correos: conversion.correo ? [conversion.correo] : [] };

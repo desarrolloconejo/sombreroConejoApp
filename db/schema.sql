@@ -3650,6 +3650,27 @@ REVOKE ALL ON FUNCTION portal.atienden_brief(integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION portal.atienden_brief(integer) TO conejo_app;
 
 -- ---------------------------------------------------------------------------
+-- Quien atiende una empresa: sus ejecutivos de cuentas asignados y activos.
+-- Es a quienes se avisa de lo que pasa con el dinero de su cliente
+-- (presupuestos creados, enviados y resueltos). Administracion y el cliente no
+-- ven las asignaciones, por eso se pregunta aqui. Solo devuelve ids, y solo a
+-- quien tiene sesion declarada.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION portal.ejecutivos_de_empresa(p_empresa integer)
+  RETURNS TABLE (id integer)
+  LANGUAGE sql STABLE SECURITY DEFINER
+  SET search_path = public, pg_temp
+  AS $fn$
+    SELECT u.id
+    FROM portal.asignaciones a
+    JOIN usuarios u ON u.id = a.usuario_id
+    WHERE a.empresa_id = p_empresa AND u.activo AND app_usuario_id() IS NOT NULL
+  $fn$;
+
+REVOKE ALL ON FUNCTION portal.ejecutivos_de_empresa(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION portal.ejecutivos_de_empresa(integer) TO conejo_app;
+
+-- ---------------------------------------------------------------------------
 -- El prospecto deja rastro sin usuario: al enviar su brief avisa a quien lo
 -- atiende y encola la copia por correo. Las politicas de la campana y de la
 -- bandeja de salida exigen un usuario; aqui se amplian para su rol. Sus

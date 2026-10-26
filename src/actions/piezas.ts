@@ -422,6 +422,17 @@ export async function planificarFase(
       despues: { fase, fechaEstimada, responsableId },
     });
 
+    // A quien le toca la fase se entera; si solo cambio la fecha, no.
+    if (responsableId !== null && responsableId !== (anterior?.responsableId ?? null)) {
+      await notificarA(tx, [responsableId], {
+        tipo: "fase.asignada",
+        titulo: `Llevas la fase ${fase} · ${nombreDeFase(contexto.proyecto.tipo, fase)}`,
+        cuerpo: `${contexto.pieza.titulo} · ${contexto.proyecto.nombre}${fechaEstimada ? `. Para el ${fechaEstimada}.` : "."}`,
+        href: rutaPieza(contexto.proyecto.id, piezaId),
+        empresaId: contexto.proyecto.empresaId,
+      });
+    }
+
     return contexto.proyecto.id;
   });
 
@@ -499,9 +510,11 @@ export async function comentarPieza(
     const pieza = await piezas.buscarPorId(piezaId, tx);
     if (!pieza) return null;
 
+    let responsableDeTarea: number | null = null;
     if (tareaId !== null) {
       const tarea = await tareas.buscarPorId(tareaId, tx);
       if (!tarea || tarea.piezaId !== piezaId || tarea.fase !== fase) return null;
+      responsableDeTarea = tarea.responsableId;
     }
 
     const comentarioId = await comentarios.crear(piezaId, usuario.id, texto, { fase, tareaId }, tx);
@@ -512,6 +525,26 @@ export async function comentarPieza(
       empresaId: proyecto?.empresaId ?? null,
       despues: { comentarioId, fase, tareaId },
     });
+
+    // Se enteran quien lleva la fase, quien tiene la tarea de la que se habla y
+    // el ejecutivo. Un comentario general, el ejecutivo y quien lleva la fase
+    // en curso.
+    if (proyecto) {
+      const deLaFase = pieza.fases.find((f) => f.fase === (fase ?? pieza.avance.faseActual));
+      await notificarA(
+        tx,
+        [proyecto.ejecutivoId, deLaFase?.responsableId, responsableDeTarea].filter(
+          (id): id is number => typeof id === "number",
+        ),
+        {
+          tipo: "pieza.comentada",
+          titulo: `${usuario.nombre} comento ${fase ? `la fase ${fase} de` : ""} ${pieza.titulo}`.replace(/\s+/g, " "),
+          cuerpo: texto.length > 140 ? `${texto.slice(0, 140)}…` : texto,
+          href: rutaPieza(proyecto.id, piezaId),
+          empresaId: proyecto.empresaId,
+        },
+      );
+    }
 
     return pieza.proyectoId;
   });

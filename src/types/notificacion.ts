@@ -22,9 +22,11 @@ export type TipoNotificacion =
   | "pieza.aprobada"
   | "pieza.correccion"
   | "tasa.rechazada"
+  | "presupuesto.creado"
   | "presupuesto.enviado"
   | "presupuesto.resuelto"
   | "proforma.emitida"
+  | "proforma.anulada"
   | "brief.enviado"
   | "brief.aceptado"
   | "brief.a_presupuesto"
@@ -33,8 +35,15 @@ export type TipoNotificacion =
   | "brief.aclaracion"
   | "brief.fecha_propuesta"
   | "factura.emitida"
+  | "factura.anulada"
   | "pago.reportado"
-  | "pago.resuelto";
+  | "pago.registrado"
+  | "pago.resuelto"
+  | "fase.asignada"
+  | "pieza.comentada"
+  | "proyecto.creado"
+  | "proyecto.estado"
+  | "empresa.retirada";
 
 /** Lo que hay que saber para notificar. Los destinatarios van aparte. */
 export type NuevaNotificacion = {
