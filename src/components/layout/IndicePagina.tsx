@@ -173,9 +173,16 @@ export function IndicePagina() {
         const actual = activa ? seccion.id === activa : indice === 0;
         return (
           <li key={seccion.id}>
-            <button
-              type="button"
-              onClick={() => ir(seccion.id)}
+            {/*
+              Un enlace a la seccion, que es lo que es: sin JavaScript lleva
+              igual. Con el, el desplazamiento es suave y el foco va al titulo.
+            */}
+            <a
+              href={`#${seccion.id}`}
+              onClick={(evento) => {
+                evento.preventDefault();
+                ir(seccion.id);
+              }}
               aria-current={actual ? "location" : undefined}
               aria-label={`Ir a la seccion ${seccion.texto}`}
               className={[
@@ -188,7 +195,7 @@ export function IndicePagina() {
                 className={["size-1.5 shrink-0 rounded-full", actual ? "bg-acento" : "bg-borde"].join(" ")}
               />
               <span className="min-w-0 truncate">{seccion.texto}</span>
-            </button>
+            </a>
           </li>
         );
       })}
