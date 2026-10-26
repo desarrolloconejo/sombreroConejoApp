@@ -78,10 +78,9 @@ export default async function PaginaProyectos(props: PageProps<"/dashboard/proye
       tx,
     );
 
-    // El alta necesita saber quien puede llevar cada proyecto: los ejecutivos
-    // de cuentas asignados a cada empresa.
-    // El administrador elige entre todos los ejecutivos de cuentas; un
-    // ejecutivo lo lleva el mismo y no necesita la lista.
+    // El alta necesita saber quien puede llevar cada proyecto: el
+    // administrador elige entre todos los ejecutivos de cuentas (primero los
+    // asignados a la empresa); un ejecutivo lo lleva el mismo.
     const alta =
       estado.panel === "nuevo"
         ? {
