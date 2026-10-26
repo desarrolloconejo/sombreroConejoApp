@@ -17,16 +17,26 @@ const COLUMNAS = `
   creado_en  AS "creadoEn"
 `;
 
-/** Registra a un usuario como persona de contacto de una empresa. */
+/**
+ * Registra a un usuario como persona de contacto de una empresa. Los permisos
+ * nacen apagados salvo que se pidan: los enciende quien sabe que esa persona
+ * decide (el contacto que lleno el brief del prospecto).
+ */
 export async function crear(
-  datos: { usuarioId: number; empresaId: number; cargo: string | null },
+  datos: {
+    usuarioId: number;
+    empresaId: number;
+    cargo: string | null;
+    puedeAprobar?: boolean;
+    puedeVerFinanzas?: boolean;
+  },
   ejecutor?: Ejecutor,
 ): Promise<Cliente> {
   const cliente = await consultarUno<Cliente>(
-    `INSERT INTO clientes (usuario_id, empresa_id, cargo)
-     VALUES ($1, $2, $3)
+    `INSERT INTO clientes (usuario_id, empresa_id, cargo, puede_aprobar, puede_ver_finanzas)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING ${COLUMNAS}`,
-    [datos.usuarioId, datos.empresaId, datos.cargo],
+    [datos.usuarioId, datos.empresaId, datos.cargo, datos.puedeAprobar ?? false, datos.puedeVerFinanzas ?? false],
     ejecutor,
   );
 

@@ -36,7 +36,7 @@ export function ProveedorDecisiones({ children }: { children: ReactNode }) {
   useAvisoDeAccion(presupuestar[0]);
   useAvisoDeAccion(descartar[0]);
 
-  const credencial = aceptar[0].credencial;
+  const credencial = aceptar[0].credencial ?? presupuestar[0].credencial;
 
   return (
     <ContextoDecisiones.Provider value={{ aceptar, presupuestar, descartar }}>
