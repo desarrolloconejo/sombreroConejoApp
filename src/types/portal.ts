@@ -82,6 +82,12 @@ export type PersonaBreve = {
   nombre: string;
 };
 
+/**
+ * Un ejecutivo de cuentas que puede llevar un proyecto de una empresa. Los de
+ * otra cuenta solo los ofrece el administrador: es la excepcion por proyecto.
+ */
+export type EjecutivoPosible = PersonaBreve & { deOtraCuenta: boolean };
+
 /** Alguien del equipo a quien se le puede asignar trabajo. */
 export type PersonaDeEquipo = PersonaBreve & {
   /** El nombre del cargo, para distinguir a quien se elige. */

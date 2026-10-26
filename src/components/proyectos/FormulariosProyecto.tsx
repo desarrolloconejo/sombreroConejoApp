@@ -7,13 +7,13 @@ import { cambiarEstadoProyecto, editarProyecto } from "@/actions/proyectos";
 import { crearPieza } from "@/actions/piezas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { PanelCuerpo, PanelPie } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, CampoFecha, Selector, useCampos } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, CampoFecha, CampoFijo, Selector, useCampos } from "@/components/ui";
 import {
   ESTADO_INICIAL,
   NOMBRES_DE_ESTADO_PROYECTO,
   NOMBRES_DE_TIPO_PIEZA,
+  type EjecutivoPosible,
   type EstadoProyecto,
-  type PersonaBreve,
   type Proyecto,
   type TipoPieza,
 } from "@/types";
@@ -28,11 +28,14 @@ import {
 export function EditarProyecto({
   proyecto,
   ejecutivos,
+  puedeReasignar,
   hrefCancelar,
 }: {
   proyecto: Proyecto;
-  /** Quien puede llevarlo: los ejecutivos de cuentas asignados a la empresa. */
-  ejecutivos: PersonaBreve[];
+  /** Quien puede llevarlo: los ejecutivos de cuentas, primero los de la empresa. */
+  ejecutivos: EjecutivoPosible[];
+  /** Solo el administrador cambia quien lo lleva; el resto lo ve. */
+  puedeReasignar: boolean;
   hrefCancelar: string;
 }) {
   const [estado, enviar, enviando] = useActionState(editarProyecto, ESTADO_INICIAL);
@@ -69,6 +72,7 @@ export function EditarProyecto({
             maxLength={1000}
             className="col-span-2"
           />
+          {puedeReasignar ? (
           <Selector
             id="editar-ejecutivo"
             nombre="ejecutivoId"
@@ -85,12 +89,27 @@ export function EditarProyecto({
                       detalle: "Lo lleva hoy; ya no se puede elegir",
                     },
                   ]),
-              ...ejecutivos.map((p) => ({ valor: String(p.id), texto: p.nombre })),
+              ...ejecutivos.map((p) => ({
+                valor: String(p.id),
+                texto: p.nombre,
+                detalle: p.deOtraCuenta ? "De otra cuenta: vera solo este proyecto" : undefined,
+              })),
             ]}
             valorInicial={String(proyecto.ejecutivoId)}
             error={errores.ejecutivoId}
             className="col-span-2"
           />
+          ) : (
+            <>
+              <input type="hidden" name="ejecutivoId" value={proyecto.ejecutivoId} />
+              <CampoFijo
+                etiqueta="Lo lleva"
+                valor={proyecto.ejecutivoNombre}
+                ayuda="Solo un administrador puede cambiar quien lo lleva."
+                className="col-span-2"
+              />
+            </>
+          )}
           <CampoFecha
             id="editar-inicio"
             etiqueta="Inicio"

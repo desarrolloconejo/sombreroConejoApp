@@ -80,8 +80,15 @@ export default async function PaginaProyectos(props: PageProps<"/dashboard/proye
 
     // El alta necesita saber quien puede llevar cada proyecto: los ejecutivos
     // de cuentas asignados a cada empresa.
+    // El administrador elige entre todos los ejecutivos de cuentas; un
+    // ejecutivo lo lleva el mismo y no necesita la lista.
     const alta =
-      estado.panel === "nuevo" ? { asignaciones: await asignacionesModelo.visibles(tx) } : null;
+      estado.panel === "nuevo"
+        ? {
+            asignaciones: await asignacionesModelo.visibles(tx),
+            ejecutivos: usuario.rol === "admin" ? await proyectosModelo.ejecutivosDeCuentas(tx) : [],
+          }
+        : null;
 
     return { empresas, pagina, alta, empresaIds };
   });
@@ -140,6 +147,8 @@ export default async function PaginaProyectos(props: PageProps<"/dashboard/proye
               <FormularioProyecto
                 empresas={datos.empresas}
                 asignaciones={datos.alta.asignaciones}
+                ejecutivos={datos.alta.ejecutivos}
+                esAdmin={usuario.rol === "admin"}
                 usuarioId={usuario.id}
                 empresaInicial={datos.empresaIds[0] ?? null}
                 hrefCancelar={hrefCerrar}

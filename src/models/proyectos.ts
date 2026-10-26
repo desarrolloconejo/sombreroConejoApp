@@ -8,6 +8,7 @@ import {
 } from "@/lib/db";
 import type {
   DatosNuevoProyecto,
+  EjecutivoPosible,
   EstadoProyecto,
   FiltrosProyectos,
   NombreEmpresa,
@@ -259,11 +260,12 @@ export async function buscarPorId(
 
 /**
  * Si quien pregunta gestiona el proyecto: lo crea, lo mueve y asigna. La
- * respuesta es la de la base, la misma que aplican sus politicas.
+ * respuesta es la de la base, la misma que aplican sus politicas: quien
+ * gestiona la empresa, o el ejecutivo que lo lleva aunque sea de otra cuenta.
  */
 export async function gestiona(id: number, ejecutor: Ejecutor): Promise<boolean> {
   const fila = await consultarUno<{ gestiona: boolean }>(
-    `SELECT portal.gestiona_empresa(empresa_id) AS gestiona
+    `SELECT portal.gestiona_proyecto(id) AS gestiona
      FROM portal.proyectos WHERE id = $1`,
     [id],
     ejecutor,
@@ -373,25 +375,38 @@ export async function empresasGestionables(ejecutor: Ejecutor): Promise<NombreEm
 }
 
 /**
- * Quien puede llevar un proyecto de una empresa: SOLO los ejecutivos de
- * cuentas activos asignados a ella. Un administrador no lleva proyectos: si
- * quiere uno, se le asigna la empresa como a cualquier ejecutivo.
+ * Quien puede llevar un proyecto de una empresa: los ejecutivos de cuentas
+ * activos. Primero los asignados a ella; despues los de otra cuenta, que solo
+ * puede elegir un administrador (la excepcion por proyecto). Un administrador
+ * no lleva proyectos.
  */
 export async function ejecutivosPosibles(
   empresaId: number,
   ejecutor: Ejecutor,
-): Promise<PersonaBreve[]> {
+): Promise<EjecutivoPosible[]> {
+  return consultar<EjecutivoPosible>(
+    `SELECT v.id,
+            v.nombre || ' ' || v.apellido AS nombre,
+            NOT EXISTS (
+              SELECT 1 FROM portal.asignaciones a
+              WHERE a.usuario_id = v.id AND a.empresa_id = $1
+            ) AS "deOtraCuenta"
+     FROM vw_usuarios_completos v
+     WHERE v.activo AND v.cargo_slug = 'cuentas'
+     ORDER BY "deOtraCuenta", lower(v.nombre), lower(v.apellido)`,
+    [empresaId],
+    ejecutor,
+  );
+}
+
+/** Todos los ejecutivos de cuentas activos: el alta del administrador los ofrece. */
+export async function ejecutivosDeCuentas(ejecutor: Ejecutor): Promise<PersonaBreve[]> {
   return consultar<PersonaBreve>(
     `SELECT v.id, v.nombre || ' ' || v.apellido AS nombre
      FROM vw_usuarios_completos v
-     WHERE v.activo
-       AND v.cargo_slug = 'cuentas'
-       AND EXISTS (
-         SELECT 1 FROM portal.asignaciones a
-         WHERE a.usuario_id = v.id AND a.empresa_id = $1
-       )
+     WHERE v.activo AND v.cargo_slug = 'cuentas'
      ORDER BY lower(v.nombre), lower(v.apellido)`,
-    [empresaId],
+    [],
     ejecutor,
   );
 }

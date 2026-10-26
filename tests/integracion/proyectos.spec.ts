@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { EMAIL_EJECUTIVO, USUARIOS } from "../../db/datos/semilla.mts";
+import { EMAIL_ADMIN_PRUEBAS, EMAIL_EJECUTIVO, USUARIOS } from "../../db/datos/semilla.mts";
 import { elegirEmpresa, elegirOpcion } from "./ayudas/formularios";
 
 /**
@@ -36,6 +36,8 @@ test("el ejecutivo crea un proyecto, cumple una tarea y completa la fase", async
   });
 
   await elegirEmpresa(page);
+  // Lo lleva quien lo abre: el ejecutivo no elige.
+  await expect(page.getByText("Solo un administrador puede darselo a otro ejecutivo.")).toBeVisible();
   await page.getByLabel("Nombre", { exact: true }).fill(nombre);
   await page.getByLabel("Titulo de la pieza 1").fill("Pieza de la prueba");
   await page.getByRole("button", { name: "Crear proyecto" }).click();
@@ -44,6 +46,14 @@ test("el ejecutivo crea un proyecto, cumple una tarea y completa la fase", async
   await expect(page).toHaveURL(/\/dashboard\/proyectos\/\d+$/, { timeout: 60_000 });
   await expect(page.getByRole("heading", { name: nombre })).toBeVisible();
   await expect(page.getByRole("img", { name: "Avance del proyecto: 0 por ciento" })).toBeVisible();
+
+  // Al editarlo, ve quien lo lleva pero no lo cambia.
+  const proyectoUrl = page.url();
+  await page.getByRole("link", { name: "Editar" }).click();
+  await expect(page.getByText("Solo un administrador puede cambiar quien lo lleva.")).toBeVisible({
+    timeout: 60_000,
+  });
+  await page.goto(proyectoUrl, { waitUntil: "networkidle" });
 
   // La ficha de la pieza.
   await page.getByRole("link", { name: /Pieza de la prueba/ }).click();
@@ -95,4 +105,16 @@ test("quien no es de cuentas no entra en Proyectos", async ({ page }) => {
   await page.goto("/dashboard/proyectos");
 
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 60_000 });
+});
+
+test("el administrador elige quien lleva un proyecto, tambien de otra cuenta", async ({ page }) => {
+  const admin = USUARIOS.find((u) => u.email === EMAIL_ADMIN_PRUEBAS);
+  if (!admin) throw new Error("La semilla no trae al administrador");
+
+  await entrar(page, admin.email, admin.password);
+  await page.goto("/dashboard/proyectos?panel=nuevo", { waitUntil: "networkidle" });
+  await expect(page.getByRole("heading", { name: "Abrir un proyecto" })).toBeVisible({ timeout: 60_000 });
+  await elegirEmpresa(page);
+  await expect(page.getByText("Solo un administrador puede darselo a otro ejecutivo.")).toHaveCount(0);
+  await elegirOpcion(page, "Lo lleva", "Andres Rojas");
 });

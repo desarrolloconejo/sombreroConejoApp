@@ -1556,15 +1556,33 @@ CREATE OR REPLACE FUNCTION portal.gestiona_empresa(p_empresa integer)
     END
   $fn$;
 
-CREATE OR REPLACE FUNCTION portal.gestiona_pieza(p_pieza integer)
+-- Gestiona el proyecto: quien gestiona su empresa, o el ejecutivo de cuentas
+-- que lo lleva aunque la empresa no le este asignada. Es la excepcion por
+-- proyecto: el administrador puede darle un proyecto concreto a un ejecutivo
+-- de otra cuenta, que gestiona ese proyecto y nada mas de la empresa (los
+-- briefs y los demas proyectos siguen yendo por gestiona_empresa).
+CREATE OR REPLACE FUNCTION portal.gestiona_proyecto(p_proyecto integer)
   RETURNS boolean
   LANGUAGE sql STABLE SECURITY DEFINER
   SET search_path = public, pg_temp
   AS $fn$
     SELECT COALESCE((
       SELECT portal.gestiona_empresa(pr.empresa_id)
+          OR (app_rol() = 'trabajador' AND app_cargo() = 'cuentas'
+              AND pr.ejecutivo_id = app_usuario_id())
+      FROM portal.proyectos pr
+      WHERE pr.id = p_proyecto
+    ), false)
+  $fn$;
+
+CREATE OR REPLACE FUNCTION portal.gestiona_pieza(p_pieza integer)
+  RETURNS boolean
+  LANGUAGE sql STABLE SECURITY DEFINER
+  SET search_path = public, pg_temp
+  AS $fn$
+    SELECT COALESCE((
+      SELECT portal.gestiona_proyecto(p.proyecto_id)
       FROM portal.piezas p
-      JOIN portal.proyectos pr ON pr.id = p.proyecto_id
       WHERE p.id = p_pieza
     ), false)
   $fn$;
@@ -1625,12 +1643,12 @@ CREATE OR REPLACE FUNCTION portal.pieza_en_revision(p_pieza integer)
   $fn$;
 
 REVOKE ALL ON FUNCTION
-  portal.gestiona_empresa(integer), portal.gestiona_pieza(integer),
+  portal.gestiona_empresa(integer), portal.gestiona_proyecto(integer), portal.gestiona_pieza(integer),
   portal.trabaja_en_pieza(integer), portal.trabaja_en_proyecto(integer),
   portal.cliente_ve_pieza(integer), portal.pieza_en_revision(integer)
   FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION
-  portal.gestiona_empresa(integer), portal.gestiona_pieza(integer),
+  portal.gestiona_empresa(integer), portal.gestiona_proyecto(integer), portal.gestiona_pieza(integer),
   portal.trabaja_en_pieza(integer), portal.trabaja_en_proyecto(integer),
   portal.cliente_ve_pieza(integer), portal.pieza_en_revision(integer)
   TO conejo_app;
@@ -1667,12 +1685,15 @@ CREATE POLICY asignaciones_quita ON portal.asignaciones
   FOR DELETE TO conejo_app
   USING (app_rol() = 'admin');
 
--- Proyectos.
+-- Proyectos. El ejecutivo de cuentas que lleva un proyecto lo gestiona aunque
+-- la empresa no le este asignada (ver gestiona_proyecto); aqui se mira su
+-- columna directamente, sin volver a consultar la tabla.
 DROP POLICY IF EXISTS proyectos_lee ON portal.proyectos;
 CREATE POLICY proyectos_lee ON portal.proyectos
   FOR SELECT TO conejo_app
   USING (
     portal.gestiona_empresa(empresa_id)
+    OR (app_rol() = 'trabajador' AND app_cargo() = 'cuentas' AND ejecutivo_id = app_usuario_id())
     OR (app_rol() = 'cliente' AND empresa_id = app_empresa_id())
     OR portal.trabaja_en_proyecto(id)
   );
@@ -1685,8 +1706,32 @@ CREATE POLICY proyectos_crea ON portal.proyectos
 DROP POLICY IF EXISTS proyectos_edita ON portal.proyectos;
 CREATE POLICY proyectos_edita ON portal.proyectos
   FOR UPDATE TO conejo_app
-  USING (portal.gestiona_empresa(empresa_id))
-  WITH CHECK (portal.gestiona_empresa(empresa_id));
+  USING (
+    portal.gestiona_empresa(empresa_id)
+    OR (app_rol() = 'trabajador' AND app_cargo() = 'cuentas' AND ejecutivo_id = app_usuario_id())
+  )
+  WITH CHECK (
+    portal.gestiona_empresa(empresa_id)
+    OR (app_rol() = 'trabajador' AND app_cargo() = 'cuentas' AND ejecutivo_id = app_usuario_id())
+  );
+
+-- Quien lleva un proyecto solo lo cambia un administrador. Lo impone la base
+-- y no solo la pantalla. Sin sesion declarada (la semilla, como duena) no se
+-- mira: el rol de la aplicacion sin sesion no ve ninguna fila que cambiar.
+CREATE OR REPLACE FUNCTION portal.proyectos_solo_admin_reasigna() RETURNS trigger AS $fn$
+BEGIN
+  IF NEW.ejecutivo_id IS DISTINCT FROM OLD.ejecutivo_id
+     AND app_rol() IS NOT NULL AND app_rol() <> 'admin' THEN
+    RAISE EXCEPTION 'Solo un administrador cambia quien lleva un proyecto'
+      USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  RETURN NEW;
+END
+$fn$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER proyectos_solo_admin_reasigna
+  BEFORE UPDATE OF ejecutivo_id ON portal.proyectos
+  FOR EACH ROW EXECUTE FUNCTION portal.proyectos_solo_admin_reasigna();
 
 -- Piezas.
 DROP POLICY IF EXISTS piezas_lee ON portal.piezas;
@@ -1701,10 +1746,7 @@ CREATE POLICY piezas_lee ON portal.piezas
 DROP POLICY IF EXISTS piezas_crea ON portal.piezas;
 CREATE POLICY piezas_crea ON portal.piezas
   FOR INSERT TO conejo_app
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM portal.proyectos pr
-    WHERE pr.id = proyecto_id AND portal.gestiona_empresa(pr.empresa_id)
-  ));
+  WITH CHECK (portal.gestiona_proyecto(proyecto_id));
 
 DROP POLICY IF EXISTS piezas_edita ON portal.piezas;
 CREATE POLICY piezas_edita ON portal.piezas

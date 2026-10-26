@@ -127,6 +127,7 @@ export type {
   EstadoTarea,
   TipoCorreccion,
   AlertaPieza,
+  EjecutivoPosible,
   PersonaBreve,
   PersonaDeEquipo,
   Asignacion,
