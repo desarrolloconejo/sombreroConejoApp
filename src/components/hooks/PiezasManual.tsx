@@ -273,9 +273,9 @@ export function MapaRetencion() {
         </div>
       </div>
 
-      <ol className="grid gap-x-px gap-y-5 p-[26px] pt-5 sm:grid-cols-2 xl:grid-cols-4">
+      <ol className="grid gap-x-px gap-y-5 p-[26px] pt-5 sm:grid-cols-2 2xl:grid-cols-4">
         {HITOS_VENTANA.map((hito, i) => (
-          <li key={hito.titulo} className="xl:px-[18px] xl:first:pl-0 xl:last:pr-0">
+          <li key={hito.titulo} className="2xl:px-[18px] 2xl:first:pl-0 2xl:last:pr-0">
             <div className="mb-2.5 flex items-center gap-2.5">
               <span className="grid size-[26px] shrink-0 place-items-center rounded-lg bg-acento text-[11.5px] font-extrabold text-acento-contraste">
                 {i + 1}

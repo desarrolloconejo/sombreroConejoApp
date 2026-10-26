@@ -122,7 +122,7 @@ export function Listado<T>({
         {rejilla && hayFilas && <ListadoOrden ruta={ruta} estado={estado} columnas={columnas} />}
 
         {hayFilas && rejilla ? (
-          <ul aria-label={titulo} className="grid grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+          <ul aria-label={titulo} className="grid grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:grid-cols-2 sm:p-5 2xl:grid-cols-3">
             {filas.map((fila, indice) => (
               <li key={claveFila ? claveFila(fila) : indice} className="min-w-0">
                 {rejilla(fila)}

@@ -152,65 +152,70 @@ export function EditorFormato({ formato }: { formato: FormatoImpresion }) {
     setColumnas((previas) => ({ ...previas, [clave]: { ...previas[clave], ...cambio } }));
 
   return (
-    <form action={enviar} noValidate className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1fr)_380px]">
+    <form action={enviar} noValidate className="grid grid-cols-[minmax(0,1fr)] gap-6 2xl:grid-cols-[minmax(0,1fr)_340px]">
       <input type="hidden" name="id" value={formato.id} />
 
       <div className="flex flex-col gap-6">
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-4">
-          <Campo
-            id="fmt-nombre"
-            etiqueta="Nombre"
-            name="nombre"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            maxLength={80}
-            error={errores.nombre}
-            className="sm:col-span-4"
-          />
-          <Campo
-            id="fmt-ancho"
-            etiqueta="Ancho (mm)"
-            name="anchoMm"
-            inputMode="decimal"
-            value={ancho}
-            onChange={(e) => setAncho(e.target.value)}
-            error={errores.anchoMm}
-          />
-          <Campo
-            id="fmt-alto"
-            etiqueta="Alto (mm)"
-            name="altoMm"
-            inputMode="decimal"
-            value={alto}
-            onChange={(e) => setAlto(e.target.value)}
-            error={errores.altoMm}
-          />
-          <Campo
-            id="fmt-fuente"
-            etiqueta="Letra (pt)"
-            name="fuentePt"
-            inputMode="decimal"
-            value={fuente}
-            onChange={(e) => setFuente(e.target.value)}
-            error={errores.fuentePt}
-          />
-          <label className="flex cursor-pointer items-end gap-2.5 pb-3 text-[13px] font-semibold">
-            <input
-              type="checkbox"
-              name="activo"
-              value="si"
-              checked={activo}
-              onChange={(e) => setActivo(e.target.checked)}
-              className="size-4 accent-[var(--acento)]"
+        <section aria-labelledby="titulo-hoja">
+          <h2 id="titulo-hoja" className="mb-2 text-[14px] font-bold">
+            La hoja
+          </h2>
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-4">
+            <Campo
+              id="fmt-nombre"
+              etiqueta="Nombre"
+              name="nombre"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              maxLength={80}
+              error={errores.nombre}
+              className="sm:col-span-4"
             />
-            Activo
-          </label>
-        </div>
+            <Campo
+              id="fmt-ancho"
+              etiqueta="Ancho (mm)"
+              name="anchoMm"
+              inputMode="decimal"
+              value={ancho}
+              onChange={(e) => setAncho(e.target.value)}
+              error={errores.anchoMm}
+            />
+            <Campo
+              id="fmt-alto"
+              etiqueta="Alto (mm)"
+              name="altoMm"
+              inputMode="decimal"
+              value={alto}
+              onChange={(e) => setAlto(e.target.value)}
+              error={errores.altoMm}
+            />
+            <Campo
+              id="fmt-fuente"
+              etiqueta="Letra (pt)"
+              name="fuentePt"
+              inputMode="decimal"
+              value={fuente}
+              onChange={(e) => setFuente(e.target.value)}
+              error={errores.fuentePt}
+            />
+            <label className="flex cursor-pointer items-end gap-2.5 pb-3 text-[13px] font-semibold">
+              <input
+                type="checkbox"
+                name="activo"
+                value="si"
+                checked={activo}
+                onChange={(e) => setActivo(e.target.checked)}
+                className="size-4 accent-[var(--acento)]"
+              />
+              Activo
+            </label>
+          </div>
+        </section>
 
         <section aria-labelledby="titulo-campos">
-          <h3 id="titulo-campos" className="mb-2 text-[14px] font-bold">
+          <h2 id="titulo-campos" className="mb-2 text-[14px] font-bold">
             Datos de la factura
-          </h3>
+          </h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
               <thead>
@@ -281,9 +286,9 @@ export function EditorFormato({ formato }: { formato: FormatoImpresion }) {
         </section>
 
         <section aria-labelledby="titulo-renglones" className="flex flex-col gap-3">
-          <h3 id="titulo-renglones" className="text-[14px] font-bold">
+          <h2 id="titulo-renglones" className="text-[14px] font-bold">
             Renglones
-          </h3>
+          </h2>
           <div className="grid grid-cols-3 gap-3">
             <Campo
               id="fmt-y-inicio"
@@ -377,7 +382,10 @@ export function EditorFormato({ formato }: { formato: FormatoImpresion }) {
         </div>
       </div>
 
-      <aside aria-label="Vista previa" className="xl:sticky xl:top-6 xl:self-start">
+      <aside aria-labelledby="titulo-vista-previa" className="2xl:sticky 2xl:top-6 2xl:self-start">
+        <h2 id="titulo-vista-previa" className="mb-1 text-[14px] font-bold">
+          Vista previa
+        </h2>
         <p className="mb-2 text-[12px] text-suave">
           La hoja a escala. Cada recuadro es un dato; las lineas punteadas, las columnas de los renglones.
         </p>

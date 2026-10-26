@@ -226,10 +226,10 @@ export function FormularioHook({
 
       {/* ================= contexto ================= */}
       <section className="surge rounded-[15px] border border-borde bg-superficie px-[26px] py-6 shadow-[var(--sombra)]">
-        <p className="mb-4 flex items-center gap-3 text-[10.5px] font-bold tracking-[0.12em] text-suave uppercase">
+        <h2 className="mb-4 flex items-center gap-3 text-[10.5px] font-bold tracking-[0.12em] text-suave uppercase">
           Contexto
           <span aria-hidden="true" className="h-px flex-1 bg-borde" />
-        </p>
+        </h2>
 
         <div className="grid gap-[18px] sm:grid-cols-2">
           <div>
@@ -354,10 +354,10 @@ export function FormularioHook({
 
       {/* ================= apertura ================= */}
       <section className="surge rounded-[15px] border border-borde bg-superficie px-[26px] py-6 shadow-[var(--sombra)] [--retraso:0.06s]">
-        <p className="mb-1.5 flex items-center gap-3 text-[10.5px] font-bold tracking-[0.12em] text-suave uppercase">
+        <h2 className="mb-1.5 flex items-center gap-3 text-[10.5px] font-bold tracking-[0.12em] text-suave uppercase">
           Apertura y pago
           <span aria-hidden="true" className="h-px flex-1 bg-borde" />
-        </p>
+        </h2>
         <p className="mb-[18px] text-[11.5px] leading-relaxed text-suave">
           Las capas se revisan como una decision, no como campos aislados.
         </p>
@@ -477,9 +477,9 @@ export function FormularioHook({
       <section className="surge overflow-hidden rounded-[15px] border border-borde bg-superficie shadow-[var(--sombra)] [--retraso:0.1s]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-borde px-[22px] py-4">
           <div>
-            <p className="mb-1 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
+            <h2 className="mb-1 text-[10.5px] font-bold tracking-[0.1em] text-suave uppercase">
               Ficha para edicion
-            </p>
+            </h2>
             <p className="text-[15px] font-bold tracking-[-0.012em]">
               Lo que se entrega, sin interpretar
             </p>

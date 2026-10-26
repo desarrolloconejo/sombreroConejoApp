@@ -52,7 +52,7 @@ export default async function PaginaMisProyectos() {
               No hay proyectos en curso ahora mismo.
             </p>
           ) : (
-            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
               {enCurso.map((proyecto) => (
                 <li key={proyecto.id}>
                   <TarjetaProyectoCliente proyecto={proyecto} />
@@ -67,7 +67,7 @@ export default async function PaginaMisProyectos() {
             <h2 id="titulo-cerrados" className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">
               Historial
             </h2>
-            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
               {cerrados.map((proyecto) => (
                 <li key={proyecto.id}>
                   <TarjetaProyectoCliente proyecto={proyecto} />

@@ -48,7 +48,7 @@ export default function CargandoProyectos() {
             <div className="hueso h-9 w-[72px] rounded-[10px]" />
           </div>
 
-          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-4 p-4 sm:grid-cols-2 sm:p-5 2xl:grid-cols-3">
             {TARJETAS.map((tarjeta, indice) => (
               <div key={`tarjeta-${indice}`} className="rounded-[15px] border border-borde p-5">
                 <div className="flex items-center gap-3">

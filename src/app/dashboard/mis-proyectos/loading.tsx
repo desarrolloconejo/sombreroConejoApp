@@ -18,7 +18,7 @@ export default function CargandoMisProyectos() {
         </div>
         <div className="hueso h-[74px] rounded-[15px]" />
         <div className="hueso mt-8 mb-3 h-[19px] w-[90px]" />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
           {[0, 1, 2].map((indice) => (
             <div key={indice} className="rounded-[15px] border border-borde bg-superficie p-5 shadow-[var(--sombra)]">
               <div className="hueso h-4 w-[70%]" />

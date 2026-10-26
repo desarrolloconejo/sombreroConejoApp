@@ -73,7 +73,7 @@ export default async function PaginaInicio() {
       {enCurso.length > 0 && (
         <section aria-label="Tus proyectos en curso">
           <h2 className="mb-3 text-[19px] font-extrabold tracking-[-0.02em]">Tus proyectos</h2>
-          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
             {enCurso.map((proyecto) => (
               <li key={proyecto.id}>
                 <TarjetaProyectoCliente proyecto={proyecto} />
