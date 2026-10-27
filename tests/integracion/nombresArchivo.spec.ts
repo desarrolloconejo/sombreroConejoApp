@@ -20,6 +20,11 @@ test("el equipo arma un nombre con la sigla de la empresa", async ({ page }) => 
   await expect(page.getByRole("button", { name: "Copiar nombre" })).toBeDisabled();
 
   await elegirOpcion(page, "Cliente", EMPRESA_SEMILLA);
+
+  // Ve los proyectos de la empresa con su nombre corto, trabaje o no en ellos.
+  await page.getByRole("combobox", { name: "Proyecto", exact: true }).click();
+  await expect(page.getByRole("option", { name: /Parrilla de octubre/ })).toBeVisible();
+  await page.getByRole("option", { name: /Escribir otro/ }).click();
   await page.getByLabel(/proyecto o campana/i).fill("Lanzamiento Prado");
   await elegirOpcion(page, "Tipo de archivo", /Key visual/);
   await elegirOpcion(page, "Version", /Version 03/);

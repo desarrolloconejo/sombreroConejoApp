@@ -278,15 +278,15 @@ export async function gestiona(id: number, ejecutor: Ejecutor): Promise<boolean>
 }
 
 /**
- * Los proyectos en marcha que quien mira alcanza, con su nombre corto: los
- * que ofrece el armador de nombres de archivo. La base decide cuales ve.
+ * Los proyectos en marcha con su nombre corto, para el armador de nombres de
+ * archivo. Todo el equipo los ve todos, aunque no trabaje en ellos, pero solo
+ * el nombre y el nombre corto: lo da `portal.proyectos_para_nombrar`, que a
+ * un cliente no le devuelve nada.
  */
 export async function paraNombrar(ejecutor: Ejecutor): Promise<ProyectoParaNombrar[]> {
   return consultar<ProyectoParaNombrar>(
     `SELECT id, empresa_id AS "empresaId", nombre, nombre_corto AS "nombreCorto"
-     FROM portal.proyectos
-     WHERE estado IN ('activo', 'pausado')
-     ORDER BY lower(nombre)`,
+     FROM portal.proyectos_para_nombrar()`,
     [],
     ejecutor,
   );

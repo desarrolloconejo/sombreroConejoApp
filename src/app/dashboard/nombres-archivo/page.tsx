@@ -12,9 +12,10 @@ import * as proyectosModelo from "@/models/proyectos";
  * Nombres de archivo: el armador de la nomenclatura de la agencia
  * (CLIENTE_PROYECTO_TIPO_AAMM_VERSION.ext), para todo el equipo.
  *
- * Los clientes salen de Empresas, con su sigla, y los proyectos de los que
- * quien mira alcanza, con su nombre corto: los mismos bloques con que la app
- * renombra lo que se sube a una pieza.
+ * Los clientes salen de Empresas, con su sigla, y los proyectos en marcha de
+ * todos ellos, con su nombre corto (solo eso, aunque quien mira no trabaje en
+ * ellos): los mismos bloques con que la app renombra lo que se sube a una
+ * pieza.
  */
 
 export const metadata: Metadata = {

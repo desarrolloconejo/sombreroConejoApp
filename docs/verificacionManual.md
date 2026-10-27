@@ -551,4 +551,6 @@ Nomenclatura de archivos (R18 y R20 de `docs/pendientesIntegracion.md`).
 57. Herramientas → **Nombres de archivo** (cualquier persona del equipo):
     elegir cliente, proyecto (o escribir uno), tipo, mes, version y
     extension arma el nombre; mientras falte algo lo dice y no deja copiar.
-    «Copiar nombre» lo copia. Un cliente no ve el modulo.
+    «Copiar nombre» lo copia. Entrando con alguien de diseno o redes, la
+    lista de proyectos trae todos los de la empresa, tambien en los que no
+    trabaja, aunque no pueda abrirlos. Un cliente no ve el modulo.
