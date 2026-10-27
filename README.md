@@ -4,7 +4,7 @@ Plataforma interna de **El Conejo del Sombrero** para centralizar y automatizar
 los procesos de la agencia, orientada a sus trabajadores y a sus clientes.
 
 Hoy cubre autenticacion, usuarios, empresas, perfil, auditoria, la bandeja de
-salida de correos, el modulo de Hooks, el de Proyectos (piezas, bateria de
+salida de correos, el modulo de Hooks, Nombres de archivo, el de Proyectos (piezas, bateria de
 fases y tareas), presupuestos y proformas, y los briefs (del cliente, de la
 bandeja de cuentas y de prospectos por enlace privado). Esta
 en marcha la integracion de un portal completo —briefs, proyectos, revision del
@@ -549,6 +549,16 @@ Hooks es ademas una **herramienta** (`src/lib/herramientas.ts`): la tarea
 «Escribir el hook» lleva al canvas con `?tarea=`, la ficha queda ligada a ella
 (`fichas_hook.tarea_id`) y, cuando aprueba la auditoria, la tarea se da por
 lista. Quien no es de redes entra asi, y solo a su ficha.
+
+### Nombres de archivo
+
+Los archivos se nombran `CLIENTE_PROYECTO_TIPO_AAMM_vNN.ext`, con las reglas
+del armador que usaba el estudio. Viven en `src/lib/nomenclatura.ts` y las
+usan dos sitios: la app al renombrar lo que se sube a una pieza, y el modulo
+**Nombres de archivo** (`/dashboard/nombres-archivo`, Herramientas, para todo
+el equipo) para lo que se nombra a mano. CLIENTE es la **sigla** de la
+empresa y PROYECTO el **nombre corto** del proyecto: se escriben en sus
+formularios, y si faltan la base los propone a partir del nombre.
 
 ### El modulo de Proyectos
 

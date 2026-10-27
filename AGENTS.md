@@ -30,7 +30,8 @@ administracion), para los clientes Mis proyectos (revision en la fase 5), Mis
 briefs y Facturacion (sus presupuestos, proformas y facturas, el estado de
 cuenta y el reporte de pagos), Facturas, Cobranza y Ajustes de finanzas para
 el admin y administracion, el brief de un prospecto
-por su enlace (`/brief/[token]`, sin cuenta), y el modulo de Hooks.
+por su enlace (`/brief/[token]`, sin cuenta), el modulo de Hooks y Nombres
+de archivo (el armador de la nomenclatura, para todo el equipo).
 Esta en marcha la integracion de un portal completo (briefs, proyectos con
 bateria de fases y tareas, revision del cliente, finanzas). **Antes de
 construir nada de eso, lee `docs/planIntegracionPortal.md`**: es el plan
@@ -252,6 +253,17 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   cuenta (`convertirSiEsProspecto`, que decide por la cuenta y no por la
   empresa), y esa cuenta nace pudiendo aprobar piezas y ver las finanzas; las
   que crea el administrador en Usuarios nacen sin permisos.
+- **Los archivos se nombran con la nomenclatura de la agencia**,
+  `CLIENTE_PROYECTO_TIPO_AAMM_vNN.ext`, y sus reglas viven solo en
+  `src/lib/nomenclatura.ts`: la usan el renombrado de las versiones
+  (`nombreEstandar`) y el modulo Nombres de archivo. CLIENTE es
+  `empresas.sigla` (unica) y PROYECTO `portal.proyectos.nombre_corto`; si
+  una fila llega sin ellos, un trigger los propone a partir del nombre, asi
+  que nunca faltan. Varias piezas del mismo tipo en un proyecto llevan su
+  orden (POST-01), que cuenta `portal.orden_de_pieza` sobre todo el
+  proyecto aunque quien sube solo vea su pieza. La version aprobada se
+  descarga como APROBADO-CLIENTE (`comoAprobado`); en Drive conserva su
+  nombre. Un campo de la nomenclatura en un formulario es `CampoBloque`.
 - La version que vera el cliente se elige en la fase 4
   (`VersionParaCliente`, dentro de su tarjeta); la tarjeta Versiones sirve
   para subir en cualquier fase.

@@ -529,3 +529,26 @@ Pulido (R15, R17 y R19 de `docs/pendientesIntegracion.md`).
     responsable de la fase»), casilla u opcion muestra la mano; uno
     deshabilitado, el cursor de no permitido. En el telefono, tocar algo no
     lo deja con el color de «encima».
+
+## Revision del responsable — Bloque 4
+
+Nomenclatura de archivos (R18 y R20 de `docs/pendientesIntegracion.md`).
+
+53. Empresas (como administrador): cada empresa tiene su **sigla** en
+    «Editar» y en la ficha. Al registrar una nueva, se propone sola mientras
+    se escribe el nombre («Cafe Sendero, C.A.» → CAFE-SENDERO) y debajo dice
+    como quedara. Repetir la sigla de otra empresa da error. Revisar las
+    siglas propuestas para las empresas de antes.
+54. Proyectos: al abrir o editar un proyecto aparece el **nombre corto**,
+    propuesto a partir del nombre («Parrilla de octubre» →
+    PARRILLA-OCTUBRE).
+55. En una pieza, al elegir un archivo para subir, la tarjeta Versiones dice
+    «Se guardara como SIGLA_NOMBRE-CORTO_TIPO_AAMM_v0N.ext». Al guardarlo,
+    la version se llama asi. Con dos piezas del mismo tipo en el proyecto, el
+    tipo lleva su orden (POST-01, POST-02).
+56. Cuando el cliente aprueba una pieza cuya version es un archivo, al
+    descargarla se llama ..._APROBADO-CLIENTE.ext.
+57. Herramientas → **Nombres de archivo** (cualquier persona del equipo):
+    elegir cliente, proyecto (o escribir uno), tipo, mes, version y
+    extension arma el nombre; mientras falte algo lo dice y no deja copiar.
+    «Copiar nombre» lo copia. Un cliente no ve el modulo.
