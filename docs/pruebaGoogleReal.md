@@ -58,7 +58,11 @@ npm run correo:probar -- tu-correo@ejemplo.com
 ```
 
 Envia un solo correo de prueba a esa direccion. Si llega (mirar tambien el
-spam), la aplicacion puede enviar.
+spam), la aplicacion puede enviar. Hecho el 2026-10-27: llego.
+
+**Antes de correr las pruebas automaticas** (`npm run test:integracion`),
+volver a `CORREO_MODO=simulado`: con el correo real intentarian escribir a
+las cuentas inventadas de la semilla (`*.test`).
 
 ## 4. Encender los modos reales
 
