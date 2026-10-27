@@ -5,6 +5,7 @@ export { ASPECTO_CONTROL, ALTO_CONTROL, Campo, CampoFijo, CLASE_CONTROL, claseLi
 export type { TamanoControl } from "./Campo";
 export { Selector } from "./Selector";
 export { CampoArchivo } from "./CampoArchivo";
+export { CampoBloque } from "./CampoBloque";
 export { CampoFecha } from "./CampoFecha";
 export type { OpcionSelector } from "./Selector";
 export { Avatar, iniciales } from "./Avatar";

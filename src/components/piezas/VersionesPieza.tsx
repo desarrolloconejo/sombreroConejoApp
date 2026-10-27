@@ -65,20 +65,30 @@ export function Miniatura({ version }: { version: Version }) {
   );
 }
 
+/** La extension con que se guardara: la de la firma, que casi siempre es la del nombre. */
+function extensionDe(nombre: string): string {
+  const extension = nombre.split(".").pop()?.toLowerCase() ?? "";
+  return extension === "jpeg" ? "jpg" : extension || "ext";
+}
+
 export function VersionesPieza({
   piezaId,
   versiones,
   puedeSubir,
+  proximoNombre,
 }: {
   piezaId: number;
   versiones: Version[];
   /** Trabaja en la pieza o la gestiona, y la pieza esta activa. */
   puedeSubir: boolean;
+  /** Como se llamara el proximo archivo, sin extension. */
+  proximoNombre: string;
 }) {
   const [subido, subir, subiendo] = useActionState(subirVersion, ESTADO_INICIAL);
   useAvisoDeAccion(subido);
 
   const [origen, setOrigen] = useState<"archivo" | "enlace">("archivo");
+  const [extension, setExtension] = useState<string | null>(null);
 
   // Aqui se sube, en cualquier fase. Cual vera el cliente se elige en la
   // tarjeta de la fase 4 (VersionParaCliente); aqui solo se ve cual es.
@@ -160,7 +170,15 @@ export function VersionesPieza({
                 ayuda="Imagen o PDF, hasta 4 MB"
                 accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
                 error={subido.errores?.archivo}
+                onElegir={(archivo) => setExtension(archivo ? extensionDe(archivo.name) : null)}
               />
+              {/* La app lo renombra con la nomenclatura de la agencia: se dice antes de guardar. */}
+              <p className="mt-2 text-[11.5px] leading-relaxed text-suave">
+                Se guardara como{" "}
+                <span className="font-mono break-all text-texto">
+                  {proximoNombre}.{extension ?? "ext"}
+                </span>
+              </p>
             </fieldset>
 
             <fieldset

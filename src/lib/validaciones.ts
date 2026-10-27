@@ -1,4 +1,5 @@
 import type { ErroresCampo, Tema } from "@/types";
+import { LARGO_NOMBRE_CORTO, LARGO_SIGLA, limpiarBloque } from "./nomenclatura";
 import { excedeLimite } from "./password";
 
 /**
@@ -138,6 +139,13 @@ export type Validacion<T> = {
   valido: boolean;
 };
 
+/** Lo que falla en un bloque de la nomenclatura de archivos, ya limpio. Null si sirve. */
+function errorDeBloque(valor: string, largo: number, que: string): string | null {
+  if (!valor) return `Escribe ${que}: va en el nombre de los archivos`;
+  if (valor.length > largo) return `Como mucho ${largo} caracteres`;
+  return null;
+}
+
 function resultado<T>(valores: T, errores: ErroresCampo): Validacion<T> {
   return { valores, errores, valido: Object.keys(errores).length === 0 };
 }
@@ -222,6 +230,7 @@ const URL_VALIDA = /^https?:\/\/\S+$/;
 
 export function validarEmpresa(datos: FormData): Validacion<{
   nombre: string;
+  sigla: string;
   rif: string | null;
   sector: string | null;
   telefono: string | null;
@@ -242,6 +251,11 @@ export function validarEmpresa(datos: FormData): Validacion<{
   const errores: ErroresCampo = {};
 
   if (!nombre) errores.nombre = "Escribe el nombre de la empresa";
+
+  // La sigla se guarda ya en bloque: lo escrito «Cafe Sendero» queda CAFE-SENDERO.
+  const sigla = limpiarBloque(limpiarTexto(datos.get("sigla"), LARGO_SIGLA * 2));
+  const errorSigla = errorDeBloque(sigla, LARGO_SIGLA, "la sigla");
+  if (errorSigla) errores.sigla = errorSigla;
 
   if (telefono && !/^[\d\s+()-]{7,}$/.test(telefono)) {
     errores.telefono = "El telefono solo puede tener numeros, espacios y + ( ) -";
@@ -264,7 +278,7 @@ export function validarEmpresa(datos: FormData): Validacion<{
   }
 
   return resultado(
-    { nombre, rif, sector, telefono, direccion, ...enlaces },
+    { nombre, sigla, rif, sector, telefono, direccion, ...enlaces },
     errores,
   );
 }
@@ -321,6 +335,7 @@ export function comoFecha(valor: unknown): string | null {
 /** Lo que se puede cambiar de un proyecto, ya validado. */
 export function validarProyecto(datos: FormData): Validacion<{
   nombre: string;
+  nombreCorto: string;
   descripcion: string | null;
   ejecutivoId: number | null;
   fechaInicio: string | null;
@@ -335,6 +350,10 @@ export function validarProyecto(datos: FormData): Validacion<{
   const errores: ErroresCampo = {};
 
   if (!nombre) errores.nombre = "Ponle un nombre al proyecto";
+
+  const nombreCorto = limpiarBloque(limpiarTexto(datos.get("nombreCorto"), LARGO_NOMBRE_CORTO * 2));
+  const errorNombreCorto = errorDeBloque(nombreCorto, LARGO_NOMBRE_CORTO, "el nombre corto");
+  if (errorNombreCorto) errores.nombreCorto = errorNombreCorto;
   if (ejecutivoId === null) errores.ejecutivoId = "Elige quien lo lleva";
 
   if (datos.get("fechaInicio") && !fechaInicio) {
@@ -350,7 +369,7 @@ export function validarProyecto(datos: FormData): Validacion<{
   }
 
   return resultado(
-    { nombre, descripcion, ejecutivoId, fechaInicio, fechaEstimadaCierre },
+    { nombre, nombreCorto, descripcion, ejecutivoId, fechaInicio, fechaEstimadaCierre },
     errores,
   );
 }

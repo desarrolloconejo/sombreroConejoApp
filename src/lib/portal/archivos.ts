@@ -1,3 +1,4 @@
+import { bloque, fechaAamm, nombreDeArchivo, TIPO_DE_PIEZA } from "@/lib/nomenclatura";
 import type { TipoPieza } from "@/types";
 
 /**
@@ -11,64 +12,41 @@ import type { TipoPieza } from "@/types";
 /** El peso maximo de un archivo subido: lo que cabe en una peticion de Vercel. */
 export const TAMANO_MAXIMO = 4 * 1024 * 1024;
 
-/** Como se nombra cada tipo de pieza en el estandar del estudio. */
-const TIPO_ESTANDAR: Record<TipoPieza, string> = {
-  post: "POST",
-  carrusel: "CARRUSEL",
-  reel: "REEL",
-  historia: "STORY",
-  video: "VIDEO",
-  logo: "LOGO",
-  entregable: "PROPUESTA",
-  otro: "PIEZA",
-};
-
 /**
- * Un bloque del nombre: MAYUSCULAS, sin acentos ni enie, con guiones entre
- * palabras y nada que no sea letra, numero o guion.
- */
-export function bloque(texto: string): string {
-  return texto
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "SIN-NOMBRE";
-}
-
-/**
- * El nombre estandar del estudio:
+ * El nombre con que se guarda una version, con la nomenclatura de la agencia
+ * (`src/lib/nomenclatura.ts`):
  *
- *   CLIENTE_PROYECTO_ARCHIVO_TIPO_AAMMDD_VERSION.extension
+ *   SIGLA_NOMBRE-CORTO_TIPO_AAMM_vNN.extension
  *
- * La version va con dos digitos (v01, v02...). La ultima aprobada lleva
- * APROBADO-CLIENTE en lugar del numero.
+ * El cliente va por la sigla de la empresa y el proyecto por su nombre corto
+ * (la base los propone si nadie los escribio). Si el proyecto tiene varias piezas del mismo tipo, el tipo lleva el orden
+ * de la pieza entre ellas (POST-01, POST-02) para que no se pisen.
  */
 export function nombreEstandar(datos: {
+  /** La sigla de la empresa. */
   cliente: string;
+  /** El nombre corto del proyecto. */
   proyecto: string;
-  archivo: string;
   tipo: TipoPieza;
+  /** El lugar de la pieza entre las de su tipo en el proyecto. */
+  orden: { numero: number; total: number };
   /** AAAA-MM-DD, el dia de Caracas. */
   fecha: string;
   version: number | "aprobado";
-  extension: string;
+  extension?: string;
 }): string {
-  const fecha = datos.fecha.replaceAll("-", "").slice(2);
-  const version =
-    datos.version === "aprobado"
-      ? "APROBADO-CLIENTE"
-      : `v${String(datos.version).padStart(2, "0")}`;
-  const extension = datos.extension.replace(/^\./, "").toLowerCase();
+  const tipo =
+    TIPO_DE_PIEZA[datos.tipo] +
+    (datos.orden.total > 1 ? `-${String(datos.orden.numero).padStart(2, "0")}` : "");
 
-  return [
-    bloque(datos.cliente),
-    bloque(datos.proyecto),
-    bloque(datos.archivo),
-    TIPO_ESTANDAR[datos.tipo],
-    fecha,
-    version,
-  ].join("_") + (extension ? `.${extension}` : "");
+  return nombreDeArchivo({
+    cliente: bloque(datos.cliente),
+    proyecto: bloque(datos.proyecto),
+    tipo,
+    fecha: fechaAamm(datos.fecha),
+    version: datos.version,
+    extension: datos.extension,
+  });
 }
 
 /** Un tipo de archivo aceptado, reconocido por sus primeros bytes. */

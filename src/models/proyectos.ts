@@ -34,11 +34,13 @@ const COLUMNAS = `
   p.id,
   p.empresa_id                           AS "empresaId",
   e.nombre                               AS "empresaNombre",
+  e.sigla                                AS "empresaSigla",
   p.ejecutivo_id                         AS "ejecutivoId",
   u.nombre || ' ' || u.apellido          AS "ejecutivoNombre",
   p.servicio,
   p.tipo,
   p.nombre,
+  p.nombre_corto                         AS "nombreCorto",
   p.descripcion,
   p.estado,
   p.fecha_inicio::text                   AS "fechaInicio",
@@ -283,8 +285,8 @@ export async function crear(
   const fila = await consultarUno<{ id: number }>(
     `INSERT INTO portal.proyectos
        (empresa_id, ejecutivo_id, servicio, tipo, nombre, descripcion,
-        fecha_inicio, fecha_estimada_cierre, creado_por)
-     VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8::date, $9)
+        fecha_inicio, fecha_estimada_cierre, creado_por, nombre_corto)
+     VALUES ($1, $2, $3, $4, $5, $6, $7::date, $8::date, $9, $10)
      RETURNING id`,
     [
       datos.empresaId,
@@ -296,6 +298,7 @@ export async function crear(
       datos.fechaInicio ?? null,
       datos.fechaEstimadaCierre ?? null,
       creadoPor,
+      datos.nombreCorto ?? null,
     ],
     ejecutor,
   );
@@ -308,6 +311,7 @@ export async function crear(
 /** Lo que se puede editar de un proyecto despues de crearlo. */
 export type CambiosProyecto = {
   nombre: string;
+  nombreCorto: string;
   descripcion: string | null;
   ejecutivoId: number;
   fechaInicio: string | null;
@@ -325,7 +329,8 @@ export async function actualizar(
          descripcion = $3,
          ejecutivo_id = $4,
          fecha_inicio = $5::date,
-         fecha_estimada_cierre = $6::date
+         fecha_estimada_cierre = $6::date,
+         nombre_corto = $7
      WHERE id = $1`,
     [
       id,
@@ -334,6 +339,7 @@ export async function actualizar(
       cambios.ejecutivoId,
       cambios.fechaInicio,
       cambios.fechaEstimadaCierre,
+      cambios.nombreCorto,
     ],
     ejecutor,
   );

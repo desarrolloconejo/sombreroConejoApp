@@ -8,12 +8,13 @@ import { requerirAdmin } from "@/lib/sesion";
 import { comoIdentificador, validarEmpresa } from "@/lib/validaciones";
 import * as empresas from "@/models/empresas";
 import * as sesiones from "@/models/sesiones";
-import type { Empresa, EstadoFormulario, ValoresAuditoria } from "@/types";
+import type { Empresa, ErroresCampo, EstadoFormulario, ValoresAuditoria } from "@/types";
 
 /** Lo que de una empresa se anota cuando cambia. */
 function paraAuditoria(empresa: Empresa): ValoresAuditoria {
   return {
     nombre: empresa.nombre,
+    sigla: empresa.sigla,
     rif: empresa.rif,
     sector: empresa.sector,
     telefono: empresa.telefono,
@@ -25,6 +26,15 @@ function paraAuditoria(empresa: Empresa): ValoresAuditoria {
     youtube: empresa.youtube,
     linkedin: empresa.linkedin,
   };
+}
+
+/** El RIF y la sigla son unicos: el indice que choco dice cual de los dos se repite. */
+function choqueDeUnicidad(error: unknown): ErroresCampo {
+  const indice = (error as { constraint?: unknown }).constraint;
+
+  return indice === "empresas_sigla_unica"
+    ? { sigla: "Otra empresa ya usa esa sigla" }
+    : { rif: "Ya hay otra empresa con ese RIF" };
 }
 
 /**
@@ -96,7 +106,7 @@ export async function crearEmpresa(
      * tiene esa carrera.
      */
     if (esErrorPostgres(error, CODIGO_ERROR.VIOLACION_UNICIDAD)) {
-      return { ok: false, errores: { rif: "Ya hay una empresa con ese RIF" } };
+      return { ok: false, errores: choqueDeUnicidad(error) };
     }
 
     throw error;
@@ -149,7 +159,7 @@ export async function editarEmpresa(
     if (!actualizada) return { ok: false, mensaje: "Esa empresa ya no existe" };
   } catch (error) {
     if (esErrorPostgres(error, CODIGO_ERROR.VIOLACION_UNICIDAD)) {
-      return { ok: false, errores: { rif: "Ya hay otra empresa con ese RIF" } };
+      return { ok: false, errores: choqueDeUnicidad(error) };
     }
 
     throw error;

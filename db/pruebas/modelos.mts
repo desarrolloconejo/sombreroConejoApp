@@ -467,8 +467,10 @@ async function principal(): Promise<void> {
   );
 
   // ---------------------------------------------------------------- empresas
+  const sigla = `PRUEBA-${Date.now().toString().slice(-9)}`;
   const nueva = await empresas.crear({
     nombre: "PRUEBA · Empresa automatica",
+    sigla,
     rif: `J-${Date.now().toString().slice(-9)}`,
     sector: "PRUEBA-sector",
     telefono: "+58 412 000 0000",
@@ -487,6 +489,8 @@ async function principal(): Promise<void> {
     `id ${nueva.id}, sitio "${nueva.sitioWeb}"`,
   );
 
+  comprobar("La empresa guarda su sigla", nueva.sigla === sigla, `sigla "${nueva.sigla}"`);
+
   // Los enlaces que no se rellenan quedan NULL, no cadena vacia: es lo que
   // permite distinguir "no lo tiene" de "lo tiene y esta vacio".
   comprobar(
@@ -504,6 +508,7 @@ async function principal(): Promise<void> {
 
   const empresaEditada = await empresas.actualizar(nueva.id, {
     nombre: nueva.nombre,
+    sigla: nueva.sigla,
     rif: nueva.rif,
     sector: nueva.sector,
     telefono: nueva.telefono,

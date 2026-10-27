@@ -83,8 +83,13 @@ test("dos rondas: el cliente corrige la redaccion y despues aprueba", async ({ p
     mimeType: "image/png",
     buffer: PNG,
   });
+  // Antes de guardar dice como se llamara: la nomenclatura de la agencia, con
+  // la sigla de la empresa y el nombre corto propuesto del proyecto.
+  const guardado = /^DIST-EJEMPLO_REVISION-\d+_POST_\d{4}_v01\.png$/;
+  await expect(page.getByText(/Se guardara como/).locator("span")).toHaveText(guardado);
   await page.getByRole("button", { name: "Guardar version" }).click();
   await avisado(page, "Version 1 guardada");
+  await expect(page.getByTitle(guardado)).toBeVisible();
 
   await completar(page, "Diseno, edicion y produccion");
 

@@ -31,6 +31,8 @@ export const EMPRESA_DEMO = {
   // El sector alimenta el escalon del medio de la resolucion de regla:
   // cliente -> sector -> estandar de la casa.
   sector: "Hosteleria",
+  // El bloque CLIENTE de los nombres de archivo (CLIENTE_PROYECTO_TIPO_AAMM_vNN).
+  sigla: "DIST-EJEMPLO",
 };
 
 export type UsuarioSemilla = {

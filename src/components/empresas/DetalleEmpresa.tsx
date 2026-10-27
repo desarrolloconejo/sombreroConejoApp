@@ -115,6 +115,10 @@ export function DetalleEmpresa({
         <SeparadorPanel>Quien es</SeparadorPanel>
 
         <dl>
+          <Dato rotulo="Sigla">
+            <span className="font-mono text-[12.5px]">{empresa.sigla}</span>
+            <span className="block text-[11.5px] text-suave">Encabeza el nombre de sus archivos</span>
+          </Dato>
           <Dato rotulo="RIF">
             <Texto valor={empresa.rif} que="el RIF" />
           </Dato>

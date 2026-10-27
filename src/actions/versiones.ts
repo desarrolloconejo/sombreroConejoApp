@@ -82,21 +82,26 @@ export async function subirVersion(
     const proyecto = await proyectos.buscarPorId(pieza.proyectoId, tx);
     if (!proyecto) return null;
 
-    return { pieza, proyecto, numero: (await versiones.contar(piezaId, tx)) + 1 };
+    return {
+      pieza,
+      proyecto,
+      numero: (await versiones.contar(piezaId, tx)) + 1,
+      orden: await piezas.ordenDeTipo(piezaId, tx),
+    };
   });
 
   if (!contexto) return NO_ALCANCE;
 
-  const { pieza, proyecto, numero } = contexto;
+  const { pieza, proyecto, numero, orden } = contexto;
   const fase = (pieza.avance.faseActual ?? 5) as NumeroFase;
 
   const nombre =
     origen === "archivo" && tipo
       ? nombreEstandar({
-          cliente: proyecto.empresaNombre,
-          proyecto: proyecto.nombre,
-          archivo: pieza.titulo,
+          cliente: proyecto.empresaSigla,
+          proyecto: proyecto.nombreCorto,
           tipo: pieza.tipo,
+          orden,
           fecha: hoyEnCaracas(),
           version: numero,
           extension: tipo.extension,

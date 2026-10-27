@@ -37,6 +37,7 @@ export function CampoArchivo({
   ayuda,
   error,
   className,
+  onElegir,
 }: {
   id: string;
   /** El nombre con que lo envia el formulario. */
@@ -47,6 +48,8 @@ export function CampoArchivo({
   ayuda?: string;
   error?: string;
   className?: string;
+  /** Avisa del archivo elegido (null al quitarlo), para quien quiera mostrar algo de el. */
+  onElegir?: (archivo: File | null) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [elegido, setElegido] = useState<Elegido | null>(null);
@@ -58,6 +61,7 @@ export function CampoArchivo({
   function leer() {
     const archivo = input.current?.files?.[0];
     setElegido(archivo ? { nombre: archivo.name, peso: pesoLegible(archivo.size) } : null);
+    onElegir?.(archivo ?? null);
   }
 
   function alSoltar(evento: React.DragEvent) {
@@ -74,6 +78,7 @@ export function CampoArchivo({
   function quitar() {
     if (input.current) input.current.value = "";
     setElegido(null);
+    onElegir?.(null);
     input.current?.focus();
   }
 

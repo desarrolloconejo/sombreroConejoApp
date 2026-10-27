@@ -81,15 +81,16 @@ async function principal(): Promise<void> {
 
     // -- Empresa demo -------------------------------------------------------
     await cliente.query(
-      `INSERT INTO empresas (nombre, rif, telefono, direccion, sector)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (rif) DO UPDATE SET sector = EXCLUDED.sector`,
+      `INSERT INTO empresas (nombre, rif, telefono, direccion, sector, sigla)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (rif) DO UPDATE SET sector = EXCLUDED.sector, sigla = EXCLUDED.sigla`,
       [
         EMPRESA_DEMO.nombre,
         EMPRESA_DEMO.rif,
         EMPRESA_DEMO.telefono,
         EMPRESA_DEMO.direccion,
         EMPRESA_DEMO.sector,
+        EMPRESA_DEMO.sigla,
       ],
     );
 

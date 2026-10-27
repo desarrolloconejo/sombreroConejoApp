@@ -607,6 +607,9 @@ async function probarProyectos(): Promise<void> {
          RETURNING id`,
       );
       const empresaB = otra[0].id;
+      r.siglaPropuesta = (
+        await tx.query<{ sigla: string }>("SELECT sigla FROM empresas WHERE id = $1", [empresaB])
+      ).rows[0].sigla;
 
       const datos = (empresaId: number, nombre: string) => ({
         empresaId,
@@ -704,6 +707,10 @@ async function probarProyectos(): Promise<void> {
       await como(produccion.id, "trabajador", "produccion");
       r.prodProyectos = await cuenta(nuestros);
       r.prodPiezas = (await piezas.deProyecto(proyectoA, tx)).map((p) => p.titulo);
+      // El orden de su pieza cuenta las dos del proyecto, aunque solo vea una;
+      // de la otra no le dice nada.
+      r.prodOrden = await piezas.ordenDeTipo(piezaA, tx);
+      r.prodOrdenAjena = await cuenta("SELECT count(*)::text AS n FROM portal.orden_de_pieza($1)", [piezaA2]);
       r.prodCopy = await piezas.leerCopy(piezaA, tx);
       r.prodMueveFase = (
         await tx.query(
@@ -818,6 +825,16 @@ async function probarProyectos(): Promise<void> {
       r.prodPiezas.join() === "A1" &&
       r.prodCopy === "Copy secreto",
     `proyectos ${r.prodProyectos}; piezas ${JSON.stringify(r.prodPiezas)}`,
+  );
+  comprobar(
+    "El orden de una pieza entre las de su tipo cuenta todo el proyecto y solo se le da a quien la ve",
+    JSON.stringify(r.prodOrden) === JSON.stringify({ numero: 1, total: 2 }) && r.prodOrdenAjena === 0,
+    `su pieza ${JSON.stringify(r.prodOrden)}; la ajena: ${r.prodOrdenAjena} filas`,
+  );
+  comprobar(
+    "Una empresa sin sigla recibe una propuesta de la base, recortada sin partir palabras",
+    r.siglaPropuesta === "EMPRESA-B-DE",
+    `sigla ${r.siglaPropuesta}`,
   );
   comprobar(
     "Quien tiene una tarea no mueve fases",

@@ -121,11 +121,15 @@ export type Proyecto = {
   id: number;
   empresaId: number;
   empresaNombre: string;
+  /** La sigla de la empresa: el bloque CLIENTE de los nombres de archivo. */
+  empresaSigla: string;
   ejecutivoId: number;
   ejecutivoNombre: string;
   servicio: string;
   tipo: TipoProyecto;
   nombre: string;
+  /** El bloque PROYECTO de los nombres de archivo. */
+  nombreCorto: string;
   descripcion: string | null;
   estado: EstadoProyecto;
   fechaInicio: string | null;
@@ -266,6 +270,8 @@ export type DatosNuevoProyecto = {
   servicio: string;
   tipo: TipoProyecto;
   nombre: string;
+  /** Sin el, la base propone uno a partir del nombre. */
+  nombreCorto?: string | null;
   descripcion?: string | null;
   fechaInicio?: string | null;
   fechaEstimadaCierre?: string | null;

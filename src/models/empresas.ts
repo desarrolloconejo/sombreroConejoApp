@@ -31,7 +31,7 @@ import type {
  */
 
 const COLUMNAS = `
-  id, nombre, rif, sector, telefono, direccion,
+  id, nombre, sigla, rif, sector, telefono, direccion,
   sitio_web      AS "sitioWeb",
   instagram,
   tiktok,
@@ -97,6 +97,7 @@ export async function listar(
     // en una factura, y muchas veces es lo unico que se tiene a mano.
     condiciones.push(
       `(nombre ILIKE ${marcador} ESCAPE '\\'
+        OR sigla ILIKE ${marcador} ESCAPE '\\'
         OR rif ILIKE ${marcador} ESCAPE '\\')`,
     );
   }
@@ -193,9 +194,9 @@ export async function crear(
   const empresa = await consultarUno<Empresa>(
     `INSERT INTO empresas (
        nombre, rif, sector, telefono, direccion,
-       sitio_web, instagram, tiktok, facebook, youtube, linkedin
+       sitio_web, instagram, tiktok, facebook, youtube, linkedin, sigla
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
      RETURNING ${COLUMNAS}`,
     [
       datos.nombre,
@@ -209,6 +210,7 @@ export async function crear(
       datos.facebook,
       datos.youtube,
       datos.linkedin,
+      datos.sigla,
     ],
     ejecutor,
   );
@@ -236,7 +238,7 @@ export async function actualizar(
     `UPDATE empresas
      SET nombre = $2, rif = $3, sector = $4, telefono = $5, direccion = $6,
          sitio_web = $7, instagram = $8, tiktok = $9, facebook = $10,
-         youtube = $11, linkedin = $12
+         youtube = $11, linkedin = $12, sigla = $13
      WHERE id = $1
      RETURNING ${COLUMNAS}`,
     [
@@ -252,6 +254,7 @@ export async function actualizar(
       datos.facebook,
       datos.youtube,
       datos.linkedin,
+      datos.sigla,
     ],
     ejecutor,
   );

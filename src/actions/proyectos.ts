@@ -117,7 +117,7 @@ export async function crearProyecto(
     return { ok: false, errores };
   }
 
-  const { nombre, descripcion, ejecutivoId, fechaInicio, fechaEstimadaCierre } =
+  const { nombre, nombreCorto, descripcion, ejecutivoId, fechaInicio, fechaEstimadaCierre } =
     validacion.valores;
 
   const sugeridas = datos.get("sugeridas") === "on";
@@ -145,6 +145,7 @@ export async function crearProyecto(
         servicio: servicio.slug,
         tipo: servicio.tipo,
         nombre,
+        nombreCorto,
         descripcion,
         fechaInicio,
         fechaEstimadaCierre,
@@ -212,6 +213,7 @@ export async function crearProyecto(
 /** Lo que se anota de un proyecto cuando cambia. */
 function paraAuditoria(datos: {
   nombre: string;
+  nombreCorto: string;
   descripcion: string | null;
   ejecutivoId: number;
   fechaInicio: string | null;
@@ -219,6 +221,7 @@ function paraAuditoria(datos: {
 }) {
   return {
     nombre: datos.nombre,
+    nombreCorto: datos.nombreCorto,
     descripcion: datos.descripcion,
     ejecutivoId: datos.ejecutivoId,
     fechaInicio: datos.fechaInicio,

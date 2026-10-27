@@ -111,7 +111,7 @@ export function columnasEmpresas(
           <div className="min-w-0">
             <p className="truncate text-[13.5px] font-semibold">{empresa.nombre}</p>
             <p className="truncate text-[11.5px] text-suave">
-              {empresa.rif ?? "Sin RIF"}
+              {empresa.sigla} · {empresa.rif ?? "Sin RIF"}
             </p>
           </div>
         </div>
