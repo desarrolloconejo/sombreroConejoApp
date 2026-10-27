@@ -86,9 +86,11 @@ Tres cosas que hay que tener presentes antes de tocar nada de esto:
   disco. No escribas archivos al disco en codigo de servidor.
 - **ProtonVPN bloquea el puerto 5432 de salida**, asi que la maquina de
   desarrollo no alcanza Neon. Desarrollo va contra el PostgreSQL de Docker, y
-  la base de produccion se siembra generando un `.sql` con
-  `npm run sql:produccion` y pegandolo en el editor del panel de Neon. Si
-  cambias el esquema, hay que repetir ese pegado.
+  la base de produccion se migra pegando SQL en el editor del panel de Neon:
+  `db/schema.sql` es la version final y coincide con produccion, y cada
+  cambio de esquema nuevo entrega su extracto en `db/neon/` (ver
+  `db/neon/README.md`). `npm run sql:produccion` solo sirve para una base
+  nueva.
 
 Las credenciales no se publican en el README ni en ningun documento del
 repositorio: se le piden al responsable.

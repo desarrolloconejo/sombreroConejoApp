@@ -18,7 +18,7 @@ cambia.
 | M2 | Decidir si la base se queda en Neon o pasa al VPS | — | Quedarse en Neon es lo mas simple (solo cambia de donde se llama). Pasarla al VPS exige montar copias de seguridad propias (seccion 4) desde el primer dia |
 | M3 | Servidor web delante de la app, con TLS | VPS | Caddy o nginx, con certificado automatico, que reenvie a la app y ponga `X-Forwarded-For` (la auditoria guarda la IP de ahi: `src/lib/auditoria.ts`) |
 | M4 | Probar el perfil `prod` del compose y el `docker/Dockerfile` | `docker-compose.yml`, `docker/Dockerfile` | Hoy existen pero nadie los usa en produccion. Construirlos en local con `COMPOSE_PROFILES=prod` y recorrer la verificacion manual |
-| M5 | Variables de entorno de produccion | `.env` del VPS, fuera del repositorio | Las mismas que hoy tiene Vercel (`docs/despliegueProduccion.md`, seccion 3). Sin `NODE_ENV` a mano: lo fija la imagen. Permisos `600` en el archivo |
+| M5 | Variables de entorno de produccion | `.env` del VPS, fuera del repositorio | Las mismas que hoy tiene Vercel (`docs/operacion/despliegue.md`, seccion 2). Sin `NODE_ENV` a mano: lo fija la imagen. Permisos `600` en el archivo |
 | M6 | Acceso al servidor | VPS | Solo por llave SSH, sin contrasena ni root; cortafuegos con 22, 80 y 443 y nada mas. El 5432 **cerrado** hacia fuera si la base vive ahi |
 | M7 | Actualizaciones del sistema y reinicio de los contenedores | VPS | Actualizaciones de seguridad automaticas y `restart: unless-stopped` en el compose |
 
@@ -27,11 +27,11 @@ cambia.
 | # | Que | Donde | Nota |
 | --- | --- | --- | --- |
 | D1 | Copia de la base justo antes | Neon / VPS | Aunque la base no se mueva. Si se mueve: `pg_dump` desde Neon y `pg_restore` en el VPS, y despues `db/neon/diagnostico.sql` debe dar todo `true` |
-| D2 | Rol `conejo_app` y su contrasena en la base de destino | Base | Si la base se mueve, el esquema lo crea sin contrasena (`db/schema.sql`): ponersela como en `db/neon/05-rol-de-la-aplicacion.sql` |
+| D2 | Rol `conejo_app` y su contrasena en la base de destino | Base | Si la base se mueve, el esquema lo crea sin contrasena (`db/schema.sql`): ponersela con `ALTER ROLE conejo_app LOGIN PASSWORD '…'` |
 | D3 | Tarea de la tasa con `cron` del sistema | VPS (`crontab`) | Llamar a `/api/cron/tasa` con `Authorization: Bearer $CRON_SECRET`. Se puede pasar a **cada hora** |
 | D4 | Si la tarea cambia de horario, cambiar su espejo | `src/lib/finanzas/programacionTasa.ts` y su prueba | `situacionTasa` supone un turno diario a las 18:30; con varias corridas al dia hay que reescribir «cuando vuelve». La prueba que compara con `vercel.json` se cambia por la del `crontab` |
 | D5 | Cambiar el DNS de `app.` al VPS | Proveedor del dominio | Bajar antes el TTL. Mientras propaga, Vercel sigue sirviendo con la misma base: no hay corte |
-| D6 | Recorrer la verificacion | `docs/despliegueProduccion.md`, seccion 5 | En especial: login, dos pasos, subir un archivo, la tasa y un correo |
+| D6 | Recorrer la verificacion | `docs/operacion/despliegue.md`, seccion 3 y `docs/verificacionManual.md` | En especial: login, dos pasos, subir un archivo, la tasa y un correo |
 | D7 | Retirar Vercel | Panel de Vercel | Solo cuando el VPS lleve unos dias bien. Quitar antes el dominio del proyecto, despues pausarlo |
 
 ## 3. Lo que la mudanza permite encender
@@ -59,7 +59,7 @@ deshacer desde ahi. Y desde la maquina de desarrollo no se puede hacer un
 
 | # | Que | Cuando | Como |
 | --- | --- | --- | --- |
-| C1 | Copia manual antes de cada cambio de esquema | Ya, en cada despliegue | Crear una rama de Neon desde `production` (es instantaneo y no copia datos hasta que cambian). Esta en la seccion 1 de la guia de despliegue |
+| C1 | Copia manual antes de cada cambio de esquema | Ya, en cada despliegue | Crear una rama de Neon desde `production` (es instantaneo y no copia datos hasta que cambian). Esta en la seccion 3 de la guia de despliegue |
 | C2 | Copia diaria fuera de Neon | Antes de tener datos de clientes reales | Una tarea de GitHub Actions (sus servidores si llegan al 5432) que haga `pg_dump` cada noche y guarde el archivo cifrado fuera de Neon (Drive de la empresa, o un almacenamiento de objetos). La cadena de conexion, como secreto del repositorio |
 | C3 | Conservar | Con C2 | Las 7 diarias y las 4 semanales, por ejemplo. Borrar lo viejo lo hace la misma tarea |
 | C4 | Probar una restauracion | Una vez al montar C2, y despues cada pocos meses | Restaurar la ultima copia en una rama nueva de Neon (o en el Postgres de Docker) y pasar `db/neon/diagnostico.sql` y un conteo de filas. Una copia que nunca se restauro no es una copia |
@@ -69,7 +69,7 @@ deshacer desde ahi. Y desde la maquina de desarrollo no se puede hacer un
 ## 5. Documentos que cambian
 
 Al mudarse, `CLAUDE.md` (seccion Despliegue), `AGENTS.md` (Plataforma),
-`README.md` (Despliegue), `docs/despliegueProduccion.md` y este archivo dejan
+`README.md` (Despliegue), `docs/operacion/despliegue.md` y este archivo dejan
 de hablar de Vercel. Las reglas de «el disco es de solo lectura» y «produccion
 se migra pegando SQL» se revisan: en el VPS la base se puede migrar por
 conexion directa.

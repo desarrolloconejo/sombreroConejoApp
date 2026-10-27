@@ -559,7 +559,7 @@ export async function comentarPieza(
 /**
  * El ejecutivo ajusta la ruta de la ultima correccion: anade fases a las que
  * pidio el cliente. Solo mientras no se haya completado ninguna fase de la
- * ronda nueva, y solo anadiendo (docs/reglasBateria.md).
+ * ronda nueva, y solo anadiendo (docs/negocio/reglasBateria.md).
  */
 export async function ajustarRuta(
   _estadoPrevio: EstadoFormulario,

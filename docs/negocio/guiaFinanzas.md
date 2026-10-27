@@ -5,8 +5,8 @@ hace que, por que estados pasa cada documento, que calcula el sistema solo,
 que protege la base de datos y que falta para facturar de verdad.
 
 Escrita para el equipo, no para desarrolladores. El detalle tecnico vive en
-`docs/planIntegracionPortal.md` (seccion 7); lo pendiente, en
-`docs/pendientesIntegracion.md`.
+`docs/planes/planIntegracionPortal.md` (seccion 7); lo pendiente, en
+`docs/pendientes.md`.
 
 ---
 

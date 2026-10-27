@@ -1,8 +1,12 @@
 -- ===========================================================================
--- Diagnostico: que archivos de db/neon/ ya estan aplicados en esta base.
+-- Diagnostico: que cambios de esquema tiene esta base.
+--
+-- Una fila por cambio. Los 01 a 22 (la integracion del portal) se aplicaron en
+-- produccion el 2026-10-27 y sus archivos se retiraron del repositorio: estan
+-- en el historial de git. Cada cambio nuevo anade aqui su marca.
 --
 -- SOLO LEE. No crea, no cambia ni borra nada: se puede pegar en el editor de
--- Neon en cualquier momento, antes y despues de cada archivo.
+-- Neon en cualquier momento, antes y despues de aplicar un cambio.
 --
 -- Devuelve una fila por archivo con `aplicado` en true o false, y al final
 -- unos conteos para saber cuantos datos reales hay. Un archivo a medias sale

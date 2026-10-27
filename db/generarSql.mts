@@ -71,7 +71,7 @@ async function principal(): Promise<void> {
 -- crean con IF NOT EXISTS y las inserciones no duplican ni pisan nada.
 --
 -- No crea usuarios ni datos de ejemplo. El rol conejo_app nace sin
--- contrasena: hay que ponersela aparte (ver db/neon/05-rol-de-la-aplicacion.sql).
+-- contrasena: hay que ponersela aparte (ALTER ROLE conejo_app LOGIN PASSWORD '...').
 --
 -- Al terminar, comprobar:
 --   SELECT count(*) FROM roles;           -- ${ROLES.length}

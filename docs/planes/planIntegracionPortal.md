@@ -1,5 +1,10 @@
 # Plan de integracion del portal completo en Conejo App
 
+**Estado: ejecutado.** Las etapas 1 a 8 y la revision del responsable estan
+publicadas desde el 2026-10-27; la etapa 9 (la mudanza al VPS) esta en
+`docs/operacion/mudanzaVps.md`. Lo que queda abierto, en `docs/pendientes.md`.
+Las decisiones de aqui siguen valiendo.
+
 Fecha: 2026-10-13. Revisado tres veces ese dia; la ultima fija el modelo de
 tareas, las herramientas y el menu. Es el unico plan de la integracion: el
 documento anterior de finanzas se retiro y su contenido vigente esta en la
@@ -9,7 +14,7 @@ seccion 7.
 esquema, reglas SQL, configuracion y maquetas), su diagnostico, y el codigo de
 Conejo App en `main` (commit `b559385`). Los huecos de seguridad de la seccion 5
 estan comprobados contra el codigo, con el archivo donde se ven, y la auditoria
-del repositorio los volvio a confirmar el 2026-10-13 (`docs/informeAuditoria.md`).
+del repositorio los volvio a confirmar el 2026-10-13 (`informeAuditoria`, retirado; en el historial de git).
 
 ## Decisiones tomadas
 
@@ -35,7 +40,7 @@ del repositorio los volvio a confirmar el 2026-10-13 (`docs/informeAuditoria.md`
 | Catalogo de servicios | Lo que el cliente puede pedir es una lista cerrada; cada servicio trae su brief, sus piezas y sus tareas sugeridas (seccion 8.1) |
 | Herramientas | Seccion propia del menu. **Hooks es la primera** y se conecta al flujo a traves de las tareas (seccion 8.1) |
 | Menu | Agrupado por secciones (seccion 9). En movil, barra inferior con hoja en lugar de hamburguesa |
-| Planes hermanos | `docs/planAuditoriaRepositorio.md` (revision con Context7, **ya ejecutada**: ver «Punto de partida tras la auditoria») y `docs/planMejoraDiseno.md` (skills de diseno y navegacion movil) |
+| Planes hermanos | La revision con Context7 (**ejecutada**; su plan y su informe se retiraron, ver «Punto de partida tras la auditoria») y `docs/planes/planMejoraDiseno.md` (skills de diseno y navegacion movil, pendiente) |
 | Tasas del BCV | Se guardan todas las que publica la pagina, no solo el dolar |
 | Asignacion de empresas | La hace el admin. El admin puede ademas actuar como ejecutivo |
 | Hooks | Lo ve solo `redes`, y el admin |
@@ -91,7 +96,7 @@ el responsable el 2026-10-13).
 
 No se publica nada hasta terminar la integracion (decidido el 2026-10-13).
 Lo que cada etapa exige en produccion se va anotando en
-`docs/despliegueProduccion.md`.
+`docs/operacion/despliegue.md`.
 
 | Etapa | Rama | Que entrega | SQL para Neon | Estado |
 | --- | --- | --- | --- | --- |
@@ -105,7 +110,7 @@ Lo que cada etapa exige en produccion se va anotando en
 | 2 | `feat/etapa2-avisos` | `portal.notificaciones` con seguridad por fila y la campana del encabezado, en escritorio y movil. Notifica el bloqueo de una cuenta y el correo fallido a los administradores, y la contrasena restablecida a su dueno | `db/neon/08-notificaciones.sql` | Hecha |
 | 2 | `feat/etapa2-tasa-bcv` | Seccion 6.1: `finanzas.tasas_cambio`, lector de la pagina del BCV con su certificado intermedio, validacion, tarea programada `/api/cron/tasa` y la identidad `sistema` | `db/neon/09-tasas-de-cambio.sql` | Hecha |
 | 8 (adelantada) | `feat/dos-pasos` | Seccion 5.3: verificacion en dos pasos con app de codigos, codigos de respaldo, retirada por un administrador | `db/neon/10-dos-pasos.sql` | Hecha |
-| 3 | `feat/etapa3-modelo` | Tablas de la bateria con seguridad por fila (asignaciones, proyectos, piezas, copy, fases, tareas, comentarios), vistas del avance, catalogo de servicios, reglas puras y modelos. Reglas en `docs/reglasBateria.md` | `db/neon/11-proyectos.sql` | Hecha |
+| 3 | `feat/etapa3-modelo` | Tablas de la bateria con seguridad por fila (asignaciones, proyectos, piezas, copy, fases, tareas, comentarios), vistas del avance, catalogo de servicios, reglas puras y modelos. Reglas en `docs/negocio/reglasBateria.md` | `db/neon/11-proyectos.sql` | Hecha |
 | 3 | `feat/etapa3-asignaciones` | El admin asigna ejecutivos a cada empresa desde su ficha en Empresas, y el ejecutivo recibe una notificacion. No se desactiva a nadie con tareas abiertas, proyectos a su cargo o empresas asignadas (P4, P5) | Ninguno | Hecha |
 | 3 | `feat/etapa3-proyectos` | Modulo Proyectos: listado, alta desde el catalogo, matriz de piezas por fases, ficha de pieza con fases, tareas, copy y comentarios. Componente bateria. Registro de herramientas con Hooks | Ninguno | Hecha |
 | 3 | `feat/etapa3-tablero` | Tablero con las cuatro alertas, que filtran al pulsarlas; filtros por ejecutivo, cliente y tipo; la fase mas atrasada de cada proyecto | Ninguno | Hecha |
@@ -131,11 +136,11 @@ Lo que cada etapa exige en produccion se va anotando en
 | 7 | `feat/etapa7-cobranza` | Cobranza por empresa y antiguedad; estado de cuenta del cliente en Facturacion | Ninguno | Hecha |
 | 8 | `feat/etapa8-tasa` | Registrar la tasa del dolar a mano, con las ultimas a la vista y confirmacion de saltos de mas del 25 % | Ninguno | Hecha |
 | 8 | `feat/etapa8-guardias` | Pruebas automaticas: toda action, page y ruta de la API con su guardia; seguridad por fila, DELETE y search_path vigilados en toda la base | Ninguno | Hecha |
-| 8 | `docs/etapa8-piloto` | `docs/planPiloto.md`: el piloto con un cliente real | Ninguno | Preparado. Falta elegir cliente y fecha |
+| 8 | `docs/etapa8-piloto` | `docs/negocio/planPiloto.md`: el piloto con un cliente real | Ninguno | Preparado. Falta elegir cliente y fecha |
 
 **La etapa 8 esta hecha en lo que no depende del negocio**: la tasa a mano, las pruebas de guardias y estructura, y el plan del piloto. El piloto en si espera a que se publique la integracion y a que el responsable elija cliente y fecha. Los dos pasos se habian adelantado.
 
-**La etapa 7 esta construida con datos de ejemplo** (seccion 7.11, decidido el 2026-10-15). Funciona de punta a punta; para usarla de verdad hay que sustituir lo provisional, que esta en `docs/pendientesIntegracion.md` (emisor, numeracion, talonario, medios de pago, impuestos). Decisiones tomadas por el camino:
+**La etapa 7 esta construida con datos de ejemplo** (seccion 7.11, decidido el 2026-10-15). Funciona de punta a punta; para usarla de verdad hay que sustituir lo provisional, que esta en `docs/pendientes.md` (emisor, numeracion, talonario, medios de pago, impuestos). Decisiones tomadas por el camino:
 
 - Varios **formatos de impresion**, uno habitual; el de ejemplo es tamano carta. La numeracion no depende del formato.
 - El PDF del talonario y los comprobantes solo los entrega el servidor por rutas que deciden con la sesion; lo que no se ve responde 404.
@@ -250,7 +255,7 @@ Sobre la etapa 4, decidido al construir:
 Sobre la etapa 3, decidido al construir el modelo:
 
 - **Las reglas de detalle del paquete pasan al repositorio** en
-  `docs/reglasBateria.md`: plantillas, avance, rutas de correccion, alertas y
+  `docs/negocio/reglasBateria.md`: plantillas, avance, rutas de correccion, alertas y
   quien ve que. Ya no hace falta la carpeta `appFacturas` para esta etapa.
 - Las preguntas P1 a P9 se construyen con la propuesta de la seccion 12. Las
   tareas sugeridas de los dos servicios (P3) son una propuesta y estan en
@@ -948,7 +953,7 @@ acceso caduca a los 7 dias.
 
 Decidido por el responsable el 2026-10-15: la etapa 7 se construye sin esperar
 al negocio, con valores de ejemplo que se sustituyen al final sin tocar codigo.
-Cada uno queda en `docs/pendientesIntegracion.md`.
+Cada uno queda en `docs/pendientes.md`.
 
 | Pieza | Como queda |
 | --- | --- |
@@ -1134,7 +1139,7 @@ Tres decisiones de diseno del menu:
 | --- | --- |
 | `src/lib/navegacion.ts` | Cada modulo declara su `seccion`. Criterios nuevos de visibilidad: solo clientes, un permiso del cliente, y «tiene tareas asignadas» |
 | `Sidebar` | Pinta un rotulo por seccion; hoy solo existe «General». Una seccion sin modulos visibles no se pinta |
-| Navegacion movil | **El cajon de hamburguesa se sustituye por una barra inferior de atajos y una hoja con el menu completo** (`docs/planMejoraDiseno.md`, fase 2). Sin boton central. La hoja agrupa por las mismas secciones, se desplaza y trae buscador, porque el menu va a ser largo; cada modulo declara su prioridad para la barra. Los modulos del portal se construyen ya sobre esa navegacion |
+| Navegacion movil | **El cajon de hamburguesa se sustituye por una barra inferior de atajos y una hoja con el menu completo** (`docs/planes/planMejoraDiseno.md`, fase 2). Sin boton central. La hoja agrupa por las mismas secciones, se desplaza y trae buscador, porque el menu va a ser largo; cada modulo declara su prioridad para la barra. Los modulos del portal se construyen ya sobre esa navegacion |
 | Buscador global | Sin cambios: sigue leyendo del mismo registro |
 | `src/proxy.ts` | Lista de rutas por tipo de usuario, la ruta publica del enlace y el paso de peticiones con cookie de renovacion |
 | `components/ui` | Componente nuevo: la bateria de cinco segmentos, con texto ademas de color y `aria-label` con el porcentaje |

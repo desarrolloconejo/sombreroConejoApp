@@ -31,7 +31,7 @@ const MIGAS = [{ texto: "Conejo App", href: "/dashboard" }, { texto: "Ajustes de
 /**
  * Lo que se configura una vez para facturar: quien emite, los impuestos, la
  * numeracion del talonario, los medios de pago y los formatos de impresion.
- * Casi todo nace de ejemplo (docs/pendientesIntegracion.md) y se cambia aqui.
+ * Casi todo nace de ejemplo (docs/pendientes.md) y se cambia aqui.
  */
 
 function Seccion({

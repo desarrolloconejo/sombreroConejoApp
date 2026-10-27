@@ -101,7 +101,7 @@ function comoMensaje(para: string, asunto: string, cuerpo: string): string {
  * El remitente es la cuenta que autorizo el cliente OAuth
  * (`npm run google:autorizar`). Por ahora es la cuenta personal del
  * responsable; al pasar a la de la empresa basta con autorizar de nuevo con
- * ella y sustituir DRIVE_REFRESH_TOKEN (R12 de docs/pendientesIntegracion.md).
+ * ella y sustituir DRIVE_REFRESH_TOKEN (R12 de docs/pendientes.md).
  */
 async function enviarPorGmail(para: string, asunto: string, cuerpo: string): Promise<string> {
   const token = await tokenDeGoogle();
