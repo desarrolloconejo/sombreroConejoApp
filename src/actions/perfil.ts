@@ -4,8 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { anotar, soloCambios } from "@/lib/auditoria";
-import { transaccion } from "@/lib/db";
+import { correoDeClaveCambiada } from "@/lib/correos/plantillas";
+import { conSesion, transaccion } from "@/lib/db";
 import { subirArchivo } from "@/lib/externos/archivos";
+import { encolarCorreo, entregarCorreos } from "@/lib/externos/correo";
+import { ZONA_HORARIA } from "@/lib/fechas";
 import { hashear, verificar } from "@/lib/password";
 import { tipoPorFirma } from "@/lib/portal/archivos";
 import { obtenerSesion, requerirUsuario } from "@/lib/sesion";
@@ -117,9 +120,16 @@ export async function cambiarPassword(
   const nuevoHash = await hashear(valores.nueva);
   const sesion = await obtenerSesion();
 
-  // El cambio, el cierre de las demas sesiones y su linea van juntos: no
-  // puede quedar una contrasena nueva con las sesiones viejas abiertas.
-  const cerradas = await transaccion(async (tx) => {
+  const cuando = new Intl.DateTimeFormat("es-VE", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: ZONA_HORARIA,
+  }).format(new Date());
+
+  // El cambio, el cierre de las demas sesiones, su linea y el aviso por correo
+  // van juntos: no puede quedar una contrasena nueva con las sesiones viejas
+  // abiertas, ni un cambio sin avisar.
+  const cambio = await conSesion(usuario, async (tx) => {
     const guardada = await usuarios.actualizarPasswordHash(
       usuario.id,
       nuevoHash,
@@ -144,12 +154,19 @@ export async function cambiarPassword(
       empresaId: usuario.empresaId,
     });
 
-    return cuantas;
+    // Por si no fue la propia persona: le llega a su correo, que quien tenga
+    // su contrasena no controla.
+    const correoId = await encolarCorreo(tx, usuario, correoDeClaveCambiada(usuario, "perfil", cuando));
+
+    return { cerradas: cuantas, correoId };
   });
 
-  if (cerradas === null) {
+  if (cambio === null) {
     return { ok: false, mensaje: "No se pudo cambiar la contrasena" };
   }
+
+  const { cerradas, correoId } = cambio;
+  await entregarCorreos(usuario, [correoId]);
 
   // Quien venia obligado a cambiarla ya puede pasar. Va fuera de cualquier
   // try: redirect lanza una excepcion interna de Next.

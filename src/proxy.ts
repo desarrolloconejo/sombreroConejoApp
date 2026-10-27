@@ -30,14 +30,17 @@ import type { SlugCargo } from "@/types";
  *
  * `/brief` es el brief de un prospecto por su enlace privado. Su guardia es
  * el token de la ruta, que comprueban la page y cada una de sus actions.
+ *
+ * `/recuperar` es «Olvide mi contrasena»: pedir el enlace no muestra nada, y
+ * poner la contrasena nueva exige el token que solo llega al correo.
  */
-const RUTAS_PUBLICAS = ["/login", "/verificar", "/api/cron", "/brief"];
+const RUTAS_PUBLICAS = ["/login", "/verificar", "/api/cron", "/brief", "/recuperar"];
 
 /**
  * Publicas que tambien abre quien tiene sesion: no son la puerta de entrada,
  * y mandarlo al panel le impediria ver el enlace (un ejecutivo que lo prueba).
  */
-const RUTAS_ABIERTAS = ["/brief"];
+const RUTAS_ABIERTAS = ["/brief", "/recuperar"];
 
 /** Prefijos de ruta reservados al rol admin. */
 const RUTAS_SOLO_ADMIN = [

@@ -5,3 +5,5 @@ export { PanelMarca } from "./PanelMarca";
 export { RenovarSesion } from "./RenovarSesion";
 export { VerificarWrapper } from "./VerificarWrapper";
 export { VerificarContent } from "./VerificarContent";
+export { RecuperarContent } from "./RecuperarContent";
+export { ClaveNuevaContent } from "./ClaveNuevaContent";

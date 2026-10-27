@@ -1,6 +1,7 @@
 import type { PoolClient } from "pg";
 
-import { conEnlace, conSesion, type ActorDeBase, type Ejecutor } from "@/lib/db";
+import { MARCADOR_ENLACE } from "@/lib/correos/plantillas";
+import { conEnlace, conSesion, conSistema, type ActorDeBase, type Ejecutor } from "@/lib/db";
 import { notificarAAdministradores } from "@/lib/notificaciones";
 import * as correos from "@/models/correos";
 import type { ModoExterno, NuevoCorreo } from "@/types";
@@ -128,12 +129,14 @@ async function enviarPorGmail(para: string, asunto: string, cuerpo: string): Pro
 }
 
 /**
- * Quien provoco los correos: una persona con sesion o un prospecto por su
- * enlace. Con esa misma identidad se leen y se anotan al entregarlos.
+ * Quien provoco los correos: una persona con sesion, un prospecto por su
+ * enlace o el sistema (lo que pide quien aun no tiene sesion, como «Olvide mi
+ * contrasena»). Con esa misma identidad se leen y se anotan al entregarlos.
  */
-export type Remitente = ActorDeBase | { enlaceId: number };
+export type Remitente = ActorDeBase | { enlaceId: number } | { sistema: true };
 
 function conRemitente<T>(remitente: Remitente, operacion: (cliente: PoolClient) => Promise<T>): Promise<T> {
+  if ("sistema" in remitente) return conSistema(operacion);
   return "enlaceId" in remitente ? conEnlace(remitente.enlaceId, operacion) : conSesion(remitente, operacion);
 }
 
@@ -146,13 +149,27 @@ function conRemitente<T>(remitente: Remitente, operacion: (cliente: PoolClient) 
  * cambio. Lo que falla queda como «fallido» en la bandeja, con su motivo, y
  * desde ahi se reintenta.
  *
+ * `enlaces` lleva, por correo, el enlace privado que va en el lugar de
+ * `MARCADOR_ENLACE` (el de «Olvide mi contrasena»): se pone solo en lo que se
+ * envia, nunca en la bandeja.
+ *
  * Devuelve cuantos se enviaron.
  */
 export async function entregarCorreos(
   actor: Remitente,
   ids: readonly number[],
+  enlaces: Readonly<Record<number, string>> = {},
 ): Promise<number> {
-  if (modoDeCorreo() === "simulado" || ids.length === 0) return 0;
+  if (modoDeCorreo() === "simulado") {
+    // En desarrollo, con el correo simulado, el enlace privado no tiene por
+    // donde llegar: sale en la consola del servidor para poder probarlo.
+    if (process.env.NODE_ENV !== "production") {
+      for (const enlace of Object.values(enlaces)) console.info(`[correo simulado] enlace privado: ${enlace}`);
+    }
+    return 0;
+  }
+
+  if (ids.length === 0) return 0;
 
   let enviados = 0;
 
@@ -170,7 +187,9 @@ export async function entregarCorreos(
       let resultado: Parameters<typeof correos.anotarEntrega>[1];
 
       try {
-        const idExterno = await enviarPorGmail(correo.para, correo.asunto, correo.cuerpo);
+        const enlace = enlaces[id];
+        const cuerpo = enlace ? correo.cuerpo.replace(MARCADOR_ENLACE, enlace) : correo.cuerpo;
+        const idExterno = await enviarPorGmail(correo.para, correo.asunto, cuerpo);
         resultado = { enviado: true, idExterno };
         enviados++;
       } catch (error) {

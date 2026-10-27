@@ -9,6 +9,8 @@ import {
   Lock,
   Mail,
 } from "lucide-react";
+import Link from "next/link";
+
 import { iniciarSesion } from "@/actions/auth";
 import { Alerta, Boton } from "@/components/ui";
 import { ESTADO_INICIAL } from "@/types";
@@ -23,11 +25,12 @@ import { CAJA, CAJA_ERROR, ENTRADA, ERROR, ETIQUETA, ICONO, retraso } from "./es
  */
 
 /** Por que alguien llego al login sin haberlo pedido. */
-export type MotivoSalida = "sin-acceso" | "caducada";
+export type MotivoSalida = "sin-acceso" | "caducada" | "clave-nueva";
 
 const AVISOS: Record<MotivoSalida, string> = {
   "sin-acceso": "Tu cuenta ya no tiene acceso. Habla con un administrador",
   caducada: "Tu sesion termino. Vuelve a entrar para continuar",
+  "clave-nueva": "Listo: tu contrasena cambio. Entra con la nueva",
 };
 
 export function LoginContent({
@@ -78,7 +81,11 @@ export function LoginContent({
           <input type="hidden" name="volverA" value={volverA} />
 
           {mensaje && (
-            <Alerta className="surge mb-[18px] lg:mb-[22px]" icono={<CircleAlert />}>
+            <Alerta
+              tono={!estado.mensaje && motivo === "clave-nueva" ? "info" : undefined}
+              className="surge mb-[18px] lg:mb-[22px]"
+              icono={<CircleAlert />}
+            >
               {mensaje}
             </Alerta>
           )}
@@ -162,6 +169,11 @@ export function LoginContent({
                 {errorPassword}
               </p>
             )}
+            <p className="mt-2 text-right text-[12px]">
+              <Link href="/recuperar" className="font-semibold text-acento underline-offset-2 hover:underline">
+                ¿Olvidaste tu contrasena?
+              </Link>
+            </p>
           </div>
 
           {/*

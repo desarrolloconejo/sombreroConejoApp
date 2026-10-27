@@ -554,3 +554,23 @@ Nomenclatura de archivos (R18 y R20 de `docs/pendientesIntegracion.md`).
     «Copiar nombre» lo copia. Entrando con alguien de diseno o redes, la
     lista de proyectos trae todos los de la empresa, tambien en los que no
     trabaja, aunque no pueda abrirlos. Un cliente no ve el modulo.
+
+## Foto de perfil y «Olvide mi contrasena»
+
+58. Mi perfil: el boton de la camara elige una foto (JPG, PNG o WEBP, hasta
+    2 MB); se ve antes de subirla, «Subir» la guarda y sale en la barra
+    lateral, en la cabecera del telefono y en las listas donde antes salian
+    las iniciales. «Quitar foto» vuelve a las iniciales. Un archivo que no es
+    imagen, aunque se llame .png, no entra. Con ARCHIVOS_MODO=real la foto
+    aparece en `ConejoApp/Perfiles` del Drive.
+59. Login → «¿Olvidaste tu contrasena?»: con un correo de una cuenta y con uno
+    inventado sale el mismo mensaje. Con CORREO_MODO=real llega el correo con
+    el enlace (en desarrollo con el correo simulado, el enlace sale en
+    `docker compose logs app-dev`). En la Bandeja de salida ese correo **no**
+    muestra el enlace, sino «[enlace privado: solo va en el correo enviado]».
+60. El enlace abre «Elige tu contrasena»; al guardarla lleva al login con
+    «Listo: tu contrasena cambio» y se entra con la nueva. El mismo enlace, otra
+    vez, dice «Este enlace ya no sirve». Pedir mas de tres en una hora no
+    manda mas correos.
+61. Cambiar la contrasena desde Mi perfil, o con el enlace, manda un correo de
+    aviso «Tu contrasena de Conejo App cambio», sin enlaces privados.

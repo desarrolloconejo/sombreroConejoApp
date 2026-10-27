@@ -719,7 +719,7 @@ servidor propio. La base esta en **Neon**.
   los de `.env.example`; sus valores, los que entregue el responsable. No se
   define `NODE_ENV`: lo fija la plataforma.
 - **El disco es de solo lectura.** El codigo de servidor no escribe archivos.
-  Por eso la subida de foto de perfil esta apagada.
+  Por eso los archivos, tambien la foto de perfil, se guardan en Google Drive.
 - **La base se migra pegando SQL.** La maquina de desarrollo no alcanza Neon,
   asi que cada cambio de esquema entrega un archivo numerado en `db/neon/`, que
   se pega en el editor de su panel. Son idempotentes y no llevan secretos.

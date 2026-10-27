@@ -297,12 +297,62 @@ async function principal(): Promise<void> {
         cliente.query("DELETE FROM portal.correos_salida WHERE false"),
       );
 
+      // El sistema (lo de «Olvide mi contrasena», sin sesion) escribe sin
+      // autor; no puede firmar como otro ni ve los correos de las personas.
+      const delSistema = (creadoPor: number | null) =>
+        cliente.query(
+          `INSERT INTO portal.correos_salida
+             (para, tipo, asunto, cuerpo, modo, estado, creado_por)
+           VALUES ('sistema@permisos.test', 'clave_recuperar', 'Prueba', 'Cuerpo',
+                   'simulado', 'simulado', $1)`,
+          [creadoPor],
+        );
+      await como(null, "sistema");
+      bandeja.sistemaInserta = await intentarDentro(() => delSistema(null));
+      bandeja.sistemaFirmaComoOtro = await intentarDentro(() => delSistema(otro.id));
+      bandeja.sistemaVeAjenos = await cuantos();
+      bandeja.sistemaVeLoSuyo = Number(
+        (
+          await cliente.query<{ n: string }>(
+            "SELECT count(*)::text AS n FROM portal.correos_salida WHERE para = 'sistema@permisos.test'",
+          )
+        ).rows[0].n,
+      );
+
+      await como(otro.id, "trabajador");
+      bandeja.otroVeDelSistema = Number(
+        (
+          await cliente.query<{ n: string }>(
+            "SELECT count(*)::text AS n FROM portal.correos_salida WHERE para = 'sistema@permisos.test'",
+          )
+        ).rows[0].n,
+      );
+
+      // Restablecimientos: el hash del enlace; nunca se borra.
+      bandeja.borraEnlaces = await intentarDentro(() =>
+        cliente.query("DELETE FROM restablecimientos_clave WHERE false"),
+      );
+
       throw new Deshacer();
     });
   } catch (error) {
     if (!(error instanceof Deshacer)) throw error;
   }
 
+  comprobar(
+    "El sistema escribe en la bandeja sin autor, no firma como otro y solo ve lo suyo",
+    bandeja.sistemaInserta === null &&
+      bandeja.sistemaFirmaComoOtro === DENEGADO &&
+      bandeja.sistemaVeAjenos === 0 &&
+      bandeja.sistemaVeLoSuyo === 1 &&
+      bandeja.otroVeDelSistema === 0,
+    `inserta: ${bandeja.sistemaInserta}; como otro: ${bandeja.sistemaFirmaComoOtro}; ve ajenos ${bandeja.sistemaVeAjenos}, suyos ${bandeja.sistemaVeLoSuyo}; otro ve ${bandeja.otroVeDelSistema}`,
+  );
+  comprobar(
+    "Los enlaces de «Olvide mi contrasena» no se borran",
+    bandeja.borraEnlaces === DENEGADO,
+    String(bandeja.borraEnlaces),
+  );
   comprobar(
     "Sin sesion declarada no se puede escribir en la bandeja",
     bandeja.sinSesionInserta === DENEGADO,

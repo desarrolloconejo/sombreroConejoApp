@@ -33,6 +33,8 @@ const ACTIONS_SIN_GUARDIA: Record<string, string> = {
   cerrarSesion: "cierra la sesion que haya, sea cual sea",
   renovarSesion: "renueva el acceso con el token de renovacion",
   verificarSegundoPaso: "el segundo paso del login: aun no hay sesion",
+  pedirRecuperacion: "«Olvide mi contrasena»: quien la pide no puede entrar; solo manda un correo a la cuenta",
+  ponerClaveNueva: "«Olvide mi contrasena»: su guardia es el token que solo llega al correo",
   cambiarTema: "solo guarda la preferencia de tema de quien la pide",
   enviarCanvas: "despacha a auditarHook o guardarBorrador, que tienen su guardia",
   enviarAuditor: "despacha a auditarFicha o auditarTexto, que tienen su guardia",
@@ -44,6 +46,8 @@ const PAGES_PUBLICAS = new Set([
   "src/app/login/page.tsx",
   "src/app/verificar/page.tsx",
   "src/app/renovar/page.tsx",
+  "src/app/recuperar/page.tsx",
+  "src/app/recuperar/nueva/page.tsx",
 ]);
 
 function archivos(directorio: string, nombre: RegExp): string[] {
@@ -111,6 +115,6 @@ test("las rutas publicas del proxy son las que son", () => {
   const publicas = proxy.match(/const RUTAS_PUBLICAS = \[([^\]]*)\]/)?.[1];
   const abiertas = proxy.match(/const RUTAS_ABIERTAS = \[([^\]]*)\]/)?.[1];
 
-  expect(publicas?.replace(/\s/g, "")).toBe('"/login","/verificar","/api/cron","/brief"');
-  expect(abiertas?.replace(/\s/g, "")).toBe('"/brief"');
+  expect(publicas?.replace(/\s/g, "")).toBe('"/login","/verificar","/api/cron","/brief","/recuperar"');
+  expect(abiertas?.replace(/\s/g, "")).toBe('"/brief","/recuperar"');
 });

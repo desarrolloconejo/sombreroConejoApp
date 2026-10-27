@@ -50,7 +50,7 @@ npm run google:autorizar
 
 Abre el enlace que imprime, entra con la cuenta de Google y **marca las dos
 casillas** (Drive y Gmail). Al terminar dice que permisos se concedieron, crea
-`ConejoApp/Piezas` y `ConejoApp/Comprobantes` en el Drive, sube un archivo de
+`ConejoApp/Piezas`, `ConejoApp/Comprobantes` y `ConejoApp/Perfiles` en el Drive, sube un archivo de
 prueba, lo lee y lo borra. Las dos lineas de permisos deben decir «si».
 
 ```bash
@@ -91,6 +91,11 @@ comando. Los archivos simulados de antes no se migran: son de prueba.
    `…_APROBADO-CLIENTE`.
 4. Reportar un pago con comprobante desde Facturacion del cliente: el archivo
    cae en `ConejoApp/Comprobantes` y administracion lo abre desde el pago.
+5. Subir una foto en Mi perfil: cae en `ConejoApp/Perfiles` y se ve en la
+   barra lateral.
+
+Hecho el 2026-10-27 con la cuenta del responsable: los tres llegaron y se
+leyeron desde la app.
 
 **Correo (R11)**
 
@@ -103,7 +108,10 @@ por una direccion propia (o crear una cuenta nueva con ella).
 2. Enviar un brief desde esa cuenta: llega la copia.
 3. Enviar un presupuesto a esa empresa: llega el aviso.
 4. En **Sistema → Bandeja de salida**, cada uno sale como entregado.
-5. Un fallo (por ejemplo, quitar `SECRET_DRIVE_KEY1` un momento y reiniciar):
+5. Login → «¿Olvidaste tu contrasena?» con ese correo: llega el enlace, sirve
+   una vez, y despues llega el aviso de que la contrasena cambio. En la
+   Bandeja de salida el correo del enlace muestra el marcador, no el enlace.
+6. Un fallo (por ejemplo, quitar `SECRET_DRIVE_KEY1` un momento y reiniciar):
    el correo queda como fallido en la bandeja y los administradores reciben
    la notificacion. Volver a ponerlo despues.
 
@@ -111,7 +119,7 @@ por una direccion propia (o crear una cuenta nueva con ella).
 
 Las mismas variables, marcadas como Sensitive: `DRIVE_CLIENT_ID`,
 `SECRET_DRIVE_KEY1`, `DRIVE_REFRESH_TOKEN`, `DRIVE_CARPETA_PIEZAS_ID`,
-`DRIVE_CARPETA_COMPROBANTES_ID`, `ARCHIVOS_MODO=real`, `CORREO_MODO=real` y
+`DRIVE_CARPETA_COMPROBANTES_ID`, `DRIVE_CARPETA_PERFILES_ID`, `ARCHIVOS_MODO=real`, `CORREO_MODO=real` y
 `APP_URL_PUBLICA` con la direccion publica. El detalle esta en
 `docs/despliegueProduccion.md`.
 

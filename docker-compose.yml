@@ -95,7 +95,8 @@ services:
       DRIVE_CARPETA_PERFILES_ID: ${DRIVE_CARPETA_PERFILES_ID:-}
       TOTP_CLAVE: ${TOTP_CLAVE:-Y2xhdmUtZGVzYXJyb2xsby1uby11c2FyLWVuLXByb2Q}
       CRON_SECRET: ${CRON_SECRET:-}
-      APP_URL_PUBLICA: ${APP_URL_PUBLICA:-}
+      # En desarrollo, los enlaces de los correos van a la app local.
+      APP_URL_PUBLICA: ${APP_URL_PUBLICA:-http://localhost:${APP_PORT:-3000}}
       BRIEFS_MAILBOX: ${BRIEFS_MAILBOX:-}
       COOKIE_SESION: ${COOKIE_SESION}
       # El bind mount desde Windows no propaga eventos de archivo al
