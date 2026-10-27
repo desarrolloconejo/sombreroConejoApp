@@ -50,6 +50,26 @@ export function Avatar({
     .filter(Boolean)
     .join(" ");
 
+  // La foto de perfil la entrega /api/fotos, que exige sesion: el optimizador
+  // de imagenes la pediria sin la cookie y recibiria 404, y next/image no
+  // admite su `?v=` sin abrir images.localPatterns a todo. Va como img.
+  if (fotoUrl?.startsWith("/api/")) {
+    return (
+      <span className={contenedor}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={fotoUrl}
+          alt={`Foto de ${nombreCompleto}`}
+          width={medida.px}
+          height={medida.px}
+          loading="lazy"
+          decoding="async"
+          className="size-full object-cover"
+        />
+      </span>
+    );
+  }
+
   if (fotoUrl) {
     return (
       <span className={contenedor}>

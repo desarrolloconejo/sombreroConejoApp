@@ -34,14 +34,15 @@ export type ArchivoNuevo = {
   nombre: string;
   mime: string;
   bytes: Uint8Array;
-  /** Donde va en Drive: las versiones de las piezas, o los comprobantes de pago. */
-  carpeta?: "piezas" | "comprobantes";
+  /** Donde va en Drive: las versiones de las piezas, los comprobantes de pago o las fotos de perfil. */
+  carpeta?: "piezas" | "comprobantes" | "perfiles";
 };
 
 /** La carpeta de Drive de cada tipo de archivo. Las crea npm run drive:probar. */
 const CARPETAS = {
   piezas: "DRIVE_CARPETA_PIEZAS_ID",
   comprobantes: "DRIVE_CARPETA_COMPROBANTES_ID",
+  perfiles: "DRIVE_CARPETA_PERFILES_ID",
 } as const;
 
 /** Guarda el archivo y devuelve su identificador, con el prefijo de su sitio. */

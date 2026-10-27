@@ -17,6 +17,8 @@
     "prueba:permisos": "npx tsx db/pruebas/permisos.mts",
     "sql:produccion": "node db/generarSql.mts",
     "drive:probar": "node --env-file=.env scripts/driveProbar.mjs",
+    "google:autorizar": "node --env-file=.env scripts/driveProbar.mjs --reautorizar",
+    "correo:probar": "node --env-file=.env scripts/correoProbar.mjs",
     "test": "playwright test",
     "test:unitarias": "playwright test --project=unitarias",
     "test:integracion": "playwright test --project=integracion"

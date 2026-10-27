@@ -18,6 +18,8 @@ export type ModoExterno = "simulado" | "real";
 export type TipoCorreo =
   | "bienvenida"
   | "clave_restablecida"
+  | "clave_recuperar"
+  | "clave_cambiada"
   | "pieza_en_revision"
   | "presupuesto_enviado"
   | "brief_enviado";
@@ -26,6 +28,8 @@ export type TipoCorreo =
 export const NOMBRES_DE_CORREO: Record<TipoCorreo, string> = {
   bienvenida: "Bienvenida",
   clave_restablecida: "Contrasena restablecida",
+  clave_recuperar: "Enlace para una contrasena nueva",
+  clave_cambiada: "Aviso de contrasena cambiada",
   pieza_en_revision: "Pieza lista para revisar",
   presupuesto_enviado: "Presupuesto para aprobar",
   brief_enviado: "Copia de un brief",
@@ -57,7 +61,10 @@ export type NuevoCorreo = {
   tipo: TipoCorreo;
   asunto: string;
 
-  /** Texto plano. Nunca lleva contrasenas ni tokens. */
+  /**
+   * Texto plano. Nunca lleva contrasenas ni tokens: el enlace de «Olvide mi
+   * contrasena» va como marcador y se pone solo al enviarlo.
+   */
   cuerpo: string;
 };
 

@@ -50,11 +50,7 @@ const MES_Y_ANO = new Intl.DateTimeFormat("es", {
  * Solo entran esos tres: el cargo y la empresa los asigna un administrador,
  * asi que contarlos culparia a quien no puede hacer nada al respecto.
  *
- * Por el mismo motivo NO entra la foto mientras su subida este apagada: pedir
- * algo que la interfaz no deja hacer dejaria a todo el mundo clavado en un 75 %
- * imposible de completar. Cuando la funcionalidad vuelva, se repone aqui la
- * linea `{ lleno: Boolean(usuario.fotoUrl), nombre: "tu foto" }` y el
- * porcentaje se recalcula solo, porque divide entre `campos.length`.
+ * La foto entra tambien: se sube desde Mi perfil (a Drive).
  */
 function revisarPerfil(usuario: UsuarioCompleto): {
   porcentaje: number;
@@ -64,6 +60,7 @@ function revisarPerfil(usuario: UsuarioCompleto): {
     { lleno: Boolean(usuario.telefono), nombre: "tu telefono" },
     { lleno: usuario.nombre.trim().length > 0, nombre: "tu nombre" },
     { lleno: usuario.apellido.trim().length > 0, nombre: "tu apellido" },
+    { lleno: Boolean(usuario.fotoUrl), nombre: "tu foto" },
   ];
 
   const faltan = campos.filter((c) => !c.lleno).map((c) => c.nombre);

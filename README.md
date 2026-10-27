@@ -119,8 +119,13 @@ En el host:
 npm run test:unitarias     # funciones puras; no necesita la app levantada
 npm run test:integracion   # navegador contra la app levantada y sembrada
 npm test                   # las dos
-npm run drive:probar       # autoriza y comprueba Google Drive
+npm run drive:probar       # comprueba Google Drive con la autorizacion del .env
+npm run google:autorizar   # autoriza de nuevo (Drive y Gmail) y comprueba Drive
+npm run correo:probar -- destino@ejemplo.com   # un correo de prueba por Gmail
 ```
+
+Probar Drive y Gmail de verdad en local, paso a paso:
+[docs/pruebaGoogleReal.md](docs/pruebaGoogleReal.md).
 
 Utiles de Docker:
 
@@ -714,7 +719,7 @@ servidor propio. La base esta en **Neon**.
   los de `.env.example`; sus valores, los que entregue el responsable. No se
   define `NODE_ENV`: lo fija la plataforma.
 - **El disco es de solo lectura.** El codigo de servidor no escribe archivos.
-  Por eso la subida de foto de perfil esta apagada.
+  Por eso los archivos, tambien la foto de perfil, se guardan en Google Drive.
 - **La base se migra pegando SQL.** La maquina de desarrollo no alcanza Neon,
   asi que cada cambio de esquema entrega un archivo numerado en `db/neon/`, que
   se pega en el editor de su panel. Son idempotentes y no llevan secretos.

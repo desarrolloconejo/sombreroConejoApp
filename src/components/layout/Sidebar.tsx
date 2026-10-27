@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
@@ -155,11 +154,14 @@ export function Sidebar({
         >
           <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-acento text-[13px] font-bold text-acento-contraste">
             {usuario.fotoUrl ? (
-              <Image
+              // La entrega /api/fotos con la sesion: va como img, como en Avatar.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={usuario.fotoUrl}
                 alt=""
                 width={36}
                 height={36}
+                decoding="async"
                 className="size-full object-cover"
               />
             ) : (

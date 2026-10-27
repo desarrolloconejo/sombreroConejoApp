@@ -21,7 +21,9 @@ export default async function PaginaLogin(props: PageProps<"/login">) {
   // Lo ponen las guardias y el guardian de sesion cuando sacan a alguien. Solo
   // se reconocen valores fijos: el texto que se pinta nunca sale de la URL.
   const motivo =
-    parametros.motivo === "sin-acceso" || parametros.motivo === "caducada"
+    parametros.motivo === "sin-acceso" ||
+    parametros.motivo === "caducada" ||
+    parametros.motivo === "clave-nueva"
       ? parametros.motivo
       : null;
 

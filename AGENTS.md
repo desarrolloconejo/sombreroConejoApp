@@ -50,6 +50,7 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 | `docs/informeIntegracion.md` | Que hace la aplicacion hoy, como se probo y la guia para probarla |
 | `docs/guiaFinanzas.md` | Como funciona finanzas de punta a punta, para el equipo: estados, quien hace que, tasa, pagos y cobranza |
 | `docs/informePendientes.md` | Lo que falta para usarla de verdad, por momento y con quien aporta cada dato |
+| `docs/pruebaGoogleReal.md` | Como pasar Drive y Gmail a modo real en local, que comprobar y como cambiar a la cuenta de la empresa |
 | `docs/planPiloto.md` | Como se hace la prueba con un cliente real: preparacion, semanas, que observar y como volver atras |
 | `docs/pendientesIntegracion.md` | Valores de ejemplo que hay que sustituir, decisiones del negocio que faltan y lo que no se hizo. Cada etapa lo actualiza; de aqui sale el informe final |
 | `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7. Ejecutado |
@@ -156,10 +157,19 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   que cambie que puede ver o hacer alguien **revoca sus sesiones**
   (`src/models/sesiones.ts`); no basta con cambiar el dato.
 - `renovarSesion` y `verificarSegundoPaso` son las unicas actions sin guardia
-  de sesion, junto con las de `src/actions/enlaceBrief.ts`, y es a proposito:
-  atienden a quien aun no tiene sesion. Las del enlace tienen por guardia el
-  token, que cada una comprueba antes de nada con `enlaceValido`
-  (`src/lib/portal/enlaceBrief.ts`). Ninguna otra puede saltarsela.
+  de sesion, junto con las de `src/actions/enlaceBrief.ts` y las de
+  `src/actions/recuperarClave.ts`, y es a proposito: atienden a quien aun no
+  tiene sesion. Las del enlace tienen por guardia el token, que cada una
+  comprueba antes de nada con `enlaceValido` (`src/lib/portal/enlaceBrief.ts`).
+  Ninguna otra puede saltarsela.
+- **«Olvide mi contrasena»** (`/recuperar`, publica y abierta tambien con
+  sesion): pedir el enlace responde siempre lo mismo y hace todo despues de
+  responder (`after`), asi que ni el texto ni el tiempo dicen si la cuenta
+  existe; como mucho `ENLACES_POR_HORA` por persona. El enlace vence a los 30
+  minutos, sirve una vez y, al usarlo, gasta los demas y cierra todas las
+  sesiones. La base guarda solo el hash (`restablecimientos_clave`, sin
+  `DELETE`). Escriben con `conSistema`; la bandeja de salida acepta al rol
+  `sistema` sin autor. Hace falta `APP_URL_PUBLICA`: sin ella no hay enlace.
 - Un prospecto no tiene usuario: ante la base actua con `conEnlace`, que
   declara el rol `prospecto` y su enlace (`app_enlace_id()`). Una tabla que
   deba aceptarlo lo nombra en su politica, como la campana y la bandeja de
@@ -193,6 +203,12 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   esas rutas aunque el cargo no toque (`RUTAS_POR_TAREA`), y la page decide
   con su guardia (`requerirHooks`). Sin el parametro, la regla del cargo es
   la de siempre.
+- La foto de perfil se guarda en Drive (`ConejoApp/Perfiles`) y se entrega
+  por `/api/fotos/[usuarioId]` a cualquiera con sesion. Donde esta guardada
+  vive en `usuarios.foto_archivo`, que no sale en ninguna vista; `foto_url` es
+  la ruta de la app, con `?v=` (que lleva la extension) para que el navegador
+  no siga pintando la vieja. Se pinta con `<img>`, no con `next/image`: el
+  optimizador la pediria sin la cookie.
 - Un archivo de una pieza solo se entrega por `/api/archivos/[versionId]`,
   que decide con la sesion y las politicas de `versiones`. Lo que no se puede
   ver responde **404, nunca 403**, y el id de Drive no sale del servidor.
@@ -200,7 +216,13 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   la raiz y `/images`. Una ruta publica nueva se declara en el proxy, no se
   cuela por el `matcher`.
 - **Ningun correo lleva contrasenas, tokens ni codigos.** La bandeja de salida
-  guarda el texto completo de cada uno.
+  guarda el texto completo de cada uno. La unica excepcion es el enlace de
+  «Olvide mi contrasena», y la bandeja tampoco lo guarda: el correo lleva
+  `MARCADOR_ENLACE` y `entregarCorreos` lo cambia por el enlace solo en lo que
+  envia (con el correo simulado, en desarrollo, sale en la consola del
+  servidor). Reenviarlo desde la bandeja manda el marcador, no el enlace.
+- **Todo cambio de contrasena avisa por correo** a la persona, sin nada
+  privado: desde Mi perfil, con el enlace o restablecida por un administrador.
 - Una **notificacion** es lo que se lee en la campana y vive en la base
   (`portal.notificaciones`, `src/lib/notificaciones.ts`). Un **aviso** es el
   mensaje flotante que confirma una accion (`ProveedorAvisos`). No se mezclan
@@ -419,6 +441,7 @@ mismo. Un evento nuevo que cambie algo de otra persona se anade aqui.
 | --- | --- |
 | Cuenta bloqueada por intentos, correo que no salio, lectura rara de la tasa | Administradores |
 | Contrasena restablecida, dos pasos retirados | La persona |
+| Contrasena cambiada (Mi perfil, enlace o administrador) | La persona, por correo |
 | Empresa asignada o retirada | Ese ejecutivo |
 | Proyecto asignado (al crear o al reasignar) | El ejecutivo que lo lleva |
 | Proyecto creado a mano | Clientes de la empresa |

@@ -3,13 +3,17 @@ import type { NuevoCorreo } from "@/types";
 /**
  * Lo que dice cada correo. Funciones puras: entran datos, sale el mensaje.
  *
- * UNA REGLA SIN EXCEPCIONES
- * -------------------------
+ * UNA REGLA, Y SU UNICA EXCEPCION
+ * -------------------------------
  * Ningun correo lleva una contrasena, ni un token, ni un codigo. La bandeja
  * de salida guarda el texto completo de todo lo que se envia, y un correo se
  * reenvia, se archiva y se lee en pantallas ajenas. La contrasena provisional
  * la sigue entregando en mano quien da el alta, como hasta ahora; el correo
  * solo avisa de que existe.
+ *
+ * La excepcion es el enlace de «Olvide mi contrasena», y aun asi el texto que
+ * sale de aqui no lo lleva: lleva `MARCADOR_ENLACE`, que es lo que guarda la
+ * bandeja, y el adaptador lo cambia por el enlace solo al enviarlo.
  *
  * El texto es plano a proposito: se lee igual en cualquier cliente, y en modo
  * simulado es lo que un administrador copia para entregarlo a mano.
@@ -69,6 +73,61 @@ export function correoDeClaveRestablecida(persona: Destinatario): NuevoCorreo {
       "La contrasena provisional te la entrega esa persona. " +
       "Al entrar se te pedira que la cambies por una propia.\n\n" +
       "Si no esperabas este cambio, avisa a la agencia." +
+      despedida(),
+  };
+}
+
+/**
+ * Lo que guarda la bandeja en el lugar del enlace de «Olvide mi contrasena».
+ * El adaptador lo cambia por el enlace de verdad solo en el correo que envia.
+ */
+export const MARCADOR_ENLACE = "[enlace privado: solo va en el correo enviado]";
+
+/** El enlace para poner una contrasena nueva, que se pidio desde el login. */
+export function correoDeRecuperarClave(persona: Destinatario, minutos: number): NuevoCorreo {
+  return {
+    para: persona.email,
+    paraUsuarioId: persona.id,
+    empresaId: persona.empresaId,
+    tipo: "clave_recuperar",
+    asunto: "Elige una contrasena nueva para Conejo App",
+    cuerpo:
+      `Hola, ${persona.nombre}:\n\n` +
+      "Pediste una contrasena nueva para tu cuenta de Conejo App. Abre este " +
+      "enlace para elegirla:\n\n" +
+      `${MARCADOR_ENLACE}\n\n` +
+      `El enlace vence en ${minutos} minutos y sirve una sola vez. Al usarlo se ` +
+      "cerraran las sesiones que tengas abiertas.\n\n" +
+      "Si no lo pediste tu, ignora este correo: tu contrasena no cambia." +
+      despedida(),
+  };
+}
+
+/**
+ * El aviso de que la contrasena cambio, por si no fue la propia persona. No
+ * lleva nada privado: solo la direccion donde pedir otra.
+ */
+export function correoDeClaveCambiada(
+  persona: Destinatario,
+  como: "perfil" | "enlace",
+  cuando: string,
+): NuevoCorreo {
+  const acceso = direccionDeAcceso();
+
+  return {
+    para: persona.email,
+    paraUsuarioId: persona.id,
+    empresaId: persona.empresaId,
+    tipo: "clave_cambiada",
+    asunto: "Tu contrasena de Conejo App cambio",
+    cuerpo:
+      `Hola, ${persona.nombre}:\n\n` +
+      `La contrasena de tu cuenta de Conejo App cambio el ${cuando}` +
+      (como === "enlace"
+        ? ", con el enlace que se envio a este correo. Las sesiones que tenias abiertas se cerraron.\n\n"
+        : ", desde Mi perfil.\n\n") +
+      "Si no fuiste tu, avisa a la agencia cuanto antes" +
+      (acceso ? ` o pide una contrasena nueva en ${acceso.replace(/\/login$/, "/recuperar")}.` : ".") +
       despedida(),
   };
 }

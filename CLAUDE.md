@@ -81,9 +81,9 @@ Tres cosas que hay que tener presentes antes de tocar nada de esto:
   proceso. El `docker/Dockerfile` y el perfil `prod` del compose se conservan
   para el dia que la aplicacion se mude a un VPS, que es el plan a medio plazo.
 - **El disco de una funcion de Vercel es de solo lectura** salvo `/tmp`, y
-  `public/` se hornea en el build. Por eso la subida de foto de perfil esta
-  apagada: su codigo esta comentado, no borrado, y vuelve sin cambios el dia
-  del VPS. No escribas archivos al disco en codigo de servidor.
+  `public/` se hornea en el build. Por eso los archivos (versiones de las
+  piezas, comprobantes y la foto de perfil) se guardan en Google Drive, no en
+  disco. No escribas archivos al disco en codigo de servidor.
 - **ProtonVPN bloquea el puerto 5432 de salida**, asi que la maquina de
   desarrollo no alcanza Neon. Desarrollo va contra el PostgreSQL de Docker, y
   la base de produccion se siembra generando un `.sql` con

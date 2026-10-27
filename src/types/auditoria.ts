@@ -17,6 +17,9 @@ export type AccionAuditoria =
   | "usuario.desactivado"
   | "usuario.clave_cambiada"
   | "usuario.clave_restablecida"
+  | "usuario.clave_pedida"
+  | "usuario.clave_recuperada"
+  | "usuario.foto_cambiada"
   | "usuario.perfil_editado"
   | "usuario.dos_pasos_activados"
   | "usuario.dos_pasos_desactivados"
@@ -101,6 +104,9 @@ export const NOMBRES_DE_ACCION: Record<AccionAuditoria, string> = {
   "usuario.desactivado": "Usuario desactivado",
   "usuario.clave_cambiada": "Cambio su contrasena",
   "usuario.clave_restablecida": "Contrasena restablecida",
+  "usuario.clave_pedida": "Pidio un enlace para una contrasena nueva",
+  "usuario.clave_recuperada": "Puso una contrasena nueva con el enlace del correo",
+  "usuario.foto_cambiada": "Cambio su foto de perfil",
   "usuario.perfil_editado": "Edito su perfil",
   "usuario.dos_pasos_activados": "Activo la verificacion en dos pasos",
   "usuario.dos_pasos_desactivados": "Desactivo la verificacion en dos pasos",
