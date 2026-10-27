@@ -73,6 +73,9 @@ sigue.
 | Boveda de marca e historial del cliente sacado de la auditoria | No se pidieron con prioridad | Cuando se pidan |
 | Limite de intentos por IP en `/brief/[token]` | El token tiene 256 bits de azar | Reconsiderar en el VPS |
 | El enlace del prospecto no se manda por correo | Ningun correo lleva tokens. El ejecutivo lo entrega a mano | Decision tomada |
+| Google Cloud sigue en «Testing» | **Decidido por el responsable el 2026-10-27:** se publica asi, con la cuenta personal y su autorizacion actual, para que el equipo vea como quedo. En «Testing» la autorizacion **caduca a los 7 dias**: despues Drive y Gmail dejan de funcionar en produccion (subir archivos falla con mensaje y los correos quedan como fallidos en la bandeja, con aviso a los administradores) | Cuando el responsable renueve: traera credenciales nuevas (`DRIVE_CLIENT_ID`, `SECRET_DRIVE_KEY1`), se autoriza con `npm run google:autorizar`, se pasa la pantalla de consentimiento a «En produccion» y se sustituyen en Vercel el token y, si cambia la cuenta, las tres carpetas (`npm run drive:separar`). Ver R12 |
+| Copias de seguridad de la base | Neon solo guarda 6 horas de historial en el plan gratuito, y desde desarrollo no se alcanza el 5432 para un `pg_dump` | Antes de tener datos de clientes reales: tarea nocturna fuera de Neon. Plan completo en `docs/mudanzaVps.md`, seccion 4 |
+| Todo lo que espera al servidor propio | Tiempo real, archivos grandes, tarea cada hora, limites por IP... | `docs/mudanzaVps.md` |
 
 ## 4. Sin probar fuera de local
 

@@ -550,6 +550,8 @@ resolver antes.
 | Certificado del BCV | El suyo vence el **20 de noviembre de 2026**. Si al renovarlo cambian de autoridad, la lectura fallara y lo notificara: hay que sustituir el intermedio de `src/lib/externos/certificados/bcvIntermedio.ts`. No se arregla apagando la verificacion |
 | Frecuencia de la tarea | Una vez al dia (18:30 de Caracas), que es lo que permite el plan gratuito de Vercel. **Decidido por el responsable el 2026-10-27: se queda en una vez al dia**, sin «refresco al usar». A cambio, Ajustes de finanzas → Tasa del dolar dice si la app ya la leyo hoy, como le fue (registrada, sin novedad o rechazada), cuando vuelve, y si toca registrarla a mano; el inicio de finanzas lo resume. Sale de `finanzas.lecturas_tasa` (archivo 22) |
 | Registrar una tasa a mano | La base ya lo admite, para `admin` y `administracion`. La pantalla llega con finanzas (etapa 5) |
+| Google Cloud en «Testing» | **Se publica asi** (decidido el 2026-10-27). La autorizacion de Google caduca a los 7 dias: pasado ese plazo fallan las subidas a Drive y los correos. El responsable traera credenciales nuevas; pasos en `docs/pendientesIntegracion.md` |
+| Copias de seguridad | Neon guarda 6 horas de historial. Antes de pegar el SQL, crear una rama de respaldo (seccion 1). La copia diaria fuera de Neon esta pendiente: `docs/mudanzaVps.md`, seccion 4 |
 | Correos que quedan «pendientes» | En modo real, si la funcion se corta entre confirmar el cambio y enviar, el correo queda como pendiente. No hay tarea que lo recoja: se reintenta a mano desde la bandeja |
 
 ### Verificacion en dos pasos

@@ -56,6 +56,7 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 | `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7. Ejecutado |
 | `docs/informeAuditoria.md` | Resultado de esa revision: que se corrigio y que quedo para el plan del portal |
 | `docs/planMejoraDiseno.md` | Plan de mejora del diseno y navegacion movil nueva |
+| `docs/mudanzaVps.md` | Lo que cambia el dia que la app deje Vercel, y las copias de seguridad de la base |
 
 El paquete de especificacion original del portal vive fuera, en la carpeta
 hermana `appFacturas` (reglas de negocio de fases, briefs y finanzas, maquetas).
