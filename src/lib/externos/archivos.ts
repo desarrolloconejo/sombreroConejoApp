@@ -61,7 +61,9 @@ export async function subirArchivo(archivo: ArchivoNuevo): Promise<string> {
   }
 
   const variable = CARPETAS[archivo.carpeta ?? "piezas"];
-  const carpeta = process.env[variable];
+  // Sin espacios ni saltos de linea: al pegarlo en un panel se cuelan, y Drive
+  // responde 404 como si la carpeta no existiera.
+  const carpeta = process.env[variable]?.trim();
   if (!carpeta) throw new Error(`Falta ${variable}: ejecuta npm run drive:probar`);
 
   const token = await tokenDeGoogle();
@@ -81,6 +83,11 @@ export async function subirArchivo(archivo: ArchivoNuevo): Promise<string> {
     signal: AbortSignal.timeout(ESPERA_GOOGLE * 3),
   });
 
+  if (respuesta.status === 404) {
+    throw new Error(
+      `Drive no encuentra la carpeta de ${variable} (404): el id esta mal copiado o no es de esta cuenta`,
+    );
+  }
   if (!respuesta.ok) throw new Error(`Drive no acepto el archivo (${respuesta.status})`);
 
   const { id } = (await respuesta.json()) as { id?: unknown };
