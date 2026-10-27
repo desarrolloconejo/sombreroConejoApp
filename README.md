@@ -121,6 +121,8 @@ npm run test:integracion   # navegador contra la app levantada y sembrada
 npm test                   # las dos
 npm run drive:probar       # comprueba Google Drive con la autorizacion del .env
 npm run google:autorizar   # autoriza de nuevo (Drive y Gmail) y comprueba Drive
+npm run drive:separar      # crea la carpeta de produccion e imprime sus ids
+npm run drive:limpiar      # lista los archivos de desarrollo (-- --confirmar: a la papelera)
 npm run correo:probar -- destino@ejemplo.com   # un correo de prueba por Gmail
 ```
 

@@ -10,7 +10,9 @@
 -- Idempotente. Solo anade: la vista gana una columna al final, que la version
 -- publicada ignora.
 --
--- ORDEN: antes de subir la aplicacion, despues del 12.
+-- ORDEN: antes de subir la aplicacion, despues del 12 **y del 06**. Su vista
+-- ya no lleva el hash: sobre la de antes del 06, PostgreSQL responde «cannot
+-- drop columns from view» (visto en el ensayo sobre Neon del 2026-10-27).
 -- ===========================================================================
 
 BEGIN;

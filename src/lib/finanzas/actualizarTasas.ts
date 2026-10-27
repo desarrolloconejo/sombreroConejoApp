@@ -20,6 +20,10 @@ import { saltoIncreible } from "./tasaBcv";
  * notifica a los administradores, que pueden registrar la tasa a mano.
  *
  * NUNCA LANZA por un problema de la fuente. Si lanza, es que fallo la base.
+ *
+ * Cada corrida queda en finanzas.lecturas_tasa, tambien la que no trae nada
+ * nuevo: es lo que Ajustes de finanzas muestra para que se sepa si la app ya
+ * lo intento hoy y si toca registrar la tasa a mano.
  */
 export async function actualizarTasas(): Promise<ResultadoDeTasas> {
   // La lectura va FUERA de la transaccion: no se espera a un servidor ajeno
@@ -39,11 +43,20 @@ export async function actualizarTasas(): Promise<ResultadoDeTasas> {
 
     if (salto) {
       const motivo = `La lectura no es creible: ${salto}`;
-      await dejarConstanciaDelRechazo(tx, motivo);
+      await dejarConstanciaDelRechazo(tx, motivo, lectura.fechaValor);
       return { ok: false as const, motivo };
     }
 
     const nuevas = await tasas.registrarLectura(lectura, tx);
+
+    await tasas.anotarLectura(
+      {
+        resultado: nuevas > 0 ? "registrada" : "sin_novedad",
+        fechaValor: lectura.fechaValor,
+        motivo: null,
+      },
+      tx,
+    );
 
     // Solo se anota cuando entra algo: la tarea lee varias veces la misma
     // fecha valor, y una linea por cada lectura sin novedad seria ruido.
@@ -73,7 +86,9 @@ export async function actualizarTasas(): Promise<ResultadoDeTasas> {
 async function dejarConstanciaDelRechazo(
   tx: Parameters<Parameters<typeof conSistema>[0]>[0],
   motivo: string,
+  fechaValor: string | null,
 ): Promise<void> {
+  await tasas.anotarLectura({ resultado: "rechazada", fechaValor, motivo }, tx);
   await anotar(tx, null, "tasa.rechazada", { despues: { motivo } });
 
   await notificarAAdministradores(tx, {
@@ -85,5 +100,5 @@ async function dejarConstanciaDelRechazo(
 }
 
 async function rechazar(motivo: string): Promise<void> {
-  await conSistema((tx) => dejarConstanciaDelRechazo(tx, motivo));
+  await conSistema((tx) => dejarConstanciaDelRechazo(tx, motivo, null));
 }

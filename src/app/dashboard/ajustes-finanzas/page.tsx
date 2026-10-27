@@ -14,6 +14,7 @@ import { Wrapper } from "@/components/layout/Wrapper";
 import { Etiqueta } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { quedaPocoTalonario } from "@/lib/finanzas/ajustes";
+import { cuandoEs, situacionTasa } from "@/lib/finanzas/programacionTasa";
 import { rutaFormatoImpresion } from "@/lib/finanzas/rutas";
 import { hoyEnCaracas } from "@/lib/portal/fases";
 import { requerirFinanzas } from "@/lib/sesion";
@@ -60,13 +61,26 @@ function Seccion({
 export default async function PaginaAjustesFinanzas() {
   const usuario = await requerirFinanzas();
 
-  const { ajustes, numeracion, medios, formatos, fiscales, tasas } = await conSesion(usuario, async (tx) => ({
+  const { ajustes, numeracion, medios, formatos, fiscales, tasas, lecturas } = await conSesion(usuario, async (tx) => ({
     ajustes: await ajustesModelo.leer(tx),
     numeracion: await ajustesModelo.numeracion(tx),
     medios: await ajustesModelo.medios(tx),
     formatos: await ajustesModelo.formatos(tx),
     fiscales: await empresasModelo.datosFiscales(tx),
     tasas: await tasasModelo.recientes("bcv", "USD", 8, tx),
+    lecturas: await tasasModelo.ultimasLecturas(5, tx),
+  }));
+
+  // Lo que depende de la hora se escribe aqui, una vez: servidor y navegador
+  // no tienen por que estar en el mismo minuto.
+  const ahora = new Date();
+  const situacion = situacionTasa(lecturas, ahora);
+  const lecturasParaMostrar = lecturas.map((lectura) => ({
+    id: lectura.id,
+    cuando: cuandoEs(lectura.leidaEn, ahora),
+    resultado: lectura.resultado,
+    fechaValor: lectura.fechaValor,
+    motivo: lectura.motivo,
   }));
 
   if (!ajustes || !numeracion) throw new Error("Faltan los ajustes de finanzas: aplica el esquema");
@@ -92,10 +106,15 @@ export default async function PaginaAjustesFinanzas() {
           <Seccion
             id="titulo-tasa"
             titulo="Tasa del dolar"
-            descripcion="La lee cada dia la tarea del BCV. Si falla, se registra aqui: sin tasa no se puede facturar."
+            descripcion="La app la lee del BCV una vez al dia. Aqui se ve si ya lo hizo; si fallo, se registra a mano: sin tasa no se puede facturar."
             retraso="0.1s"
           >
-            <TasaDolar recientes={tasas} hoy={hoyEnCaracas()} />
+            <TasaDolar
+              recientes={tasas}
+              hoy={hoyEnCaracas(ahora)}
+              situacion={situacion}
+              lecturas={lecturasParaMostrar}
+            />
           </Seccion>
         </div>
 

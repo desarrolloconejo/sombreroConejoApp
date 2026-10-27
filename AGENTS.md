@@ -203,7 +203,11 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   esas rutas aunque el cargo no toque (`RUTAS_POR_TAREA`), y la page decide
   con su guardia (`requerirHooks`). Sin el parametro, la regla del cargo es
   la de siempre.
-- La foto de perfil se guarda en Drive (`ConejoApp/Perfiles`) y se entrega
+- Drive tiene dos raices en la misma cuenta: `ConejoApp/` es de
+  produccion (sus ids solo van en Vercel) y desarrollo usa `DRIVE_RAIZ`
+  (`ConejoApp-Desarrollo`). Los scripts de `scripts/drive*.mjs` nunca
+  escriben ni limpian `ConejoApp/` salvo `drive:separar`, que solo la crea.
+- La foto de perfil se guarda en Drive (`Perfiles` de su raiz) y se entrega
   por `/api/fotos/[usuarioId]` a cualquiera con sesion. Donde esta guardada
   vive en `usuarios.foto_archivo`, que no sale en ninguna vista; `foto_url` es
   la ruta de la app, con `?v=` (que lleva la extension) para que el navegador
@@ -237,7 +241,10 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   administracion y el cliente no leen las asignaciones.
 - Una tarea programada vive en `src/app/api/cron/`, comprueba `CRON_SECRET`
   antes de nada y escribe con `conSistema`, nunca con una identidad
-  inventada. Si una tabla debe aceptarla, su politica nombra el rol
+  inventada. La de la tasa corre una vez al dia (`vercel.json`, espejo en
+  `src/lib/finanzas/programacionTasa.ts`, que una prueba compara) y anota
+  cada corrida en `finanzas.lecturas_tasa`, tambien la que no trae nada:
+  de ahi sale lo que Ajustes de finanzas dice de si ya lo hizo. Si una tabla debe aceptarla, su politica nombra el rol
   `sistema`.
 - El dinero y las tasas viajan como **texto decimal** y se guardan en
   `NUMERIC`. No pasan por `number`.

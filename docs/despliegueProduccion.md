@@ -11,6 +11,19 @@ de darse por terminada. El dia del despliegue se sigue de arriba abajo.
 Los pasos de la base los hace el responsable: la maquina de desarrollo no
 alcanza Neon, y la produccion se migra pegando SQL en su editor.
 
+**Estado real, leido el 2026-10-27** (Neon y Vercel, solo lectura):
+
+- Vercel publica `1e57306` (etapas 1 y 2 y dos pasos), que no funciona porque
+  Neon no tiene ninguno de los archivos. Se sabia al subirlo.
+- Vercel solo tiene `DATABASE_URL` (la del dueno) y `JWT_SECRET`, en
+  produccion **y en preview**: los despliegues de preview apuntan a la base
+  de produccion.
+- Neon esta en el esquema de la fase 1 mas Hooks: 4 usuarios, todos admin, 1
+  empresa, 0 clientes, 42 aperturas. No existe `conejo_app`.
+- Los 21 archivos se ensayaron sobre una copia de `production`: ver
+  `db/neon/README.md`. Resultado: entran todos con el **06 justo despues del
+  05**, y el esquema queda identico al local.
+
 ## Como leer esta guia
 
 | Seccion | Cuando |
@@ -90,6 +103,11 @@ Sus tres comprobaciones:
 heredo privilegios que no debe tener, y la seguridad por fila seria decorativa.
 No se cambia Vercel ni se sube hasta resolverlo.
 
+**Despues del 05 va el 06** (`db/neon/06-vista-sin-hash.sql`, seccion 6):
+el 13 y el 14 necesitan la vista sin el hash. La regla de «despues de subir»
+protegia a la version publicada, y la de hoy no funciona contra esta base.
+Debe salir `columnas_con_hash = 0` y el numero de usuarios (4).
+
 ### Etapa 2 — Externos y avisos
 
 Necesitan el rol `conejo_app`: van despues del 5.
@@ -158,8 +176,12 @@ rol `prospecto`, que la version publicada no usa.
 | 17 | `db/neon/17-comentarios-por-fase.sql` | En `portal.comentarios_pieza`, la fase y la tarea de cada comentario (los de antes quedan como generales), dos comprobaciones y un indice | `columnas = 2`, `restricciones = 2` e `indice = 1` |
 | 18 | `db/neon/18-proyecto-por-ejecutivo.sql` | Un proyecto lo puede llevar un ejecutivo de otra cuenta, que gestiona solo ese proyecto: funcion `portal.gestiona_proyecto`, `gestiona_pieza` la usa, politicas de proyectos y piezas, y trigger para que solo un administrador cambie quien lo lleva | `funcion = 1`, `pieza_la_usa = true`, `trigger = 1` y `politicas = 3` |
 | 19 | `db/neon/19-avisos-a-ejecutivos.sql` | Funcion `portal.ejecutivos_de_empresa`: los ejecutivos de una empresa, para avisarles de sus presupuestos aunque quien avisa (administracion, el cliente) no lea las asignaciones | `funcion = 1` y `con_search_path = true` |
-| 20 | `db/neon/20-nomenclatura-de-archivos.sql` | La nomenclatura de los archivos: `empresas.sigla` (unica) y `portal.proyectos.nombre_corto`, los triggers que los proponen a partir del nombre si llegan vacios, la propuesta para las empresas y proyectos que ya existen, `portal.orden_de_pieza` y `portal.proyectos_para_nombrar` (nombre y nombre corto de los proyectos en marcha, para el armador) |
-| 21 | `db/neon/21-foto-y-recuperar-clave.sql` | La foto de perfil en Drive (`usuarios.foto_archivo`) y «Olvide mi contrasena»: la tabla `restablecimientos_clave` y las politicas de la bandeja de salida, que aceptan al rol sistema | `columna = 1`, `tabla = 1`, `permisos = 3` y `politicas_con_sistema = 3` | `sin_sigla = 0`, `sin_nombre_corto = 0` y `siglas_repetidas = 0`. **Despues, revisar a ojo la lista de siglas** que devuelve y corregir en Empresas las que no gusten |
+| 20 | `db/neon/20-nomenclatura-de-archivos.sql` | La nomenclatura de los archivos: `empresas.sigla` (unica) y `portal.proyectos.nombre_corto`, los triggers que los proponen a partir del nombre si llegan vacios, la propuesta para las empresas y proyectos que ya existen, `portal.orden_de_pieza` y `portal.proyectos_para_nombrar` (nombre y nombre corto de los proyectos en marcha, para el armador) | `sin_sigla = 0`, `sin_nombre_corto = 0` y `siglas_repetidas = 0`. **Despues, revisar a ojo la lista de siglas** que devuelve (en el ensayo: `GRUPO-MIMESA`) y corregir en Empresas las que no gusten |
+| 21 | `db/neon/21-foto-y-recuperar-clave.sql` | La foto de perfil en Drive (`usuarios.foto_archivo`) y «Olvide mi contrasena»: la tabla `restablecimientos_clave` y las politicas de la bandeja de salida, que aceptan al rol sistema | `columna = 1`, `tabla = 1`, `permisos = 3` y `politicas_con_sistema = 3` |
+
+| 22 | `db/neon/22-lecturas-de-la-tasa.sql` | `finanzas.lecturas_tasa`: cada corrida de la tarea diaria de la tasa, tambien sin novedad o rechazada. La escribe solo la tarea y la lee quien opera finanzas | `seguridad_por_fila = true`, `politicas = 2` y `permisos = INSERT, SELECT` |
+
+Al terminar, `db/neon/diagnostico.sql`: los 22 en `true`.
 
 Trae un formato de impresion de ejemplo (carta) y cuatro medios de pago de
 ejemplo sin datos bancarios. **El emisor nace vacio: no se puede emitir
@@ -176,7 +198,7 @@ En Settings → Environment Variables, entorno de produccion.
 
 | Variable | Accion | Valor |
 | --- | --- | --- |
-| `DATABASE_URL` | **Cambiar** | La misma cadena agrupada de Neon (host con `-pooler`, `sslmode=verify-full`), con usuario `conejo_app` y su contrasena en lugar de los del dueno. Marcada como Sensitive |
+| `DATABASE_URL` | **Cambiar** | La misma cadena agrupada de Neon (host con `-pooler`, `sslmode=verify-full`), con usuario `conejo_app` y su contrasena en lugar de los del dueno. Marcada como Sensitive. **Solo en Production**: hoy esta tambien en Preview, y una rama de preview escribiria en la base real |
 | `JWT_EXPIRACION` | **Borrar** | Ya no se usa |
 | `JWT_SECRET` | Comprobar | Que **no** sea el de ejemplo de `.env.example`: la version nueva lo rechaza en produccion y no arrancaria |
 | `SESION_ACCESO_SEGUNDOS`, `SESION_HORAS`, `SESION_INACTIVIDAD_MINUTOS` | No definir | Tienen valor por defecto (30 minutos, 12 horas, 15 minutos). Solo existen para pruebas |
@@ -201,7 +223,7 @@ En Settings → Environment Variables, entorno de produccion.
 | Variable | Accion | Valor |
 | --- | --- | --- |
 | `DRIVE_CLIENT_ID`, `SECRET_DRIVE_KEY1`, `DRIVE_REFRESH_TOKEN` | **Anadir** | Las que deja `npm run drive:probar` en el `.env` local. Marcadas como Sensitive. Son las mismas que usaran los comprobantes en la etapa 7 |
-| `DRIVE_CARPETA_PIEZAS_ID` | **Anadir** | El id de `ConejoApp/Piezas`, que tambien deja `drive:probar` (hay que volver a ejecutarlo: antes solo creaba la de comprobantes) |
+| `DRIVE_CARPETA_PIEZAS_ID` | **Anadir** | El id de `ConejoApp/Piezas`, la carpeta **de produccion**. Lo imprime `npm run drive:separar` (se puede repetir: vuelve a imprimir los mismos). **No** es el del `.env` local: ese es el de `ConejoApp-Desarrollo` |
 | `ARCHIVOS_MODO` | No definir | Sin definir vale `real`: las versiones van a Drive. `simulado` las guarda en la base, hasta 4 MB, y es solo para desarrollo |
 
 Sin las variables de Drive, subir un archivo falla con un mensaje claro; las
@@ -223,8 +245,14 @@ publicada sigue con la conexion anterior hasta que se suba.
 
 | Variable | Accion | Valor |
 | --- | --- | --- |
-| `DRIVE_CARPETA_PERFILES_ID` | **Anadir** | El id de `ConejoApp/Perfiles`, que deja `npm run drive:probar` en el `.env` local. Sin ella, subir la foto de perfil falla con un mensaje claro |
-| `DRIVE_CARPETA_COMPROBANTES_ID` | **Anadir** si no esta | El id de `ConejoApp/Comprobantes`, que deja `npm run drive:probar` en el `.env` local. Sin ella, reportar un pago con comprobante falla con un mensaje claro |
+| `DRIVE_CARPETA_PERFILES_ID` | **Anadir** | El id de `ConejoApp/Perfiles` de produccion, que imprime `npm run drive:separar`. Sin ella, subir la foto de perfil falla con un mensaje claro |
+| `DRIVE_CARPETA_COMPROBANTES_ID` | **Anadir** | El id de `ConejoApp/Comprobantes` de produccion, que imprime `npm run drive:separar`. Sin ella, reportar un pago con comprobante falla con un mensaje claro |
+
+**Drive de desarrollo y de produccion estan separados** (2026-10-27): la
+misma cuenta, pero desarrollo guarda en `ConejoApp-Desarrollo/` (`DRIVE_RAIZ`
+en el `.env`) y produccion en `ConejoApp/`, que nacio vacia. Los archivos de
+las pruebas quedaron en la de desarrollo; `npm run drive:limpiar` los lista y,
+con `-- --confirmar`, los manda a la papelera.
 
 ---
 
@@ -295,7 +323,7 @@ En la aplicacion publicada, con la cuenta de administrador.
       una empresa de prueba.
 - [ ] Con un proyecto de prueba de esa empresa: en la fase 3, subir una imagen
       (Drive) y, en la fase 4, marcarla «Para el cliente» y completar la fase.
-      La version aparece en Drive, en `ConejoApp/Piezas`, con el nombre
+      La version aparece en Drive, en `ConejoApp/Piezas` (la de produccion), con el nombre
       estandar del estudio.
 - [ ] Con la cuenta del cliente: el inicio dice que una pieza espera su
       revision; la imagen se ve; «Descargar» no aparece hasta aprobarla.
@@ -343,7 +371,7 @@ En la aplicacion publicada, con la cuenta de administrador.
 - [ ] En Finanzas → Ajustes de finanzas: llenar el emisor (razon social, RIF,
       domicilio fiscal) y revisar la numeracion. **Con datos reales, no de
       ejemplo**: lo que se emita queda con ellos.
-- [ ] En Ajustes de finanzas → Tasa del dolar, comprobar que hay tasa del dia (la lee la tarea programada). Si no la hay, registrarla a mano.
+- [ ] En Ajustes de finanzas → Tasa del dolar, el recuadro de arriba dice si la app ya leyo la tasa hoy y cuando vuelve. Tras lanzar la tarea a mano desde Vercel debe decir «La app ya registro la tasa de hoy» (o «no ha publicado una nueva», o el motivo del rechazo) y aparecer en «Ultimas lecturas automaticas». Si pide registrarla a mano, hacerlo.
 - [ ] Con una proforma emitida de prueba: «Emitir la factura». Abre la
       factura con su numero y numero de control.
 - [ ] «Abrir el PDF para imprimir»: sale el PDF con el texto en su sitio.
@@ -359,6 +387,9 @@ En la aplicacion publicada, con la cuenta de administrador.
 ## 6. SQL que se pega despues de subir
 
 Solo con la seccion 5 en verde.
+
+En el despliegue de la integracion esta seccion queda vacia: el 06 se pega
+despues del 05 (ver seccion 2). Lo de abajo sirve para entender el archivo.
 
 ### Etapa 1
 
@@ -517,7 +548,7 @@ resolver antes.
 | Correo en modo real (Gmail) | **Probada la autorizacion y un envio** (2026-10-27, `npm run correo:probar`); falta ver el primer correo enviado por la propia aplicacion. Por ahora con la cuenta personal del responsable. Antes de poner `CORREO_MODO=real`: `npm run google:autorizar` (pide Drive y Gmail y dice si se concedieron) y `npm run correo:probar -- destino`. Pasos en `docs/pruebaGoogleReal.md` |
 | El BCV desde los servidores de Vercel | **Sin probar.** Desde aqui responde, pero es habitual que filtre por pais de origen. Si rechaza a Vercel, la tarea lo notificara cada dia y la tasa habra que registrarla a mano hasta mudarse al VPS |
 | Certificado del BCV | El suyo vence el **20 de noviembre de 2026**. Si al renovarlo cambian de autoridad, la lectura fallara y lo notificara: hay que sustituir el intermedio de `src/lib/externos/certificados/bcvIntermedio.ts`. No se arregla apagando la verificacion |
-| Frecuencia de la tarea | Una vez al dia (18:30 de Caracas), que es lo que permite el plan gratuito de Vercel. El «refresco al usar» del plan llega con el modulo de finanzas |
+| Frecuencia de la tarea | Una vez al dia (18:30 de Caracas), que es lo que permite el plan gratuito de Vercel. **Decidido por el responsable el 2026-10-27: se queda en una vez al dia**, sin «refresco al usar». A cambio, Ajustes de finanzas → Tasa del dolar dice si la app ya la leyo hoy, como le fue (registrada, sin novedad o rechazada), cuando vuelve, y si toca registrarla a mano; el inicio de finanzas lo resume. Sale de `finanzas.lecturas_tasa` (archivo 22) |
 | Registrar una tasa a mano | La base ya lo admite, para `admin` y `administracion`. La pantalla llega con finanzas (etapa 5) |
 | Correos que quedan «pendientes» | En modo real, si la funcion se corta entre confirmar el cambio y enviar, el correo queda como pendiente. No hay tarea que lo recoja: se reintenta a mano desde la bandeja |
 
@@ -600,3 +631,5 @@ resolver antes.
 | 8. Endurecimiento y piloto | — | — | — | Si. El piloto, despues de publicar: `docs/planPiloto.md` |
 | Mejoras posteriores (comentarios por fase) | 17 | — | — | Si |
 | Revision del responsable, bloque 1 | 18, 19 | — | — | Si |
+| Revision del responsable, bloques 4 y 5 | 20, 21 | `DRIVE_CARPETA_PERFILES_ID`, `CORREO_MODO`, `APP_URL_PUBLICA` | — | Si |
+| Preparacion del despliegue (2026-10-27) | 22; el 06 pasa a ir tras el 05 | Las tres `DRIVE_CARPETA_*` de produccion (`drive:separar`) | — | Si |
