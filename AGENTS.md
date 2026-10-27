@@ -50,6 +50,7 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 | `docs/informeIntegracion.md` | Que hace la aplicacion hoy, como se probo y la guia para probarla |
 | `docs/guiaFinanzas.md` | Como funciona finanzas de punta a punta, para el equipo: estados, quien hace que, tasa, pagos y cobranza |
 | `docs/informePendientes.md` | Lo que falta para usarla de verdad, por momento y con quien aporta cada dato |
+| `docs/pruebaGoogleReal.md` | Como pasar Drive y Gmail a modo real en local, que comprobar y como cambiar a la cuenta de la empresa |
 | `docs/planPiloto.md` | Como se hace la prueba con un cliente real: preparacion, semanas, que observar y como volver atras |
 | `docs/pendientesIntegracion.md` | Valores de ejemplo que hay que sustituir, decisiones del negocio que faltan y lo que no se hizo. Cada etapa lo actualiza; de aqui sale el informe final |
 | `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7. Ejecutado |

@@ -512,7 +512,7 @@ resolver antes.
 
 | Tema | Estado |
 | --- | --- |
-| Correo en modo real (Gmail) | **Escrito y sin probar.** No hay cuenta de Google de la empresa. Antes de poner `CORREO_MODO=real` hay que repetir `npm run drive:probar` pidiendo tambien el permiso `gmail.send`, y probar un envio |
+| Correo en modo real (Gmail) | **Escrito y sin probar.** Por ahora con la cuenta personal del responsable. Antes de poner `CORREO_MODO=real`: `npm run google:autorizar` (pide Drive y Gmail y dice si se concedieron) y `npm run correo:probar -- destino`. Pasos en `docs/pruebaGoogleReal.md` |
 | El BCV desde los servidores de Vercel | **Sin probar.** Desde aqui responde, pero es habitual que filtre por pais de origen. Si rechaza a Vercel, la tarea lo notificara cada dia y la tasa habra que registrarla a mano hasta mudarse al VPS |
 | Certificado del BCV | El suyo vence el **20 de noviembre de 2026**. Si al renovarlo cambian de autoridad, la lectura fallara y lo notificara: hay que sustituir el intermedio de `src/lib/externos/certificados/bcvIntermedio.ts`. No se arregla apagando la verificacion |
 | Frecuencia de la tarea | Una vez al dia (18:30 de Caracas), que es lo que permite el plan gratuito de Vercel. El «refresco al usar» del plan llega con el modulo de finanzas |

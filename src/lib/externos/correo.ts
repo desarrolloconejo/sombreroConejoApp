@@ -97,9 +97,10 @@ function comoMensaje(para: string, asunto: string, cuerpo: string): string {
 /**
  * Manda un mensaje por la API de Gmail y devuelve su identificador.
  *
- * El remitente es la cuenta que autorizo el cliente OAuth: por eso no puede
- * ser una cuenta personal, y por eso el correo sigue simulado hasta tener la
- * de la empresa.
+ * El remitente es la cuenta que autorizo el cliente OAuth
+ * (`npm run google:autorizar`). Por ahora es la cuenta personal del
+ * responsable; al pasar a la de la empresa basta con autorizar de nuevo con
+ * ella y sustituir DRIVE_REFRESH_TOKEN (R12 de docs/pendientesIntegracion.md).
  */
 async function enviarPorGmail(para: string, asunto: string, cuerpo: string): Promise<string> {
   const token = await tokenDeGoogle();

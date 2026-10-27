@@ -1,26 +1,35 @@
 /**
- * Autoriza la aplicacion contra Google Drive y comprueba que puede guardar.
+ * Autoriza la aplicacion contra Google (Drive y Gmail) y comprueba que puede
+ * guardar archivos.
  *
- *   npm run drive:probar
+ *   npm run drive:probar        usa la autorizacion que ya hay
+ *   npm run google:autorizar    la pide de nuevo (otra cuenta, o un permiso
+ *                               que faltaba) y sustituye la del .env
  *
  * Se ejecuta en el HOST, no en el contenedor: abre un puerto local para
  * recibir la respuesta de Google y hace falta el navegador de quien autoriza.
  *
  * Que hace, en orden:
- *   1. Si no hay DRIVE_REFRESH_TOKEN, pide la autorizacion en el navegador y
- *      lo guarda en el .env. Solo ocurre la primera vez.
+ *   1. Si no hay DRIVE_REFRESH_TOKEN, o se pide con --reautorizar, pide la
+ *      autorizacion en el navegador y lo guarda en el .env. Dice que
+ *      permisos concedio Google: sin el de Gmail, el correo real no sale.
  *   2. Crea ConejoApp/Comprobantes y ConejoApp/Piezas si no existen, y guarda
  *      sus ids en el .env.
  *   3. Sube un archivo de prueba, lo vuelve a leer y lo borra.
  *
  * No usa ninguna libreria: la API de Drive es HTTP y Node trae fetch.
  *
- * SOBRE EL PERMISO QUE SE PIDE
- * ----------------------------
- * El alcance es `drive.file`: la aplicacion solo ve los archivos y carpetas
- * que ELLA crea. No puede leer el resto del Drive de quien autoriza. Por eso
- * las carpetas las crea este script y no se hacen a mano: una carpeta creada
- * desde la web de Drive seria invisible para la aplicacion.
+ * SOBRE LOS PERMISOS QUE SE PIDEN
+ * -------------------------------
+ * `drive.file`: la aplicacion solo ve los archivos y carpetas que ELLA crea.
+ * No puede leer el resto del Drive de quien autoriza. Por eso las carpetas
+ * las crea este script y no se hacen a mano: una carpeta creada desde la web
+ * de Drive seria invisible para la aplicacion.
+ *
+ * `gmail.send`: solo enviar. No puede leer ni borrar el correo de la cuenta.
+ * Los correos salen desde la cuenta que autoriza. Tiene que estar anadido en
+ * la pantalla de consentimiento del proyecto de GCP; si no, Google lo
+ * descarta sin avisar y este script lo dice.
  */
 import { randomBytes } from "node:crypto";
 import { appendFile, readFile, writeFile } from "node:fs/promises";
@@ -32,7 +41,9 @@ const ARCHIVO_ENV = join(RAIZ, ".env");
 
 const PUERTO = 53682;
 const REDIRECCION = `http://127.0.0.1:${PUERTO}`;
-const ALCANCE = "https://www.googleapis.com/auth/drive.file";
+const ALCANCE_DRIVE = "https://www.googleapis.com/auth/drive.file";
+const ALCANCE_GMAIL = "https://www.googleapis.com/auth/gmail.send";
+const REAUTORIZAR = process.argv.includes("--reautorizar");
 
 const CARPETAS = ["ConejoApp", "Comprobantes"];
 const TIPO_CARPETA = "application/vnd.google-apps.folder";
@@ -106,14 +117,15 @@ async function autorizar(clientId, secreto) {
   url.searchParams.set("client_id", clientId);
   url.searchParams.set("redirect_uri", REDIRECCION);
   url.searchParams.set("response_type", "code");
-  url.searchParams.set("scope", ALCANCE);
+  url.searchParams.set("scope", `${ALCANCE_DRIVE} ${ALCANCE_GMAIL}`);
   url.searchParams.set("state", estado);
   // offline + consent es lo que hace que Google entregue un refresh token.
   url.searchParams.set("access_type", "offline");
   url.searchParams.set("prompt", "consent");
 
-  console.log("\nAbre este enlace en el navegador y autoriza con la cuenta");
-  console.log("de Google en cuyo Drive se van a guardar los comprobantes:\n");
+  console.log("\nAbre este enlace en el navegador y autoriza con la cuenta de");
+  console.log("Google en cuyo Drive se guardaran los archivos y desde la que");
+  console.log("saldran los correos. Marca las dos casillas de permisos:\n");
   console.log(url.toString());
   console.log("\nEsperando la respuesta de Google...");
 
@@ -138,6 +150,25 @@ async function autorizar(clientId, secreto) {
   console.log("Autorizado. DRIVE_REFRESH_TOKEN guardado en el .env");
 
   return tokens.access_token;
+}
+
+/** Dice que permisos tiene un token de acceso. */
+async function revisarPermisos(token) {
+  const info = await pedir(
+    `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(token)}`,
+  );
+  const concedidos = String(info.scope ?? "").split(" ");
+  const drive = concedidos.includes(ALCANCE_DRIVE);
+  const gmail = concedidos.includes(ALCANCE_GMAIL);
+
+  console.log(`Permiso de Drive (drive.file): ${drive ? "si" : "NO"}`);
+  console.log(`Permiso de Gmail (gmail.send): ${gmail ? "si" : "NO"}`);
+
+  if (!drive) throw new Error("La autorizacion no tiene el permiso de Drive");
+  if (!gmail) {
+    console.log("  Sin el, CORREO_MODO=real no puede enviar. Anade gmail.send en la");
+    console.log("  pantalla de consentimiento de GCP y ejecuta npm run google:autorizar.");
+  }
 }
 
 /** Cambia el refresh token por un token de acceso de una hora. */
@@ -223,9 +254,12 @@ async function principal() {
   }
 
   const refreshToken = process.env.DRIVE_REFRESH_TOKEN;
-  const token = refreshToken
-    ? await renovar(clientId, secreto, refreshToken)
-    : await autorizar(clientId, secreto);
+  const token =
+    refreshToken && !REAUTORIZAR
+      ? await renovar(clientId, secreto, refreshToken)
+      : await autorizar(clientId, secreto);
+
+  await revisarPermisos(token);
 
   let carpetaId = "root";
   for (const nombre of CARPETAS) {

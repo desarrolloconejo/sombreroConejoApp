@@ -119,8 +119,13 @@ En el host:
 npm run test:unitarias     # funciones puras; no necesita la app levantada
 npm run test:integracion   # navegador contra la app levantada y sembrada
 npm test                   # las dos
-npm run drive:probar       # autoriza y comprueba Google Drive
+npm run drive:probar       # comprueba Google Drive con la autorizacion del .env
+npm run google:autorizar   # autoriza de nuevo (Drive y Gmail) y comprueba Drive
+npm run correo:probar -- destino@ejemplo.com   # un correo de prueba por Gmail
 ```
+
+Probar Drive y Gmail de verdad en local, paso a paso:
+[docs/pruebaGoogleReal.md](docs/pruebaGoogleReal.md).
 
 Utiles de Docker:
 
