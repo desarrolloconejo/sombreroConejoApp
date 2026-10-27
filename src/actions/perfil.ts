@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 
 import { anotar, soloCambios } from "@/lib/auditoria";
 import { transaccion } from "@/lib/db";
+import { subirArchivo } from "@/lib/externos/archivos";
 import { hashear, verificar } from "@/lib/password";
+import { tipoPorFirma } from "@/lib/portal/archivos";
 import { obtenerSesion, requerirUsuario } from "@/lib/sesion";
 import { validarCambioPassword, validarPerfil } from "@/lib/validaciones";
 import * as sesiones from "@/models/sesiones";
@@ -23,8 +25,8 @@ import type { EstadoFormulario } from "@/types";
  * La preferencia de tema no vive aqui: es `cambiarTema` de "@/actions/tema",
  * que ya la usa el proveedor de tema desde el cliente.
  *
- * La subida de foto esta APAGADA y su codigo vive comentado al final del
- * archivo. El motivo y como reactivarla estan explicados alli.
+ * La foto de perfil se guarda en Drive (`subirFoto`), como los demas
+ * archivos: en Vercel no hay disco donde escribirla.
  */
 
 /** Guarda los datos personales que cada quien puede cambiar de si mismo. */
@@ -164,102 +166,23 @@ export async function cambiarPassword(
   };
 }
 
-/* ===========================================================================
-   SUBIDA DE FOTO DE PERFIL — APAGADA, NO BORRADA
-   ===========================================================================
+/** El peso maximo de una foto de perfil. */
+const TAMANO_FOTO = 2 * 1024 * 1024;
 
-   POR QUE ESTA APAGADA
-   --------------------
-   En Vercel el sistema de archivos de una funcion es de SOLO LECTURA salvo
-   /tmp, y la carpeta public/ se hornea en el build. El `writeFile` de abajo
-   daria EROFS; y aunque no lo diera, el archivo no se serviria por HTTP ni
-   sobreviviria al siguiente despliegue, porque cada invocacion puede caer en
-   una instancia distinta.
+/** Los tipos que admite una foto: imagenes fijas, sin GIF. */
+const TIPOS_FOTO = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-   No es una decision de producto: es que este codigo, tal como esta escrito,
-   es incompatible con una plataforma sin disco. En local sigue funcionando, y
-   en un VPS volveria a funcionar sin cambiarle una linea.
-
-   COMO REACTIVARLA
-   ----------------
-   1. Descomentar este bloque entero y los imports de la cabecera:
-        import { randomUUID } from "node:crypto";
-        import { mkdir, unlink, writeFile } from "node:fs/promises";
-        import path from "node:path";
-   2. Descomentar `actualizarFoto` en src/models/usuarios.ts.
-   3. Descomentar el formulario de src/components/perfil/TarjetaFoto.tsx
-      (vuelve a necesitar "use client").
-   4. Devolver la entrada de la foto al medidor de
-      src/components/inicio/EstadoCuenta.tsx.
-
-   Si en vez de disco se va a almacenamiento de objetos (Vercel Blob, S3), lo
-   unico que cambia es de donde sale `rutaPublica`: pasa a ser una URL
-   absoluta, y entonces hace falta declarar su host en `images.remotePatterns`
-   de next.config.ts o `next/image` la rechaza.
-
-   El contrato con la base NO cambia en ninguno de los dos casos:
-   `usuarios.actualizarFoto` ya devuelve la foto anterior para poder borrarla.
-   =========================================================================== */
-
-/*
-// El limite del que avisa la interfaz. Se comprueba igualmente en el servidor,
-// porque el aviso del formulario es una cortesia, no una barrera.
-const TAMANO_MAXIMO = 2 * 1024 * 1024;
-
-// Carpeta real en disco y prefijo con el que se sirve por HTTP.
-const CARPETA_AVATARES = path.join(process.cwd(), "public", "uploads", "avatares");
-const PREFIJO_PUBLICO = "/uploads/avatares";
-
-// Firmas de archivo (magic numbers) de los formatos que se aceptan.
-//
-// Es lo unico que decide si un archivo entra. Ni el nombre ni el `type` que
-// manda el navegador sirven: los dos los controla quien envia, asi que un
-// script disfrazado de .jpg pasaria cualquier comprobacion basada en ellos.
-const FIRMAS = [
-  { extension: "jpg", bytes: [0xff, 0xd8, 0xff], desde: 0 },
-  { extension: "png", bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], desde: 0 },
-  // WEBP no tiene una firma continua: es un contenedor RIFF cuyo tipo se
-  // declara cuatro bytes despues del tamano, en la posicion 8.
-  { extension: "webp", bytes: [0x52, 0x49, 0x46, 0x46], desde: 0, ademas: { bytes: [0x57, 0x45, 0x42, 0x50], desde: 8 } },
-] as const;
-
-function coincide(contenido: Uint8Array, bytes: readonly number[], desde: number): boolean {
-  if (contenido.length < desde + bytes.length) return false;
-
-  return bytes.every((byte, indice) => contenido[desde + indice] === byte);
-}
-
-// Extension que corresponde al contenido real, o null si no es una imagen valida.
-function extensionPorFirma(contenido: Uint8Array): string | null {
-  for (const firma of FIRMAS) {
-    if (!coincide(contenido, firma.bytes, firma.desde)) continue;
-
-    const segunda = "ademas" in firma ? firma.ademas : null;
-    if (segunda && !coincide(contenido, segunda.bytes, segunda.desde)) continue;
-
-    return firma.extension;
-  }
-
-  return null;
-}
-
-// Borra un avatar del disco sin dejar que el fallo suba.
-//
-// La ruta se reconstruye desde el nombre del archivo, nunca se usa tal cual:
-// el valor viene de la base, pero componer una ruta con texto que no se
-// controla es la via clasica al recorrido de directorios.
-async function borrarAvatar(rutaPublica: string | null): Promise<void> {
-  if (!rutaPublica || !rutaPublica.startsWith(`${PREFIJO_PUBLICO}/`)) return;
-
-  try {
-    await unlink(path.join(CARPETA_AVATARES, path.basename(rutaPublica)));
-  } catch {
-    // Que el archivo ya no este no es un problema: lo que importaba era
-    // quitarlo de la base, y eso ya ocurrio.
-  }
-}
-
-// Sustituye la foto de perfil por la que llega en el formulario.
+/**
+ * Sustituye la foto de perfil por la que llega en el formulario.
+ *
+ * La foto va a Drive (ConejoApp/Perfiles), como los demas archivos: en
+ * Vercel no hay disco donde escribir. Se entrega por /api/fotos/ID, que
+ * exige sesion; el id de Drive no sale del servidor. La URL lleva una version
+ * para que el navegador no siga pintando la anterior.
+ *
+ * La foto anterior se queda en Drive: el adaptador no borra, y una foto vieja
+ * no estorba (docs/pendientesIntegracion.md).
+ */
 export async function subirFoto(
   _estadoPrevio: EstadoFormulario,
   datos: FormData,
@@ -273,44 +196,75 @@ export async function subirFoto(
   }
 
   // Se rechaza por tamano ANTES de leer el contenido: cargar en memoria un
-  // archivo enorme para despues descartarlo es justo lo que busca quien
-  // quiere tumbar el servidor.
-  if (archivo.size > TAMANO_MAXIMO) {
+  // archivo enorme para despues descartarlo es lo que busca quien quiere
+  // tumbar el servidor.
+  if (archivo.size > TAMANO_FOTO) {
     return { ok: false, errores: { foto: "La imagen no puede pasar de 2 MB" } };
   }
 
-  const contenido = new Uint8Array(await archivo.arrayBuffer());
-  const extension = extensionPorFirma(contenido);
+  // El tipo lo dice el contenido, no el nombre ni lo que declara el navegador.
+  const bytes = new Uint8Array(await archivo.arrayBuffer());
+  const tipo = tipoPorFirma(bytes);
 
-  if (!extension) {
-    return {
-      ok: false,
-      errores: { foto: "El archivo no es una imagen JPG, PNG o WEBP" },
-    };
+  if (!tipo || !TIPOS_FOTO.has(tipo.mime)) {
+    return { ok: false, errores: { foto: "El archivo no es una imagen JPG, PNG o WEBP" } };
   }
 
-  // El nombre lo decide el servidor. El que manda el navegador puede traer
-  // barras, puntos suspensivos o una extension que no corresponde al
-  // contenido, y ninguna de esas cosas debe llegar al disco.
-  const nombre = `${randomUUID()}.${extension}`;
+  // Se sube ANTES de la fila y fuera de cualquier transaccion: un servicio
+  // externo no se llama con una conexion a la base tomada.
+  let guardada: string;
 
-  await mkdir(CARPETA_AVATARES, { recursive: true });
-  await writeFile(path.join(CARPETA_AVATARES, nombre), contenido);
-
-  const rutaPublica = `${PREFIJO_PUBLICO}/${nombre}`;
-  const cambio = await usuarios.actualizarFoto(usuario.id, rutaPublica);
-
-  if (!cambio) {
-    // Si la fila no se actualizo, el archivo recien escrito no lo referencia
-    // nadie: se retira para no dejar basura en disco.
-    await borrarAvatar(rutaPublica);
-    return { ok: false, mensaje: "No se pudo guardar la foto" };
+  try {
+    guardada = await subirArchivo({
+      nombre: `PERFIL_${usuario.id}_${Date.now().toString(36)}.${tipo.extension}`,
+      mime: tipo.mime,
+      bytes,
+      carpeta: "perfiles",
+    });
+  } catch (error) {
+    console.error("[perfil] no se pudo guardar la foto:", error);
+    return { ok: false, mensaje: "No se pudo guardar la foto. Intentalo de nuevo" };
   }
 
-  await borrarAvatar(cambio.fotoAnterior);
+  // La version cambia con cada foto y lleva la extension: la ruta saca de
+  // ella el tipo de imagen sin tener que leer el archivo.
+  const fotoUrl = `/api/fotos/${usuario.id}?v=${Date.now().toString(36)}.${tipo.extension}`;
 
+  const hecho = await transaccion(async (tx) => {
+    if (!(await usuarios.actualizarFoto(usuario.id, { fotoUrl, archivo: guardada }, tx))) return false;
+
+    await anotar(tx, usuario, "usuario.foto_cambiada", {
+      entidadId: usuario.id,
+      empresaId: usuario.empresaId,
+    });
+
+    return true;
+  });
+
+  if (!hecho) return { ok: false, mensaje: "No se pudo guardar la foto" };
+
+  // La foto sale en la barra lateral y en todo el panel.
   revalidatePath("/dashboard", "layout");
 
   return { ok: true, mensaje: "Tu foto quedo actualizada" };
 }
-*/
+
+/** Quita la foto de perfil: vuelven las iniciales. */
+export async function quitarFoto(): Promise<EstadoFormulario> {
+  const usuario = await requerirUsuario();
+
+  if (!usuario.fotoUrl) return { ok: false, mensaje: "No tienes foto" };
+
+  await transaccion(async (tx) => {
+    await usuarios.actualizarFoto(usuario.id, null, tx);
+    await anotar(tx, usuario, "usuario.foto_cambiada", {
+      entidadId: usuario.id,
+      empresaId: usuario.empresaId,
+      despues: { foto: null },
+    });
+  });
+
+  revalidatePath("/dashboard", "layout");
+
+  return { ok: true, mensaje: "Quitaste tu foto" };
+}

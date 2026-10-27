@@ -274,6 +274,11 @@ async function principal() {
   const piezas = await carpeta(token, "Piezas", raiz);
   await guardarEnEnv("DRIVE_CARPETA_PIEZAS_ID", piezas);
   console.log(`Carpeta ${CARPETAS[0]}/Piezas lista`);
+
+  // Las fotos de perfil.
+  const perfiles = await carpeta(token, "Perfiles", raiz);
+  await guardarEnEnv("DRIVE_CARPETA_PERFILES_ID", perfiles);
+  console.log(`Carpeta ${CARPETAS[0]}/Perfiles lista`);
   console.log(`https://drive.google.com/drive/folders/${carpetaId}`);
 
   await probarSubida(token, carpetaId);

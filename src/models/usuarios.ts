@@ -297,33 +297,40 @@ export async function actualizarPasswordHash(
   return afectadas === 1;
 }
 
-/*
- * APAGADA junto con la subida de foto. El porque y como reactivarla estan en
- * el bloque del final de src/actions/perfil.ts, que es su unico consumidor.
- * La columna foto_url se queda en la tabla y en los tipos: quitarla obligaria
- * a migrar la vista vw_usuarios_completos y seis componentes, para volver a
- * anadirlo todo cuando la funcionalidad regrese.
- *
- * Cambia la foto de perfil y devuelve la ruta de la anterior, para que quien
- * llame pueda borrar el archivo que queda huerfano.
- *
+/**
+ * Cambia la foto de perfil: `fotoUrl` es lo que se pinta (la ruta de la
+ * aplicacion que la entrega, con una version para que el navegador no use la
+ * vieja) y `archivo`, donde esta guardada. Null en los dos la quita.
+ */
 export async function actualizarFoto(
   id: number,
-  fotoUrl: string | null,
-): Promise<{ fotoAnterior: string | null } | null> {
-  // El alias `anterior` en el FROM se resuelve con la version de la fila
-  // previa al UPDATE, que es justo la ruta que hay que borrar del disco.
-  // Una subconsulta dentro del RETURNING no daria esa garantia.
-  return consultarUno<{ fotoAnterior: string | null }>(
-    `UPDATE usuarios AS u
-     SET foto_url = $2
-     FROM usuarios AS anterior
-     WHERE u.id = $1 AND anterior.id = u.id
-     RETURNING anterior.foto_url AS "fotoAnterior"`,
-    [id, fotoUrl],
+  foto: { fotoUrl: string; archivo: string } | null,
+  ejecutor?: Ejecutor,
+): Promise<boolean> {
+  const afectadas = await ejecutar(
+    "UPDATE usuarios SET foto_url = $2, foto_archivo = $3 WHERE id = $1",
+    [id, foto?.fotoUrl ?? null, foto?.archivo ?? null],
+    ejecutor,
+  );
+
+  return afectadas === 1;
+}
+
+/**
+ * Donde esta guardada la foto de una persona activa, y su URL (que lleva la
+ * extension en la version). Solo para la ruta que la entrega: no sale hacia
+ * el navegador.
+ */
+export async function archivoDeFoto(
+  id: number,
+): Promise<{ archivo: string; fotoUrl: string } | null> {
+  return consultarUno<{ archivo: string; fotoUrl: string }>(
+    `SELECT foto_archivo AS archivo, foto_url AS "fotoUrl"
+     FROM usuarios
+     WHERE id = $1 AND activo AND foto_archivo IS NOT NULL AND foto_url IS NOT NULL`,
+    [id],
   );
 }
-*/
 
 /** Guarda la preferencia de tema. */
 export async function actualizarTema(id: number, tema: Tema): Promise<boolean> {

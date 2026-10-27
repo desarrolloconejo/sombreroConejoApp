@@ -58,6 +58,9 @@ export function Avatar({
           alt={`Foto de ${nombreCompleto}`}
           width={medida.px}
           height={medida.px}
+          // La foto la entrega una ruta de la aplicacion que exige sesion: el
+          // optimizador de imagenes la pediria sin la cookie y recibiria 404.
+          unoptimized={fotoUrl.startsWith("/api/")}
           className="size-full object-cover"
         />
       </span>
