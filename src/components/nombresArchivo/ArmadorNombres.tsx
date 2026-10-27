@@ -62,7 +62,7 @@ export function ArmadorNombres({
   hoy,
 }: {
   empresas: SiglaEmpresa[];
-  /** Los proyectos en marcha que quien mira alcanza. */
+  /** Los proyectos en marcha de todas las empresas, con su nombre corto. */
   proyectos: ProyectoParaNombrar[];
   /** AAAA-MM-DD, el dia de Caracas. */
   hoy: string;

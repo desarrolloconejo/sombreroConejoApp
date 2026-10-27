@@ -711,6 +711,17 @@ async function probarProyectos(): Promise<void> {
       // de la otra no le dice nada.
       r.prodOrden = await piezas.ordenDeTipo(piezaA, tx);
       r.prodOrdenAjena = await cuenta("SELECT count(*)::text AS n FROM portal.orden_de_pieza($1)", [piezaA2]);
+
+      // El armador de nombres: el equipo ve el nombre de todos los proyectos,
+      // aunque no trabaje en ellos; el cliente, ninguno.
+      const paraNombrar =
+        "SELECT count(*)::text AS n FROM portal.proyectos_para_nombrar() WHERE nombre LIKE 'Permisos %'";
+      await como(disenador.id, "trabajador", "diseno");
+      r.disenoProyectos = await cuenta(nuestros);
+      r.disenoNombra = await cuenta(paraNombrar);
+      await como(clienteDemo.id, "cliente", "", empresaA);
+      r.clienteNombra = await cuenta(paraNombrar);
+      await como(produccion.id, "trabajador", "produccion");
       r.prodCopy = await piezas.leerCopy(piezaA, tx);
       r.prodMueveFase = (
         await tx.query(
@@ -830,6 +841,11 @@ async function probarProyectos(): Promise<void> {
     "El orden de una pieza entre las de su tipo cuenta todo el proyecto y solo se le da a quien la ve",
     JSON.stringify(r.prodOrden) === JSON.stringify({ numero: 1, total: 2 }) && r.prodOrdenAjena === 0,
     `su pieza ${JSON.stringify(r.prodOrden)}; la ajena: ${r.prodOrdenAjena} filas`,
+  );
+  comprobar(
+    "El armador de nombres da a todo el equipo el nombre de todos los proyectos, y al cliente ninguno",
+    r.disenoProyectos === 0 && r.disenoNombra === 3 && r.clienteNombra === 0,
+    `diseno ve ${r.disenoProyectos} proyectos y nombra ${r.disenoNombra}; el cliente nombra ${r.clienteNombra}`,
   );
   comprobar(
     "Una empresa sin sigla recibe una propuesta de la base, recortada sin partir palabras",

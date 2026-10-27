@@ -264,6 +264,9 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   proyecto aunque quien sube solo vea su pieza. La version aprobada se
   descarga como APROBADO-CLIENTE (`comoAprobado`); en Drive conserva su
   nombre. Un campo de la nomenclatura en un formulario es `CampoBloque`.
+  El armador ofrece a todo el equipo todos los proyectos en marcha, pero
+  solo su nombre y su nombre corto (`portal.proyectos_para_nombrar`); lo
+  demas del proyecto sigue con sus politicas.
 - La version que vera el cliente se elige en la fase 4
   (`VersionParaCliente`, dentro de su tarjeta); la tarjeta Versiones sirve
   para subir en cualquier fase.

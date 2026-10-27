@@ -4666,6 +4666,27 @@ CREATE OR REPLACE FUNCTION portal.orden_de_pieza(p_pieza integer)
 REVOKE ALL ON FUNCTION portal.orden_de_pieza(integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION portal.orden_de_pieza(integer) TO conejo_app;
 
+-- Los proyectos en marcha con su nombre corto, para el armador de nombres de
+-- archivo: todo el equipo los ve todos, para que nadie escriba a mano uno que
+-- ya existe. Solo el nombre y el nombre corto; lo demas del proyecto sigue
+-- con sus politicas. A un cliente, a un prospecto o sin sesion no les
+-- devuelve nada.
+CREATE OR REPLACE FUNCTION portal.proyectos_para_nombrar()
+  RETURNS TABLE (id integer, empresa_id integer, nombre text, nombre_corto text)
+  LANGUAGE sql STABLE SECURITY DEFINER
+  SET search_path = public, pg_temp
+  AS $fn$
+    SELECT p.id, p.empresa_id, p.nombre, p.nombre_corto
+    FROM portal.proyectos p
+    WHERE p.estado IN ('activo', 'pausado')
+      AND app_usuario_id() IS NOT NULL
+      AND app_rol() IN ('admin', 'trabajador')
+    ORDER BY lower(p.nombre)
+  $fn$;
+
+REVOKE ALL ON FUNCTION portal.proyectos_para_nombrar() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION portal.proyectos_para_nombrar() TO conejo_app;
+
 -- Lo que ya existia recibe su propuesta: tocar la columna dispara el trigger.
 -- Las empresas, de una en una y por antiguedad, para que la mas vieja se
 -- quede la sigla sin numero.
