@@ -145,6 +145,24 @@ export async function deProyecto(
 }
 
 /** Una pieza con sus fases, si quien pregunta la puede ver. */
+/**
+ * El lugar de la pieza entre las de su tipo en su proyecto, para el nombre de
+ * sus archivos (POST-01, POST-02…). Lo cuenta la base sobre todo el proyecto,
+ * aunque quien pregunta solo vea esta pieza.
+ */
+export async function ordenDeTipo(
+  piezaId: number,
+  ejecutor: Ejecutor,
+): Promise<{ numero: number; total: number }> {
+  const fila = await consultarUno<{ numero: number; total: number }>(
+    "SELECT numero, total FROM portal.orden_de_pieza($1)",
+    [piezaId],
+    ejecutor,
+  );
+
+  return fila ?? { numero: 1, total: 1 };
+}
+
 export async function buscarPorId(
   id: number,
   ejecutor: Ejecutor,

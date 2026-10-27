@@ -17,8 +17,9 @@ import {
 import { Alerta, BotonEnlace, Tarjeta } from "@/components/ui";
 import { conSesion } from "@/lib/db";
 import { leerEstadoListado } from "@/lib/parametros";
+import { nombreEstandar } from "@/lib/portal/archivos";
 import { servicioPorSlug } from "@/lib/portal/catalogo";
-import { rutaAjustable } from "@/lib/portal/fases";
+import { hoyEnCaracas, rutaAjustable } from "@/lib/portal/fases";
 import { RUTA_PROYECTOS, rutaPieza, rutaProyecto } from "@/lib/portal/rutas";
 import { requerirRol } from "@/lib/sesion";
 import { conPanel } from "@/lib/urlListado";
@@ -88,6 +89,7 @@ export default async function PaginaPieza(
       versiones: await versionesModelo.dePieza(piezaId, tx),
       revisiones: await revisionesModelo.dePieza(piezaId, tx),
       puedeTrabajar: await piezasModelo.puedeTrabajar(piezaId, tx),
+      orden: await piezasModelo.ordenDeTipo(piezaId, tx),
       // C1: si nadie de la empresa puede aprobar, el ejecutivo lo tiene que saber.
       aprobadores: gestiona ? (await clientesModelo.aprobadoresDe(proyecto.empresaId, tx)).length : null,
     };
@@ -107,7 +109,19 @@ export default async function PaginaPieza(
     revisiones,
     puedeTrabajar,
     aprobadores,
+    orden,
   } = datos;
+
+  // Como se llamara el proximo archivo, sin la extension: la pone el archivo
+  // que se elija. La action lo vuelve a calcular al guardar.
+  const proximoNombre = nombreEstandar({
+    cliente: proyecto.empresaSigla,
+    proyecto: proyecto.nombreCorto,
+    tipo: pieza.tipo,
+    orden,
+    fecha: hoyEnCaracas(),
+    version: versiones.reduce((mayor, version) => Math.max(mayor, version.numero), 0) + 1,
+  });
   const ruta = rutaPieza(proyectoId, piezaId);
   const hrefCerrar = conPanel(ruta, estado, null);
   const activa = pieza.estado === "activa";
@@ -180,6 +194,7 @@ export default async function PaginaPieza(
               piezaId={piezaId}
               versiones={versiones}
               puedeSubir={puedeTrabajar && activa}
+              proximoNombre={proximoNombre}
             />
           </Tarjeta>
 

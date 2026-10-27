@@ -5,7 +5,8 @@ import { Building2, Check } from "lucide-react";
 
 import { crearEmpresa, editarEmpresa } from "@/actions/empresas";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, useCampos } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, CampoBloque, useCampos } from "@/components/ui";
+import { LARGO_SIGLA, proponerSigla } from "@/lib/nomenclatura";
 import { ENLACES_EMPRESA } from "@/lib/validaciones";
 import { ESTADO_INICIAL } from "@/types";
 import type { Empresa } from "@/types";
@@ -95,6 +96,20 @@ export function FormularioEmpresa({
             maxLength={120}
             required
             error={errores.nombre}
+            className="col-span-2"
+          />
+
+          {/* Va en el nombre de todos sus archivos: CLIENTE_PROYECTO_TIPO_AAMM_vNN. */}
+          <CampoBloque
+            id="empresa-sigla"
+            name="sigla"
+            etiqueta="Sigla"
+            origen={campo("nombre").value}
+            inicial={empresa?.sigla ?? null}
+            proponer={proponerSigla}
+            largo={LARGO_SIGLA}
+            ejemplo="DIST-EJEMPLO"
+            error={errores.sigla}
             className="col-span-2"
           />
 

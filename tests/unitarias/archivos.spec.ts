@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { leerRango } from "@/lib/externos/archivos";
 import {
-  bloque,
   enlacePermitido,
   nombreEstandar,
   sitioDeEnlace,
@@ -14,53 +13,41 @@ import {
  */
 
 test.describe("nombre estandar", () => {
-  test("arma los seis bloques con la version en dos digitos", () => {
-    expect(
-      nombreEstandar({
-        cliente: "Gella",
-        proyecto: "Parrilla octubre",
-        archivo: "Post 04",
-        tipo: "post",
-        fecha: "2026-10-06",
-        version: 2,
-        extension: "png",
-      }),
-    ).toBe("GELLA_PARRILLA-OCTUBRE_POST-04_POST_261006_v02.png");
+  const base = {
+    cliente: "GELLA",
+    proyecto: "PARRILLA-OCTUBRE",
+    tipo: "post" as const,
+    orden: { numero: 1, total: 1 },
+    fecha: "2026-10-06",
+  };
+
+  test("CLIENTE_PROYECTO_TIPO_AAMM_vNN, con la version en dos digitos", () => {
+    expect(nombreEstandar({ ...base, version: 2, extension: "png" })).toBe(
+      "GELLA_PARRILLA-OCTUBRE_POST_2610_v02.png",
+    );
   });
 
   test("la aprobada lleva APROBADO-CLIENTE en lugar del numero", () => {
-    expect(
-      nombreEstandar({
-        cliente: "Gella",
-        proyecto: "Imagen corporativa",
-        archivo: "Logo",
-        tipo: "logo",
-        fecha: "2026-10-14",
-        version: "aprobado",
-        extension: ".PDF",
-      }),
-    ).toBe("GELLA_IMAGEN-CORPORATIVA_LOGO_LOGO_261014_APROBADO-CLIENTE.pdf");
+    expect(nombreEstandar({ ...base, tipo: "logo", version: "aprobado", extension: ".PDF" })).toBe(
+      "GELLA_PARRILLA-OCTUBRE_LOGO_2610_APROBADO-CLIENTE.pdf",
+    );
   });
 
-  test("una historia se llama STORY", () => {
-    expect(
-      nombreEstandar({
-        cliente: "A",
-        proyecto: "B",
-        archivo: "C",
-        tipo: "historia",
-        fecha: "2026-01-02",
-        version: 1,
-        extension: "jpg",
-      }),
-    ).toContain("_STORY_260102_v01");
+  test("una historia se llama STORY y un entregable PROPUESTA", () => {
+    expect(nombreEstandar({ ...base, tipo: "historia", version: 1 })).toBe("GELLA_PARRILLA-OCTUBRE_STORY_2610_v01");
+    expect(nombreEstandar({ ...base, tipo: "entregable", version: 1 })).toContain("_PROPUESTA_");
   });
 
-  test("sin acentos, sin enie y con guiones entre palabras", () => {
-    expect(bloque("Cafe Sendero, C.A.")).toBe("CAFE-SENDERO-C-A");
-    expect(bloque("Campana de Navidad")).toBe("CAMPANA-DE-NAVIDAD");
-    expect(bloque("Diseño  y   edición")).toBe("DISENO-Y-EDICION");
-    expect(bloque("!!!")).toBe("SIN-NOMBRE");
+  test("con varias piezas del mismo tipo, el tipo lleva su orden", () => {
+    expect(nombreEstandar({ ...base, orden: { numero: 3, total: 4 }, version: 1, extension: "jpg" })).toBe(
+      "GELLA_PARRILLA-OCTUBRE_POST-03_2610_v01.jpg",
+    );
+  });
+
+  test("lo que llega sin limpiar se pasa a bloque", () => {
+    expect(nombreEstandar({ ...base, cliente: "Café Sendero", proyecto: "", version: 1 })).toBe(
+      "CAFE-SENDERO_SIN-NOMBRE_POST_2610_v01",
+    );
   });
 });
 

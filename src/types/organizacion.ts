@@ -30,6 +30,12 @@ export type Empresa = {
   rif: string | null;
 
   /**
+   * El bloque CLIENTE de los nombres de archivo (CLIENTE_PROYECTO_TIPO_AAMM_vNN).
+   * Unica; si no se escribe, la base propone una a partir del nombre.
+   */
+  sigla: string;
+
+  /**
    * El sector, que decide la regla del auditor cuando la empresa no tiene
    * una propia: la resolucion es cliente, luego sector, luego el estandar.
    */
@@ -65,6 +71,7 @@ export type Empresa = {
  */
 export type DatosNuevaEmpresa = {
   nombre: string;
+  sigla: string;
   rif: string | null;
   sector: string | null;
   telefono: string | null;
@@ -118,6 +125,13 @@ export type ResumenEmpresa = Empresa & {
 export type NombreEmpresa = {
   id: number;
   nombre: string;
+};
+
+/** Una empresa tal como la necesita el armador de nombres de archivo. */
+export type SiglaEmpresa = {
+  id: number;
+  nombre: string;
+  sigla: string;
 };
 
 /** Vinculo de un usuario con el personal de la empresa. */

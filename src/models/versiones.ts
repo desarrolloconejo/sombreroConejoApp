@@ -43,19 +43,27 @@ export async function dePieza(piezaId: number, ejecutor: Ejecutor): Promise<Vers
 /**
  * Una version, con donde esta guardado su archivo. Solo para la ruta de
  * entrega: `archivoId` no sale nunca hacia el navegador.
+ *
+ * `aprobada` dice si la pieza ya esta aprobada; `laAprobada`, si ademas esta
+ * es la version que el cliente aprobo (la enviada en la ultima ronda).
  */
 export async function paraEntregar(
   id: number,
   ejecutor: Ejecutor,
-): Promise<(Version & { archivoId: string | null; aprobada: boolean }) | null> {
+): Promise<(Version & { archivoId: string | null; aprobada: boolean; laAprobada: boolean }) | null> {
   return consultarUno(
     `SELECT ${COLUMNAS},
             v.archivo_id AS "archivoId",
-            EXISTS (
-              SELECT 1 FROM portal.pieza_fases f
-              WHERE f.pieza_id = v.pieza_id AND f.fase = 5 AND f.estado = 'completada'
-            ) AS aprobada
+            a.aprobada,
+            (a.aprobada AND v.enviada_en IS NOT NULL
+              AND v.ronda = (SELECT p.ronda FROM portal.piezas p WHERE p.id = v.pieza_id)) AS "laAprobada"
      ${DESDE}
+     CROSS JOIN LATERAL (
+       SELECT EXISTS (
+         SELECT 1 FROM portal.pieza_fases f
+         WHERE f.pieza_id = v.pieza_id AND f.fase = 5 AND f.estado = 'completada'
+       ) AS aprobada
+     ) a
      WHERE v.id = $1`,
     [id],
     ejecutor,

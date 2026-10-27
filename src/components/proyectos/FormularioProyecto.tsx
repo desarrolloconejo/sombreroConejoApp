@@ -6,7 +6,8 @@ import { FolderPlus, Plus, X } from "lucide-react";
 import { crearProyecto } from "@/actions/proyectos";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { PanelCuerpo, PanelPie, SeparadorPanel } from "@/components/listado";
-import { Alerta, Boton, BotonEnlace, Campo, CampoFecha, CampoFijo, claseLinea, Selector, useCampos } from "@/components/ui";
+import { Alerta, Boton, BotonEnlace, Campo, CampoFecha, CampoBloque, CampoFijo, claseLinea, Selector, useCampos } from "@/components/ui";
+import { LARGO_NOMBRE_CORTO, proponerNombreCorto } from "@/lib/nomenclatura";
 import { SERVICIOS } from "@/lib/portal/catalogo";
 import {
   ESTADO_INICIAL,
@@ -147,6 +148,19 @@ export function FormularioProyecto({
             maxLength={120}
             required
             error={errores.nombre}
+            className="col-span-2"
+          />
+          {/* El bloque PROYECTO de sus archivos: CLIENTE_PROYECTO_TIPO_AAMM_vNN. */}
+          <CampoBloque
+            id="proyecto-nombre-corto"
+            name="nombreCorto"
+            etiqueta="Nombre corto"
+            origen={campo("nombre").value}
+            inicial={null}
+            proponer={proponerNombreCorto}
+            largo={LARGO_NOMBRE_CORTO}
+            ejemplo="PARRILLA-NOVIEMBRE"
+            error={errores.nombreCorto}
             className="col-span-2"
           />
 

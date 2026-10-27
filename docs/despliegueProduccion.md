@@ -158,6 +158,7 @@ rol `prospecto`, que la version publicada no usa.
 | 17 | `db/neon/17-comentarios-por-fase.sql` | En `portal.comentarios_pieza`, la fase y la tarea de cada comentario (los de antes quedan como generales), dos comprobaciones y un indice | `columnas = 2`, `restricciones = 2` e `indice = 1` |
 | 18 | `db/neon/18-proyecto-por-ejecutivo.sql` | Un proyecto lo puede llevar un ejecutivo de otra cuenta, que gestiona solo ese proyecto: funcion `portal.gestiona_proyecto`, `gestiona_pieza` la usa, politicas de proyectos y piezas, y trigger para que solo un administrador cambie quien lo lleva | `funcion = 1`, `pieza_la_usa = true`, `trigger = 1` y `politicas = 3` |
 | 19 | `db/neon/19-avisos-a-ejecutivos.sql` | Funcion `portal.ejecutivos_de_empresa`: los ejecutivos de una empresa, para avisarles de sus presupuestos aunque quien avisa (administracion, el cliente) no lea las asignaciones | `funcion = 1` y `con_search_path = true` |
+| 20 | `db/neon/20-nomenclatura-de-archivos.sql` | La nomenclatura de los archivos: `empresas.sigla` (unica) y `portal.proyectos.nombre_corto`, los triggers que los proponen a partir del nombre si llegan vacios, la propuesta para las empresas y proyectos que ya existen y `portal.orden_de_pieza` | `sin_sigla = 0`, `sin_nombre_corto = 0` y `siglas_repetidas = 0`. **Despues, revisar a ojo la lista de siglas** que devuelve y corregir en Empresas las que no gusten |
 
 Trae un formato de impresion de ejemplo (carta) y cuatro medios de pago de
 ejemplo sin datos bancarios. **El emisor nace vacio: no se puede emitir
@@ -576,6 +577,8 @@ resolver antes.
 | Proyectos solo de ejecutivos de cuentas | Sin cambio de esquema. Los proyectos que hoy lleva un admin siguen igual hasta que se les cambie el ejecutivo |
 | `db/neon/18-proyecto-por-ejecutivo.sql` | Ensayado dos veces sobre la base local: aplica limpio y la comprobacion da lo esperado. La version publicada no tiene proyectos, asi que no la toca |
 | `db/neon/19-avisos-a-ejecutivos.sql` | Ensayado dos veces sobre la base local. Solo anade una funcion |
+| `db/neon/20-nomenclatura-de-archivos.sql` | Ensayado dos veces sobre la base local, la primera sin las columnas: propone siglas sin repetir (con -2, -3…) y nombres cortos. Solo anade; la version publicada inserta sin ellas y los triggers las rellenan |
+| Archivos subidos antes del cambio | Conservan su nombre. Solo los nuevos siguen la nomenclatura |
 
 ## Registro por etapa
 

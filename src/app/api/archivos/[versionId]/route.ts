@@ -1,5 +1,6 @@
 import { conSesion } from "@/lib/db";
 import { leerArchivo, leerRango } from "@/lib/externos/archivos";
+import { comoAprobado } from "@/lib/nomenclatura";
 import { conservaElAcceso, usuarioActual } from "@/lib/sesion";
 import { comoIdentificador } from "@/lib/validaciones";
 import * as versiones from "@/models/versiones";
@@ -58,7 +59,12 @@ export async function GET(
 
   const cabeceras = new Headers({
     "Content-Type": version.mime ?? "application/octet-stream",
-    "Content-Disposition": cabeceraDeNombre(version.nombre, descargar),
+    // La que el cliente aprobo se entrega como APROBADO-CLIENTE, la version
+    // final de la nomenclatura; en Drive conserva el nombre con que se subio.
+    "Content-Disposition": cabeceraDeNombre(
+      version.laAprobada ? comoAprobado(version.nombre) : version.nombre,
+      descargar,
+    ),
     "Cache-Control": "private, no-store",
     "Accept-Ranges": "bytes",
   });

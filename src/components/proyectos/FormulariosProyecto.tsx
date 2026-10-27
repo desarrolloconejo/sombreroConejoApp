@@ -7,7 +7,8 @@ import { cambiarEstadoProyecto, editarProyecto } from "@/actions/proyectos";
 import { crearPieza } from "@/actions/piezas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { PanelCuerpo, PanelPie } from "@/components/listado";
-import { Boton, BotonEnlace, Campo, CampoFecha, CampoFijo, Selector, useCampos } from "@/components/ui";
+import { Boton, BotonEnlace, Campo, CampoFecha, CampoBloque, CampoFijo, Selector, useCampos } from "@/components/ui";
+import { LARGO_NOMBRE_CORTO, proponerNombreCorto } from "@/lib/nomenclatura";
 import {
   ESTADO_INICIAL,
   NOMBRES_DE_ESTADO_PROYECTO,
@@ -62,6 +63,19 @@ export function EditarProyecto({
             maxLength={120}
             required
             error={errores.nombre}
+            className="col-span-2"
+          />
+          {/* El bloque PROYECTO de sus archivos: CLIENTE_PROYECTO_TIPO_AAMM_vNN. */}
+          <CampoBloque
+            id="editar-nombre-corto"
+            name="nombreCorto"
+            etiqueta="Nombre corto"
+            origen={campo("nombre").value}
+            inicial={proyecto.nombreCorto}
+            proponer={proponerNombreCorto}
+            largo={LARGO_NOMBRE_CORTO}
+            ejemplo="PARRILLA-NOVIEMBRE"
+            error={errores.nombreCorto}
             className="col-span-2"
           />
           <Campo

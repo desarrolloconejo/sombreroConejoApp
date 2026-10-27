@@ -4,6 +4,7 @@ import {
   Building2,
   ChartNoAxesColumn,
   ClipboardList,
+  FilePen,
   FileSpreadsheet,
   FileText,
   FolderKanban,
@@ -294,6 +295,21 @@ const MODULOS: readonly Modulo[] = [
         alias: ["fichas", "piezas", "archivo", "borradores"],
       },
     ],
+  },
+
+  /*
+   * El armador de nombres de archivo: para todo el equipo, que nombra a mano
+   * lo que no se sube a la app con las mismas reglas con que la app renombra
+   * lo que si.
+   */
+  {
+    titulo: "Nombres de archivo",
+    seccion: "herramientas",
+    subtitulo: "Arma el nombre correcto para cada archivo",
+    href: "/dashboard/nombres-archivo",
+    icono: FilePen,
+    roles: ["admin", "trabajador"],
+    alias: ["nomenclatura", "nombrar", "renombrar", "armador", "archivo", "sigla"],
   },
 
   /*
