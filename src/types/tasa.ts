@@ -43,3 +43,22 @@ export type TasaDeCambio = {
 export type ResultadoDeTasas =
   | { ok: true; fechaValor: string; nuevas: number; leidas: number }
   | { ok: false; motivo: string };
+
+/**
+ * En que acabo una corrida de la tarea diaria. Espejo del CHECK
+ * `lecturas_tasa_resultado_valido`.
+ *
+ * - registrada: entro una tasa nueva.
+ * - sin_novedad: el BCV seguia publicando una fecha valor que ya estaba.
+ * - rechazada: no se pudo leer, o lo leido no era creible.
+ */
+export type ResultadoLecturaTasa = "registrada" | "sin_novedad" | "rechazada";
+
+/** Una corrida de la tarea diaria, tal como la ve quien opera finanzas. */
+export type LecturaTasa = {
+  id: number;
+  leidaEn: Date;
+  resultado: ResultadoLecturaTasa;
+  fechaValor: string | null;
+  motivo: string | null;
+};

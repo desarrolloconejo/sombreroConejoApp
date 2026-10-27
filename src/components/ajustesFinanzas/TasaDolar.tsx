@@ -1,17 +1,36 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Save } from "lucide-react";
+import { CircleAlert, CircleCheck, Clock, Save } from "lucide-react";
 
 import { registrarTasa } from "@/actions/tasas";
 import { useAvisoDeAccion } from "@/components/layout/useAvisoDeAccion";
 import { Boton, Campo, CampoFecha } from "@/components/ui";
-import { ESTADO_INICIAL, type TasaDeCambio } from "@/types";
+import { ESTADO_INICIAL, type ResultadoLecturaTasa, type TasaDeCambio } from "@/types";
+import type { SituacionTasa } from "@/lib/finanzas/programacionTasa";
 
 /**
- * La tasa del dolar del BCV: las ultimas, de donde salio cada una, y el
- * formulario para registrarla a mano cuando la lectura diaria falla.
+ * La tasa del dolar del BCV: si la app ya la leyo hoy y cuando lo hara, las
+ * ultimas, de donde salio cada una, y el formulario para registrarla a mano
+ * cuando la lectura diaria falla.
  */
+
+/** Una corrida de la tarea, con su momento ya escrito por el servidor. */
+export type LecturaParaMostrar = {
+  id: number;
+  cuando: string;
+  resultado: ResultadoLecturaTasa;
+  fechaValor: string | null;
+  motivo: string | null;
+};
+
+const RESULTADO: Record<ResultadoLecturaTasa, string> = {
+  registrada: "Registro una nueva",
+  sin_novedad: "Sin novedad",
+  rechazada: "No pudo leerla",
+};
+
+const ICONO = { ok: CircleCheck, aviso: Clock, manual: CircleAlert };
 
 function legible(valor: string): string {
   const [entera, fraccion = ""] = valor.split(".");
@@ -23,7 +42,17 @@ function dia(fecha: string): string {
   return `${numero}/${mes}/${ano}`;
 }
 
-export function TasaDolar({ recientes, hoy }: { recientes: TasaDeCambio[]; hoy: string }) {
+export function TasaDolar({
+  recientes,
+  hoy,
+  situacion,
+  lecturas,
+}: {
+  recientes: TasaDeCambio[];
+  hoy: string;
+  situacion: SituacionTasa;
+  lecturas: LecturaParaMostrar[];
+}) {
   const [estado, enviar, enviando] = useActionState(registrarTasa, ESTADO_INICIAL);
   useAvisoDeAccion(estado);
   const [fecha, setFecha] = useState(hoy);
@@ -43,9 +72,33 @@ export function TasaDolar({ recientes, hoy }: { recientes: TasaDeCambio[]; hoy: 
 
   const vigente = recientes[0];
   const deHoy = vigente?.fechaValor === hoy;
+  const Icono = ICONO[situacion.tono];
 
   return (
     <div className="flex flex-col gap-5">
+      <div
+        role="status"
+        className={`flex gap-3 rounded-xl px-3.5 py-3 text-[13px] ${
+          situacion.tono === "ok" ? "border border-borde bg-campo" : "bg-acento-tenue"
+        }`}
+      >
+        <Icono
+          aria-hidden="true"
+          className={`mt-0.5 size-[18px] shrink-0 ${
+            situacion.tono === "manual" ? "text-blackberry dark-tema:text-acento" : "text-suave"
+          }`}
+        />
+        <div className="flex flex-col gap-1">
+          <p
+            className={`font-bold ${situacion.tono === "manual" ? "text-blackberry dark-tema:text-acento" : ""}`}
+          >
+            {situacion.titulo}
+          </p>
+          <p className="leading-relaxed">{situacion.detalle}</p>
+          <p className="text-[12px] text-suave">{situacion.proxima}</p>
+        </div>
+      </div>
+
       {vigente ? (
         <div>
           <p className="text-[12px] font-semibold text-suave">La que se usa al facturar hoy</p>
@@ -107,6 +160,29 @@ export function TasaDolar({ recientes, hoy }: { recientes: TasaDeCambio[]; hoy: 
           </Boton>
         </div>
       </form>
+
+      {lecturas.length > 0 && (
+        <div className="border-t border-borde pt-4">
+          <p className="mb-2 text-[12px] font-semibold text-suave">Ultimas lecturas automaticas</p>
+          <ul aria-label="Ultimas lecturas automaticas de la tasa" className="flex flex-col text-[13px]">
+            {lecturas.map((lectura) => (
+              <li
+                key={lectura.id}
+                className="flex flex-col gap-0.5 border-b border-borde/70 py-1.5 last:border-0"
+              >
+                <span className="flex justify-between gap-4">
+                  <span>{lectura.cuando}</span>
+                  <span className={lectura.resultado === "rechazada" ? "font-semibold text-blackberry dark-tema:text-acento" : "text-suave"}>
+                    {RESULTADO[lectura.resultado]}
+                    {lectura.fechaValor && lectura.resultado !== "rechazada" ? ` · del ${dia(lectura.fechaValor)}` : ""}
+                  </span>
+                </span>
+                {lectura.motivo && <span className="text-[12px] text-suave">{lectura.motivo}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {recientes.length > 0 && (
         <div className="border-t border-borde pt-4">

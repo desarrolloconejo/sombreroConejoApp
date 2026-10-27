@@ -179,7 +179,9 @@ rol `prospecto`, que la version publicada no usa.
 | 20 | `db/neon/20-nomenclatura-de-archivos.sql` | La nomenclatura de los archivos: `empresas.sigla` (unica) y `portal.proyectos.nombre_corto`, los triggers que los proponen a partir del nombre si llegan vacios, la propuesta para las empresas y proyectos que ya existen, `portal.orden_de_pieza` y `portal.proyectos_para_nombrar` (nombre y nombre corto de los proyectos en marcha, para el armador) | `sin_sigla = 0`, `sin_nombre_corto = 0` y `siglas_repetidas = 0`. **Despues, revisar a ojo la lista de siglas** que devuelve (en el ensayo: `GRUPO-MIMESA`) y corregir en Empresas las que no gusten |
 | 21 | `db/neon/21-foto-y-recuperar-clave.sql` | La foto de perfil en Drive (`usuarios.foto_archivo`) y «Olvide mi contrasena»: la tabla `restablecimientos_clave` y las politicas de la bandeja de salida, que aceptan al rol sistema | `columna = 1`, `tabla = 1`, `permisos = 3` y `politicas_con_sistema = 3` |
 
-Al terminar, `db/neon/diagnostico.sql`: los 21 en `true`.
+| 22 | `db/neon/22-lecturas-de-la-tasa.sql` | `finanzas.lecturas_tasa`: cada corrida de la tarea diaria de la tasa, tambien sin novedad o rechazada. La escribe solo la tarea y la lee quien opera finanzas | `seguridad_por_fila = true`, `politicas = 2` y `permisos = INSERT, SELECT` |
+
+Al terminar, `db/neon/diagnostico.sql`: los 22 en `true`.
 
 Trae un formato de impresion de ejemplo (carta) y cuatro medios de pago de
 ejemplo sin datos bancarios. **El emisor nace vacio: no se puede emitir
@@ -369,7 +371,7 @@ En la aplicacion publicada, con la cuenta de administrador.
 - [ ] En Finanzas → Ajustes de finanzas: llenar el emisor (razon social, RIF,
       domicilio fiscal) y revisar la numeracion. **Con datos reales, no de
       ejemplo**: lo que se emita queda con ellos.
-- [ ] En Ajustes de finanzas → Tasa del dolar, comprobar que hay tasa del dia (la lee la tarea programada). Si no la hay, registrarla a mano.
+- [ ] En Ajustes de finanzas → Tasa del dolar, el recuadro de arriba dice si la app ya leyo la tasa hoy y cuando vuelve. Tras lanzar la tarea a mano desde Vercel debe decir «La app ya registro la tasa de hoy» (o «no ha publicado una nueva», o el motivo del rechazo) y aparecer en «Ultimas lecturas automaticas». Si pide registrarla a mano, hacerlo.
 - [ ] Con una proforma emitida de prueba: «Emitir la factura». Abre la
       factura con su numero y numero de control.
 - [ ] «Abrir el PDF para imprimir»: sale el PDF con el texto en su sitio.
@@ -546,7 +548,7 @@ resolver antes.
 | Correo en modo real (Gmail) | **Probada la autorizacion y un envio** (2026-10-27, `npm run correo:probar`); falta ver el primer correo enviado por la propia aplicacion. Por ahora con la cuenta personal del responsable. Antes de poner `CORREO_MODO=real`: `npm run google:autorizar` (pide Drive y Gmail y dice si se concedieron) y `npm run correo:probar -- destino`. Pasos en `docs/pruebaGoogleReal.md` |
 | El BCV desde los servidores de Vercel | **Sin probar.** Desde aqui responde, pero es habitual que filtre por pais de origen. Si rechaza a Vercel, la tarea lo notificara cada dia y la tasa habra que registrarla a mano hasta mudarse al VPS |
 | Certificado del BCV | El suyo vence el **20 de noviembre de 2026**. Si al renovarlo cambian de autoridad, la lectura fallara y lo notificara: hay que sustituir el intermedio de `src/lib/externos/certificados/bcvIntermedio.ts`. No se arregla apagando la verificacion |
-| Frecuencia de la tarea | Una vez al dia (18:30 de Caracas), que es lo que permite el plan gratuito de Vercel. El «refresco al usar» del plan llega con el modulo de finanzas |
+| Frecuencia de la tarea | Una vez al dia (18:30 de Caracas), que es lo que permite el plan gratuito de Vercel. **Decidido por el responsable el 2026-10-27: se queda en una vez al dia**, sin «refresco al usar». A cambio, Ajustes de finanzas → Tasa del dolar dice si la app ya la leyo hoy, como le fue (registrada, sin novedad o rechazada), cuando vuelve, y si toca registrarla a mano; el inicio de finanzas lo resume. Sale de `finanzas.lecturas_tasa` (archivo 22) |
 | Registrar una tasa a mano | La base ya lo admite, para `admin` y `administracion`. La pantalla llega con finanzas (etapa 5) |
 | Correos que quedan «pendientes» | En modo real, si la funcion se corta entre confirmar el cambio y enviar, el correo queda como pendiente. No hay tarea que lo recoja: se reintenta a mano desde la bandeja |
 
@@ -629,3 +631,5 @@ resolver antes.
 | 8. Endurecimiento y piloto | — | — | — | Si. El piloto, despues de publicar: `docs/planPiloto.md` |
 | Mejoras posteriores (comentarios por fase) | 17 | — | — | Si |
 | Revision del responsable, bloque 1 | 18, 19 | — | — | Si |
+| Revision del responsable, bloques 4 y 5 | 20, 21 | `DRIVE_CARPETA_PERFILES_ID`, `CORREO_MODO`, `APP_URL_PUBLICA` | — | Si |
+| Preparacion del despliegue (2026-10-27) | 22; el 06 pasa a ir tras el 05 | Las tres `DRIVE_CARPETA_*` de produccion (`drive:separar`) | — | Si |

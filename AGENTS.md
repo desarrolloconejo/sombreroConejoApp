@@ -241,7 +241,10 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   administracion y el cliente no leen las asignaciones.
 - Una tarea programada vive en `src/app/api/cron/`, comprueba `CRON_SECRET`
   antes de nada y escribe con `conSistema`, nunca con una identidad
-  inventada. Si una tabla debe aceptarla, su politica nombra el rol
+  inventada. La de la tasa corre una vez al dia (`vercel.json`, espejo en
+  `src/lib/finanzas/programacionTasa.ts`, que una prueba compara) y anota
+  cada corrida en `finanzas.lecturas_tasa`, tambien la que no trae nada:
+  de ahi sale lo que Ajustes de finanzas dice de si ya lo hizo. Si una tabla debe aceptarla, su politica nombra el rol
   `sistema`.
 - El dinero y las tasas viajan como **texto decimal** y se guardan en
   `NUMERIC`. No pasan por `number`.

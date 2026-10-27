@@ -72,7 +72,9 @@ marcas(archivo, aplicado) AS (
      EXISTS (SELECT 1 FROM funcion WHERE esquema = 'portal' AND nombre = 'proyectos_para_nombrar')),
   ('21-foto-y-recuperar-clave',
      to_regclass('public.restablecimientos_clave') IS NOT NULL
-     AND EXISTS (SELECT 1 FROM columna WHERE tabla = 'usuarios' AND nombre = 'foto_archivo'))
+     AND EXISTS (SELECT 1 FROM columna WHERE tabla = 'usuarios' AND nombre = 'foto_archivo')),
+  ('22-lecturas-de-la-tasa',
+     to_regclass('finanzas.lecturas_tasa') IS NOT NULL)
 )
 SELECT archivo, aplicado FROM marcas ORDER BY archivo;
 

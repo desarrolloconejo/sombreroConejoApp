@@ -8,6 +8,7 @@ import { conSesion } from "@/lib/db";
 import { haceCuanto, hoyEnCaracas } from "@/lib/fechas";
 import { aEscalado, deEscalado } from "@/lib/finanzas/calculo";
 import { bolivares, dolares, numeroDe } from "@/lib/finanzas/documentos";
+import { situacionTasa } from "@/lib/finanzas/programacionTasa";
 import {
   RUTA_AJUSTES_FINANZAS,
   RUTA_COBRANZA,
@@ -138,6 +139,7 @@ export default async function PaginaInicio() {
     porFacturar: esFinanzas ? await proformas.porFacturar(tx) : [],
     cobranza: esFinanzas ? await facturas.cobranza(tx) : [],
     tasa: esFinanzas ? ((await tasas.recientes("bcv", "USD", 1, tx))[0] ?? null) : null,
+    lecturasTasa: esFinanzas ? await tasas.ultimasLecturas(5, tx) : [],
     // Cliente
     esperando: esCliente && usuario.empresaId ? await piezas.esperandoCliente(tx) : [],
     presupuestosPendientes: esCliente && usuario.puedeVerFinanzas ? await presupuestos.porAprobar(tx) : [],
@@ -309,11 +311,11 @@ export default async function PaginaInicio() {
         key="tasa"
         titulo="Tasa del dolar"
         cifra={datos.tasa ? `Bs. ${datos.tasa.valor}` : "Sin tasa"}
-        nota={
+        nota={`${
           datos.tasa
             ? `BCV, valor del ${diaDe(datos.tasa.fechaValor)}${datos.tasa.origen === "manual" ? " · registrada a mano" : ""}`
-            : "Sin tasa no se puede facturar: registrala a mano"
-        }
+            : "Sin tasa no se puede facturar"
+        }. ${situacionTasa(datos.lecturasTasa).titulo}`}
         vacio="Se lee sola del BCV una vez al dia."
         enlace={{ href: RUTA_AJUSTES_FINANZAS, texto: "Ir a Ajustes de finanzas" }}
       />,

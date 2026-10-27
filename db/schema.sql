@@ -1239,6 +1239,51 @@ CREATE POLICY tasas_cambio_escribe ON finanzas.tasas_cambio
     app_rol() IN ('admin', 'sistema') OR app_cargo() = 'administracion'
   );
 
+-- ---------------------------------------------------------------------------
+-- finanzas.lecturas_tasa: una fila por cada vez que corre la tarea diaria.
+--
+-- Las tasas solo dicen lo que entro. Esto dice ademas cuando corrio la tarea
+-- y en que acabo, tambien si no habia nada nuevo o la lectura se rechazo:
+-- con eso quien opera finanzas sabe si la app ya lo intento hoy y si le toca
+-- registrar la tasa a mano.
+--
+-- Solo crece. La escribe la tarea (rol sistema) y la lee quien opera
+-- finanzas. Espejo de `resultado` en src/types/tasa.ts.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS finanzas.lecturas_tasa (
+  id           BIGSERIAL     PRIMARY KEY,
+  leida_en     TIMESTAMPTZ   NOT NULL DEFAULT now(),
+  resultado    TEXT          NOT NULL,
+  -- La fecha valor que publicaba el BCV, si se pudo leer.
+  fecha_valor  DATE,
+  -- Por que se rechazo, si se rechazo.
+  motivo       TEXT,
+
+  CONSTRAINT lecturas_tasa_resultado_valido
+    CHECK (resultado IN ('registrada', 'sin_novedad', 'rechazada')),
+  CONSTRAINT lecturas_tasa_rechazo_con_motivo
+    CHECK (resultado <> 'rechazada' OR motivo IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS lecturas_tasa_recientes_idx
+  ON finanzas.lecturas_tasa (leida_en DESC);
+
+GRANT SELECT, INSERT ON finanzas.lecturas_tasa TO conejo_app;
+REVOKE UPDATE ON finanzas.lecturas_tasa FROM conejo_app;
+GRANT USAGE, SELECT ON SEQUENCE finanzas.lecturas_tasa_id_seq TO conejo_app;
+
+ALTER TABLE finanzas.lecturas_tasa ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS lecturas_tasa_lee ON finanzas.lecturas_tasa;
+CREATE POLICY lecturas_tasa_lee ON finanzas.lecturas_tasa
+  FOR SELECT TO conejo_app
+  USING (app_rol() IN ('admin', 'sistema') OR app_cargo() = 'administracion');
+
+DROP POLICY IF EXISTS lecturas_tasa_escribe ON finanzas.lecturas_tasa;
+CREATE POLICY lecturas_tasa_escribe ON finanzas.lecturas_tasa
+  FOR INSERT TO conejo_app
+  WITH CHECK (app_rol() = 'sistema');
+
 -- ===========================================================================
 -- PROYECTOS, PIEZAS, FASES Y TAREAS
 --

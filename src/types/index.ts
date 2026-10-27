@@ -108,6 +108,8 @@ export type {
   LecturaDeTasas,
   TasaDeCambio,
   ResultadoDeTasas,
+  ResultadoLecturaTasa,
+  LecturaTasa,
 } from "./tasa";
 
 export {

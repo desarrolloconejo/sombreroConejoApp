@@ -1,8 +1,14 @@
 import { consultar, ejecutar, type Ejecutor } from "@/lib/db";
-import type { FuenteTasa, LecturaDeTasas, TasaDeCambio } from "@/types";
+import type {
+  FuenteTasa,
+  LecturaDeTasas,
+  LecturaTasa,
+  ResultadoLecturaTasa,
+  TasaDeCambio,
+} from "@/types";
 
 /**
- * Consultas sobre finanzas.tasas_cambio.
+ * Consultas sobre finanzas.tasas_cambio y finanzas.lecturas_tasa.
  *
  * El ejecutor es obligatorio: la tabla tiene seguridad por fila. Lo entrega
  * `conSesion` cuando hay una persona, o `conSistema` cuando escribe la tarea
@@ -142,4 +148,36 @@ export async function hayTasaDel(
     ejecutor,
   );
   return filas.length > 0;
+}
+
+/** Anota una corrida de la tarea diaria, acabe como acabe. */
+export async function anotarLectura(
+  datos: { resultado: ResultadoLecturaTasa; fechaValor: string | null; motivo: string | null },
+  ejecutor: Ejecutor,
+): Promise<void> {
+  await ejecutar(
+    `INSERT INTO finanzas.lecturas_tasa (resultado, fecha_valor, motivo)
+     VALUES ($1, $2::date, $3)`,
+    [datos.resultado, datos.fechaValor, datos.motivo],
+    ejecutor,
+  );
+}
+
+/** Las ultimas corridas de la tarea diaria, de la mas reciente a la mas vieja. */
+export async function ultimasLecturas(limite: number, ejecutor: Ejecutor): Promise<LecturaTasa[]> {
+  const filas = await consultar<Omit<LecturaTasa, "id"> & { id: string }>(
+    `SELECT id,
+            leida_en                           AS "leidaEn",
+            resultado,
+            to_char(fecha_valor, 'YYYY-MM-DD') AS "fechaValor",
+            motivo
+     FROM finanzas.lecturas_tasa
+     ORDER BY leida_en DESC
+     LIMIT $1`,
+    [limite],
+    ejecutor,
+  );
+
+  // BIGSERIAL llega como texto.
+  return filas.map((fila) => ({ ...fila, id: Number(fila.id) }));
 }

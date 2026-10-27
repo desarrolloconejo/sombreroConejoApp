@@ -540,6 +540,40 @@ async function principal(): Promise<void> {
       );
       tasa.repite = await intentarDentro(() => registrar("2001-01-01"));
 
+      // Las corridas de la tarea: solo las escribe ella, las lee finanzas.
+      const corrida = () =>
+        cliente.query(
+          `INSERT INTO finanzas.lecturas_tasa (resultado, fecha_valor) VALUES ('sin_novedad', '2001-01-01')`,
+        );
+      const corridas = async () =>
+        Number(
+          (
+            await cliente.query<{ n: string }>(
+              "SELECT count(*)::text AS n FROM finanzas.lecturas_tasa WHERE fecha_valor = '2001-01-01'",
+            )
+          ).rows[0].n,
+        );
+
+      await como(null, "sistema");
+      tasa.corridaSistema = await intentarDentro(corrida);
+      tasa.rechazoSinMotivo = await intentarDentro(() =>
+        cliente.query("INSERT INTO finanzas.lecturas_tasa (resultado) VALUES ('rechazada')"),
+      );
+
+      await como(admin.id, "admin");
+      tasa.corridaAdmin = await intentarDentro(corrida);
+      tasa.corridasAdminLee = await corridas();
+      tasa.corridaModifica = await intentarDentro(() =>
+        cliente.query("UPDATE finanzas.lecturas_tasa SET motivo = 'x'"),
+      );
+      tasa.corridaBorra = await intentarDentro(() => cliente.query("DELETE FROM finanzas.lecturas_tasa"));
+
+      await como(otro.id, "trabajador", "administracion");
+      tasa.corridasAdministracionLee = await corridas();
+
+      await como(otro.id, "trabajador", "redes");
+      tasa.corridasRedesLee = await corridas();
+
       throw new Deshacer();
     });
   } catch (error) {
@@ -575,6 +609,26 @@ async function principal(): Promise<void> {
     "No caben dos tasas de la misma moneda y fecha valor",
     tasa.repite === "23505",
     String(tasa.repite),
+  );
+  comprobar(
+    "Las corridas de la tarea de la tasa solo las anota ella",
+    tasa.corridaSistema === null && tasa.corridaAdmin === DENEGADO,
+    `sistema: ${tasa.corridaSistema}; admin: ${tasa.corridaAdmin}`,
+  );
+  comprobar(
+    "Una corrida rechazada lleva su motivo",
+    tasa.rechazoSinMotivo === "23514",
+    String(tasa.rechazoSinMotivo),
+  );
+  comprobar(
+    "Las corridas las lee quien opera finanzas, y nadie mas",
+    tasa.corridasAdminLee === 1 && tasa.corridasAdministracionLee === 1 && tasa.corridasRedesLee === 0,
+    `admin ${tasa.corridasAdminLee}, administracion ${tasa.corridasAdministracionLee}, redes ${tasa.corridasRedesLee}`,
+  );
+  comprobar(
+    "Una corrida anotada no se modifica ni se borra",
+    tasa.corridaModifica === DENEGADO && tasa.corridaBorra === DENEGADO,
+    "UPDATE y DELETE denegados",
   );
 
   await probarProyectos();
