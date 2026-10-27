@@ -12,7 +12,7 @@ que observar y como volver atras si algo sale mal.
 | Que cliente | Uno de confianza, con un proyecto en curso y una persona de contacto que use el telefono a diario. Mejor si ya tiene presupuestos o proformas este mes |
 | Cuando | Despues de publicar la integracion y de pasar la verificacion manual de todas las etapas |
 | Cuanto dura | Cuatro semanas |
-| ¿Se factura de verdad en el piloto? | **No al principio.** Facturar exige los datos reales del emisor, la numeracion y el talonario calibrado (`docs/pendientesIntegracion.md`). Se propone empezar con proyectos, revision, briefs y presupuestos, y sumar facturas cuando lo anterior este resuelto |
+| ¿Se factura de verdad en el piloto? | **No al principio.** Facturar exige los datos reales del emisor, la numeracion y el talonario calibrado (`docs/pendientes.md`). Se propone empezar con proyectos, revision, briefs y presupuestos, y sumar facturas cuando lo anterior este resuelto |
 
 ---
 
@@ -21,7 +21,7 @@ que observar y como volver atras si algo sale mal.
 ### Lo tecnico
 
 - [ ] Publicada la version con la integracion completa, siguiendo
-      `docs/despliegueProduccion.md` (archivos `db/neon/` 01 a 16 en orden).
+      `docs/operacion/despliegue.md` (archivos `db/neon/` 01 a 16 en orden).
 - [ ] Pasada la verificacion manual de cada etapa (`docs/verificacionManual.md`).
 - [ ] La tasa del dolar del dia aparece en Ajustes de finanzas.
 - [ ] El correo: si sigue en modo simulado, alguien del equipo revisa la
@@ -80,7 +80,7 @@ que costo, que pidio el cliente. Eso alimenta el informe del piloto.
 | --- | --- |
 | El cliente no puede entrar | Usuarios → «Restablecer contrasena» y entregarsela en mano. Si perdio el telefono de los dos pasos, «Retirar los dos pasos» en su ficha |
 | Una pantalla falla | Se sigue por el canal de siempre (correo, mensajes) y se anota la hora y lo que hacia. Se corrige y se publica una version nueva |
-| Algo grave en la aplicacion entera | La vuelta atras de `docs/despliegueProduccion.md`, seccion 7 |
+| Algo grave en la aplicacion entera | La vuelta atras de `docs/operacion/despliegue.md`, seccion 4 |
 | Una factura sale mal | Se anula con su motivo y se emite otra (F9). Nunca se edita |
 
 ---

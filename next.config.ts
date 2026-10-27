@@ -39,6 +39,11 @@ const nextConfig: NextConfig = {
   // No hay por que anunciar con que esta hecha la aplicacion.
   poweredByHeader: false,
 
+  // `next dev` no escribe su bloque de instrucciones en AGENTS.md: lo que
+  // dice (leer la documentacion local de Next 16) ya esta en el propio
+  // AGENTS.md, con el resto de herramientas del asistente.
+  agentRules: false,
+
   experimental: {
     serverActions: {
       // Una version de una pieza llega en una Server Action: 4 MB de archivo

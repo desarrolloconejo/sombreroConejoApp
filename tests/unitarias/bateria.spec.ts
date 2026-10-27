@@ -20,7 +20,7 @@ import {
 import type { NumeroFase } from "@/types";
 
 /**
- * Las reglas de la bateria (docs/reglasBateria.md). Los ejemplos A y B son
+ * Las reglas de la bateria (docs/negocio/reglasBateria.md). Los ejemplos A y B son
  * los del paquete original, y son obligatorios.
  */
 

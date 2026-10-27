@@ -1,11 +1,12 @@
 # Verificacion manual del portal
 
-Lo que el responsable prueba a mano, etapa por etapa, antes de publicar. Las
-pruebas automaticas cubren mucho, pero no todo: aqui va lo que necesita ojos
-—pantallas, textos, movil— y lo que ninguna prueba recorre todavia.
+Lo que el responsable prueba a mano, modulo a modulo. Las pruebas automaticas
+cubren mucho, pero no todo: aqui va lo que necesita ojos —pantallas, textos,
+movil— y lo que ninguna prueba recorre todavia.
 
-Se prueba al terminar las nueve etapas, todo junto. Cada etapa anade su
-seccion al cerrarse.
+Se escribio etapa a etapa durante la integracion, que se publico el
+2026-10-27. Sirve para repasar un modulo despues de cambiarlo: un cambio que
+anada algo que solo se ve a mano anade aqui su comprobacion.
 
 ## Antes de empezar
 
@@ -295,7 +296,7 @@ empresa de ejemplo con un pago reportado por confirmar.
 
 ### Sin hacer todavia
 
-Todo esta en `docs/pendientesIntegracion.md`. Lo mas importante: aplicar ISLR
+Todo esta en `docs/pendientes.md`. Lo mas importante: aplicar ISLR
 e IGTF cuando el contador responda, y calibrar el talonario real.
 
 ## Etapa 8 — Endurecimiento
@@ -314,7 +315,7 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
 5. `npm run test:unitarias` incluye `guardias.spec.ts` (toda action, page y
    ruta con su guardia) y `prueba:permisos` la seccion «Estructura».
 
-**Piloto**: se sigue `docs/planPiloto.md` cuando se elija cliente y fecha.
+**Piloto**: se sigue `docs/negocio/planPiloto.md` cuando se elija cliente y fecha.
 
 ## Mejora — Desplegables y botones de copiar
 
@@ -444,7 +445,7 @@ e IGTF cuando el contador responda, y calibrar el talonario real.
 ## Revision del responsable — Bloque 1
 
 Lo que el responsable pidio corregir al revisar la aplicacion (R3, R4, R6,
-R9, R13, R14 y R16 de `docs/pendientesIntegracion.md`).
+R9, R13, R14 y R16 de `docs/pendientes.md`).
 
 35. Brief del cliente (como `cliente@empresa.test`, Mis briefs → empezar):
     el paso «03 · El producto por dentro» no sale marcado hasta escribir algo
@@ -485,7 +486,7 @@ R9, R13, R14 y R16 de `docs/pendientesIntegracion.md`).
 ## Revision del responsable — Bloque 2
 
 Reorganizar las pantallas (R1, R2, R5, R7 y R8 de
-`docs/pendientesIntegracion.md`).
+`docs/pendientes.md`).
 
 43. Con la ventana a 1280 px o mas, toda pagina con secciones tiene a la
     derecha la columna «En esta pagina»: marca la seccion que se ve y lleva a
@@ -518,7 +519,7 @@ Reorganizar las pantallas (R1, R2, R5, R7 y R8 de
 
 ## Revision del responsable — Bloque 3
 
-Pulido (R15, R17 y R19 de `docs/pendientesIntegracion.md`).
+Pulido (R15, R17 y R19 de `docs/pendientes.md`).
 
 50. Un presupuesto, una proforma y una factura (de administracion y del
     cliente) y la portada de Facturacion: las dos columnas terminan a la
@@ -532,7 +533,7 @@ Pulido (R15, R17 y R19 de `docs/pendientesIntegracion.md`).
 
 ## Revision del responsable — Bloque 4
 
-Nomenclatura de archivos (R18 y R20 de `docs/pendientesIntegracion.md`).
+Nomenclatura de archivos (R18 y R20 de `docs/pendientes.md`).
 
 53. Empresas (como administrador): cada empresa tiene su **sigla** en
     «Editar» y en la ficha. Al registrar una nueva, se propone sola mientras

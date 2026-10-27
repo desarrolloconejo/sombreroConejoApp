@@ -7,7 +7,7 @@ proyectos, piezas y fases del paquete de especificacion original
 depende de esa carpeta.
 
 Donde este documento y el paquete difieren, manda este documento; donde este
-documento y `docs/planIntegracionPortal.md` difieren, manda el plan.
+documento y `docs/planes/planIntegracionPortal.md` difieren, manda el plan.
 
 ## El modelo
 

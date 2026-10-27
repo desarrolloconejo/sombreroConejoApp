@@ -923,7 +923,7 @@ FROM usuarios u;
 -- El rol se crea al principio del archivo, sin contrasena y sin poder iniciar
 -- sesion: este archivo va al repositorio y no puede llevar un secreto. La contrasena se pone aparte:
 -- en desarrollo la pone el seed; en produccion, el responsable
--- (db/neon/05-rol-de-la-aplicacion.sql).
+-- (ALTER ROLE conejo_app LOGIN PASSWORD '...' en el editor de Neon).
 -- ===========================================================================
 -- ---------------------------------------------------------------------------
 -- Lo que puede hacer el rol de la aplicacion.
@@ -1288,7 +1288,7 @@ CREATE POLICY lecturas_tasa_escribe ON finanzas.lecturas_tasa
 -- PROYECTOS, PIEZAS, FASES Y TAREAS
 --
 -- La bateria de cinco fases. Las reglas completas estan en
--- docs/reglasBateria.md; aqui solo lo que la base tiene que imponer por si
+-- docs/negocio/reglasBateria.md; aqui solo lo que la base tiene que imponer por si
 -- misma.
 --
 -- El avance NO se guarda: no hay columna de porcentaje ni de fase actual. Lo
@@ -1975,7 +1975,7 @@ CREATE INDEX IF NOT EXISTS fichas_hook_tarea_idx
 --
 -- La fase 5 la decide el cliente: aprueba la pieza o pide una correccion. Lo
 -- que ve para decidir es la version que el ejecutivo marco como enviada.
--- Las reglas estan en docs/reglasBateria.md.
+-- Las reglas estan en docs/negocio/reglasBateria.md.
 -- ===========================================================================
 
 -- clientes.puede_aprobar va junto a la tabla clientes: la vista de usuarios lo
@@ -3772,7 +3772,7 @@ CREATE POLICY correos_salida_actualiza ON portal.correos_salida
 --
 -- Se construye con valores de ejemplo (seccion 7.11): emisor, numeracion,
 -- formatos de impresion, medios de pago e impuestos viven en tablas que el
--- operador edita. Lo que hay que sustituir esta en docs/pendientesIntegracion.md.
+-- operador edita. Lo que hay que sustituir esta en docs/pendientes.md.
 --
 -- Lo que la base impone por si misma:
 --
@@ -3867,7 +3867,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS formatos_un_habitual
   ON finanzas.formatos_impresion ((true)) WHERE habitual;
 
 -- El formato de ejemplo, tamano carta. Se sustituye por el del talonario real
--- al calibrar con su hoja (docs/pendientesIntegracion.md, V4).
+-- al calibrar con su hoja (docs/pendientes.md, V4).
 INSERT INTO finanzas.formatos_impresion (nombre, ancho_mm, alto_mm, fuente_pt, campos, renglones, habitual)
 SELECT 'Carta (ejemplo)', 215.9, 279.4, 9,
   '{
@@ -3900,7 +3900,7 @@ WHERE NOT EXISTS (SELECT 1 FROM finanzas.formatos_impresion);
 -- ---------------------------------------------------------------------------
 -- finanzas.medios_pago: como puede pagar un cliente. Se desactivan, no se
 -- borran: un pago viejo puede citar uno retirado. Los de ejemplo no llevan
--- datos bancarios (docs/pendientesIntegracion.md, V5).
+-- datos bancarios (docs/pendientes.md, V5).
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS finanzas.medios_pago (
   id               SERIAL      PRIMARY KEY,

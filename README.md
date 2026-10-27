@@ -6,13 +6,13 @@ los procesos de la agencia, orientada a sus trabajadores y a sus clientes.
 Hoy cubre autenticacion, usuarios, empresas, perfil, auditoria, la bandeja de
 salida de correos, el modulo de Hooks, Nombres de archivo, el de Proyectos (piezas, bateria de
 fases y tareas), presupuestos y proformas, y los briefs (del cliente, de la
-bandeja de cuentas y de prospectos por enlace privado). Esta
-en marcha la integracion de un portal completo —briefs, proyectos, revision del
-cliente y finanzas—, cuyo plan vive en
-[docs/planIntegracionPortal.md](docs/planIntegracionPortal.md). La revision
-del repositorio ya se hizo y su resultado esta en
-[docs/informeAuditoria.md](docs/informeAuditoria.md); queda pendiente el plan de
-mejora del diseno.
+bandeja de cuentas y de prospectos por enlace privado), la revision del
+cliente y finanzas (facturas, cobranza y la tasa del BCV). La integracion del
+portal esta **publicada desde el 2026-10-27**; su plan, con las decisiones
+tomadas, vive en
+[docs/planes/planIntegracionPortal.md](docs/planes/planIntegracionPortal.md).
+Queda pendiente el plan de mejora del diseno, y lo que falta para usarla de
+verdad esta en [docs/pendientes.md](docs/pendientes.md).
 
 ## Stack
 
@@ -127,7 +127,7 @@ npm run correo:probar -- destino@ejemplo.com   # un correo de prueba por Gmail
 ```
 
 Probar Drive y Gmail de verdad en local, paso a paso:
-[docs/pruebaGoogleReal.md](docs/pruebaGoogleReal.md).
+[docs/operacion/google.md](docs/operacion/google.md).
 
 Utiles de Docker:
 
@@ -174,19 +174,23 @@ src/
   lib/portal/   catalogo de servicios y reglas de la bateria de fases, puras
   proxy.ts      barrera de rutas (en Next 16 sustituye a middleware.ts)
 db/
-  schema.sql    definicion completa e idempotente del esquema
+  schema.sql    definicion completa e idempotente del esquema: la version
+                final, igual a la de produccion
   seed.mts      aplica el esquema y siembra la base local
-  generarSql.mts  vuelca el SQL que se pega en produccion
-  neon/         SQL numerado para pegar en Neon, un archivo por cambio
+  generarSql.mts  vuelca el SQL de una base nueva (esquema y catalogos)
+  neon/         cambios de esquema para pegar en Neon (desde el 23),
+                diagnostico y huella para comparar con produccion
   datos/        datos de la semilla
   pruebas/      baterias del auditor y de los modelos
 tests/
   unitarias/    Playwright sin navegador
   integracion/  Playwright con navegador
-scripts/        utilidades que corren en el host
+scripts/        Google desde el host: autorizar, probar y ordenar Drive y Gmail
 docker/         Dockerfile y configuracion de servicios
-docs/           plan de integracion y documentos de referencia
-diseno/         maquetas aprobadas
+docs/           pendientes.md, verificacionManual.md y tres carpetas:
+  operacion/    despliegue, Google y mudanza al VPS
+  negocio/      finanzas, bateria de fases y plan del piloto
+  planes/       plan de la integracion (ejecutado) y de mejora del diseno
 ```
 
 Regla de dependencias: los componentes nunca importan de `models/`, y `models/`
@@ -583,7 +587,7 @@ Lo gestionan el admin, el ejecutivo de cuentas asignado a la empresa y el
 ejecutivo que lleva ese proyecto, aunque sea de otra cuenta (solo el admin
 decide quien lo lleva). Quien tiene una tarea abre la ficha de esa pieza,
 marca su tarea y escribe el copy, pero no mueve fases. Las reglas estan en
-[docs/reglasBateria.md](docs/reglasBateria.md); el criterio de la agencia
+[docs/negocio/reglasBateria.md](docs/negocio/reglasBateria.md); el criterio de la agencia
 (plantillas, servicios y tareas sugeridas), en `src/lib/portal/catalogo.ts`; y
 lo que decide si una fase se mueve, en `src/lib/portal/fases.ts`.
 
@@ -609,7 +613,7 @@ aviso no llega a verse.
 
 Se construyo con **valores de ejemplo** (emisor, numeracion, talonario,
 medios de pago, impuestos) que se cambian en Ajustes de finanzas; la lista
-esta en [docs/pendientesIntegracion.md](docs/pendientesIntegracion.md).
+esta en [docs/pendientes.md](docs/pendientes.md).
 
 - **La factura la emite la base** (`finanzas.emitir_factura`), en bolivares a
   la ultima tasa del BCV, con copia congelada del emisor y del cliente.
@@ -723,17 +727,19 @@ servidor propio. La base esta en **Neon**.
 - **El disco es de solo lectura.** El codigo de servidor no escribe archivos.
   Por eso los archivos, tambien la foto de perfil, se guardan en Google Drive.
 - **La base se migra pegando SQL.** La maquina de desarrollo no alcanza Neon,
-  asi que cada cambio de esquema entrega un archivo numerado en `db/neon/`, que
-  se pega en el editor de su panel. Son idempotentes y no llevan secretos.
-  `npm run sql:produccion` es otra cosa: genera el SQL de una base **nueva**.
+  asi que cada cambio de esquema nuevo entrega un archivo numerado en
+  `db/neon/` (el proximo es el 23), que se pega en el editor de su panel. Son
+  idempotentes y no llevan secretos. `db/schema.sql` ya coincide con
+  produccion. `npm run sql:produccion` es otra cosa: genera el SQL de una base
+  **nueva**.
 - **Primero la base, despues el codigo.** Si un cambio toca el esquema, se pega
   el SQL antes de subir `main`. Al reves, la aplicacion arranca contra tablas
   que no existen. La excepcion es lo que le quita algo a la version publicada,
   que se pega despues.
-- **El orden completo esta en
-  [docs/despliegueProduccion.md](docs/despliegueProduccion.md):** SQL,
-  variables de Vercel, comprobaciones y vuelta atras, etapa a etapa. No se
-  publica hasta terminar la integracion del portal.
+- **El estado de produccion y como publicar estan en
+  [docs/operacion/despliegue.md](docs/operacion/despliegue.md):** variables de
+  Vercel, ensayo y aplicacion del SQL, comprobaciones, vuelta atras y el
+  registro de despliegues.
 - **La aplicacion se conecta como `conejo_app`**, no como duena de la base.
 - **La base de produccion tiene datos reales.** No se le insertan datos de
   ejemplo.
@@ -744,14 +750,14 @@ servidor propio. La base esta en **Neon**.
 | --- | --- |
 | [CLAUDE.md](CLAUDE.md) | Contrato del proyecto |
 | [AGENTS.md](AGENTS.md) | Contexto y reglas para asistentes de codigo |
-| [docs/planIntegracionPortal.md](docs/planIntegracionPortal.md) | Plan de la integracion del portal |
-| [docs/reglasBateria.md](docs/reglasBateria.md) | Reglas de proyectos, piezas, fases y tareas: avance, correcciones, alertas y quien ve que |
-| [docs/despliegueProduccion.md](docs/despliegueProduccion.md) | Guia del despliegue: SQL, variables y pasos, etapa a etapa |
-| [docs/informeIntegracion.md](docs/informeIntegracion.md) | Que hace hoy la aplicacion y como probarla |
-| [docs/informePendientes.md](docs/informePendientes.md) | Lo que falta para usarla de verdad, por momento |
-| [docs/planPiloto.md](docs/planPiloto.md) | La prueba con un cliente real, semana a semana |
-| [docs/pendientesIntegracion.md](docs/pendientesIntegracion.md) | Valores de ejemplo por sustituir, decisiones del negocio que faltan y lo que queda sin hacer |
-| [docs/verificacionManual.md](docs/verificacionManual.md) | Lo que hay que probar a mano antes de publicar, etapa por etapa |
-| [docs/planAuditoriaRepositorio.md](docs/planAuditoriaRepositorio.md) | Plan de revision y actualizacion del repositorio. Ejecutado |
-| [docs/informeAuditoria.md](docs/informeAuditoria.md) | Resultado de esa revision, hallazgo a hallazgo |
-| [docs/planMejoraDiseno.md](docs/planMejoraDiseno.md) | Plan de mejora del diseno |
+| [docs/pendientes.md](docs/pendientes.md) | Lo que falta: valores de ejemplo por sustituir, decisiones del negocio y lo que queda sin hacer |
+| [docs/verificacionManual.md](docs/verificacionManual.md) | Lo que hay que probar a mano, modulo a modulo |
+| [docs/operacion/despliegue.md](docs/operacion/despliegue.md) | Estado de produccion, variables de Vercel y como publicar un cambio |
+| [docs/operacion/google.md](docs/operacion/google.md) | Drive y Gmail en modo real, y el cambio a la cuenta de la empresa |
+| [docs/operacion/mudanzaVps.md](docs/operacion/mudanzaVps.md) | La mudanza a un servidor propio y las copias de seguridad de la base |
+| [docs/negocio/guiaFinanzas.md](docs/negocio/guiaFinanzas.md) | Finanzas de punta a punta, para el equipo |
+| [docs/negocio/reglasBateria.md](docs/negocio/reglasBateria.md) | Reglas de proyectos, piezas, fases y tareas: avance, correcciones, alertas y quien ve que |
+| [docs/negocio/planPiloto.md](docs/negocio/planPiloto.md) | La prueba con un cliente real, semana a semana |
+| [docs/planes/planIntegracionPortal.md](docs/planes/planIntegracionPortal.md) | Plan de la integracion del portal, ya ejecutada |
+| [docs/planes/planMejoraDiseno.md](docs/planes/planMejoraDiseno.md) | Plan de mejora del diseno. Pendiente |
+| [db/neon/README.md](db/neon/README.md) | Como se lleva un cambio de esquema a produccion |

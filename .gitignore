@@ -54,9 +54,6 @@ next-env.d.ts
 # datos locales de docker
 /.docker-data
 
-# El lienzo ensamblado se regenera desde los .dc.html y pesa ~2 MB
-/diseno/conejo-app-fase-1.html
-
 # frascos de cookies de las pruebas de humo (llevan un token de sesion real)
 cookie-*.txt
 

@@ -2,7 +2,7 @@
 
 Como pasar de los modos simulados a los reales en la maquina de desarrollo,
 para probar antes de publicar que los archivos llegan a Drive y que los
-correos salen (R10 y R11 de `docs/pendientesIntegracion.md`).
+correos salen (R10 y R11 de `docs/pendientes.md`).
 
 Por ahora se usa la **cuenta personal de Google del responsable**, en
 desarrollo y en produccion (decidido el 2026-10-26). El cambio a la cuenta de
@@ -125,7 +125,7 @@ Las mismas variables, marcadas como Sensitive: `DRIVE_CLIENT_ID`,
 `SECRET_DRIVE_KEY1`, `DRIVE_REFRESH_TOKEN`, `DRIVE_CARPETA_PIEZAS_ID`,
 `DRIVE_CARPETA_COMPROBANTES_ID`, `DRIVE_CARPETA_PERFILES_ID`, `ARCHIVOS_MODO=real`, `CORREO_MODO=real` y
 `APP_URL_PUBLICA` con la direccion publica. El detalle esta en
-`docs/despliegueProduccion.md`.
+`docs/operacion/despliegue.md`.
 
 **Las tres carpetas de produccion no son las del `.env`.** Produccion guarda
 en `ConejoApp/` y desarrollo en `ConejoApp-Desarrollo/` (`DRIVE_RAIZ`), en la

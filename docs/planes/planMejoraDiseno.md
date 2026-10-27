@@ -6,7 +6,7 @@ Subir el nivel de la interfaz usando las skills de diseno instaladas, y
 sustituir el menu movil de hamburguesa por una barra inferior con hoja de
 navegacion.
 
-Es independiente de `docs/planIntegracionPortal.md`, con un punto de contacto:
+Es independiente de `docs/planes/planIntegracionPortal.md`, con un punto de contacto:
 la navegacion movil de aqui es la que usaran todos los modulos nuevos.
 
 ## Lo que no cambia
@@ -215,7 +215,7 @@ construyen para rediseñarlos despues.
 | Tema | Decision |
 | --- | --- |
 | Boton central con la marca | **No.** La barra no lleva boton central |
-| Maquetas de `diseno/` | **Se retiran cuando este plan termine**, y no antes: hasta entonces son la referencia aprobada |
+| Maquetas de `diseno/` | **Retiradas el 2026-10-27** por decision del responsable, antes de ejecutar este plan. Siguen en el historial de git (hasta el commit `1e2d6f4`) |
 
 Siguen abiertas:
 
@@ -261,13 +261,12 @@ tener presente antes de empezar.
   documentos de `AGENTS.md`.
 - `moduloActivo` (`src/lib/navegacion.ts`) esta sin uso y sirve para el titulo
   de la cabecera movil.
-- Al terminar: actualizar la linea de `diseno/` en el `README.md` y los
-  comentarios que nombran el cajon en `navegacion.ts` y en el layout del panel.
+- Al terminar: actualizar los comentarios que nombran el cajon en
+  `navegacion.ts` y en el layout del panel.
 
 ## Criterios de terminado
 
 - La navegacion movil nueva esta en `main`, con sus pruebas, y el cajon ya no existe.
-- La carpeta `diseno/` se ha retirado.
 - Cada hallazgo aprobado de la fase 1 esta resuelto o aplazado con motivo.
 - Todas las pantallas pasan a 360, 768 y 1440 px, en claro y en oscuro.
 - Ningun color literal, ninguna libreria nueva.

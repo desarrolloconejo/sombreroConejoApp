@@ -3,7 +3,7 @@
  *
  * Los conjuntos cerrados son el espejo de los CHECK de db/schema.sql: si se
  * anade un valor hay que tocar los dos sitios. Las reglas estan en
- * docs/reglasBateria.md.
+ * docs/negocio/reglasBateria.md.
  *
  * Las fechas sin hora (estimadas, de inicio) viajan como texto AAAA-MM-DD: un
  * `Date` les inventaria una hora y una zona, y en Caracas eso cambia el dia.

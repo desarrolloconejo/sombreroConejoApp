@@ -1,7 +1,7 @@
 /**
  * Los proyectos de ejemplo de la semilla de desarrollo.
  *
- * El de redes reproduce el ejemplo A de docs/reglasBateria.md: diez piezas
+ * El de redes reproduce el ejemplo A de docs/negocio/reglasBateria.md: diez piezas
  * que suman exactamente 60 %. Ademas deja una pieza de cada alerta, para que
  * el tablero arranque ensenando las cuatro.
  *

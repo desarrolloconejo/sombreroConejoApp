@@ -13,7 +13,7 @@ import type {
  * Va en codigo y no en la base, igual que el catalogo de hooks: la aplicacion
  * depende de que sean exactamente estos valores, y cambiarlos es una decision
  * que se revisa, no un dato que se edita. Las reglas estan explicadas en
- * docs/reglasBateria.md.
+ * docs/negocio/reglasBateria.md.
  */
 
 export const FASES: readonly NumeroFase[] = [1, 2, 3, 4, 5];

@@ -18,7 +18,7 @@ import type { EstadoFormulario } from "@/types";
  * numeracion, medios de pago y formatos de impresion.
  *
  * Casi todo nace con valores de ejemplo y se sustituye al final
- * (docs/pendientesIntegracion.md). Cambiar un ajuste nunca toca una factura
+ * (docs/pendientes.md). Cambiar un ajuste nunca toca una factura
  * ya emitida: guarda su propia copia.
  */
 

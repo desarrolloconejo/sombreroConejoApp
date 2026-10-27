@@ -14,7 +14,7 @@ import type {
  * el cliente lee los medios de pago activos. Lo decide la base.
  *
  * Muchos de estos valores nacen de ejemplo y se sustituyen al final
- * (docs/pendientesIntegracion.md).
+ * (docs/pendientes.md).
  */
 
 // ---------------------------------------------------------------------------

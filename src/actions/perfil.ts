@@ -198,7 +198,7 @@ const TIPOS_FOTO = new Set(["image/jpeg", "image/png", "image/webp"]);
  * para que el navegador no siga pintando la anterior.
  *
  * La foto anterior se queda en Drive: el adaptador no borra, y una foto vieja
- * no estorba (docs/pendientesIntegracion.md).
+ * no estorba (docs/pendientes.md).
  */
 export async function subirFoto(
   _estadoPrevio: EstadoFormulario,

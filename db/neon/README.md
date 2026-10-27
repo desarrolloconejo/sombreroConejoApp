@@ -1,76 +1,53 @@
-# SQL para pegar en Neon
+# Cambios de esquema para Neon
 
-La maquina de desarrollo no alcanza Neon, asi que produccion se migra pegando
-SQL en el editor de su panel. Aqui va **un archivo por cambio de esquema**,
-numerado en el orden en que hay que pegarlo.
+`db/schema.sql` es **la version final del esquema** y la unica fuente: crea
+una base desde cero y, como es idempotente, tambien la pone al dia. La base de
+produccion coincide con el objeto a objeto (comparado el 2026-10-27, tras
+aplicar los cambios 01 a 22).
 
-## Reglas
+Esta carpeta guarda lo que hace falta para llevar a produccion los cambios
+que vengan, sin pegar el esquema entero sobre una base con datos.
 
-- **Primero se pega, despues se sube `main`.** Al reves, la aplicacion nueva
-  arranca contra un esquema viejo. La excepcion va marcada en la tabla: lo
-  que le QUITA algo a la version publicada se pega despues de sustituirla.
-- **Ningun archivo que se pega antes de subir rompe la version publicada.**
-  Solo anaden. Entre pegar y subir, la aplicacion sigue funcionando.
-- **Son idempotentes.** Pegar uno dos veces no rompe nada.
-- **No llevan secretos.** Donde hace falta una contrasena hay un hueco
+| Archivo | Para que |
+| --- | --- |
+| `diagnostico.sql` | Solo lee. Dice que cambios de esquema tiene una base (uno por fila, con `aplicado` true o false) y cuantos usuarios y empresas hay. Un cambio nuevo anade aqui su fila |
+| `huella.sql` | Solo lee. Lista cada objeto del esquema (columnas, funciones, politicas, vistas, indices, restricciones, triggers y permisos de `conejo_app`). Ejecutado en la base local y en Neon, las dos listas tienen que ser iguales |
+
+Los archivos 01 a 22 —toda la integracion del portal— ya estan aplicados en
+produccion y se retiraron del repositorio: siguen en el historial de git.
+
+## Un cambio nuevo
+
+Cada cambio de esquema hace dos cosas:
+
+1. Lo escribe en `db/schema.sql`, idempotente (`IF NOT EXISTS`, bloques `DO`).
+2. Entrega aqui su extracto para produccion, `NN-que-hace.sql`, con el
+   siguiente numero: **el proximo es el 23**.
+
+El extracto:
+
+- **Solo anade.** Entre pegarlo y subir `main`, la version publicada sigue
+  funcionando. Lo que le quite algo va en un archivo aparte, que se pega
+  despues de subir.
+- **Es idempotente.** Pegarlo dos veces no rompe nada.
+- **No lleva secretos.** Donde haga falta una contrasena va un hueco
   (`PEGA_AQUI_…`) que se sustituye en el editor de Neon, nunca en el archivo.
-- **No insertan datos de ejemplo.** Solo esquema y las filas de las que depende
+- **No inserta datos de ejemplo.** Solo esquema y las filas de las que depende
   la logica.
-- Cada archivo termina con una consulta de **comprobacion** y dice que
-  resultado esperar.
+- **Termina con su comprobacion**, y dice que resultado esperar.
+- Una tabla nueva con seguridad por fila trae sus politicas, y su comprobacion
+  en `prueba:permisos`.
 
-La fuente del esquema sigue siendo `db/schema.sql`. Estos archivos son el
-extracto de lo que cambia en cada entrega, para no tener que pegar el esquema
-entero sobre una base con datos.
+Como se ensaya y se aplica: `docs/operacion/despliegue.md`, seccion 3.
 
-El orden completo del despliegue —con las variables de Vercel, las
-comprobaciones y la vuelta atras— esta en `docs/despliegueProduccion.md`.
+## Por que no se conecta directo
 
-## Saber que falta
+ProtonVPN cierra el puerto 5432 de salida, asi que desde la maquina de
+desarrollo no hay `psql` contra Neon. Produccion se migra pegando el SQL en el
+editor de su panel. Para el ensayo y la aplicacion del 2026-10-27 se uso el
+protocolo de PostgreSQL por WebSocket (puerto 443, como el controlador
+serverless de Neon), con permiso expreso del responsable.
 
-`diagnostico.sql` solo lee: pegado en el editor de Neon devuelve una fila por
-archivo con `aplicado` en true o false, y cuantos usuarios y empresas hay. Se
-pega antes de empezar y despues de cada archivo.
-
-## Ensayo sobre una copia de produccion (2026-10-27)
-
-Del 01 al 21 se aplicaron sobre una rama desechable de Neon, copia de
-`production`, en el orden **01 → 05, 06, 07 → 21**, y despues otra vez enteros:
-
-- Todos entran y sus comprobaciones dan lo que dicen. El 13 fallaba con el 06
-  al final; por eso el 06 va ahora despues del 05.
-- Pegarlos dos veces no cambia nada.
-- El esquema resultante es **identico** al de la base local creada con
-  `db/schema.sql`: columnas, funciones, politicas, vistas, indices,
-  restricciones, triggers, seguridad por fila y permisos de `conejo_app`
-  (Neon va en PostgreSQL 18, que anota los NOT NULL como restricciones; se
-  descontaron).
-- Los datos siguen: 4 usuarios activos, 1 empresa, 42 aperturas. El 20
-  propone la sigla `GRUPO-MIMESA` para la empresa que hay.
-
-## Estado
-
-| Archivo | Que hace | Pegado en produccion |
-| --- | --- | --- |
-| `01-cargo-produccion.sql` | Anade el cargo `produccion` | **Aplicado el 2026-10-27** |
-| `02-sesiones.sql` | Crea la tabla `sesiones`. **Antes** de subir la aplicacion | **Aplicado el 2026-10-27** |
-| `03-acceso.sql` | Tres columnas en `usuarios` y la vista que las expone. **Antes** de subir la aplicacion | **Aplicado el 2026-10-27** |
-| `04-auditoria.sql` | Crea la tabla `auditoria`, que solo admite lineas nuevas. **Antes** de subir la aplicacion | **Aplicado el 2026-10-27** |
-| `05-rol-de-la-aplicacion.sql` | Crea el rol `conejo_app` con sus permisos y la vista `vw_usuarios_acceso`. **Lleva un hueco para la contrasena.** Antes de cambiar `DATABASE_URL` en Vercel y de subir | **Aplicado el 2026-10-27** |
-| `06-vista-sin-hash.sql` | Quita el hash de `vw_usuarios_completos`. **Va antes del 13**, que lo necesita: en este despliegue, justo despues del 05 (la version publicada no funciona contra esta base, asi que no hay a quien romper) | **Aplicado el 2026-10-27** |
-| `07-esquemas-y-correos.sql` | Crea los esquemas `portal` y `finanzas`, las funciones de sesion y `portal.correos_salida` con su politica. **Antes** de subir, despues del 05 | **Aplicado el 2026-10-27** |
-| `08-notificaciones.sql` | Crea `portal.notificaciones`, los avisos de la campana, con sus politicas. **Antes** de subir, despues del 07 | **Aplicado el 2026-10-27** |
-| `09-tasas-de-cambio.sql` | Crea `finanzas.tasas_cambio` y deja que la tarea programada escriba y notifique. **Antes** de subir, despues del 08 | **Aplicado el 2026-10-27** |
-| `10-dos-pasos.sql` | Verificacion en dos pasos: tres columnas en `usuarios`, la tabla `codigos_respaldo` y tres columnas mas en `vw_usuarios_acceso`. **Antes** de subir, despues del 05 | **Aplicado el 2026-10-27** |
-| `11-proyectos.sql` | Etapa 3: asignaciones, proyectos, piezas, copy, fases, tareas y comentarios, con sus politicas y las vistas del avance. **Antes** de subir, despues del 07 | **Aplicado el 2026-10-27** |
-| `12-hooks-herramienta.sql` | Etapa 3: `fichas_hook.tarea_id`, la ficha que cumple una tarea. **Antes** de subir, despues del 11 | **Aplicado el 2026-10-27** |
-| `13-revision-del-cliente.sql` | Etapa 4: permiso de aprobar de cada cliente (y su columna en `vw_usuarios_completos`), versiones, decisiones del cliente, almacen del modo simulado de archivos y `portal.decidir_fase_5`. **Antes** de subir, despues del 12 | **Aplicado el 2026-10-27** |
-| `14-presupuestos-y-proformas.sql` | Etapa 5: permiso de finanzas de cada cliente (y su columna en `vw_usuarios_completos`), presupuestos, proformas, renglones, contadores y sus funciones; deja a quien opera finanzas leer los proyectos. **Antes** de subir, despues del 13 | **Aplicado el 2026-10-27** |
-| `15-briefs.sql` | Etapa 6: prospectos y sus enlaces privados, briefs, versiones congeladas, aclaraciones, `brief_id` en proyectos y presupuestos, las funciones que guardan, envian y convierten, y la campana y la bandeja de salida abiertas al prospecto. **Antes** de subir, despues del 14 | **Aplicado el 2026-10-27** |
-| `16-facturas-y-pagos.sql` | Etapa 7: ajustes de finanzas (emisor, impuestos, numeracion), formatos de impresion, medios de pago, facturas, pagos y retenciones, la vista del estado de cobro y la retencion de cada empresa. Trae un formato y cuatro medios de ejemplo; el emisor nace vacio. **Antes** de subir, despues del 15 | **Aplicado el 2026-10-27** |
-| `17-comentarios-por-fase.sql` | Comentarios por fase: `fase` y `tarea_id` en `portal.comentarios_pieza`, con sus comprobaciones y un indice. Los comentarios de antes quedan como generales. **Antes** de subir, despues del 16 | **Aplicado el 2026-10-27** |
-| `18-proyecto-por-ejecutivo.sql` | Un proyecto lo puede llevar un ejecutivo de otra cuenta, que gestiona solo ese proyecto (`portal.gestiona_proyecto`); solo un administrador cambia quien lo lleva (trigger). **Antes** de subir, despues del 17 | **Aplicado el 2026-10-27** |
-| `19-avisos-a-ejecutivos.sql` | Funcion `portal.ejecutivos_de_empresa`, para avisar a los ejecutivos de una empresa de sus presupuestos. **Antes** de subir, despues del 18 | **Aplicado el 2026-10-27** |
-| `20-nomenclatura-de-archivos.sql` | Sigla de cada empresa (unica) y nombre corto de cada proyecto, con los triggers que los proponen si llegan vacios y la propuesta para lo que ya existe; `portal.orden_de_pieza`, el POST-01, POST-02 de los nombres, y `portal.proyectos_para_nombrar`, los proyectos que ofrece el armador. **Antes** de subir, despues del 19 | **Aplicado el 2026-10-27** |
-| `21-foto-y-recuperar-clave.sql` | `usuarios.foto_archivo` (donde esta la foto de perfil), la tabla `restablecimientos_clave` (el hash de cada enlace de «Olvide mi contrasena») y la bandeja de salida abierta al rol sistema. **Antes** de subir, despues del 20 | **Aplicado el 2026-10-27** |
-| `22-lecturas-de-la-tasa.sql` | `finanzas.lecturas_tasa`: una fila por cada corrida de la tarea diaria del BCV (registrada, sin novedad o rechazada), para que Ajustes de finanzas diga si la app ya leyo la tasa hoy y cuando vuelve. **Antes** de subir, despues del 21 | **Aplicado el 2026-10-27** |
+Los roles de PostgreSQL son del servidor entero: ensayar en local un archivo
+que toque `conejo_app` le cambia la contrasena, y despues hay que volver a
+ejecutar el seed.

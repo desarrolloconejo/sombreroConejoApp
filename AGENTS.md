@@ -1,18 +1,12 @@
-<!-- BEGIN:nextjs-agent-rules -->
-
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
-
 # Conejo App — contexto para modelos
 
 Lo que un asistente necesita saber antes de tocar este repositorio. El contrato
 del proyecto es `CLAUDE.md`; la guia para personas, `README.md`. Este archivo
 resume las reglas que no se deducen leyendo el codigo.
+
+**Next 16 no es el Next que conoces**: APIs, convenciones y estructura cambian.
+Antes de escribir codigo de Next, lee la guia que toque en
+`node_modules/next/dist/docs/` y haz caso de los avisos de obsolescencia.
 
 ## Que es
 
@@ -32,10 +26,10 @@ cuenta y el reporte de pagos), Facturas, Cobranza y Ajustes de finanzas para
 el admin y administracion, el brief de un prospecto
 por su enlace (`/brief/[token]`, sin cuenta), el modulo de Hooks y Nombres
 de archivo (el armador de la nomenclatura, para todo el equipo).
-Esta en marcha la integracion de un portal completo (briefs, proyectos con
-bateria de fases y tareas, revision del cliente, finanzas). **Antes de
-construir nada de eso, lee `docs/planIntegracionPortal.md`**: es el plan
-maestro, con las decisiones tomadas y las que siguen abiertas.
+La integracion del portal (briefs, proyectos con bateria de fases y tareas,
+revision del cliente, finanzas) esta terminada y **publicada desde el
+2026-10-27**. Sus decisiones siguen en `docs/planes/planIntegracionPortal.md`:
+leelo antes de cambiar algo de esos modulos.
 
 ## Documentos
 
@@ -43,20 +37,17 @@ maestro, con las decisiones tomadas y las que siguen abiertas.
 | --- | --- |
 | `CLAUDE.md` | Contrato: stack, principios, alcance por fases |
 | `README.md` | Puesta en marcha, comandos, convenciones, despliegue |
-| `docs/planIntegracionPortal.md` | Plan maestro de la integracion. Manda sobre los demas |
-| `docs/verificacionManual.md` | Lo que el responsable prueba a mano, etapa por etapa. Cada etapa anade su seccion al cerrarse |
-| `docs/reglasBateria.md` | Reglas de proyectos, piezas, fases y tareas, extraidas del paquete. Para la etapa 3 sustituye a `appFacturas` |
-| `docs/despliegueProduccion.md` | Guia viva del despliegue: SQL, variables y pasos, por etapa |
-| `docs/informeIntegracion.md` | Que hace la aplicacion hoy, como se probo y la guia para probarla |
-| `docs/guiaFinanzas.md` | Como funciona finanzas de punta a punta, para el equipo: estados, quien hace que, tasa, pagos y cobranza |
-| `docs/informePendientes.md` | Lo que falta para usarla de verdad, por momento y con quien aporta cada dato |
-| `docs/pruebaGoogleReal.md` | Como pasar Drive y Gmail a modo real en local, que comprobar y como cambiar a la cuenta de la empresa |
-| `docs/planPiloto.md` | Como se hace la prueba con un cliente real: preparacion, semanas, que observar y como volver atras |
-| `docs/pendientesIntegracion.md` | Valores de ejemplo que hay que sustituir, decisiones del negocio que faltan y lo que no se hizo. Cada etapa lo actualiza; de aqui sale el informe final |
-| `docs/planAuditoriaRepositorio.md` | Plan de revision del repositorio con Context7. Ejecutado |
-| `docs/informeAuditoria.md` | Resultado de esa revision: que se corrigio y que quedo para el plan del portal |
-| `docs/planMejoraDiseno.md` | Plan de mejora del diseno y navegacion movil nueva |
-| `docs/mudanzaVps.md` | Lo que cambia el dia que la app deje Vercel, y las copias de seguridad de la base |
+| `docs/pendientes.md` | El unico registro de lo que falta: valores de ejemplo, decisiones del negocio y lo que no se hizo |
+| `docs/verificacionManual.md` | Lo que el responsable prueba a mano, por modulo |
+| `docs/operacion/despliegue.md` | Como se publica un cambio, el estado de produccion y sus variables |
+| `docs/operacion/google.md` | Drive y Gmail en modo real, y el cambio a la cuenta de la empresa |
+| `docs/operacion/mudanzaVps.md` | Lo que cambia el dia que la app deje Vercel, y las copias de seguridad de la base |
+| `docs/negocio/guiaFinanzas.md` | Como funciona finanzas de punta a punta, para el equipo |
+| `docs/negocio/reglasBateria.md` | Reglas de proyectos, piezas, fases y tareas, extraidas del paquete original |
+| `docs/negocio/planPiloto.md` | Como se hace la prueba con un cliente real |
+| `docs/planes/planIntegracionPortal.md` | El plan de la integracion, ya ejecutada: sus decisiones siguen valiendo |
+| `docs/planes/planMejoraDiseno.md` | Plan de mejora del diseno y navegacion movil. **Pendiente** |
+| `db/neon/README.md` | Como se lleva un cambio de esquema a produccion |
 
 El paquete de especificacion original del portal vive fuera, en la carpeta
 hermana `appFacturas` (reglas de negocio de fases, briefs y finanzas, maquetas).
@@ -80,8 +71,14 @@ src/lib/correos/  lo que dice cada correo, como funciones puras
 src/lib/finanzas/ criterio de finanzas como funciones puras, y sus tareas
 src/app/api/cron/ tareas programadas: sin sesion, protegidas por CRON_SECRET
 src/proxy.ts      barrera de rutas (en Next 16 sustituye a middleware.ts)
-db/               schema.sql, seed, generador de SQL de produccion, pruebas
-db/neon/          SQL numerado para pegar en Neon, un archivo por cambio
+db/               schema.sql (version final, igual a produccion), seed,
+                  generador de SQL para una base nueva, pruebas
+db/neon/          cambios de esquema para pegar en Neon (desde el 23), su
+                  diagnostico y la huella para comparar con produccion
+scripts/          Google en el host: autorizar, probar Drive y Gmail, separar
+                  y limpiar las carpetas de Drive
+docs/             pendientes.md y verificacionManual.md; operacion/ (despliegue,
+                  Google, VPS), negocio/ (finanzas, bateria, piloto), planes/
 tests/            Playwright: unitarias e integracion
 ```
 
@@ -264,7 +261,7 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   `/api/pagos/[id]/comprobante`. Lo que no se ve responde 404.
 - Un comprobante de pago se sube con `subirArchivo({ carpeta: "comprobantes" })`
   antes de la transaccion, como las versiones de las piezas.
-- Lo que nace con valores de ejemplo se anota en `docs/pendientesIntegracion.md`.
+- Lo que nace con valores de ejemplo se anota en `docs/pendientes.md`.
 - Un proyecto lo lleva **solo un ejecutivo de cuentas**; los
   administradores no. Si lo abre un ejecutivo, lo lleva el. **Solo un
   administrador elige o cambia quien lo lleva**, y puede darselo a un
@@ -428,11 +425,13 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
 
 - Produccion corre en Vercel con la base en Neon. **El disco es de solo
   lectura**: el codigo de servidor no escribe archivos.
-- La maquina de desarrollo no alcanza Neon. Produccion se migra **pegando SQL**
-  en su editor; lo hace el responsable, no un asistente. Cada cambio de esquema
-  entrega su archivo en `db/neon/`, idempotente, sin secretos y con su
-  consulta de comprobacion; `db/neon/README.md` lleva la lista. Lo que se
-  pega antes de subir **solo anade**: nada que rompa la version publicada.
+- La maquina de desarrollo no alcanza Neon por el 5432. Produccion se migra
+  **pegando SQL** en su editor; lo hace el responsable, no un asistente, salvo
+  que lo pida expresamente. `db/schema.sql` es la version final y coincide
+  con produccion; cada cambio de esquema nuevo entrega ademas su extracto en
+  `db/neon/` (el proximo es el 23), idempotente, sin secretos y con su
+  consulta de comprobacion. Lo que se pega antes de subir **solo anade**: nada
+  que rompa la version publicada.
   Lo que le quita algo va en un archivo aparte, para despues de publicar.
 - Los roles de PostgreSQL son del servidor entero, no de una base. Ensayar un
   archivo de `db/neon/` que toque `conejo_app` cambia su contrasena en local:
@@ -488,14 +487,11 @@ valida a mano en `src/lib/validaciones.ts`.
 
 - **Una rama por funcionalidad**, que se une a `main` cuando esta terminada y
   probada. Subir `main` publica en Vercel.
-- **No se publica hasta terminar la integracion del portal.** `main` se
-  acumula en local; decidido por el responsable el 2026-10-13. No se sube ni
-  se propone subir a mitad.
-- **Todo lo que cambie produccion se anota en `docs/despliegueProduccion.md`
-  antes de dar la rama por terminada**: el archivo de `db/neon/` en su
-  seccion (antes o despues de subir), las variables de entorno, lo que hay
-  que comprobar y lo que quedo sin probar. Es lo que se seguira el dia del
-  despliegue.
+- **El push a `main` lo hace el responsable**, cuando el SQL y las
+  variables que necesite el cambio ya estan en produccion.
+- **Todo lo que cambie produccion se anota en `docs/operacion/despliegue.md`
+  antes de dar la rama por terminada**: el archivo de `db/neon/`, las
+  variables de entorno y su fila en el registro de despliegues.
 - Commits en espanol, descriptivos, que digan solo lo que cambia ese commit.
 - Antes de dar algo por hecho: `lint`, `typecheck` y las pruebas que toquen.
 - Lo que cambie como se usa o se construye el proyecto se refleja en `README.md`

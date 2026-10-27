@@ -2,7 +2,7 @@
  * Las facturas de ejemplo de la semilla de desarrollo.
  *
  * Llena el emisor con datos FICTICIOS (en produccion nace vacio y lo llena el
- * responsable, docs/pendientesIntegracion.md V1), deja una tasa del dia si no
+ * responsable, docs/pendientes.md V1), deja una tasa del dia si no
  * la hay, factura la proforma emitida del empaque y deja un pago reportado
  * por el cliente, por confirmar.
  *
