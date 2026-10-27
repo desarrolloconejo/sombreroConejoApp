@@ -23,6 +23,15 @@ alcanza Neon, y la produccion se migra pegando SQL en su editor.
 - Los 21 archivos se ensayaron sobre una copia de `production`: ver
   `db/neon/README.md`. Resultado: entran todos con el **06 justo despues del
   05**, y el esquema queda identico al local.
+- **Aplicados en `production` el 2026-10-27** (del 01 al 22, en ese orden y
+  con el 06 tras el 05), por el asistente con autorizacion expresa del
+  responsable, por WebSocket (el 5432 sigue cerrado). Antes se creo la rama
+  de respaldo `respaldo-antes-integracion-2026-10-27`. Todas las
+  comprobaciones dieron lo esperado, el esquema es identico al local y siguen
+  los 4 usuarios, la empresa y las 42 aperturas. **La seccion 2 ya esta
+  hecha.** El rol `conejo_app` nacio con una contrasena al azar que nadie
+  conoce: el responsable le pone la suya (`ALTER ROLE conejo_app PASSWORD
+  '…'` en el editor de Neon) antes de cambiar `DATABASE_URL` en Vercel.
 
 ## Como leer esta guia
 
