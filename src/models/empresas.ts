@@ -13,6 +13,7 @@ import type {
   FiltrosEmpresas,
   NombreEmpresa,
   Pagina,
+  SiglaEmpresa,
 } from "@/types";
 
 /**
@@ -70,6 +71,13 @@ export async function listarActivas(): Promise<Empresa[]> {
 export async function nombres(): Promise<NombreEmpresa[]> {
   return consultar<NombreEmpresa>(
     "SELECT id, nombre FROM empresas ORDER BY lower(nombre)",
+  );
+}
+
+/** Las activas con su sigla: los clientes del armador de nombres de archivo. */
+export async function siglas(): Promise<SiglaEmpresa[]> {
+  return consultar<SiglaEmpresa>(
+    "SELECT id, nombre, sigla FROM empresas WHERE activo ORDER BY lower(nombre)",
   );
 }
 

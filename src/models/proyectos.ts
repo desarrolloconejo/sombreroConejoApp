@@ -16,6 +16,7 @@ import type {
   Pagina,
   PersonaBreve,
   Proyecto,
+  ProyectoParaNombrar,
 } from "@/types";
 
 /**
@@ -274,6 +275,21 @@ export async function gestiona(id: number, ejecutor: Ejecutor): Promise<boolean>
   );
 
   return fila?.gestiona ?? false;
+}
+
+/**
+ * Los proyectos en marcha que quien mira alcanza, con su nombre corto: los
+ * que ofrece el armador de nombres de archivo. La base decide cuales ve.
+ */
+export async function paraNombrar(ejecutor: Ejecutor): Promise<ProyectoParaNombrar[]> {
+  return consultar<ProyectoParaNombrar>(
+    `SELECT id, empresa_id AS "empresaId", nombre, nombre_corto AS "nombreCorto"
+     FROM portal.proyectos
+     WHERE estado IN ('activo', 'pausado')
+     ORDER BY lower(nombre)`,
+    [],
+    ejecutor,
+  );
 }
 
 /** Crea el proyecto y devuelve su id. Las piezas se crean aparte. */

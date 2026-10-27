@@ -1,0 +1,1 @@
+export { ArmadorNombres } from "./ArmadorNombres";

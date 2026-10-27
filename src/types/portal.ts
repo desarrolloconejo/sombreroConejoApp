@@ -264,6 +264,14 @@ export type DatosNuevaTarea = {
 };
 
 /** Lo que hace falta para crear un proyecto. */
+/** Un proyecto tal como lo necesita el armador de nombres de archivo. */
+export type ProyectoParaNombrar = {
+  id: number;
+  empresaId: number;
+  nombre: string;
+  nombreCorto: string;
+};
+
 export type DatosNuevoProyecto = {
   empresaId: number;
   ejecutivoId: number;

@@ -27,6 +27,7 @@ export type {
   FiltrosEmpresas,
   ResumenEmpresa,
   NombreEmpresa,
+  SiglaEmpresa,
   Trabajador,
   Cliente,
 } from "./organizacion";
@@ -145,6 +146,7 @@ export type {
   DatosNuevaPieza,
   DatosNuevaTarea,
   DatosNuevoProyecto,
+  ProyectoParaNombrar,
   FiltrosProyectos,
   OrigenVersion,
   DecisionRevision,

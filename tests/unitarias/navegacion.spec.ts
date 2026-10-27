@@ -28,7 +28,7 @@ test("el administrador ve todas las secciones que tienen algo, en su orden", () 
   expect(menuDe(ADMIN)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
     { seccion: "Trabajo", modulos: ["Tablero", "Proyectos", "Briefs", "Mi trabajo"] },
-    { seccion: "Herramientas", modulos: ["Hooks"] },
+    { seccion: "Herramientas", modulos: ["Hooks", "Nombres de archivo"] },
     {
       seccion: "Finanzas",
       modulos: ["Presupuestos", "Proformas", "Facturas", "Cobranza", "Ajustes de finanzas"],
@@ -45,7 +45,7 @@ test("redes ve Herramientas y no ve Sistema", () => {
   expect(menuDe(REDES)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
     { seccion: "Trabajo", modulos: ["Mi trabajo"] },
-    { seccion: "Herramientas", modulos: ["Hooks"] },
+    { seccion: "Herramientas", modulos: ["Hooks", "Nombres de archivo"] },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
 });
@@ -54,6 +54,7 @@ test("un ejecutivo de cuentas ve Tablero, Proyectos y Briefs en Trabajo, y no ve
   expect(menuDe(CUENTAS)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
     { seccion: "Trabajo", modulos: ["Tablero", "Proyectos", "Briefs", "Mi trabajo"] },
+    { seccion: "Herramientas", modulos: ["Nombres de archivo"] },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
 });
@@ -62,6 +63,7 @@ test("diseno ve Mi trabajo y nada mas de Trabajo", () => {
   expect(menuDe(DISENO)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
     { seccion: "Trabajo", modulos: ["Mi trabajo"] },
+    { seccion: "Herramientas", modulos: ["Nombres de archivo"] },
     { seccion: null, modulos: ["Mi perfil"] },
   ]);
 });
@@ -70,6 +72,7 @@ test("administracion ve Finanzas, y una seccion sin modulos no deja su rotulo", 
   // No ve nada de Trabajo: su seccion no aparece, ni vacia.
   expect(menuDe(ADMINISTRACION)).toEqual([
     { seccion: "General", modulos: ["Inicio"] },
+    { seccion: "Herramientas", modulos: ["Nombres de archivo"] },
     {
       seccion: "Finanzas",
       modulos: ["Presupuestos", "Proformas", "Facturas", "Cobranza", "Ajustes de finanzas"],

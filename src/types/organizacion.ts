@@ -127,6 +127,13 @@ export type NombreEmpresa = {
   nombre: string;
 };
 
+/** Una empresa tal como la necesita el armador de nombres de archivo. */
+export type SiglaEmpresa = {
+  id: number;
+  nombre: string;
+  sigla: string;
+};
+
 /** Vinculo de un usuario con el personal de la empresa. */
 export type Trabajador = {
   id: number;
