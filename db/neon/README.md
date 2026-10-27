@@ -26,6 +26,12 @@ entero sobre una base con datos.
 El orden completo del despliegue —con las variables de Vercel, las
 comprobaciones y la vuelta atras— esta en `docs/despliegueProduccion.md`.
 
+## Saber que falta
+
+`diagnostico.sql` solo lee: pegado en el editor de Neon devuelve una fila por
+archivo con `aplicado` en true o false, y cuantos usuarios y empresas hay. Se
+pega antes de empezar y despues de cada archivo.
+
 ## Estado
 
 | Archivo | Que hace | Pegado en produccion |
