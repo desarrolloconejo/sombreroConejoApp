@@ -1,8 +1,14 @@
 # Guia de despliegue a produccion
 
-Estado: **en preparacion**. No se publica nada hasta que la integracion del
-portal este completa y probada en local. Ultima etapa anotada: **2**, mas la
-verificacion en dos pasos, que se adelanto desde la etapa 8.
+Estado: **publicado el 2026-10-27** (commit `eefff89`, y el arreglo de la
+carpeta de Drive despues). SQL del 01 al 22 aplicado, variables cargadas en
+Vercel y comprobado en produccion: login, verificacion en dos pasos con Google
+Authenticator, correo real (incluido el enlace de «Olvide mi contrasena») y la
+foto de perfil en Drive. **Falta**: lanzar la tarea de la tasa y ver que el BCV
+responde a Vercel, y llenar el emisor antes de facturar.
+
+Lo que sigue sirve para el proximo despliegue: cada cambio de esquema anade su
+archivo a `db/neon/` y su fila aqui.
 
 Este documento se va llenando etapa a etapa. Cada rama que cambie algo de
 produccion —esquema, variables de entorno, un paso manual— lo anota aqui antes
