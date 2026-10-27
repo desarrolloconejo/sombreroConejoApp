@@ -32,6 +32,22 @@ comprobaciones y la vuelta atras— esta en `docs/despliegueProduccion.md`.
 archivo con `aplicado` en true o false, y cuantos usuarios y empresas hay. Se
 pega antes de empezar y despues de cada archivo.
 
+## Ensayo sobre una copia de produccion (2026-10-27)
+
+Del 01 al 21 se aplicaron sobre una rama desechable de Neon, copia de
+`production`, en el orden **01 → 05, 06, 07 → 21**, y despues otra vez enteros:
+
+- Todos entran y sus comprobaciones dan lo que dicen. El 13 fallaba con el 06
+  al final; por eso el 06 va ahora despues del 05.
+- Pegarlos dos veces no cambia nada.
+- El esquema resultante es **identico** al de la base local creada con
+  `db/schema.sql`: columnas, funciones, politicas, vistas, indices,
+  restricciones, triggers, seguridad por fila y permisos de `conejo_app`
+  (Neon va en PostgreSQL 18, que anota los NOT NULL como restricciones; se
+  descontaron).
+- Los datos siguen: 4 usuarios activos, 1 empresa, 42 aperturas. El 20
+  propone la sigla `GRUPO-MIMESA` para la empresa que hay.
+
 ## Estado
 
 | Archivo | Que hace | Pegado en produccion |
@@ -41,7 +57,7 @@ pega antes de empezar y despues de cada archivo.
 | `03-acceso.sql` | Tres columnas en `usuarios` y la vista que las expone. **Antes** de subir la aplicacion | Pendiente |
 | `04-auditoria.sql` | Crea la tabla `auditoria`, que solo admite lineas nuevas. **Antes** de subir la aplicacion | Pendiente |
 | `05-rol-de-la-aplicacion.sql` | Crea el rol `conejo_app` con sus permisos y la vista `vw_usuarios_acceso`. **Lleva un hueco para la contrasena.** Antes de cambiar `DATABASE_URL` en Vercel y de subir | Pendiente |
-| `06-vista-sin-hash.sql` | Quita el hash de `vw_usuarios_completos`. **Despues** de publicar: la version anterior lo necesita para iniciar sesion | Pendiente |
+| `06-vista-sin-hash.sql` | Quita el hash de `vw_usuarios_completos`. **Va antes del 13**, que lo necesita: en este despliegue, justo despues del 05 (la version publicada no funciona contra esta base, asi que no hay a quien romper) | Pendiente |
 | `07-esquemas-y-correos.sql` | Crea los esquemas `portal` y `finanzas`, las funciones de sesion y `portal.correos_salida` con su politica. **Antes** de subir, despues del 05 | Pendiente |
 | `08-notificaciones.sql` | Crea `portal.notificaciones`, los avisos de la campana, con sus politicas. **Antes** de subir, despues del 07 | Pendiente |
 | `09-tasas-de-cambio.sql` | Crea `finanzas.tasas_cambio` y deja que la tarea programada escriba y notifique. **Antes** de subir, despues del 08 | Pendiente |

@@ -11,6 +11,19 @@ de darse por terminada. El dia del despliegue se sigue de arriba abajo.
 Los pasos de la base los hace el responsable: la maquina de desarrollo no
 alcanza Neon, y la produccion se migra pegando SQL en su editor.
 
+**Estado real, leido el 2026-10-27** (Neon y Vercel, solo lectura):
+
+- Vercel publica `1e57306` (etapas 1 y 2 y dos pasos), que no funciona porque
+  Neon no tiene ninguno de los archivos. Se sabia al subirlo.
+- Vercel solo tiene `DATABASE_URL` (la del dueno) y `JWT_SECRET`, en
+  produccion **y en preview**: los despliegues de preview apuntan a la base
+  de produccion.
+- Neon esta en el esquema de la fase 1 mas Hooks: 4 usuarios, todos admin, 1
+  empresa, 0 clientes, 42 aperturas. No existe `conejo_app`.
+- Los 21 archivos se ensayaron sobre una copia de `production`: ver
+  `db/neon/README.md`. Resultado: entran todos con el **06 justo despues del
+  05**, y el esquema queda identico al local.
+
 ## Como leer esta guia
 
 | Seccion | Cuando |
@@ -90,6 +103,11 @@ Sus tres comprobaciones:
 heredo privilegios que no debe tener, y la seguridad por fila seria decorativa.
 No se cambia Vercel ni se sube hasta resolverlo.
 
+**Despues del 05 va el 06** (`db/neon/06-vista-sin-hash.sql`, seccion 6):
+el 13 y el 14 necesitan la vista sin el hash. La regla de «despues de subir»
+protegia a la version publicada, y la de hoy no funciona contra esta base.
+Debe salir `columnas_con_hash = 0` y el numero de usuarios (4).
+
 ### Etapa 2 — Externos y avisos
 
 Necesitan el rol `conejo_app`: van despues del 5.
@@ -158,8 +176,10 @@ rol `prospecto`, que la version publicada no usa.
 | 17 | `db/neon/17-comentarios-por-fase.sql` | En `portal.comentarios_pieza`, la fase y la tarea de cada comentario (los de antes quedan como generales), dos comprobaciones y un indice | `columnas = 2`, `restricciones = 2` e `indice = 1` |
 | 18 | `db/neon/18-proyecto-por-ejecutivo.sql` | Un proyecto lo puede llevar un ejecutivo de otra cuenta, que gestiona solo ese proyecto: funcion `portal.gestiona_proyecto`, `gestiona_pieza` la usa, politicas de proyectos y piezas, y trigger para que solo un administrador cambie quien lo lleva | `funcion = 1`, `pieza_la_usa = true`, `trigger = 1` y `politicas = 3` |
 | 19 | `db/neon/19-avisos-a-ejecutivos.sql` | Funcion `portal.ejecutivos_de_empresa`: los ejecutivos de una empresa, para avisarles de sus presupuestos aunque quien avisa (administracion, el cliente) no lea las asignaciones | `funcion = 1` y `con_search_path = true` |
-| 20 | `db/neon/20-nomenclatura-de-archivos.sql` | La nomenclatura de los archivos: `empresas.sigla` (unica) y `portal.proyectos.nombre_corto`, los triggers que los proponen a partir del nombre si llegan vacios, la propuesta para las empresas y proyectos que ya existen, `portal.orden_de_pieza` y `portal.proyectos_para_nombrar` (nombre y nombre corto de los proyectos en marcha, para el armador) |
-| 21 | `db/neon/21-foto-y-recuperar-clave.sql` | La foto de perfil en Drive (`usuarios.foto_archivo`) y «Olvide mi contrasena»: la tabla `restablecimientos_clave` y las politicas de la bandeja de salida, que aceptan al rol sistema | `columna = 1`, `tabla = 1`, `permisos = 3` y `politicas_con_sistema = 3` | `sin_sigla = 0`, `sin_nombre_corto = 0` y `siglas_repetidas = 0`. **Despues, revisar a ojo la lista de siglas** que devuelve y corregir en Empresas las que no gusten |
+| 20 | `db/neon/20-nomenclatura-de-archivos.sql` | La nomenclatura de los archivos: `empresas.sigla` (unica) y `portal.proyectos.nombre_corto`, los triggers que los proponen a partir del nombre si llegan vacios, la propuesta para las empresas y proyectos que ya existen, `portal.orden_de_pieza` y `portal.proyectos_para_nombrar` (nombre y nombre corto de los proyectos en marcha, para el armador) | `sin_sigla = 0`, `sin_nombre_corto = 0` y `siglas_repetidas = 0`. **Despues, revisar a ojo la lista de siglas** que devuelve (en el ensayo: `GRUPO-MIMESA`) y corregir en Empresas las que no gusten |
+| 21 | `db/neon/21-foto-y-recuperar-clave.sql` | La foto de perfil en Drive (`usuarios.foto_archivo`) y «Olvide mi contrasena»: la tabla `restablecimientos_clave` y las politicas de la bandeja de salida, que aceptan al rol sistema | `columna = 1`, `tabla = 1`, `permisos = 3` y `politicas_con_sistema = 3` |
+
+Al terminar, `db/neon/diagnostico.sql`: los 21 en `true`.
 
 Trae un formato de impresion de ejemplo (carta) y cuatro medios de pago de
 ejemplo sin datos bancarios. **El emisor nace vacio: no se puede emitir
@@ -176,7 +196,7 @@ En Settings → Environment Variables, entorno de produccion.
 
 | Variable | Accion | Valor |
 | --- | --- | --- |
-| `DATABASE_URL` | **Cambiar** | La misma cadena agrupada de Neon (host con `-pooler`, `sslmode=verify-full`), con usuario `conejo_app` y su contrasena en lugar de los del dueno. Marcada como Sensitive |
+| `DATABASE_URL` | **Cambiar** | La misma cadena agrupada de Neon (host con `-pooler`, `sslmode=verify-full`), con usuario `conejo_app` y su contrasena en lugar de los del dueno. Marcada como Sensitive. **Solo en Production**: hoy esta tambien en Preview, y una rama de preview escribiria en la base real |
 | `JWT_EXPIRACION` | **Borrar** | Ya no se usa |
 | `JWT_SECRET` | Comprobar | Que **no** sea el de ejemplo de `.env.example`: la version nueva lo rechaza en produccion y no arrancaria |
 | `SESION_ACCESO_SEGUNDOS`, `SESION_HORAS`, `SESION_INACTIVIDAD_MINUTOS` | No definir | Tienen valor por defecto (30 minutos, 12 horas, 15 minutos). Solo existen para pruebas |
@@ -359,6 +379,9 @@ En la aplicacion publicada, con la cuenta de administrador.
 ## 6. SQL que se pega despues de subir
 
 Solo con la seccion 5 en verde.
+
+En el despliegue de la integracion esta seccion queda vacia: el 06 se pega
+despues del 05 (ver seccion 2). Lo de abajo sirve para entender el archivo.
 
 ### Etapa 1
 

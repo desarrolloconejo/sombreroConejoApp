@@ -12,6 +12,10 @@
 -- Antes de pegarlo: comprueba en la aplicacion publicada que puedes cerrar
 -- sesion y volver a entrar.
 --
+-- EXCEPCION, la del despliegue de la integracion: el 13 y el 14 necesitan
+-- la vista sin hash, y la version publicada (1e57306) nunca funciono contra
+-- esta base. Ese dia se pega justo despues del 05.
+--
 -- Idempotente. Va en una transaccion: si algo falla, la vista anterior sigue
 -- en su sitio.
 -- ===========================================================================
