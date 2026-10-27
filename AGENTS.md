@@ -203,7 +203,11 @@ primera la impone el lint: `src/components/**` no puede importar `models/` ni
   esas rutas aunque el cargo no toque (`RUTAS_POR_TAREA`), y la page decide
   con su guardia (`requerirHooks`). Sin el parametro, la regla del cargo es
   la de siempre.
-- La foto de perfil se guarda en Drive (`ConejoApp/Perfiles`) y se entrega
+- Drive tiene dos raices en la misma cuenta: `ConejoApp/` es de
+  produccion (sus ids solo van en Vercel) y desarrollo usa `DRIVE_RAIZ`
+  (`ConejoApp-Desarrollo`). Los scripts de `scripts/drive*.mjs` nunca
+  escriben ni limpian `ConejoApp/` salvo `drive:separar`, que solo la crea.
+- La foto de perfil se guarda en Drive (`Perfiles` de su raiz) y se entrega
   por `/api/fotos/[usuarioId]` a cualquiera con sesion. Donde esta guardada
   vive en `usuarios.foto_archivo`, que no sale en ninguna vista; `foto_url` es
   la ruta de la app, con `?v=` (que lleva la extension) para que el navegador

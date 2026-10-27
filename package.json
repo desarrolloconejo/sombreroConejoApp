@@ -18,6 +18,8 @@
     "sql:produccion": "node db/generarSql.mts",
     "drive:probar": "node --env-file=.env scripts/driveProbar.mjs",
     "google:autorizar": "node --env-file=.env scripts/driveProbar.mjs --reautorizar",
+    "drive:separar": "node --env-file=.env scripts/driveSeparar.mjs",
+    "drive:limpiar": "node --env-file=.env scripts/driveLimpiar.mjs",
     "correo:probar": "node --env-file=.env scripts/correoProbar.mjs",
     "test": "playwright test",
     "test:unitarias": "playwright test --project=unitarias",

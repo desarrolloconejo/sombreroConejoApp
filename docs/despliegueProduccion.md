@@ -221,7 +221,7 @@ En Settings → Environment Variables, entorno de produccion.
 | Variable | Accion | Valor |
 | --- | --- | --- |
 | `DRIVE_CLIENT_ID`, `SECRET_DRIVE_KEY1`, `DRIVE_REFRESH_TOKEN` | **Anadir** | Las que deja `npm run drive:probar` en el `.env` local. Marcadas como Sensitive. Son las mismas que usaran los comprobantes en la etapa 7 |
-| `DRIVE_CARPETA_PIEZAS_ID` | **Anadir** | El id de `ConejoApp/Piezas`, que tambien deja `drive:probar` (hay que volver a ejecutarlo: antes solo creaba la de comprobantes) |
+| `DRIVE_CARPETA_PIEZAS_ID` | **Anadir** | El id de `ConejoApp/Piezas`, la carpeta **de produccion**. Lo imprime `npm run drive:separar` (se puede repetir: vuelve a imprimir los mismos). **No** es el del `.env` local: ese es el de `ConejoApp-Desarrollo` |
 | `ARCHIVOS_MODO` | No definir | Sin definir vale `real`: las versiones van a Drive. `simulado` las guarda en la base, hasta 4 MB, y es solo para desarrollo |
 
 Sin las variables de Drive, subir un archivo falla con un mensaje claro; las
@@ -243,8 +243,14 @@ publicada sigue con la conexion anterior hasta que se suba.
 
 | Variable | Accion | Valor |
 | --- | --- | --- |
-| `DRIVE_CARPETA_PERFILES_ID` | **Anadir** | El id de `ConejoApp/Perfiles`, que deja `npm run drive:probar` en el `.env` local. Sin ella, subir la foto de perfil falla con un mensaje claro |
-| `DRIVE_CARPETA_COMPROBANTES_ID` | **Anadir** si no esta | El id de `ConejoApp/Comprobantes`, que deja `npm run drive:probar` en el `.env` local. Sin ella, reportar un pago con comprobante falla con un mensaje claro |
+| `DRIVE_CARPETA_PERFILES_ID` | **Anadir** | El id de `ConejoApp/Perfiles` de produccion, que imprime `npm run drive:separar`. Sin ella, subir la foto de perfil falla con un mensaje claro |
+| `DRIVE_CARPETA_COMPROBANTES_ID` | **Anadir** | El id de `ConejoApp/Comprobantes` de produccion, que imprime `npm run drive:separar`. Sin ella, reportar un pago con comprobante falla con un mensaje claro |
+
+**Drive de desarrollo y de produccion estan separados** (2026-10-27): la
+misma cuenta, pero desarrollo guarda en `ConejoApp-Desarrollo/` (`DRIVE_RAIZ`
+en el `.env`) y produccion en `ConejoApp/`, que nacio vacia. Los archivos de
+las pruebas quedaron en la de desarrollo; `npm run drive:limpiar` los lista y,
+con `-- --confirmar`, los manda a la papelera.
 
 ---
 
@@ -315,7 +321,7 @@ En la aplicacion publicada, con la cuenta de administrador.
       una empresa de prueba.
 - [ ] Con un proyecto de prueba de esa empresa: en la fase 3, subir una imagen
       (Drive) y, en la fase 4, marcarla «Para el cliente» y completar la fase.
-      La version aparece en Drive, en `ConejoApp/Piezas`, con el nombre
+      La version aparece en Drive, en `ConejoApp/Piezas` (la de produccion), con el nombre
       estandar del estudio.
 - [ ] Con la cuenta del cliente: el inicio dice que una pieza espera su
       revision; la imagen se ve; «Descargar» no aparece hasta aprobarla.

@@ -13,8 +13,9 @@
  *   1. Si no hay DRIVE_REFRESH_TOKEN, o se pide con --reautorizar, pide la
  *      autorizacion en el navegador y lo guarda en el .env. Dice que
  *      permisos concedio Google: sin el de Gmail, el correo real no sale.
- *   2. Crea ConejoApp/Comprobantes y ConejoApp/Piezas si no existen, y guarda
- *      sus ids en el .env.
+ *   2. Crea la carpeta de DESARROLLO (ConejoApp-Desarrollo, o DRIVE_RAIZ) con
+ *      Piezas, Comprobantes y Perfiles si no existen, y guarda sus ids en el
+ *      .env. La de produccion no la toca: es cosa de npm run drive:separar.
  *   3. Sube un archivo de prueba, lo vuelve a leer y lo borra.
  *
  * No usa ninguna libreria: la API de Drive es HTTP y Node trae fetch.
@@ -32,48 +33,23 @@
  * descarta sin avisar y este script lo dice.
  */
 import { randomBytes } from "node:crypto";
-import { appendFile, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
-import { join } from "node:path";
 
-const RAIZ = join(import.meta.dirname, "..");
-const ARCHIVO_ENV = join(RAIZ, ".env");
+import {
+  API,
+  API_SUBIDA,
+  arbol,
+  guardarEnEnv,
+  pedir,
+  raizDesarrollo,
+  renovar,
+} from "./driveComun.mjs";
 
 const PUERTO = 53682;
 const REDIRECCION = `http://127.0.0.1:${PUERTO}`;
 const ALCANCE_DRIVE = "https://www.googleapis.com/auth/drive.file";
 const ALCANCE_GMAIL = "https://www.googleapis.com/auth/gmail.send";
 const REAUTORIZAR = process.argv.includes("--reautorizar");
-
-const CARPETAS = ["ConejoApp", "Comprobantes"];
-const TIPO_CARPETA = "application/vnd.google-apps.folder";
-
-const API = "https://www.googleapis.com/drive/v3";
-const API_SUBIDA = "https://www.googleapis.com/upload/drive/v3";
-
-/** Escribe o reemplaza una variable del .env sin tocar las demas. */
-async function guardarEnEnv(clave, valor) {
-  const contenido = await readFile(ARCHIVO_ENV, "utf8");
-  const linea = new RegExp(`^${clave}=.*$`, "m");
-
-  if (linea.test(contenido)) {
-    await writeFile(ARCHIVO_ENV, contenido.replace(linea, () => `${clave}=${valor}`));
-  } else {
-    await appendFile(ARCHIVO_ENV, `${contenido.endsWith("\n") ? "" : "\n"}${clave}=${valor}\n`);
-  }
-}
-
-/** Una peticion a Google que falla con el mensaje que Google devuelve. */
-async function pedir(url, opciones) {
-  const respuesta = await fetch(url, opciones);
-  const texto = await respuesta.text();
-
-  if (!respuesta.ok) {
-    throw new Error(`Google respondio ${respuesta.status}: ${texto}`);
-  }
-
-  return texto ? JSON.parse(texto) : null;
-}
 
 /** Espera a que Google devuelva el codigo de autorizacion al puerto local. */
 function esperarCodigo(estado) {
@@ -171,49 +147,6 @@ async function revisarPermisos(token) {
   }
 }
 
-/** Cambia el refresh token por un token de acceso de una hora. */
-async function renovar(clientId, secreto, refreshToken) {
-  const tokens = await pedir("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: secreto,
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }),
-  });
-
-  return tokens.access_token;
-}
-
-/** Devuelve el id de la carpeta, creandola dentro de `padre` si no existe. */
-async function carpeta(token, nombre, padre) {
-  const consulta = [
-    `name = '${nombre}'`,
-    `mimeType = '${TIPO_CARPETA}'`,
-    `'${padre}' in parents`,
-    "trashed = false",
-  ].join(" and ");
-
-  const url = new URL(`${API}/files`);
-  url.searchParams.set("q", consulta);
-  url.searchParams.set("fields", "files(id)");
-
-  const cabeceras = { Authorization: `Bearer ${token}` };
-  const { files } = await pedir(url, { headers: cabeceras });
-
-  if (files.length > 0) return files[0].id;
-
-  const creada = await pedir(`${API}/files?fields=id`, {
-    method: "POST",
-    headers: { ...cabeceras, "Content-Type": "application/json" },
-    body: JSON.stringify({ name: nombre, mimeType: TIPO_CARPETA, parents: [padre] }),
-  });
-
-  console.log(`Carpeta creada: ${nombre}`);
-  return creada.id;
-}
-
 /** Sube un archivo pequeno, lo lee de vuelta y lo borra. */
 async function probarSubida(token, carpetaId) {
   const cabeceras = { Authorization: `Bearer ${token}` };
@@ -261,27 +194,16 @@ async function principal() {
 
   await revisarPermisos(token);
 
-  let carpetaId = "root";
-  for (const nombre of CARPETAS) {
-    carpetaId = await carpeta(token, nombre, carpetaId);
+  const raiz = raizDesarrollo();
+  const { raizId, ids } = await arbol(token, raiz);
+
+  for (const [variable, id] of Object.entries(ids)) {
+    await guardarEnEnv(variable, id);
   }
+  console.log(`Carpeta ${raiz} lista, con Piezas, Comprobantes y Perfiles`);
+  console.log(`https://drive.google.com/drive/folders/${raizId}`);
 
-  await guardarEnEnv("DRIVE_CARPETA_COMPROBANTES_ID", carpetaId);
-  console.log(`Carpeta ${CARPETAS.join("/")} lista`);
-
-  // Las versiones de las piezas, junto a los comprobantes.
-  const raiz = await carpeta(token, CARPETAS[0], "root");
-  const piezas = await carpeta(token, "Piezas", raiz);
-  await guardarEnEnv("DRIVE_CARPETA_PIEZAS_ID", piezas);
-  console.log(`Carpeta ${CARPETAS[0]}/Piezas lista`);
-
-  // Las fotos de perfil.
-  const perfiles = await carpeta(token, "Perfiles", raiz);
-  await guardarEnEnv("DRIVE_CARPETA_PERFILES_ID", perfiles);
-  console.log(`Carpeta ${CARPETAS[0]}/Perfiles lista`);
-  console.log(`https://drive.google.com/drive/folders/${carpetaId}`);
-
-  await probarSubida(token, carpetaId);
+  await probarSubida(token, ids.DRIVE_CARPETA_COMPROBANTES_ID);
 
   console.log("\nDrive funciona: la aplicacion puede guardar y leer comprobantes.");
 }

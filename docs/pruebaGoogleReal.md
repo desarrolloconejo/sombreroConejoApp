@@ -50,7 +50,7 @@ npm run google:autorizar
 
 Abre el enlace que imprime, entra con la cuenta de Google y **marca las dos
 casillas** (Drive y Gmail). Al terminar dice que permisos se concedieron, crea
-`ConejoApp/Piezas`, `ConejoApp/Comprobantes` y `ConejoApp/Perfiles` en el Drive, sube un archivo de
+`ConejoApp-Desarrollo/Piezas`, `ConejoApp-Desarrollo/Comprobantes` y `ConejoApp-Desarrollo/Perfiles` en el Drive, sube un archivo de
 prueba, lo lee y lo borra. Las dos lineas de permisos deben decir «si».
 
 ```bash
@@ -87,15 +87,15 @@ comando. Los archivos simulados de antes no se migran: son de prueba.
 **Archivos (R10)**
 
 1. En una pieza, subir una imagen o un PDF en la tarjeta Versiones. En
-   `ConejoApp/Piezas` del Drive aparece con el nombre de la nomenclatura
+   `ConejoApp-Desarrollo/Piezas` del Drive aparece con el nombre de la nomenclatura
    (`SIGLA_NOMBRE-CORTO_TIPO_AAMM_v01.png`).
 2. En la app se ve la miniatura y se abre. El enlace es de la app
    (`/api/archivos/…`), nunca de Drive.
 3. Como cliente, con la pieza en la fase 5, se ve; aprobada, se descarga como
    `…_APROBADO-CLIENTE`.
 4. Reportar un pago con comprobante desde Facturacion del cliente: el archivo
-   cae en `ConejoApp/Comprobantes` y administracion lo abre desde el pago.
-5. Subir una foto en Mi perfil: cae en `ConejoApp/Perfiles` y se ve en la
+   cae en `ConejoApp-Desarrollo/Comprobantes` y administracion lo abre desde el pago.
+5. Subir una foto en Mi perfil: cae en `ConejoApp-Desarrollo/Perfiles` y se ve en la
    barra lateral.
 
 Hecho el 2026-10-27 con la cuenta del responsable: los tres llegaron y se
@@ -126,6 +126,16 @@ Las mismas variables, marcadas como Sensitive: `DRIVE_CLIENT_ID`,
 `DRIVE_CARPETA_COMPROBANTES_ID`, `DRIVE_CARPETA_PERFILES_ID`, `ARCHIVOS_MODO=real`, `CORREO_MODO=real` y
 `APP_URL_PUBLICA` con la direccion publica. El detalle esta en
 `docs/despliegueProduccion.md`.
+
+**Las tres carpetas de produccion no son las del `.env`.** Produccion guarda
+en `ConejoApp/` y desarrollo en `ConejoApp-Desarrollo/` (`DRIVE_RAIZ`), en la
+misma cuenta. `npm run drive:separar` crea la de produccion si falta e
+imprime sus ids para Vercel.
+
+**Limpiar lo de las pruebas:** `npm run drive:limpiar` lista los archivos de
+`ConejoApp-Desarrollo/`; con `npm run drive:limpiar -- --confirmar` los manda
+a la papelera de Drive (se recuperan desde alli mientras no se vacie). Nunca
+toca `ConejoApp/`.
 
 ## 7. Cambio a la cuenta de la empresa (R12, despues)
 
