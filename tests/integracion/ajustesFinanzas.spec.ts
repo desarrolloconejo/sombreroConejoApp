@@ -99,9 +99,13 @@ test("quien no opera finanzas no entra en los ajustes", async ({ page }) => {
 test("la tasa del dolar se registra a mano, un salto grande se confirma y una fecha no se pisa", async ({ page }) => {
   test.setTimeout(200_000);
   // Fechas viejas que no estorban a la tasa vigente; distintas en cada corrida.
-  const ano = 1900 + (Math.floor(Date.now() / 1000) % 89);
-  const enero = `${ano}-01-15`;
-  const febrero = `${ano}-02-15`;
+  // Con solo el ano chocaba con corridas anteriores (89 huecos); con el dia,
+  // son casi 2.500.
+  const segundos = Math.floor(Date.now() / 1000);
+  const ano = 1900 + (segundos % 89);
+  const dia = String(1 + (Math.floor(segundos / 89) % 28)).padStart(2, "0");
+  const enero = `${ano}-01-${dia}`;
+  const febrero = `${ano}-02-${dia}`;
 
   await entrar(page, "finanzas@conejo.test");
   await page.goto("/dashboard/ajustes-finanzas", { waitUntil: "networkidle" });
